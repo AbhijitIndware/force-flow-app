@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Image,
   Linking,
   Platform,
   Pressable,
@@ -9,6 +10,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 import {
   BottomTabHeaderProps,
@@ -21,11 +23,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import Feather from 'react-native-vector-icons/Feather';
 import {useAppSelector} from '../../store/hook';
 import {flexCol} from '../../utils/styles';
 import {AppStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>;
 
 type Props = {
@@ -88,29 +92,28 @@ function MyTabBar({state, descriptors, navigation}: any) {
             onPress={onPress}
             style={{
               flex: 1,
-              height: 80,
-              backgroundColor: Colors.white,
+              height: 90,
+              backgroundColor: Colors.midBlack,
               margin: 0,
               padding: 8,
-              borderTopWidth: 2,
-              borderTopColor: '#f0f0f0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 5,
+              paddingBottom:15,
             }}>
             <View style={[styles.tabButton]}>
               {options.tabBarIcon &&
                 options.tabBarIcon({
-                  color: isFocused ? Colors.primary : Colors.black,
+                  color: isFocused ? Colors.orange : Colors.white,
                   size: 28,
                   focused: isFocused,
                 })}
             </View>
             <Text
               style={{
-                color: isFocused ? Colors.primary : Colors.black,
-                fontSize: 12,
+                color: isFocused ? Colors.orange : Colors.white,
+                fontSize: 12, fontFamily:Fonts.regular,
               }}>
               {label}
             </Text>
@@ -128,21 +131,20 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   const userRole = userData?.role?.name ?? 'User';
   return (
     <View style={styles.headerTitleContainer}>
-      {/* <View style={styles.BackIconContainer}>
-        <MaterialCommunityIcons
-          name="arrow-left-thin"
-          size={20}
-          color={Colors.black}
-        />
-      </View> */}
-      <View style={[flexCol, {alignItems: 'flex-start', gap: 2}]}>
-        <Text style={[styles.headerTitle, {fontFamily: Fonts.light}]}>
-          ForceFlow
-        </Text>
+      <View>
+        <Image source={require('../../assets/images/brand.png')} resizeMode="cover" style={styles.logoImage} />
       </View>
-      <TouchableOpacity style={styles.profileIconContainer}>
-        <FontAwesome name="user-circle" size={24} color={Colors.black} />
-      </TouchableOpacity>
+      <View style={styles.alignment}>
+        <TouchableOpacity  style={styles.notification}>
+              <View style={styles.notificationBatch}>
+                  <Text style={styles.notificationCount}>5</Text>
+              </View>
+              <Feather name="bell" size={24} color={Colors.greyDark} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.userInfo}>
+          <Image source={require('../../assets/images/user.jpg')} resizeMode="cover" style={styles.avtarImage} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -158,7 +160,7 @@ const Home = ({navigation, route}: Props) => {
         tabBarShowLabel: false,
         tabBarItemStyle: {
           height: '100%',
-          backgroundColor: '#fff',
+          backgroundColor: Colors.lightBg,
         },
       }}
       tabBar={props => <MyTabBar {...props} />}>
@@ -169,9 +171,9 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'Home',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <MaterialCommunityIcons
+              <Feather
                 name="home"
-                color={focused ? Colors.primary : Colors.menuColor}
+                color={focused ? Colors.white : Colors.white}
                 size={28}
               />
             );
@@ -185,9 +187,9 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'Sales',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <MaterialIcons
-                name="bar-chart"
-                color={focused ? Colors.primary : Colors.menuColor}
+              <Ionicons
+                name="stats-chart-outline"
+                color={focused ? Colors.white : Colors.white}
                 size={28}
               />
             );
@@ -201,9 +203,9 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'Incentives',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <MaterialIcons
-                name="savings"
-                color={focused ? Colors.primary : Colors.menuColor}
+              <Ionicons
+                name="server-outline"
+                color={focused ? Colors.white : Colors.white}
                 size={25}
               />
             );
@@ -217,9 +219,9 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'Stock',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <Ionicons
-                name="settings-sharp"
-                color={focused ? Colors.primary : Colors.menuColor}
+              <Feather
+                name="box"
+                color={focused ? Colors.white : Colors.white}
                 size={28}
               />
             );
@@ -234,9 +236,9 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'More',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <Ionicons
-                name="menu-sharp"
-                color={focused ? Colors.primary : Colors.menuColor}
+              <MaterialCommunityIcons
+                name="text"
+                color={focused ? Colors.white : Colors.white}
                 size={28}
               />
             );
@@ -251,18 +253,39 @@ export default Home;
 
 const styles = StyleSheet.create({
   headerTitleContainer: {
-    height: 55,
     backgroundColor: Colors.white,
-    paddingHorizontal: 10,
-
+    paddingHorizontal: 20,
+    paddingTop:35,
+    paddingBottom:15,
     width: '100%',
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomColor: Colors.lightGray,
-    borderBottomWidth: 1,
   },
+  alignment:{
+     display:'flex',
+     flexDirection:'row',
+     justifyContent:'center',
+     alignItems:'center',
+     gap:18,
+  },
+
+  logoImage:{
+     width: width * 0.4, height:36,
+  },
+
+  notification:{position:'relative',top:6},
+  notificationBatch:{width:26,height:26, backgroundColor:Colors.orange, borderRadius:50, display:'flex',
+    alignItems:'center', justifyContent:'center', position:'absolute', zIndex:1, right:-13,top:-14, borderColor: Colors.white, borderWidth:3,
+  },
+  notificationCount:{color:Colors.white},
+
+  userInfo:{overflow:'hidden',borderRadius:15},
+  avtarImage:{
+    width: width * 0.12, height:50,
+  },
+
   tabButton: {
     width: '100%',
     justifyContent: 'center',

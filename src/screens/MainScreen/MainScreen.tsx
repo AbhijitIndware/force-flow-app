@@ -3,6 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
 import HomeScreen from '../HomeScreen/HomeScreen';
+import AttendanceScreen from '../Attendance/AttendanceScreen';
 import Home from '../HomeScreen/Home';
 import {AppStackParamList} from '../../types/Navigation';
 
@@ -30,6 +31,11 @@ const MainScreen = () => {
         name="HomeScreen"
         component={HomeScreen}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AttendanceScreen"
+        component={AttendanceScreen}
+        options={{headerShown:false}}
       />
     </Stack.Navigator>
   );

@@ -53,12 +53,17 @@ export const Colors = {
   lightestGray: '#F2F2F2',
 
   // Other Custom
-  pink: '#F59636',
-  darkBlue: '#003060',
-  blue: '#2DCCFF',
-  orange: '#FFB302',
-  yellow: '#DEA64C',
-  red: '#FF0000',
+  orange: '#FF7B00',
+  greyDark:'#4A4A4A',
+  midBlack:'#111111',
+  lightBg:'#F0F2F6',
+  Orangelight:'#FF9533',
+  darkButton:'#2D2D2D',
+  lightSuccess:'#E7F8EA',
+  sucess:'#0AB72A',
+  lightDenger:'#FBE8E8',
+  denger:'#D31010',
+
 
   // Transparent variants
   transparent: 'transparent',

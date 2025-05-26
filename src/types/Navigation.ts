@@ -4,6 +4,7 @@ export type AppStackParamList = {
   SignupScreen: undefined;
   Home: undefined;
   HomeScreen: undefined;
+  AttendanceScreen:undefined;
 };
 
 export type menuType = {

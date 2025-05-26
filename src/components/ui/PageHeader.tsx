@@ -19,7 +19,7 @@ const PageHeader = ({title, navigation}: Props) => {
           color={Colors.black}
         />
       </TouchableOpacity>
-      <Text style={styles.headerTitle}>{title as string}</Text>\
+      <Text style={styles.headerTitle}>{title as string}</Text>
     </View>
   );
 };
