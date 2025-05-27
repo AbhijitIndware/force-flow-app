@@ -28,6 +28,10 @@ import {useAppSelector} from '../../store/hook';
 import {flexCol} from '../../utils/styles';
 import {AppStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { House } from 'lucide-react-native';
+import SalesScreen from '../Sales/Sales';
+import StockScreen from '../Stock/Stock';
+import IncentiveScreen from '../Incentive/Incentive';
 
 const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>;
@@ -171,18 +175,14 @@ const Home = ({navigation, route}: Props) => {
           tabBarLabel: 'Home',
           tabBarIcon: ({color, size, focused}) => {
             return (
-              <Feather
-                name="home"
-                color={focused ? Colors.white : Colors.white}
-                size={28}
-              />
+              <House  strokeWidth={2} color={focused ? Colors.white : Colors.white} size={25} />
             );
           },
         }}
       />
       <Tab.Screen
         name="Sales"
-        component={HomeScreen}
+        component={SalesScreen}
         options={{
           tabBarLabel: 'Sales',
           tabBarIcon: ({color, size, focused}) => {
@@ -198,7 +198,7 @@ const Home = ({navigation, route}: Props) => {
       />
       <Tab.Screen
         name="Incentives"
-        component={HomeScreen}
+        component={IncentiveScreen}
         options={{
           tabBarLabel: 'Incentives',
           tabBarIcon: ({color, size, focused}) => {
@@ -214,7 +214,7 @@ const Home = ({navigation, route}: Props) => {
       />
       <Tab.Screen
         name="Stock"
-        component={HomeScreen}
+        component={StockScreen}
         options={{
           tabBarLabel: 'Stock',
           tabBarIcon: ({color, size, focused}) => {

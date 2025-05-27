@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import {Dimensions, Image, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Dimensions,  RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {flexCol} from '../../utils/styles';
 import {Colors} from '../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -8,9 +8,9 @@ import React, {useCallback, useState} from 'react';
 import {AppStackParamList} from '../../types/Navigation';
 import { Fonts } from '../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { Size } from '../../utils/fontSize';
-
+import { Divider } from '@rneui/themed';
+import { Banknote, CalendarCheck, CalendarCheck2, ChartCandlestick, FilePenLine, MessageSquareQuote, MoveDown, MoveUp, Network, Package, UserRoundCog } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -69,7 +69,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 </View>
 
                 <TouchableOpacity style={styles.checkinButton} onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <MaterialCommunityIcons name="calendar-check-outline" size={26} color={Colors.white} />
+                    <CalendarCheck strokeWidth={1.4} color={Colors.white} />
                     <Text style={styles.checkinButtonText}>Check-in</Text>
                 </TouchableOpacity>
               </View>
@@ -77,14 +77,14 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View style={styles.countBoxSection}>
                   <View style={styles.countBox}>
                     <View style={styles.countBoxIcon}>
-                      <Image source={require('../../assets/images/calendar-check-2.png')} resizeMode="contain" style={{width:width * 0.4, height:23}} />
+                      <CalendarCheck2 strokeWidth={1.4} color={Colors.white}/>
                     </View>
                     <Text style={styles.countBoxTitle}>Attendance</Text>
                     <Text style={styles.countBoxDay}>24 Days</Text>
                   </View>
                   <View style={styles.countBox}>
                     <View style={styles.countBoxIcon}>
-                      <Image source={require('../../assets/images/network.png')} resizeMode="contain" style={{width:width * 0.4, height:25}} />
+                      <Network strokeWidth={1.4} color={Colors.white}/>
                     </View>
                     <Text style={styles.countBoxTitle}>AON</Text>
                     <Text style={styles.countBoxDay}>1244 Days</Text>
@@ -115,7 +115,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                           <Text style={styles.quantitytime}>Daily quantity</Text>
                         </View>
                         <View style={styles.positionValue}>
-                          <Image source={require('../../assets/images/move-up.png')} resizeMode="contain" style={{width:width * 0.07, height:23}} />
+                          <MoveUp strokeWidth={2} color={Colors.darkButton}/>
                           <Text style={styles.incressValu}>+3%</Text>
                         </View>
                       </View>
@@ -125,7 +125,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                           <Text style={styles.quantitytime}>Monthly quantity</Text>
                         </View>
                         <View style={styles.positionValue}>
-                          <Image source={require('../../assets/images/move-down.png')} resizeMode="contain" style={{width:width * 0.07, height:23}} />
+                          <MoveDown strokeWidth={2} color={Colors.darkButton}/>
                           <Text style={styles.decriseValu}>-2%</Text>
                         </View>
                       </View>
@@ -135,7 +135,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                           <Text style={styles.quantitytime}>Quartely quantity</Text>
                         </View>
                         <View style={styles.positionValue}>
-                          <Image source={require('../../assets/images/move-down.png')} resizeMode="contain" style={{width:width * 0.07, height:23}} />
+                          <MoveDown strokeWidth={2} color={Colors.darkButton}/>
                           <Text style={styles.decriseValu}>-2%</Text>
                         </View>
                       </View>
@@ -146,7 +146,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <View style={[styles.dataBox, {flexDirection:'column', alignItems:'flex-start', marginTop:10}]}>
                   <View style={styles.incentiveContent}>
                     <View style={styles.iconbox}>
-                        <Image source={require('../../assets/images/banknote.png')} resizeMode="contain" style={{width:width * 0.80, height:30}} />
+                        <Banknote strokeWidth={2} color={Colors.white} size={30}/>
                     </View>
                     <View>
                       <Text style={styles.quantityCount}>₹2115</Text>
@@ -160,56 +160,57 @@ const HomeScreen = ({navigation, route}: Props) => {
               </View>
               <View style={[styles.container,{paddingTop:20}]}>
                 <Text style={styles.SectionHeading}>Are you in a new store?</Text>
-                <View style={[styles.dataBox, {flexDirection:'column', alignItems:'flex-start', marginTop:10, paddingHorizontal:0, paddingVertical:10}]}>
-                  <TouchableOpacity style={styles.listLink}>
-                    <Text style={styles.listLinkText}>Set up the opening stock of your store</Text>
-                    <View style={styles.arrobox}>
-                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.listLink}>
-                    <Text style={styles.listLinkText}>Check the user manual </Text>
-                    <View style={styles.arrobox}>
-                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
-                    </View>
-                  </TouchableOpacity>
+                <View style={{ backgroundColor:Colors.white, borderRadius:20, paddingVertical:20, marginBottom:30}} >
+                    <TouchableOpacity style={styles.listLink}>
+                      <Text style={styles.listLinkText}>Set up the opening stock of your store</Text>
+                      <View style={styles.arrobox}>
+                        <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                      </View>
+                    </TouchableOpacity>
+                    <Divider width={1} color={Colors.lightGray} style={{ borderStyle: 'dashed'}} />
+                    <TouchableOpacity style={styles.listLink}>
+                      <Text style={styles.listLinkText}>Check the user manual </Text>
+                      <View style={styles.arrobox}>
+                        <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                      </View>
+                    </TouchableOpacity>
                 </View>
               </View>
               <View style={[styles.LinkSection,{paddingVertical:15}]}>
-                <View style={styles.container}>
-                  <Text style={[styles.SectionHeading,{marginBottom:10}]}>Quick links</Text>
-                  <View style={styles.IconlinkBox}>
-                      <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
-                        {/* <Image source={require('../../assets/images/banknote.png')} resizeMode="contain" style={{width:width * 0.50, height:20}} /> */}
-                         <Ionicons name="person-add-outline" size={18} color={Colors.white} />
-                      </View>
-                      <Text style={styles.linkTitle}>Register Sales</Text>
-                  </View>
-                  <View style={styles.IconlinkBox}>
-                      <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
-                        {/* <Image source={require('../../assets/images/banknote.png')} resizeMode="contain" style={{width:width * 0.50, height:20}} /> */}
-                         <Ionicons name="cube-outline" size={18} color={Colors.white} />
-                      </View>
-                      <Text style={styles.linkTitle}>New Stock Entry</Text>
-                  </View>
-                  <View style={styles.IconlinkBox}>
-                      <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
-                        <Image source={require('../../assets/images/file-pen-line.png')} resizeMode="contain" style={{width:width * 0.50, height:18}} />
-                      </View>
-                      <Text style={styles.linkTitle}>Stock Requisition</Text>
-                  </View>
-                  <View style={styles.IconlinkBox}>
-                      <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
-                        <Image source={require('../../assets/images/chart-candlestick.png')} resizeMode="contain" style={{width:width * 0.50, height:18}} />
-                      </View>
-                      <Text style={styles.linkTitle}>Stock Taking</Text>
-                  </View>
-                  <View style={styles.IconlinkBox}>
-                      <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
-                        <Image source={require('../../assets/images/message-square-quote.png')} resizeMode="contain" style={{width:width * 0.50, height:18}} />
-                      </View>
-                      <Text style={styles.linkTitle}>Feedback</Text>
-                  </View>
+                <Text style={[styles.SectionHeading,{marginBottom:10,paddingHorizontal:20}]}>Quick links</Text>
+                <View style={styles.IconlinkBox}>
+                    <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
+                      <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={styles.linkTitle}>Register Sales</Text>
+                </View>
+                <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
+                <View style={styles.IconlinkBox}>
+                    <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
+                     <Package  strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={styles.linkTitle}>New Stock Entry</Text>
+                </View>
+                <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
+                <View style={styles.IconlinkBox}>
+                    <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
+                      <FilePenLine strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={styles.linkTitle}>Stock Requisition</Text>
+                </View>
+                <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
+                <View style={styles.IconlinkBox}>
+                    <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
+                      <ChartCandlestick strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={styles.linkTitle}>Stock Taking</Text>
+                </View>
+                <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
+                <View style={styles.IconlinkBox}>
+                    <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
+                      <MessageSquareQuote  strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={styles.linkTitle}>Feedback</Text>
                 </View>
               </View>
           </ScrollView>
@@ -306,7 +307,7 @@ arrobox:{width:20, height:20, backgroundColor:'#F0F2F6',display:'flex', flexDire
 //incentive section css start
 LinkSection:{backgroundColor:Colors.white},
 
-IconlinkBox:{display:'flex', flexDirection:'row',alignItems:'center', gap:10, marginBottom:10},
+IconlinkBox:{display:'flex', flexDirection:'row',alignItems:'center', gap:10, marginBottom:10, paddingHorizontal:20},
 linkTitle:{color:Colors.darkButton,fontSize:Size.sm, fontFamily:Fonts.medium},
 
 });

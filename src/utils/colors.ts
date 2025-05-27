@@ -37,7 +37,7 @@ export const Colors = {
   // Light Variants
   lightPink: '#EB425526',
   lightGray: '#E8E8E8',
-  lightBlue: '#F0FFFF',
+  lightBlue: '#E3ECFF',
   lightRed: '#FFEBEB',
   lightRed2: '#FFC1C3',
   lightGreen: '#DFFF9A',
@@ -63,6 +63,8 @@ export const Colors = {
   sucess:'#0AB72A',
   lightDenger:'#FBE8E8',
   denger:'#D31010',
+  holdLight:'#FFE9D4',
+  blue:'#367CFF',
 
 
   // Transparent variants

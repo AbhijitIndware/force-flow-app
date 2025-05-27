@@ -6,6 +6,9 @@ import HomeScreen from '../HomeScreen/HomeScreen';
 import AttendanceScreen from '../Attendance/AttendanceScreen';
 import Home from '../HomeScreen/Home';
 import {AppStackParamList} from '../../types/Navigation';
+import SalesScreen from '../Sales/Sales';
+import StockScreen from '../Stock/Stock';
+import IncentiveScreen from '../Incentive/Incentive';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -35,6 +38,21 @@ const MainScreen = () => {
       <Stack.Screen
         name="AttendanceScreen"
         component={AttendanceScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="SalesScreen"
+        component={SalesScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="StockScreen"
+        component={StockScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="IncentiveScreen"
+        component={IncentiveScreen}
         options={{headerShown:false}}
       />
     </Stack.Navigator>
