@@ -19,6 +19,7 @@ import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import {Tab, TabView} from '@rneui/themed';
 import RangeSlider from '../../components/ui/rangeSlider';
+import IncentiveGraph from '../../components/incentive/incentive-graph';
 
 const {width} = Dimensions.get('window');
 
@@ -307,11 +308,13 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         styles.earningRange,
                         {alignItems: 'flex-start', padding: 20},
                       ]}>
-                      <Image
+                      {/* <Image
                         source={require('../../assets/images/graph.jpg')}
                         resizeMode="cover"
                         style={{width: '100%', height: 127}}
-                      />
+                      /> */}
+
+                      <IncentiveGraph />
                     </View>
                   </View>
                 </View>
@@ -481,11 +484,12 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         styles.earningRange,
                         {alignItems: 'flex-start', padding: 20},
                       ]}>
-                      <Image
+                      {/* <Image
                         source={require('../../assets/images/graph.jpg')}
                         resizeMode="cover"
                         style={{width: '100%', height: 127}}
-                      />
+                      /> */}
+                      <IncentiveGraph />
                     </View>
                   </View>
                 </View>

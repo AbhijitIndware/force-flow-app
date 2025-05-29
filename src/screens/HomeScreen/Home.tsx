@@ -28,12 +28,15 @@ import {useAppSelector} from '../../store/hook';
 import {flexCol} from '../../utils/styles';
 import {AppStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import { House } from 'lucide-react-native';
+import {House} from 'lucide-react-native';
 import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
+import {useState} from 'react';
+import {Modal} from 'react-native';
+import MoreOptionsModal from '../../components/home/MoreOption';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>;
 
 type Props = {
@@ -104,7 +107,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
               alignItems: 'center',
               justifyContent: 'center',
               gap: 5,
-              paddingBottom:15,
+              paddingBottom: 15,
             }}>
             <View style={[styles.tabButton]}>
               {options.tabBarIcon &&
@@ -117,7 +120,8 @@ function MyTabBar({state, descriptors, navigation}: any) {
             <Text
               style={{
                 color: isFocused ? Colors.orange : Colors.white,
-                fontSize: 12, fontFamily:Fonts.regular,
+                fontSize: 12,
+                fontFamily: Fonts.regular,
               }}>
               {label}
             </Text>
@@ -136,17 +140,25 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   return (
     <View style={styles.headerTitleContainer}>
       <View>
-        <Image source={require('../../assets/images/brand.png')} resizeMode="cover" style={styles.logoImage} />
+        <Image
+          source={require('../../assets/images/brand.png')}
+          resizeMode="cover"
+          style={styles.logoImage}
+        />
       </View>
       <View style={styles.alignment}>
-        <TouchableOpacity  style={styles.notification}>
-              <View style={styles.notificationBatch}>
-                  <Text style={styles.notificationCount}>5</Text>
-              </View>
-              <Feather name="bell" size={24} color={Colors.greyDark} />
+        <TouchableOpacity style={styles.notification}>
+          <View style={styles.notificationBatch}>
+            <Text style={styles.notificationCount}>5</Text>
+          </View>
+          <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo}>
-          <Image source={require('../../assets/images/user.jpg')} resizeMode="cover" style={styles.avtarImage} />
+          <Image
+            source={require('../../assets/images/user.jpg')}
+            resizeMode="cover"
+            style={styles.avtarImage}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -154,98 +166,129 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 };
 
 const Home = ({navigation, route}: Props) => {
+  const [isModalVisible, setModalVisible] = useState(false);
+
+  const handleMorePress = () => {
+    setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+  };
+
+  const menuItems = [
+    {id: '1', title: 'Profile', onPress: () => console.log('Profile')},
+    {id: '2', title: 'Settings', onPress: () => console.log('Settings')},
+    {id: '3', title: 'Logout', onPress: () => console.log('Logout')},
+  ];
   return (
-    <Tab.Navigator
-      initialRouteName={route?.params ? route?.params?.routeName : 'HomeScreen'}
-      screenOptions={{
-        tabBarHideOnKeyboard: true,
-        headerShown: true,
-        header: props => <CustomHeader {...props} />,
-        tabBarShowLabel: false,
-        tabBarItemStyle: {
-          height: '100%',
-          backgroundColor: Colors.lightBg,
-        },
-      }}
-      tabBar={props => <MyTabBar {...props} />}>
-      <Tab.Screen
-        name="HomeScreen"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({color, size, focused}) => {
-            return (
-              <House  strokeWidth={2} color={focused ? Colors.white : Colors.white} size={25} />
-            );
+    <>
+      <Tab.Navigator
+        initialRouteName={
+          route?.params ? route?.params?.routeName : 'HomeScreen'
+        }
+        screenOptions={{
+          tabBarHideOnKeyboard: true,
+          headerShown: true,
+          header: props => <CustomHeader {...props} />,
+          tabBarShowLabel: false,
+          tabBarItemStyle: {
+            height: '100%',
+            backgroundColor: Colors.lightBg,
           },
         }}
-      />
-      <Tab.Screen
-        name="Sales"
-        component={SalesScreen}
-        options={{
-          tabBarLabel: 'Sales',
-          tabBarIcon: ({color, size, focused}) => {
-            return (
-              <Ionicons
-                name="stats-chart-outline"
-                color={focused ? Colors.white : Colors.white}
-                size={28}
-              />
-            );
-          },
-        }}
-      />
-      <Tab.Screen
-        name="Incentives"
-        component={IncentiveScreen}
-        options={{
-          tabBarLabel: 'Incentives',
-          tabBarIcon: ({color, size, focused}) => {
-            return (
-              <Ionicons
-                name="server-outline"
-                color={focused ? Colors.white : Colors.white}
-                size={25}
-              />
-            );
-          },
-        }}
-      />
-      <Tab.Screen
-        name="Stock"
-        component={StockScreen}
-        options={{
-          tabBarLabel: 'Stock',
-          tabBarIcon: ({color, size, focused}) => {
-            return (
-              <Feather
-                name="box"
-                color={focused ? Colors.white : Colors.white}
-                size={28}
-              />
-            );
-          },
-        }}
-      />
-      <Tab.Screen
-        name="More"
-        component={HomeScreen}
-        options={{
-          // headerShown: false,
-          tabBarLabel: 'More',
-          tabBarIcon: ({color, size, focused}) => {
-            return (
+        tabBar={props => <MyTabBar {...props} />}>
+        <Tab.Screen
+          name="HomeScreen"
+          component={HomeScreen}
+          options={{
+            tabBarLabel: 'Home',
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <House
+                  strokeWidth={2}
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}
+                />
+              );
+            },
+          }}
+        />
+        <Tab.Screen
+          name="Sales"
+          component={SalesScreen}
+          options={{
+            tabBarLabel: 'Sales',
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Ionicons
+                  name="stats-chart-outline"
+                  color={focused ? Colors.white : Colors.white}
+                  size={28}
+                />
+              );
+            },
+          }}
+        />
+        <Tab.Screen
+          name="Incentives"
+          component={IncentiveScreen}
+          options={{
+            tabBarLabel: 'Incentives',
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Ionicons
+                  name="server-outline"
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}
+                />
+              );
+            },
+          }}
+        />
+        <Tab.Screen
+          name="Stock"
+          component={StockScreen}
+          options={{
+            tabBarLabel: 'Stock',
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Feather
+                  name="box"
+                  color={focused ? Colors.white : Colors.white}
+                  size={28}
+                />
+              );
+            },
+          }}
+        />
+        <Tab.Screen
+          name="More"
+          component={HomeScreen}
+          listeners={{
+            tabPress: e => {
+              // e.preventDefault(); // Prevent default navigation
+              handleMorePress(); // Open modal
+            },
+          }}
+          options={{
+            tabBarLabel: 'More',
+            tabBarIcon: ({focused}) => (
               <MaterialCommunityIcons
                 name="text"
                 color={focused ? Colors.white : Colors.white}
                 size={28}
               />
-            );
-          },
-        }}
+            ),
+          }}
+        />
+      </Tab.Navigator>
+      <MoreOptionsModal
+        visible={isModalVisible}
+        onClose={handleCloseModal}
+        menuItems={menuItems}
       />
-    </Tab.Navigator>
+    </>
   );
 };
 
@@ -255,35 +298,49 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
-    paddingTop:35,
-    paddingBottom:15,
+    paddingTop: 35,
+    paddingBottom: 15,
     width: '100%',
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  alignment:{
-     display:'flex',
-     flexDirection:'row',
-     justifyContent:'center',
-     alignItems:'center',
-     gap:18,
+  alignment: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 18,
   },
 
-  logoImage:{
-     width: width * 0.4, height:36,
+  logoImage: {
+    width: width * 0.4,
+    height: 36,
   },
 
-  notification:{position:'relative',top:6},
-  notificationBatch:{width:26,height:26, backgroundColor:Colors.orange, borderRadius:50, display:'flex',
-    alignItems:'center', justifyContent:'center', position:'absolute', zIndex:1, right:-13,top:-14, borderColor: Colors.white, borderWidth:3,
+  notification: {position: 'relative', top: 6},
+  notificationBatch: {
+    width: 26,
+    height: 26,
+    backgroundColor: Colors.orange,
+    borderRadius: 50,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    zIndex: 1,
+    right: -13,
+    top: -14,
+    borderColor: Colors.white,
+    borderWidth: 3,
   },
-  notificationCount:{color:Colors.white},
+  notificationCount: {color: Colors.white},
 
-  userInfo:{overflow:'hidden',borderRadius:15},
-  avtarImage:{
-    width: width * 0.12, height:50,
+  userInfo: {overflow: 'hidden', borderRadius: 15},
+  avtarImage: {
+    width: width * 0.12,
+    height: 50,
   },
 
   tabButton: {
