@@ -19,7 +19,7 @@ import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import {
   Banknote,
-  CalendarCheck,
+  CalendarDays,
   Clock2,
   EllipsisVertical,
   Funnel,
@@ -161,7 +161,7 @@ const SalesScreen = ({navigation}: Props) => {
                 <View style={styles.cardHeader}>
                   <View style={styles.timeSection}>
                     <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}> In Time: 11:03:45 AM</Text>
+                    <Text style={styles.time}>11:03:45 AM</Text>
                   </View>
                   <Text style={[styles.present, {marginLeft: 'auto'}]}>
                     Delivered
@@ -200,7 +200,7 @@ const SalesScreen = ({navigation}: Props) => {
                 <View style={styles.cardHeader}>
                   <View style={styles.timeSection}>
                     <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}> In Time: 11:03:45 AM</Text>
+                    <Text style={styles.time}>11:03:45 AM</Text>
                   </View>
                   <Text style={[styles.present, {marginLeft: 'auto'}]}>
                     Delivered
@@ -239,7 +239,7 @@ const SalesScreen = ({navigation}: Props) => {
                 <View style={styles.cardHeader}>
                   <View style={styles.timeSection}>
                     <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}> In Time: 11:03:45 AM</Text>
+                    <Text style={styles.time}>11:03:45 AM</Text>
                   </View>
                   <Text style={[styles.present, {marginLeft: 'auto'}]}>
                     Delivered
@@ -278,7 +278,7 @@ const SalesScreen = ({navigation}: Props) => {
                 <View style={styles.cardHeader}>
                   <View style={styles.timeSection}>
                     <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}> In Time: 11:03:45 AM</Text>
+                    <Text style={styles.time}>11:03:45 AM</Text>
                   </View>
                   <Text style={[styles.present, {marginLeft: 'auto'}]}>
                     Delivered
@@ -325,8 +325,8 @@ const SalesScreen = ({navigation}: Props) => {
             <TouchableOpacity
               style={styles.checkinButton}
               onPress={() => navigation.navigate('AttendanceScreen')}>
-              <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-              <Text style={styles.checkinButtonText}>Check-in</Text>
+              <CalendarDays strokeWidth={1.4} color={Colors.white} />
+              <Text style={styles.checkinButtonText}>Register Sale</Text>
             </TouchableOpacity>
           </View>
         </>

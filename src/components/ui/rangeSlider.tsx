@@ -1,6 +1,6 @@
 // components/RangeSlider.tsx
 import React from 'react';
-import {View, StyleSheet} from 'react-native';
+import {StyleSheet} from 'react-native';
 import Slider from '@react-native-community/slider';
 
 interface RangeSliderProps {
@@ -18,10 +18,10 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
   value,
   onChange,
   step = 1,
-  color = '#007bff', // default to primary blue
+  color = '#C6F0CD', // default to primary blue
 }) => {
   return (
-    <View style={styles.container}>
+
       <Slider
         style={styles.slider}
         minimumValue={min}
@@ -30,10 +30,10 @@ const RangeSlider: React.FC<RangeSliderProps> = ({
         value={value}
         onValueChange={onChange}
         minimumTrackTintColor={color}
-        maximumTrackTintColor="#ddd"
+        maximumTrackTintColor="#C6F0CD"
         thumbTintColor={color}
       />
-    </View>
+
   );
 };
 

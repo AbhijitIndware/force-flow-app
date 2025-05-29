@@ -177,9 +177,10 @@ const Home = ({navigation, route}: Props) => {
   };
 
   const menuItems = [
-    {id: '1', title: 'Profile', onPress: () => console.log('Profile')},
-    {id: '2', title: 'Settings', onPress: () => console.log('Settings')},
-    {id: '3', title: 'Logout', onPress: () => console.log('Logout')},
+    {id: '1', title: 'Product feedback', onPress: () => navigation.navigate('ProductFeedbackScreen')},
+    {id: '2', title: 'Downloads',  onPress: () => navigation.navigate('DownloadScreen')},
+    {id: '3', title: 'Schemes', onPress: () => console.log('Logout')},
+    {id: '4', title: 'Profile', onPress: () => navigation.navigate('ProfileScreen')},
   ];
   return (
     <>

@@ -8,6 +8,10 @@ export type AppStackParamList = {
   SalesScreen:undefined;
   StockScreen:undefined;
   IncentiveScreen:undefined;
+  CheckinScreen:undefined;
+  DownloadScreen:undefined;
+  ProductFeedbackScreen:undefined;
+  ProfileScreen:undefined;
 };
 
 export type menuType = {

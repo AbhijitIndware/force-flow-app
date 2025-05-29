@@ -56,7 +56,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View style={styles.headerSec}>
                 <View style={styles.welcomBox}>
                     <Text style={styles.welcomeText}>Hello <Text style={styles.name}>Santanu</Text></Text>
-                    <View style={styles.linkBox}>
+                    <TouchableOpacity style={styles.linkBox} onPress={() => navigation.navigate('AttendanceScreen')}>
                         <View style={styles.dateBox}>
                           <Text style={styles.dateText}>21</Text>
                           <Text style={styles.monthText}>APR</Text>
@@ -65,10 +65,10 @@ const HomeScreen = ({navigation, route}: Props) => {
                           <Text style={styles.paraText}>Last check-in at 11:05 pm.</Text>
                           <Ionicons name="chevron-forward-circle-sharp" size={24} color={Colors.white} />
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.checkinButton} onPress={() => navigation.navigate('AttendanceScreen')}>
+                <TouchableOpacity style={styles.checkinButton} onPress={() => navigation.navigate('CheckinScreen')}>
                     <CalendarCheck strokeWidth={1.4} color={Colors.white} />
                     <Text style={styles.checkinButtonText}>Check-in</Text>
                 </TouchableOpacity>
@@ -92,7 +92,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               </View>
 
               <View style={[styles.container,{backgroundColor:Colors.transparent, paddingTop:10}]}>
-                <TouchableOpacity style={[styles.linkBox,{backgroundColor:Colors.orange,padding:7, borderRadius:18}]}>
+                <TouchableOpacity style={[styles.linkBox,{backgroundColor:Colors.orange,padding:7, borderRadius:18}]}  onPress={() => navigation.navigate('StockScreen')}>
                     <View style={[styles.dateBox,{backgroundColor:Colors.Orangelight,borderTopWidth:1, borderLeftWidth:1,borderRightWidth:1,borderColor:'#FFBF83',
                       borderBottomWidth:0, width:60, height:60,borderRadius:18}]}>
                        <Ionicons name="cube-outline" size={28} color={Colors.white} />
@@ -106,6 +106,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                     </View>
                 </TouchableOpacity>
               </View>
+
               <View style={[styles.container,{paddingTop:20}]}>
                   <Text style={styles.SectionHeading}>Target vs Achievement <Text style={{fontFamily:Fonts.regular}}>(Qty)</Text></Text>
                   <View style={styles.dataBoxSection}>
@@ -141,6 +142,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                       </View>
                   </View>
               </View>
+
               <View style={[styles.container,{paddingTop:20}]}>
                 <Text style={styles.SectionHeading}>Incentive Status</Text>
                 <View style={[styles.dataBox, {flexDirection:'column', alignItems:'flex-start', marginTop:10}]}>
@@ -182,7 +184,10 @@ const HomeScreen = ({navigation, route}: Props) => {
                     <View style={[styles.iconbox,{width:35, height:35, borderRadius:10}]}>
                       <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
                     </View>
-                    <Text style={styles.linkTitle}>Register Sales</Text>
+                    <Text style={[styles.linkTitle]}>Register Sales</Text>
+                    <View style={[styles.arrobox,{marginLeft:'auto'}]}>
+                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                    </View>
                 </View>
                 <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
                 <View style={styles.IconlinkBox}>
@@ -190,6 +195,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                      <Package  strokeWidth={2} color={Colors.white} size={20} />
                     </View>
                     <Text style={styles.linkTitle}>New Stock Entry</Text>
+                    <View style={[styles.arrobox,{marginLeft:'auto'}]}>
+                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                    </View>
                 </View>
                 <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
                 <View style={styles.IconlinkBox}>
@@ -197,6 +205,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                       <FilePenLine strokeWidth={2} color={Colors.white} size={20} />
                     </View>
                     <Text style={styles.linkTitle}>Stock Requisition</Text>
+                    <View style={[styles.arrobox,{marginLeft:'auto'}]}>
+                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                    </View>
                 </View>
                 <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
                 <View style={styles.IconlinkBox}>
@@ -204,6 +215,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                       <ChartCandlestick strokeWidth={2} color={Colors.white} size={20} />
                     </View>
                     <Text style={styles.linkTitle}>Stock Taking</Text>
+                    <View style={[styles.arrobox,{marginLeft:'auto'}]}>
+                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                    </View>
                 </View>
                 <Divider width={1} color={Colors.lightGray} style={{ marginBottom:10,borderStyle: 'dashed'}} />
                 <View style={styles.IconlinkBox}>
@@ -211,6 +225,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                       <MessageSquareQuote  strokeWidth={2} color={Colors.white} size={20} />
                     </View>
                     <Text style={styles.linkTitle}>Feedback</Text>
+                    <View style={[styles.arrobox,{marginLeft:'auto'}]}>
+                      <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
+                    </View>
                 </View>
               </View>
           </ScrollView>
