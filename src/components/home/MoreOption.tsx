@@ -21,7 +21,6 @@ interface Props {
 }
 
 const MoreOptionsModal: React.FC<Props> = ({visible, onClose, menuItems}) => {
-  console.log('🚀 ~ visible:', visible);
   return (
     <Modal
       visible={visible}

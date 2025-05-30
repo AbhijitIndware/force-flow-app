@@ -172,7 +172,6 @@ const Home = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
 
   const handleMorePress = () => {
-    console.log('🚀 ~ Home ~ e:', isModalVisible);
     setModalVisible(true);
   };
 
