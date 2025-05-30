@@ -50,7 +50,7 @@ const DATA = [
   {
     id: '1',
     title: 'Accestisa new mart',
-    time: 'In  Time: 11:03:45 AM',
+    time: '11:03:45 AM',
     status: 'General',
     storename: 'Store name',
     date: '19',
@@ -59,7 +59,7 @@ const DATA = [
   {
     id: '2',
     title: 'Accestisa new mart',
-    time: 'In  Time: 11:03:45 AM',
+    time: '11:03:45 AM',
     status: 'General',
     storename: 'Store name',
     date: '19',
@@ -68,7 +68,7 @@ const DATA = [
   {
     id: '3',
     title: 'Accestisa new mart',
-    time: 'In  Time: 11:03:45 AM',
+    time: '11:03:45 AM',
     status: 'General',
     storename: 'Store name',
     date: '19',
@@ -77,7 +77,7 @@ const DATA = [
   {
     id: '4',
     title: 'Accestisa new mart',
-    time: 'In  Time: 11:03:45 AM',
+    time: '11:03:45 AM',
     status: 'Present',
     storename: 'Store name',
     date: '19',
@@ -86,7 +86,7 @@ const DATA = [
   {
     id: '5',
     title: 'Accestisa new mart',
-    time: 'In  Time: 11:03:45 AM',
+    time: '11:03:45 AM',
     status: 'General',
     storename: 'Store name',
     date: '19',

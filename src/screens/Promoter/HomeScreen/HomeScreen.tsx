@@ -78,7 +78,9 @@ const HomeScreen = ({navigation, route}: Props) => {
               <Text style={styles.welcomeText}>
                 Hello <Text style={styles.name}>Santanu</Text>
               </Text>
-              <View style={styles.linkBox}>
+              <TouchableOpacity
+                style={styles.linkBox}
+                onPress={() => navigation.navigate('AttendanceScreen')}>
                 <View style={styles.dateBox}>
                   <Text style={styles.dateText}>21</Text>
                   <Text style={styles.monthText}>APR</Text>
@@ -93,12 +95,12 @@ const HomeScreen = ({navigation, route}: Props) => {
                     color={Colors.white}
                   />
                 </View>
-              </View>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
               style={styles.checkinButton}
-              onPress={() => navigation.navigate('AttendanceScreen')}>
+              onPress={() => navigation.navigate('CheckingScreen')}>
               <CalendarCheck strokeWidth={1.4} color={Colors.white} />
               <Text style={styles.checkinButtonText}>Check-in</Text>
             </TouchableOpacity>
@@ -130,7 +132,8 @@ const HomeScreen = ({navigation, route}: Props) => {
               style={[
                 styles.linkBox,
                 {backgroundColor: Colors.orange, padding: 7, borderRadius: 18},
-              ]}>
+              ]}
+              onPress={() => navigation.navigate('StockScreen')}>
               <View
                 style={[
                   styles.dateBox,
@@ -171,6 +174,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               </View>
             </TouchableOpacity>
           </View>
+
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
@@ -209,6 +213,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               </View>
             </View>
           </View>
+
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>Incentive Status</Text>
             <View
@@ -311,7 +316,14 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ]}>
                 <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Register Sales</Text>
+              <Text style={[styles.linkTitle]}>Register Sales</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -327,6 +339,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>New Stock Entry</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -342,6 +361,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <FilePenLine strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Stock Requisition</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -361,6 +387,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Stock Taking</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -380,6 +413,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Feedback</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
           </View>
         </ScrollView>

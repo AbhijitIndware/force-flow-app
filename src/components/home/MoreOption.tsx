@@ -2,10 +2,10 @@
 // MoreOptionsModal.tsx
 import React from 'react';
 import {Modal, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import { Size } from '../../utils/fontSize';
-import { Fonts } from '../../constants';
-import { Colors } from '../../utils/colors';
-import { Divider } from '@rneui/themed';
+import {Size} from '../../utils/fontSize';
+import {Fonts} from '../../constants';
+import {Colors} from '../../utils/colors';
+import {Divider} from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface MenuItem {
@@ -21,6 +21,7 @@ interface Props {
 }
 
 const MoreOptionsModal: React.FC<Props> = ({visible, onClose, menuItems}) => {
+  console.log('🚀 ~ visible:', visible);
   return (
     <Modal
       visible={visible}
@@ -41,13 +42,29 @@ const MoreOptionsModal: React.FC<Props> = ({visible, onClose, menuItems}) => {
                 onClose();
               }}
               style={styles.menuItem}>
-                <View style={{display:'flex', justifyContent:'space-between', alignItems:'center', flexDirection:'row', paddingHorizontal:20, paddingBottom:10}}>
-                  <Text style={styles.menuText}>{item.title}</Text>
-                  <View style={styles.arrobox}>
-                    <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
-                  </View>
+              <View
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  paddingHorizontal: 20,
+                  paddingBottom: 10,
+                }}>
+                <Text style={styles.menuText}>{item.title}</Text>
+                <View style={styles.arrobox}>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={12}
+                    color={Colors.darkButton}
+                  />
                 </View>
-              <Divider width={1} color="#B9BFCB" style={{ borderStyle:'dashed'}} />
+              </View>
+              <Divider
+                width={1}
+                color="#B9BFCB"
+                style={{borderStyle: 'dashed'}}
+              />
             </TouchableOpacity>
           ))}
           <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
@@ -72,30 +89,41 @@ const styles = StyleSheet.create({
     maxHeight: '60%',
   },
   title: {
-    fontSize:Size.md,
+    fontSize: Size.md,
     marginBottom: 10,
-    fontFamily:Fonts.semiBold,
-    color:Colors.darkButton,
-    padding:20,
-    borderBottomWidth:1,
-    borderColor:Colors.lightGray,
+    fontFamily: Fonts.semiBold,
+    color: Colors.darkButton,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderColor: Colors.lightGray,
   },
   menuItem: {
- paddingVertical:10,
+    paddingVertical: 10,
   },
   menuText: {
-    fontSize:Size.sm,fontFamily:Fonts.medium,
-    color:Colors.darkButton,
+    fontSize: Size.sm,
+    fontFamily: Fonts.medium,
+    color: Colors.darkButton,
   },
-  cancelButton:{
-    padding:20, alignItems:'center',
+  cancelButton: {
+    padding: 20,
+    alignItems: 'center',
   },
   cancelText: {
-    fontSize:Size.sm,fontFamily:Fonts.medium,
-    color:Colors.orange,
+    fontSize: Size.sm,
+    fontFamily: Fonts.medium,
+    color: Colors.orange,
   },
-  arrobox:{width:20, height:20, backgroundColor:'#F0F2F6',display:'flex', flexDirection:'row',
-  alignItems:'center',justifyContent:'center', borderRadius:100},
+  arrobox: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#F0F2F6',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
+  },
 });
 
 export default MoreOptionsModal;

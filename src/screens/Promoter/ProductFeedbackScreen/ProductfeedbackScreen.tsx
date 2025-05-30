@@ -8,25 +8,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../utils/styles';
-import {Colors} from '../../utils/colors';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../components/ui/LoadingScreen';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 import React, {useCallback, useState} from 'react';
-import {AppStackParamList} from '../../types/Navigation';
-import PageHeader from '../../components/ui/PageHeader';
-import { Size } from '../../utils/fontSize';
-import { Fonts } from '../../constants';
-
-import { Clock2,  EllipsisVertical, Funnel, Search} from 'lucide-react-native';
-import FilterModal from '../../components/ui/filterModal';
-
-
-//const { width } = Dimensions.get('window');
-//const { height } = Dimensions.get('window');
+import {PromoterAppStackParamList} from '../../../types/Navigation';
+import PageHeader from '../../../components/ui/PageHeader';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {Clock2, EllipsisVertical, Funnel, Search} from 'lucide-react-native';
+import FilterModal from '../../../components/ui/filterModal';
 
 type NavigationProp = NativeStackNavigationProp<
-  AppStackParamList,
+  PromoterAppStackParamList,
   'ProductFeedbackScreen'
 >;
 
@@ -35,14 +30,12 @@ type Props = {
   route: any;
 };
 
-
-
 const ProductFeedbackScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const [isModalVisible, setModalVisible] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState('All');
-    console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -60,7 +53,10 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      <PageHeader title="Product Feedback" navigation={() => navigation.goBack()} />
+      <PageHeader
+        title="Product Feedback"
+        navigation={() => navigation.goBack()}
+      />
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -69,37 +65,37 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
           nestedScrollEnabled={true}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }>
-         <View style={styles.bodyHeader}>
-                <Text style={styles.bodyHeaderTitle}>Recent Shared</Text>
-                <View style={styles.bodyHeaderIcon}>
-                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  <FilterModal
-                    visible={isModalVisible}
-                    onClose={() => setModalVisible(false)}
-                    onApply={() => setModalVisible(false)}>
-                    <Text
-                      onPress={() => setSelectedCategory('All')}
-                      style={{paddingVertical: 10}}>
-                      All
-                    </Text>
-                    <Text
-                      onPress={() => setSelectedCategory('Electronics')}
-                      style={{paddingVertical: 10}}>
-                      Electronics
-                    </Text>
-                    <Text
-                      onPress={() => setSelectedCategory('Books')}
-                      style={{paddingVertical: 10}}>
-                      Books
-                    </Text>
-                  </FilterModal>
-                  <TouchableOpacity onPress={() => setModalVisible(true)}>
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </TouchableOpacity>
-                </View>
-         </View>
-         <View>
+          }>
+          <View style={styles.bodyHeader}>
+            <Text style={styles.bodyHeaderTitle}>Recent Shared</Text>
+            <View style={styles.bodyHeaderIcon}>
+              <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
+              <FilterModal
+                visible={isModalVisible}
+                onClose={() => setModalVisible(false)}
+                onApply={() => setModalVisible(false)}>
+                <Text
+                  onPress={() => setSelectedCategory('All')}
+                  style={{paddingVertical: 10}}>
+                  All
+                </Text>
+                <Text
+                  onPress={() => setSelectedCategory('Electronics')}
+                  style={{paddingVertical: 10}}>
+                  Electronics
+                </Text>
+                <Text
+                  onPress={() => setSelectedCategory('Books')}
+                  style={{paddingVertical: 10}}>
+                  Books
+                </Text>
+              </FilterModal>
+              <TouchableOpacity onPress={() => setModalVisible(true)}>
+                <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View>
             <View style={styles.atteddanceCard}>
               <View style={styles.cardHeader}>
                 <View style={styles.timeSection}>
@@ -120,13 +116,15 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                       fontSize: Size.xsmd,
                       color: Colors.darkButton,
                       lineHeight: 18,
-                      marginBottom:5,
+                      marginBottom: 5,
                     }}>
                     Feedback no: FF/223467
                   </Text>
                   <Text style={styles.contentText}>Store name</Text>
                   <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>Feedback:  Packaging problem</Text>
+                  <Text style={styles.contentText}>
+                    Feedback: Packaging problem
+                  </Text>
                 </View>
               </View>
             </View>
@@ -150,13 +148,15 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                       fontSize: Size.xsmd,
                       color: Colors.darkButton,
                       lineHeight: 18,
-                      marginBottom:5,
+                      marginBottom: 5,
                     }}>
                     Feedback no: FF/223467
                   </Text>
                   <Text style={styles.contentText}>Store name</Text>
                   <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>Feedback:  Packaging problem</Text>
+                  <Text style={styles.contentText}>
+                    Feedback: Packaging problem
+                  </Text>
                 </View>
               </View>
             </View>
@@ -180,13 +180,15 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                       fontSize: Size.xsmd,
                       color: Colors.darkButton,
                       lineHeight: 18,
-                      marginBottom:5,
+                      marginBottom: 5,
                     }}>
                     Feedback no: FF/223467
                   </Text>
                   <Text style={styles.contentText}>Store name</Text>
                   <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>Feedback:  Packaging problem</Text>
+                  <Text style={styles.contentText}>
+                    Feedback: Packaging problem
+                  </Text>
                 </View>
               </View>
             </View>
@@ -210,13 +212,15 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                       fontSize: Size.xsmd,
                       color: Colors.darkButton,
                       lineHeight: 18,
-                      marginBottom:5,
+                      marginBottom: 5,
                     }}>
                     Feedback no: FF/223467
                   </Text>
                   <Text style={styles.contentText}>Store name</Text>
                   <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>Feedback:  Packaging problem</Text>
+                  <Text style={styles.contentText}>
+                    Feedback: Packaging problem
+                  </Text>
                 </View>
               </View>
             </View>
@@ -240,19 +244,20 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                       fontSize: Size.xsmd,
                       color: Colors.darkButton,
                       lineHeight: 18,
-                      marginBottom:5,
+                      marginBottom: 5,
                     }}>
                     Feedback no: FF/223467
                   </Text>
                   <Text style={styles.contentText}>Store name</Text>
                   <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>Feedback:  Packaging problem</Text>
+                  <Text style={styles.contentText}>
+                    Feedback: Packaging problem
+                  </Text>
                 </View>
               </View>
             </View>
-         </View>
+          </View>
         </ScrollView>
-
       )}
     </SafeAreaView>
   );
@@ -276,7 +281,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E4E9',
-    marginTop:20,
+    marginTop: 20,
   },
   bodyHeaderTitle: {
     color: Colors.darkButton,
@@ -291,7 +296,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
   },
-
 
   atteddanceCard: {
     display: 'flex',
@@ -408,6 +412,4 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     lineHeight: 20,
   },
-
-
 });

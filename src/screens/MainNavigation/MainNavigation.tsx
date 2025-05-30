@@ -12,7 +12,7 @@ const AppStack = createStackNavigator<MainNavigationStackParamList>();
 const MainNavigation = () => {
   const token = 'hhfuyf';
   const isAuthenticated = !!token;
-  const userType = true ? 'SO' : 'PROMOTER';
+  const userType = false ? 'SO' : 'PROMOTER';
 
   return isAuthenticated && userType ? (
     <AppStackNavigator userType={userType} />

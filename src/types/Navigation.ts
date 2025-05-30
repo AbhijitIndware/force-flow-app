@@ -12,7 +12,7 @@ export type PromoterAppStackParamList = {
   SalesScreen: undefined;
   StockScreen: undefined;
   IncentiveScreen: undefined;
-  CheckinScreen: undefined;
+  CheckingScreen: undefined;
   DownloadScreen: undefined;
   ProductFeedbackScreen: undefined;
   ProfileScreen: undefined;
