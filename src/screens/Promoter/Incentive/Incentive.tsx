@@ -262,15 +262,15 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                     </Text>
                   </View>
                 </View>
-                <RangeSlider
-                  min={0}
-                  max={100}
-                  value={value}
-                  onChange={setValue}
-                  color={Colors.primary}
-                />
                 <View style={styles.container}>
                   <View style={styles.earningRange}>
+                    <RangeSlider
+                      min={0}
+                      max={100}
+                      value={value}
+                      onChange={setValue}
+                      color={Colors.sucess}
+                    />
                     <Text style={styles.earningRangeText}>
                       Earning Tips: Clear Aging stock worth ₹4590
                     </Text>
@@ -443,6 +443,13 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                 </View>
                 <View style={styles.container}>
                   <View style={[styles.earningRange, {paddingHorizontal: 15}]}>
+                    <RangeSlider
+                      min={0}
+                      max={100}
+                      value={value}
+                      onChange={setValue}
+                      color="#E9CA2A"
+                    />
                     <Text
                       style={[
                         styles.earningRangeText,

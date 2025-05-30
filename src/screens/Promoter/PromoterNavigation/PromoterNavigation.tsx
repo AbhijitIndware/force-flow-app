@@ -7,6 +7,10 @@ import {PromoterAppStackParamList} from '../../../types/Navigation';
 import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
+import CheckinScreen from '../CheckinScreen/CheckinScreen';
+import DownloadScreen from '../DownloadScreen/DownloadScreen';
+import ProductFeedbackScreen from '../ProductFeedbackScreen/ProductfeedbackScreen';
+import ProfileScreen from '../ProfileScreen/ProfileScreen';
 
 const Stack = createNativeStackNavigator<PromoterAppStackParamList>();
 
@@ -42,6 +46,26 @@ const PromoterNavigation = () => {
         name="IncentiveScreen"
         component={IncentiveScreen}
         options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="CheckinScreen"
+        component={CheckinScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="DownloadScreen"
+        component={DownloadScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="ProductFeedbackScreen"
+        component={ProductFeedbackScreen}
+        options={{headerShown:false}}
+      />
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
+        options={{headerShown:false}}
       />
     </Stack.Navigator>
   );
