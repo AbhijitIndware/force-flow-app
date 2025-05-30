@@ -9,22 +9,22 @@ import {
   Text,
   View,
 } from 'react-native';
-import {flexCol} from '../../utils/styles';
-import {Colors} from '../../utils/colors';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../components/ui/LoadingScreen';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 import React, {useCallback, useState} from 'react';
-import {AppStackParamList} from '../../types/Navigation';
-import {Fonts} from '../../constants';
-import {Size} from '../../utils/fontSize';
+import {PromoterAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {Tab, TabView} from '@rneui/themed';
-import RangeSlider from '../../components/ui/rangeSlider';
-import IncentiveGraph from '../../components/incentive/incentive-graph';
+import RangeSlider from '../../../components/ui/rangeSlider';
+import IncentiveGraph from '../../../components/incentive/incentive-graph';
 
 const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
-  AppStackParamList,
+  PromoterAppStackParamList,
   'IncentiveScreen'
 >;
 
@@ -160,7 +160,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                 <View style={styles.insantiveCounter}>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/target.png')}
+                      source={require('../../../assets/images/target.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />
@@ -185,7 +185,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                   </View>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/trophy.png')}
+                      source={require('../../../assets/images/trophy.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />
@@ -224,7 +224,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                   </View>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/money.png')}
+                      source={require('../../../assets/images/money.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />
@@ -339,7 +339,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                 <View style={styles.insantiveCounter}>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/target.png')}
+                      source={require('../../../assets/images/target.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />
@@ -364,7 +364,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                   </View>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/trophy.png')}
+                      source={require('../../../assets/images/trophy.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />
@@ -403,7 +403,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                   </View>
                   <View style={styles.insantiveCounterBox}>
                     <Image
-                      source={require('../../assets/images/money.png')}
+                      source={require('../../../assets/images/money.png')}
                       resizeMode="cover"
                       style={styles.Icon}
                     />

@@ -1,13 +1,22 @@
 //Stack ParamList Type
-export type AppStackParamList = {
+export type MainNavigationStackParamList = {
+  PromoterNavigation: undefined;
+  SoNavigation: undefined;
   LoginScreen: undefined;
   SignupScreen: undefined;
+};
+export type PromoterAppStackParamList = {
   Home: undefined;
   HomeScreen: undefined;
-  AttendanceScreen:undefined;
-  SalesScreen:undefined;
-  StockScreen:undefined;
-  IncentiveScreen:undefined;
+  AttendanceScreen: undefined;
+  SalesScreen: undefined;
+  StockScreen: undefined;
+  IncentiveScreen: undefined;
+};
+
+export type SoAppStackParamList = {
+  Home: undefined;
+  HomeScreen: undefined;
 };
 
 export type menuType = {

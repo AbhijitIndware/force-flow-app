@@ -9,14 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../utils/styles';
-import {Colors} from '../../utils/colors';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../components/ui/LoadingScreen';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 import React, {useCallback, useState} from 'react';
-import {AppStackParamList} from '../../types/Navigation';
-import {Fonts} from '../../constants';
-import {Size} from '../../utils/fontSize';
+import {PromoterAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   Banknote,
   CalendarCheck,
@@ -25,13 +25,13 @@ import {
   Funnel,
   Search,
 } from 'lucide-react-native';
-import FilterModal from '../../components/ui/filterModal';
+import FilterModal from '../../../components/ui/filterModal';
 //import { fonts } from '@rneui/base';
 
 const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
-  AppStackParamList,
+  PromoterAppStackParamList,
   'SalesScreen'
 >;
 

@@ -17,27 +17,18 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import HomeScreen from './HomeScreen';
-import {Colors} from '../../utils/colors';
-import {Fonts} from '../../constants';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-import {useAppSelector} from '../../store/hook';
-import {flexCol} from '../../utils/styles';
-import {AppStackParamList} from '../../types/Navigation';
+import {useAppSelector} from '../../../store/hook';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {House} from 'lucide-react-native';
-import SalesScreen from '../Sales/Sales';
-import StockScreen from '../Stock/Stock';
-import IncentiveScreen from '../Incentive/Incentive';
-import {useState} from 'react';
-import {Modal} from 'react-native';
-import MoreOptionsModal from '../../components/home/MoreOption';
 
 const {width} = Dimensions.get('window');
-type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'Home'>;
+type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
 
 type Props = {
   navigation: NavigationProp;
@@ -141,7 +132,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     <View style={styles.headerTitleContainer}>
       <View>
         <Image
-          source={require('../../assets/images/brand.png')}
+          source={require('../../../assets/images/brand.png')}
           resizeMode="cover"
           style={styles.logoImage}
         />
@@ -155,7 +146,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo}>
           <Image
-            source={require('../../assets/images/user.jpg')}
+            source={require('../../../assets/images/user.jpg')}
             resizeMode="cover"
             style={styles.avtarImage}
           />
@@ -166,21 +157,6 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 };
 
 const Home = ({navigation, route}: Props) => {
-  const [isModalVisible, setModalVisible] = useState(false);
-
-  const handleMorePress = () => {
-    setModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-  };
-
-  const menuItems = [
-    {id: '1', title: 'Profile', onPress: () => console.log('Profile')},
-    {id: '2', title: 'Settings', onPress: () => console.log('Settings')},
-    {id: '3', title: 'Logout', onPress: () => console.log('Logout')},
-  ];
   return (
     <>
       <Tab.Navigator
@@ -215,10 +191,10 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
         <Tab.Screen
-          name="Sales"
-          component={SalesScreen}
+          name="Partners"
+          component={HomeScreen}
           options={{
-            tabBarLabel: 'Sales',
+            tabBarLabel: 'Partners',
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Ionicons
@@ -231,10 +207,10 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
         <Tab.Screen
-          name="Incentives"
-          component={IncentiveScreen}
+          name="Sales"
+          component={HomeScreen}
           options={{
-            tabBarLabel: 'Incentives',
+            tabBarLabel: 'Sales',
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Ionicons
@@ -247,10 +223,10 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
         <Tab.Screen
-          name="Stock"
-          component={StockScreen}
+          name="Activity"
+          component={HomeScreen}
           options={{
-            tabBarLabel: 'Stock',
+            tabBarLabel: 'Activity',
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Feather
@@ -263,16 +239,10 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
         <Tab.Screen
-          name="More"
+          name="Orders"
           component={HomeScreen}
-          listeners={{
-            tabPress: e => {
-              // e.preventDefault(); // Prevent default navigation
-              handleMorePress(); // Open modal
-            },
-          }}
           options={{
-            tabBarLabel: 'More',
+            tabBarLabel: 'Orders',
             tabBarIcon: ({focused}) => (
               <MaterialCommunityIcons
                 name="text"
@@ -283,11 +253,6 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
       </Tab.Navigator>
-      <MoreOptionsModal
-        visible={isModalVisible}
-        onClose={handleCloseModal}
-        menuItems={menuItems}
-      />
     </>
   );
 };
