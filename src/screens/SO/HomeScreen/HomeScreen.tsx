@@ -20,17 +20,17 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Size} from '../../../utils/fontSize';
 import {Divider} from '@rneui/themed';
 import {
-  Banknote,
-  CalendarCheck,
-  CalendarCheck2,
-  ChartCandlestick,
-  FilePenLine,
-  MessageSquareQuote,
+  ArrowRight,
+  BaggageClaim,
+  ClipboardPenLine,
+  FilePlus2,
+  Hotel,
+  MapPinCheck,
   MoveDown,
   MoveUp,
-  Network,
   Package,
-  UserRoundCog,
+  ShoppingCart,
+  UsersRound,
 } from 'lucide-react-native';
 
 const {width} = Dimensions.get('window');
@@ -74,102 +74,64 @@ const HomeScreen = ({navigation, route}: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={styles.welcomBox}>
-              <Text style={styles.welcomeText}>
-                Hello <Text style={styles.name}>Santanu</Text>
-              </Text>
-              <View style={styles.linkBox}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>21</Text>
-                  <Text style={styles.monthText}>APR</Text>
+            <View style={{position:'relative', marginBottom:-100}}>
+              <View style={styles.welcomBox}>
+                <Text style={styles.welcomeText}>
+                  Hello <Text style={styles.name}>Santanu</Text>
+                </Text>
+                <View style={styles.linkBox}>
+                  <View style={styles.dateBox}>
+                    <Text style={styles.dateText}>21</Text>
+                    <Text style={styles.monthText}>APR</Text>
+                  </View>
+                  <View style={styles.linkContent}>
+                    <Text style={styles.paraText}>
+                      Last check-in at 11:05 pm.
+                    </Text>
+                    <Text style={styles.paraText}>
+                      Store- New mart
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.linkContent}>
-                  <Text style={styles.paraText}>
-                    Last check-in at 11:05 pm.
-                  </Text>
+                <TouchableOpacity style={styles.checkinButton}>
+                  <Text style={styles.checkinButtonText}>Check Out from New mart</Text>
                   <Ionicons
                     name="chevron-forward-circle-sharp"
                     size={24}
                     color={Colors.white}
                   />
-                </View>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.planLink}>
+                <TouchableOpacity style={{flexDirection:'row', alignItems:'center'}} onPress={() => navigation.navigate('AttendanceScreen')}>
+                  <Text style={{fontFamily:Fonts.regular, fontSize:Size.sm,color:Colors.darkButton}}>See todays beat plan</Text>
+                  <ArrowRight
+                  strokeWidth={2}
+                  color={Colors.darkButton}
+                  size={20}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
-
-            <TouchableOpacity style={styles.checkinButton}>
-              <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-              <Text style={styles.checkinButtonText}>Check-in</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
-              <View style={styles.countBoxIcon}>
-                <CalendarCheck2 strokeWidth={1.4} color={Colors.white} />
+              <View style={[styles.countBoxIcon,{backgroundColor:Colors.holdLight}]}>
+                <ClipboardPenLine  strokeWidth={1.4} color={Colors.orange} />
               </View>
-              <Text style={styles.countBoxTitle}>Attendance</Text>
-              <Text style={styles.countBoxDay}>24 Days</Text>
+              <Text style={styles.countBoxDay}>50</Text>
+              <Text style={styles.countBoxTitle}>Total call</Text>
             </View>
             <View style={styles.countBox}>
-              <View style={styles.countBoxIcon}>
-                <Network strokeWidth={1.4} color={Colors.white} />
+              <View style={[styles.countBoxIcon,{backgroundColor:Colors.lightSuccess}]}>
+                <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
-              <Text style={styles.countBoxTitle}>AON</Text>
-              <Text style={styles.countBoxDay}>1244 Days</Text>
+              <Text style={styles.countBoxDay}>12</Text>
+              <Text style={styles.countBoxTitle}>Productive Call</Text>
             </View>
           </View>
-
-          <View
-            style={[
-              styles.container,
-              {backgroundColor: Colors.transparent, paddingTop: 10},
-            ]}>
-            <TouchableOpacity
-              style={[
-                styles.linkBox,
-                {backgroundColor: Colors.orange, padding: 7, borderRadius: 18},
-              ]}>
-              <View
-                style={[
-                  styles.dateBox,
-                  {
-                    backgroundColor: Colors.Orangelight,
-                    borderTopWidth: 1,
-                    borderLeftWidth: 1,
-                    borderRightWidth: 1,
-                    borderColor: '#FFBF83',
-                    borderBottomWidth: 0,
-                    width: 60,
-                    height: 60,
-                    borderRadius: 18,
-                  },
-                ]}>
-                <Ionicons name="cube-outline" size={28} color={Colors.white} />
-              </View>
-              <View style={styles.linkContent}>
-                <View>
-                  <Text style={styles.paraText}>Stock Valuation</Text>
-                  <Text
-                    style={[
-                      styles.paraText,
-                      {
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.md,
-                        lineHeight: 20,
-                      },
-                    ]}>
-                    <Text style={{fontFamily: Fonts.customefont}}>₹</Text>2115
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward-circle-sharp"
-                  size={24}
-                  color={Colors.white}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, {paddingTop: 35}]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
               <Text style={{fontFamily: Fonts.regular}}>(Qty)</Text>
@@ -208,7 +170,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             </View>
           </View>
           <View style={[styles.container, {paddingTop: 20}]}>
-            <Text style={styles.SectionHeading}>Incentive Status</Text>
+            <Text style={styles.SectionHeading}>Team Performance</Text>
             <View
               style={[
                 styles.dataBox,
@@ -220,80 +182,46 @@ const HomeScreen = ({navigation, route}: Props) => {
               ]}>
               <View style={styles.incentiveContent}>
                 <View style={styles.iconbox}>
-                  <Banknote strokeWidth={2} color={Colors.white} size={30} />
+                  <UsersRound strokeWidth={2} color={Colors.white} size={30} />
                 </View>
                 <View>
                   <Text style={styles.quantityCount}>₹2115</Text>
-                  <Text style={styles.quantitytime}>Earned this month</Text>
+                  <Text style={styles.quantitytime}>Sales this month</Text>
                 </View>
               </View>
               <View
                 style={[
                   styles.positionValue,
                   {
-                    flexDirection: 'column',
+                    flexDirection: 'row',
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginTop: 20,
+                    height: 40,
+                    borderStyle: 'dashed',
+                    borderWidth: 1,
+                    borderColor: Colors.sucess,
+                    backgroundColor:'#C8F8D1',
+                    borderRadius:8,
+                    width:'100%',
                   },
                 ]}>
                 <Text
                   style={[
                     styles.incressValu,
-                    {
-                      width: width * 0.82,
-                      height: 40,
-                      textAlign: 'center',
-                      lineHeight: 34,
-                      borderStyle: 'dashed',
-                      borderWidth: 1,
-                      borderColor: Colors.sucess,
-                    },
                   ]}>
-                  See how you can earn upto ₹15999
+                  See how your team is doing
                 </Text>
+                <Ionicons
+                  name="chevron-forward-circle-sharp"
+                  size={24}
+                  color={Colors.sucess}
+                />
               </View>
             </View>
           </View>
-          <View style={[styles.container, {paddingTop: 20}]}>
-            <Text style={styles.SectionHeading}>Are you in a new store?</Text>
-            <View
-              style={{
-                backgroundColor: Colors.white,
-                borderRadius: 20,
-                paddingVertical: 20,
-                marginBottom: 30,
-              }}>
-              <TouchableOpacity style={styles.listLink}>
-                <Text style={styles.listLinkText}>
-                  Set up the opening stock of your store
-                </Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={12}
-                    color={Colors.darkButton}
-                  />
-                </View>
-              </TouchableOpacity>
-              <Divider
-                width={1}
-                color={Colors.lightGray}
-                style={{borderStyle: 'dashed'}}
-              />
-              <TouchableOpacity style={styles.listLink}>
-                <Text style={styles.listLinkText}>Check the user manual </Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={12}
-                    color={Colors.darkButton}
-                  />
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={[styles.LinkSection, {paddingVertical: 15}]}>
+
+          <View style={[styles.LinkSection, {paddingVertical: 15, marginTop:20}]}>
             <Text
               style={[
                 styles.SectionHeading,
@@ -305,11 +233,18 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
                 ]}>
-                <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
+                <Hotel strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Register Sales</Text>
+              <Text style={styles.linkTitle}>Add Store</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -320,26 +255,18 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                 {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>New Stock Entry</Text>
-            </View>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
-            />
-            <View style={styles.IconlinkBox}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
-                ]}>
-                <FilePenLine strokeWidth={2} color={Colors.white} size={20} />
+              <Text style={styles.linkTitle}>Add Distributor</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
               </View>
-              <Text style={styles.linkTitle}>Stock Requisition</Text>
             </View>
             <Divider
               width={1}
@@ -350,15 +277,44 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
                 ]}>
-                <ChartCandlestick
+                <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Sales Order</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </View>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
+            />
+            <View style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                ]}>
+                <ShoppingCart
                   strokeWidth={2}
                   color={Colors.white}
                   size={20}
                 />
               </View>
-              <Text style={styles.linkTitle}>Stock Taking</Text>
+              <Text style={styles.linkTitle}>Purchase Order</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
             <Divider
               width={1}
@@ -369,15 +325,22 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
                 ]}>
-                <MessageSquareQuote
+                <FilePlus2
                   strokeWidth={2}
                   color={Colors.white}
                   size={20}
                 />
               </View>
-              <Text style={styles.linkTitle}>Feedback</Text>
+              <Text style={styles.linkTitle}>Add PJP</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -425,6 +388,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingVertical: 20,
     marginTop: 10,
+    borderBottomRightRadius:0,
+    borderBottomLeftRadius:0,
+    position:'relative',
   },
 
   linkBox: {
@@ -432,15 +398,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: Colors.Orangelight,
     borderRadius: 15,
-    padding: 12,
     marginTop: 8,
     gap: 10,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#FFBF83',
   },
 
   dateBox: {
@@ -473,12 +433,19 @@ const styles = StyleSheet.create({
 
   linkContent: {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection:'column',
+    justifyContent: 'center',
     color: Colors.white,
-    gap: 5,
-    alignItems: 'center',
+    gap: 1,
+    alignItems: 'flex-start',
     width: '80%',
+  },
+
+  planLink:{
+    backgroundColor:Colors.white,
+    padding:20,
+    borderBottomLeftRadius:15,
+    borderBottomRightRadius:15,
   },
 
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
@@ -492,8 +459,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 18,
     position: 'relative',
-    bottom: -15,
     gap: 5,
+    marginTop:15,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,
@@ -506,7 +473,7 @@ const styles = StyleSheet.create({
   //countBox-section css start
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingTop: 35,
+    paddingTop: 100,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -528,8 +495,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 100,
+    borderRadius:15,
     marginBottom: 10,
+    marginLeft:'auto',
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
@@ -539,8 +507,10 @@ const styles = StyleSheet.create({
   countBoxDay: {
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
-    fontSize: Size.xsmd,
-    lineHeight: 18,
+    fontSize: Size.xslg,
+    lineHeight: 20,
+    position:'relative',
+    marginTop:-25,
   },
   //countBox-section css end
 
@@ -568,7 +538,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.lightSuccess,
     color: Colors.sucess,
     paddingHorizontal: 15,
     paddingVertical: 4,
@@ -614,7 +583,7 @@ const styles = StyleSheet.create({
   iconbox: {
     width: 60,
     height: 60,
-    backgroundColor: Colors.darkButton,
+    backgroundColor: Colors.sucess,
     borderRadius: 18,
     display: 'flex',
     flexDirection: 'row',

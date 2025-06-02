@@ -3,6 +3,11 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../HomeScreen/HomeScreen';
 import Home from '../HomeScreen/Home';
 import {SoAppStackParamList} from '../../../types/Navigation';
+import AttendanceScreen from '../Attendance/AttendanceScreen';
+import SalesScreen from '../Sales/Sales';
+import ActivityScreen from '../ActivityScreen/ActivityScreen';
+import OrdersScreen from '../OrdersScreen/OrdersScreen';
+import PartnersScreen from '../PartnersScreen/PartnersScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -17,6 +22,31 @@ const SoNavigation = () => {
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
+        options={{headerShown: false}}
+      />
+       <Stack.Screen
+        name="AttendanceScreen"
+        component={AttendanceScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="SalesScreen"
+        component={SalesScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ActivityScreen"
+        component={ActivityScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="OrdersScreen"
+        component={OrdersScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="PartnersScreen"
+        component={ PartnersScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

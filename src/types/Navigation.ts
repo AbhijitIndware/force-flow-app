@@ -21,6 +21,11 @@ export type PromoterAppStackParamList = {
 export type SoAppStackParamList = {
   Home: undefined;
   HomeScreen: undefined;
+  AttendanceScreen: undefined;
+  SalesScreen: undefined;
+  ActivityScreen:undefined;
+  OrdersScreen:undefined;
+  PartnersScreen:undefined;
 };
 
 export type menuType = {

@@ -19,13 +19,15 @@ import {
 import HomeScreen from './HomeScreen';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import {useAppSelector} from '../../../store/hook';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {House} from 'lucide-react-native';
+import {ChartNoAxesCombined, Handshake, House, Lightbulb, ShoppingCart} from 'lucide-react-native';
+import SalesScreen from '../Sales/Sales';
+import ActivityScreen from '../ActivityScreen/ActivityScreen';
+import OrdersScreen from '../OrdersScreen/OrdersScreen';
+import PartnersScreen from '../PartnersScreen/PartnersScreen';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
@@ -192,15 +194,20 @@ const Home = ({navigation, route}: Props) => {
         />
         <Tab.Screen
           name="Partners"
-          component={HomeScreen}
+          component={ PartnersScreen}
           options={{
             tabBarLabel: 'Partners',
             tabBarIcon: ({color, size, focused}) => {
               return (
-                <Ionicons
-                  name="stats-chart-outline"
+                // <Ionicons
+                //   name="stats-chart-outline"
+                //   color={focused ? Colors.white : Colors.white}
+                //   size={28}
+                // />
+                <Handshake
+                  strokeWidth={2}
                   color={focused ? Colors.white : Colors.white}
-                  size={28}
+                  size={25}
                 />
               );
             },
@@ -208,13 +215,18 @@ const Home = ({navigation, route}: Props) => {
         />
         <Tab.Screen
           name="Sales"
-          component={HomeScreen}
+          component={SalesScreen}
           options={{
             tabBarLabel: 'Sales',
             tabBarIcon: ({color, size, focused}) => {
               return (
-                <Ionicons
-                  name="server-outline"
+                // <Ionicons
+                //   name="server-outline"
+                //   color={focused ? Colors.white : Colors.white}
+                //   size={25}
+                // />
+                <ChartNoAxesCombined
+                  strokeWidth={2}
                   color={focused ? Colors.white : Colors.white}
                   size={25}
                 />
@@ -224,15 +236,20 @@ const Home = ({navigation, route}: Props) => {
         />
         <Tab.Screen
           name="Activity"
-          component={HomeScreen}
+          component={ActivityScreen}
           options={{
             tabBarLabel: 'Activity',
             tabBarIcon: ({color, size, focused}) => {
               return (
-                <Feather
-                  name="box"
+                // <Feather
+                //   name="box"
+                //   color={focused ? Colors.white : Colors.white}
+                //   size={28}
+                // />
+                <Lightbulb
+                  strokeWidth={2}
                   color={focused ? Colors.white : Colors.white}
-                  size={28}
+                  size={25}
                 />
               );
             },
@@ -240,15 +257,18 @@ const Home = ({navigation, route}: Props) => {
         />
         <Tab.Screen
           name="Orders"
-          component={HomeScreen}
+          component={OrdersScreen}
           options={{
             tabBarLabel: 'Orders',
             tabBarIcon: ({focused}) => (
-              <MaterialCommunityIcons
-                name="text"
-                color={focused ? Colors.white : Colors.white}
-                size={28}
-              />
+              // <MaterialCommunityIcons
+              //   name="text"
+              //   color={focused ? Colors.white : Colors.white}
+              //   size={28}
+              // />
+              <ShoppingCart strokeWidth={2}
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}/>
             ),
           }}
         />
