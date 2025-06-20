@@ -1,9 +1,31 @@
-import {ApiResponse} from './Navigation';
-
 export interface ILogin {
-  email: string;
-  password: string;
+  data: {
+    usr: string;
+    pwd: string;
+  };
 }
-export type RLogin = Pick<ApiResponse, 'message' | 'statusCode'> & {
-  data: null;
+export type RLogin = {
+  message: {
+    success: boolean;
+    message: string;
+    user: {
+      email: string;
+      username: string;
+      full_name: string;
+      roles: string[];
+      sid: string;
+    };
+    api_credentials: {
+      api_key: string;
+      api_secret: string;
+    };
+    employee: {
+      id: string;
+      designation: string;
+      company_email: string;
+      department: string;
+      branch: string;
+      personal_email: string;
+    };
+  };
 };

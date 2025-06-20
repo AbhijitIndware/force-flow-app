@@ -8,6 +8,7 @@ import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
+import ProfileScreen from '../ProfileScreen/ProfileScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -24,7 +25,7 @@ const SoNavigation = () => {
         component={HomeScreen}
         options={{headerShown: false}}
       />
-       <Stack.Screen
+      <Stack.Screen
         name="AttendanceScreen"
         component={AttendanceScreen}
         options={{headerShown: false}}
@@ -46,7 +47,12 @@ const SoNavigation = () => {
       />
       <Stack.Screen
         name="PartnersScreen"
-        component={ PartnersScreen}
+        component={PartnersScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ProfileScreen"
+        component={ProfileScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

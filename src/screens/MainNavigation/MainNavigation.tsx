@@ -5,14 +5,18 @@ import {MainNavigationStackParamList} from '../../types/Navigation';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
+import {useAppSelector} from '../../store/hook';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
 
 const MainNavigation = () => {
-  const token = 'hhfuyf';
-  const isAuthenticated = !!token;
-  const userType = true ? 'SO' : 'PROMOTER';
+  const sId = useAppSelector(state => state?.persistedReducer?.authSlice?.sId);
+  const isAuthenticated = !!sId;
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const userType = employee?.designation !== 'Promoter' ? 'SO' : 'PROMOTER';
 
   return isAuthenticated && userType ? (
     <AppStackNavigator userType={userType} />

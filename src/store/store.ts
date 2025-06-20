@@ -9,7 +9,7 @@ const persistConfig = {
 };
 
 const authReducer = combineReducers({
-  registerSlice: authSlice.reducer,
+  authSlice: authSlice.reducer,
 });
 const persistedReducer = persistReducer(persistConfig, authReducer);
 

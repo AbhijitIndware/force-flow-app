@@ -32,6 +32,7 @@ import {
   ShoppingCart,
   UsersRound,
 } from 'lucide-react-native';
+import {useAppSelector} from '../../../store/hook';
 
 const {width} = Dimensions.get('window');
 
@@ -45,9 +46,11 @@ type Props = {
   route: any;
 };
 
-const HomeScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const HomeScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -74,10 +77,10 @@ const HomeScreen = ({navigation, route}: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{position:'relative', marginBottom:-100}}>
+            <View style={{position: 'relative', marginBottom: -100}}>
               <View style={styles.welcomBox}>
                 <Text style={styles.welcomeText}>
-                  Hello <Text style={styles.name}>Santanu</Text>
+                  Hello <Text style={styles.name}>{user?.full_name}</Text>
                 </Text>
                 <View style={styles.linkBox}>
                   <View style={styles.dateBox}>
@@ -88,13 +91,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                     <Text style={styles.paraText}>
                       Last check-in at 11:05 pm.
                     </Text>
-                    <Text style={styles.paraText}>
-                      Store- New mart
-                    </Text>
+                    <Text style={styles.paraText}>Store- New mart</Text>
                   </View>
                 </View>
                 <TouchableOpacity style={styles.checkinButton}>
-                  <Text style={styles.checkinButtonText}>Check Out from New mart</Text>
+                  <Text style={styles.checkinButtonText}>
+                    Check Out from New mart
+                  </Text>
                   <Ionicons
                     name="chevron-forward-circle-sharp"
                     size={24}
@@ -103,12 +106,21 @@ const HomeScreen = ({navigation, route}: Props) => {
                 </TouchableOpacity>
               </View>
               <View style={styles.planLink}>
-                <TouchableOpacity style={{flexDirection:'row', alignItems:'center'}} onPress={() => navigation.navigate('AttendanceScreen')}>
-                  <Text style={{fontFamily:Fonts.regular, fontSize:Size.sm,color:Colors.darkButton}}>See todays beat plan</Text>
+                <TouchableOpacity
+                  style={{flexDirection: 'row', alignItems: 'center'}}
+                  onPress={() => navigation.navigate('AttendanceScreen')}>
+                  <Text
+                    style={{
+                      fontFamily: Fonts.regular,
+                      fontSize: Size.sm,
+                      color: Colors.darkButton,
+                    }}>
+                    See todays beat plan
+                  </Text>
                   <ArrowRight
-                  strokeWidth={2}
-                  color={Colors.darkButton}
-                  size={20}
+                    strokeWidth={2}
+                    color={Colors.darkButton}
+                    size={20}
                   />
                 </TouchableOpacity>
               </View>
@@ -117,14 +129,22 @@ const HomeScreen = ({navigation, route}: Props) => {
 
           <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
-              <View style={[styles.countBoxIcon,{backgroundColor:Colors.holdLight}]}>
-                <ClipboardPenLine  strokeWidth={1.4} color={Colors.orange} />
+              <View
+                style={[
+                  styles.countBoxIcon,
+                  {backgroundColor: Colors.holdLight},
+                ]}>
+                <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
               </View>
               <Text style={styles.countBoxDay}>50</Text>
               <Text style={styles.countBoxTitle}>Total call</Text>
             </View>
             <View style={styles.countBox}>
-              <View style={[styles.countBoxIcon,{backgroundColor:Colors.lightSuccess}]}>
+              <View
+                style={[
+                  styles.countBoxIcon,
+                  {backgroundColor: Colors.lightSuccess},
+                ]}>
                 <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
               <Text style={styles.countBoxDay}>12</Text>
@@ -201,15 +221,12 @@ const HomeScreen = ({navigation, route}: Props) => {
                     borderStyle: 'dashed',
                     borderWidth: 1,
                     borderColor: Colors.sucess,
-                    backgroundColor:'#C8F8D1',
-                    borderRadius:8,
-                    width:'100%',
+                    backgroundColor: '#C8F8D1',
+                    borderRadius: 8,
+                    width: '100%',
                   },
                 ]}>
-                <Text
-                  style={[
-                    styles.incressValu,
-                  ]}>
+                <Text style={[styles.incressValu]}>
                   See how your team is doing
                 </Text>
                 <Ionicons
@@ -221,7 +238,8 @@ const HomeScreen = ({navigation, route}: Props) => {
             </View>
           </View>
 
-          <View style={[styles.LinkSection, {paddingVertical: 15, marginTop:20}]}>
+          <View
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 20}]}>
             <Text
               style={[
                 styles.SectionHeading,
@@ -233,7 +251,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
                 ]}>
                 <Hotel strokeWidth={2} color={Colors.white} size={20} />
               </View>
@@ -255,7 +278,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                 {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
@@ -277,7 +305,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
                 ]}>
                 <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
               </View>
@@ -299,13 +332,14 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
                 ]}>
-                <ShoppingCart
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={20}
-                />
+                <ShoppingCart strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Purchase Order</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
@@ -325,13 +359,14 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10, backgroundColor:Colors.darkButton},
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
                 ]}>
-                <FilePlus2
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={20}
-                />
+                <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add PJP</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
@@ -388,9 +423,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingVertical: 20,
     marginTop: 10,
-    borderBottomRightRadius:0,
-    borderBottomLeftRadius:0,
-    position:'relative',
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
+    position: 'relative',
   },
 
   linkBox: {
@@ -433,7 +468,7 @@ const styles = StyleSheet.create({
 
   linkContent: {
     display: 'flex',
-    flexDirection:'column',
+    flexDirection: 'column',
     justifyContent: 'center',
     color: Colors.white,
     gap: 1,
@@ -441,11 +476,11 @@ const styles = StyleSheet.create({
     width: '80%',
   },
 
-  planLink:{
-    backgroundColor:Colors.white,
-    padding:20,
-    borderBottomLeftRadius:15,
-    borderBottomRightRadius:15,
+  planLink: {
+    backgroundColor: Colors.white,
+    padding: 20,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
   },
 
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
@@ -460,7 +495,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     position: 'relative',
     gap: 5,
-    marginTop:15,
+    marginTop: 15,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,
@@ -495,9 +530,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius:15,
+    borderRadius: 15,
     marginBottom: 10,
-    marginLeft:'auto',
+    marginLeft: 'auto',
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
@@ -509,8 +544,8 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.xslg,
     lineHeight: 20,
-    position:'relative',
-    marginTop:-25,
+    position: 'relative',
+    marginTop: -25,
   },
   //countBox-section css end
 

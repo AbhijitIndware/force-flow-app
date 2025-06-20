@@ -20,14 +20,23 @@ import HomeScreen from './HomeScreen';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import {useAppSelector} from '../../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {ChartNoAxesCombined, Handshake, House, Lightbulb, ShoppingCart} from 'lucide-react-native';
+import {
+  ChartNoAxesCombined,
+  Handshake,
+  House,
+  Lightbulb,
+  ShoppingCart,
+} from 'lucide-react-native';
 import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
+import {Modal} from 'react-native';
+import {useState} from 'react';
+import {logout} from '../../../features/auth/auth';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
@@ -126,10 +135,6 @@ function MyTabBar({state, descriptors, navigation}: any) {
 }
 
 const CustomHeader = (props: BottomTabHeaderProps) => {
-  const userData = useAppSelector(
-    state => state?.persistedReducer?.registerSlice?.data,
-  );
-  const userRole = userData?.role?.name ?? 'User';
   return (
     <View style={styles.headerTitleContainer}>
       <View>
@@ -139,6 +144,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           style={styles.logoImage}
         />
       </View>
+
       <View style={styles.alignment}>
         <TouchableOpacity style={styles.notification}>
           <View style={styles.notificationBatch}>
@@ -146,7 +152,10 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.userInfo}>
+
+        <TouchableOpacity
+          style={styles.userInfo}
+          onPress={() => props.navigation.navigate('ProfileScreen')}>
           <Image
             source={require('../../../assets/images/user.jpg')}
             resizeMode="cover"
@@ -194,7 +203,7 @@ const Home = ({navigation, route}: Props) => {
         />
         <Tab.Screen
           name="Partners"
-          component={ PartnersScreen}
+          component={PartnersScreen}
           options={{
             tabBarLabel: 'Partners',
             tabBarIcon: ({color, size, focused}) => {
@@ -266,9 +275,11 @@ const Home = ({navigation, route}: Props) => {
               //   color={focused ? Colors.white : Colors.white}
               //   size={28}
               // />
-              <ShoppingCart strokeWidth={2}
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}/>
+              <ShoppingCart
+                strokeWidth={2}
+                color={focused ? Colors.white : Colors.white}
+                size={25}
+              />
             ),
           }}
         />
@@ -283,7 +294,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
-    paddingTop: 35,
+    paddingTop: 15,
     paddingBottom: 15,
     width: '100%',
     flexDirection: 'row',

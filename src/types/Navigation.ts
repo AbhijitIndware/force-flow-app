@@ -23,9 +23,10 @@ export type SoAppStackParamList = {
   HomeScreen: undefined;
   AttendanceScreen: undefined;
   SalesScreen: undefined;
-  ActivityScreen:undefined;
-  OrdersScreen:undefined;
-  PartnersScreen:undefined;
+  ActivityScreen: undefined;
+  OrdersScreen: undefined;
+  PartnersScreen: undefined;
+  ProfileScreen: undefined;
 };
 
 export type menuType = {

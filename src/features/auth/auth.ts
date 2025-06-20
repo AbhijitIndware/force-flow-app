@@ -3,10 +3,7 @@ import {createSlice} from '@reduxjs/toolkit';
 import {apiBaseUrl} from '../apiBaseUrl.js';
 import {ILogin, RLogin} from '../../types/authType';
 
-let payload: any;
-let token: null | string = null;
-
-//Registration api calling
+//Auth api calling
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
@@ -16,20 +13,10 @@ export const authApi = createApi({
   endpoints: builder => ({
     login: builder.mutation<RLogin, ILogin>({
       query: body => ({
-        url: '/login',
+        url: '/method/salesforce_management.mobile_app_apis.authentications.login.login',
         method: 'POST',
         body,
       }),
-      transformResponse: (response, meta) => {
-        const _token = meta?.response?.headers?.get('authorization');
-        // const decodedToken: any =
-        //   token && typeof token === 'string'
-        //     ? jwtDecode<JwtPayload>(token as string)
-        //     : null;
-        token = _token!;
-        // payload = decodedToken;
-        return response as RLogin;
-      },
     }),
   }),
 });
@@ -38,18 +25,22 @@ interface InitialState {
   status?: String | null;
   loading?: Boolean;
   error?: Boolean;
-  token?: string | null;
-  data?: any;
+  user: any | null;
+  api_credentials: any | null;
+  employee: any | null;
+  sId: string | null;
 }
 const initialState: InitialState = {
   status: null,
   loading: false,
   error: false,
-  token: null,
-  data: null,
+  user: null,
+  api_credentials: null,
+  employee: null,
+  sId: null,
 };
 
-//login api response handling(saving the token)
+//auth api response handling(saving the token)
 export const authSlice = createSlice({
   name: 'authSlice',
   initialState,
@@ -58,18 +49,22 @@ export const authSlice = createSlice({
       state.status = null;
       state.loading = false;
       state.error = false;
-      state.token = null;
-      state.data = null;
+      state.user = null;
+      state.api_credentials = null;
+      state.employee = null;
+      state.sId = null;
     },
   },
   extraReducers: builder => {
     builder
-      .addMatcher(authApi.endpoints.login.matchFulfilled, state => {
+      .addMatcher(authApi.endpoints.login.matchFulfilled, (state, action) => {
         state.status = 'Fullfilled';
         state.loading = false;
         state.error = false;
-        state.token = token;
-        state.data = payload;
+        state.employee = action?.payload.message?.employee;
+        state.api_credentials = action?.payload.message?.api_credentials;
+        state.user = action?.payload.message?.user;
+        state.sId = action?.payload.message?.user?.sid;
       })
       .addMatcher(authApi.endpoints.login.matchRejected, state => {
         state.status = 'Rejected';
