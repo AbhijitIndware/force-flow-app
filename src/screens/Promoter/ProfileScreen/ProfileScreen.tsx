@@ -20,6 +20,9 @@ import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {CirclePower} from 'lucide-react-native';
 import {Divider} from '@rneui/themed';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import Toast from 'react-native-toast-message';
+import {logout} from '../../../features/auth/auth';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -33,13 +36,29 @@ type Props = {
 
 const ProfileScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
-
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
     }, 2000);
   }, []);
+
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    Toast.show({
+      type: 'success',
+      text1: '🔒 Logout successful',
+      position: 'top',
+    });
+    dispatch(logout());
+  };
 
   return (
     <SafeAreaView
@@ -76,7 +95,7 @@ const ProfileScreen = ({navigation}: Props) => {
                   lineHeight: 16,
                   marginTop: 15,
                 }}>
-                9748133185@softsensbaby.com
+                {user?.email}
               </Text>
             </View>
           </View>
@@ -106,7 +125,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  Santanu Das
+                  {user?.full_name}
                 </Text>
               </View>
               <Divider
@@ -268,9 +287,9 @@ const ProfileScreen = ({navigation}: Props) => {
             </View>
             <TouchableOpacity
               style={styles.checkinButton}
-              onPress={() => navigation.navigate('AttendanceScreen')}>
+              onPress={() => handleLogout()}>
               <CirclePower strokeWidth={1.4} color={Colors.white} />
-              <Text style={styles.checkinButtonText}>Check-in</Text>
+              <Text style={styles.checkinButtonText}>Logout</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -287,6 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.transparent,
     position: 'relative',
     paddingHorizontal: 20,
+    paddingBottom: 15,
   },
   checkinButton: {
     display: 'flex',
