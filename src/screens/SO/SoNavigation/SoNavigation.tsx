@@ -9,6 +9,8 @@ import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
+import AddDistributorScreen from '../PartnersScreen/AddDistributorScreen';
+import AddStoreScreen from '../PartnersScreen/AddStoreScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -53,6 +55,16 @@ const SoNavigation = () => {
       <Stack.Screen
         name="ProfileScreen"
         component={ProfileScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddDistributorScreen"
+        component={AddDistributorScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddStoreScreen"
+        component={AddStoreScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

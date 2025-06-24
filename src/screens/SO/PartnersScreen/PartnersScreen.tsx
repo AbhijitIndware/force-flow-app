@@ -288,7 +288,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   }}>
                   <TouchableOpacity
                     style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
+                    onPress={() => navigation.navigate('AddDistributorScreen')}>
                     <CirclePlus  strokeWidth={1.4} color={Colors.white} />
                     <Text style={styles.checkinButtonText}>
                       Add Distributor
@@ -455,7 +455,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   }}>
                   <TouchableOpacity
                     style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
+                    onPress={() => navigation.navigate('AddStoreScreen')}>
                     <CirclePlus  strokeWidth={1.4} color={Colors.white} />
                     <Text style={styles.checkinButtonText}>
                       Add Store

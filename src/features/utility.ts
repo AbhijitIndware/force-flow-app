@@ -11,11 +11,11 @@ import {logout} from './auth/auth';
 export const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
   prepareHeaders: (headers, {getState}) => {
-    const token = (getState() as RootState).persistedReducer.registerSlice
-      .token;
+    const sId = (getState() as RootState).persistedReducer.authSlice
+      .sId;
 
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
+    if (sId) {
+      headers.set('sId', `${sId}`);
     }
     return headers;
   },

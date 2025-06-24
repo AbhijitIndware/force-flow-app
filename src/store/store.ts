@@ -2,6 +2,8 @@ import {combineReducers, configureStore} from '@reduxjs/toolkit';
 import {persistReducer, persistStore} from 'redux-persist';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authApi, authSlice} from '../features/auth/auth';
+import { dropdownApi } from '../features/dropdown/dropdown-api';
+import { baseApi } from '../features/base/base-api';
 
 const persistConfig = {
   key: 'root',
@@ -18,10 +20,14 @@ export const store = configureStore({
     persistedReducer,
 
     [authApi.reducerPath]: authApi.reducer,
+    [dropdownApi.reducerPath]: dropdownApi.reducer,
+    [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({serializableCheck: false}).concat([
       authApi.middleware,
+      dropdownApi.middleware,
+      baseApi.middleware
     ]),
 });
 

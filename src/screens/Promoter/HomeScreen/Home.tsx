@@ -21,11 +21,7 @@ import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
-import {useAppSelector} from '../../../store/hook';
-import {flexCol} from '../../../utils/styles';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {House} from 'lucide-react-native';
@@ -33,7 +29,6 @@ import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
 import {useState} from 'react';
-import {Modal} from 'react-native';
 import MoreOptionsModal from '../../../components/home/MoreOption';
 
 const {width} = Dimensions.get('window');
@@ -136,10 +131,6 @@ function MyTabBar({state, descriptors, navigation}: any) {
 }
 
 const CustomHeader = (props: BottomTabHeaderProps) => {
-  const userData = useAppSelector(
-    state => state?.persistedReducer?.registerSlice?.data,
-  );
-  const userRole = userData?.role?.name ?? 'User';
   return (
     <View style={styles.headerTitleContainer}>
       <View>
@@ -156,7 +147,8 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.userInfo}>
+        <TouchableOpacity style={styles.userInfo}
+          onPress={() => props.navigation.navigate('ProfileScreen')}>
           <Image
             source={require('../../../assets/images/user.jpg')}
             resizeMode="cover"
@@ -314,7 +306,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
-    paddingTop: 35,
+    paddingTop: 15,
     paddingBottom: 15,
     width: '100%',
     flexDirection: 'row',
