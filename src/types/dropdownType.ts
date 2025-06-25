@@ -1,10 +1,19 @@
 import { ApiResponse } from "./Navigation";
 
+export type RResponse = {
+    message: {
+        status: string;
+        data: {
+            name: string;
+        }[];
+    };
+};
 export type RState = {
     message: {
         status: string;
         data: {
             name: string;
+            zone: string;
         }[];
     };
 };

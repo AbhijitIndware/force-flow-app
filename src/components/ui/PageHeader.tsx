@@ -51,8 +51,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
-    paddingTop: 5,
-    paddingBottom: 10,
+    paddingVertical: 5,
     width: '100%',
     flexDirection: 'row',
     gap: 10,
@@ -112,6 +111,6 @@ const styles = StyleSheet.create({
   userInfo: {overflow: 'hidden', borderRadius: 15},
   avtarImage: {
     width: width * 0.12,
-    height: 40,
+    height: 50,
   },
 });

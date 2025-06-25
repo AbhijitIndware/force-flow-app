@@ -9,14 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import React, { useCallback, useRef, useState } from 'react';
+import { PromoterAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   Banknote,
   Clock2,
@@ -25,11 +25,14 @@ import {
   Search,
 } from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
-import {Tab, TabView} from '@rneui/themed';
+import { Tab, TabView } from '@rneui/themed';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Animated } from 'react-native';
+import RecentTeamSaleScreen from './RecentTeamSaleScreen';
+import RecentSaleScreen from './RecentSaleScreen';
 //import { fonts } from '@rneui/base';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -41,12 +44,10 @@ type Props = {
   route: any;
 };
 
-const SalesScreen = ({}: Props) => {
+const SalesScreen = ({ navigation }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
-   const [index, setIndex] = React.useState(0);
+  const [index, setIndex] = React.useState(0);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -67,7 +68,17 @@ const SalesScreen = ({}: Props) => {
       {refreshing ? (
         <LoadingScreen />
       ) : (
-        <>
+        <Animated.ScrollView
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          stickyHeaderIndices={[1]} // Index of the Tab header
+          scrollEventThrottle={16}
+          contentContainerStyle={{ position: 'relative' }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           <View style={styles.headerSec}>
             <View style={styles.salesHeaderData}>
               <Text
@@ -127,7 +138,7 @@ const SalesScreen = ({}: Props) => {
                 height: 0,
               }}
               variant="primary"
-              style={{backgroundColor: Colors.transparent, padding: 0}}>
+              style={{ backgroundColor: Colors.transparent, padding: 0 }}>
               <Tab.Item
                 title="Individual"
                 titleStyle={{
@@ -162,411 +173,13 @@ const SalesScreen = ({}: Props) => {
               />
             </Tab>
           </View>
-          <TabView value={index} onChange={setIndex} animationType="spring">
-            <TabView.Item
-              style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop:15},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>Recent Sales</Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <FilterModal
-                      visible={isModalVisible}
-                      onClose={() => setModalVisible(false)}
-                      onApply={() => setModalVisible(false)}>
-                      <Text
-                        onPress={() => setSelectedCategory('All')}
-                        style={{paddingVertical: 10}}>
-                        All
-                      </Text>
-                      <Text
-                        onPress={() => setSelectedCategory('Electronics')}
-                        style={{paddingVertical: 10}}>
-                        Electronics
-                      </Text>
-                      <Text
-                        onPress={() => setSelectedCategory('Books')}
-                        style={{paddingVertical: 10}}>
-                        Books
-                      </Text>
-                    </FilterModal>
-                    <TouchableOpacity onPress={() => setModalVisible(true)}>
-                      <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                  }>
-                    {/* card section start here */}
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                          Delivered
-                        </Text>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Sales Order no: FF/223467
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                          Delivered
-                        </Text>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Sales Order no: FF/223467
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                          Delivered
-                        </Text>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Sales Order no: FF/223467
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                          Delivered
-                        </Text>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Sales Order no: FF/223467
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                </ScrollView>
-              </View>
-            </TabView.Item>
-            <TabView.Item
-              style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20,paddingTop:15},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>Recent Team Sales</Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <FilterModal
-                      visible={isModalVisible}
-                      onClose={() => setModalVisible(false)}
-                      onApply={() => setModalVisible(false)}>
-                      <Text
-                        onPress={() => setSelectedCategory('All')}
-                        style={{paddingVertical: 10}}>
-                        All
-                      </Text>
-                      <Text
-                        onPress={() => setSelectedCategory('Electronics')}
-                        style={{paddingVertical: 10}}>
-                        Electronics
-                      </Text>
-                      <Text
-                        onPress={() => setSelectedCategory('Books')}
-                        style={{paddingVertical: 10}}>
-                        Books
-                      </Text>
-                    </FilterModal>
-                    <TouchableOpacity onPress={() => setModalVisible(true)}>
-                      <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                  }>
-                    {/* card section start here */}
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <View style={[styles.upparrow,{marginLeft: 'auto'}]}>
-                          <MaterialCommunityIcons name="triangle" size={15} color={Colors.sucess} />
-                        </View>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Name: Rahul Sharma
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <View style={[styles.downarrow,{marginLeft: 'auto', transform: [{ rotate: '180deg' }]}]}>
-                          <MaterialCommunityIcons name="triangle" size={15} color={Colors.denger} />
-                        </View>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Name: Priya Verma
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <View style={[styles.upparrow,{marginLeft: 'auto'}]}>
-                          <MaterialCommunityIcons name="triangle" size={15} color={Colors.sucess} />
-                        </View>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Name: Rahul Sharma
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}>11:03:45 AM</Text>
-                        </View>
-                        <View style={[styles.downarrow,{marginLeft: 'auto', transform: [{ rotate: '180deg' }]}]}>
-                          <MaterialCommunityIcons name="triangle" size={15} color={Colors.denger} />
-                        </View>
-                        <EllipsisVertical size={20} color={Colors.darkButton} />
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                              lineHeight: 18,
-                            }}>
-                            Name: Priya Verma
-                          </Text>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>Accestisa new mart</Text>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.semiBold,
-                              fontSize: Size.xsmd,
-                              color: Colors.darkButton,
-                            }}>
-                            Amount: ₹ 1240
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                </ScrollView>
-              </View>
-            </TabView.Item>
-          </TabView>
-        </>
+          {/* Conditionally rendered tab content */}
+          {index === 0 ? (
+            <RecentSaleScreen navigation={navigation} />
+          ) : (
+            <RecentTeamSaleScreen navigation={navigation} />
+          )}
+        </Animated.ScrollView>
       )}
     </SafeAreaView>
   );
@@ -592,11 +205,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    position:'relative',
-    zIndex:1,
+    position: 'relative',
+    zIndex: 1,
     // Android Shadow
     elevation: 2,
   },
@@ -615,7 +228,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -632,7 +245,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor:'#575757',
+    backgroundColor: '#575757',
     borderRadius: 15,
     padding: 12,
     marginTop: 8,
@@ -652,10 +265,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -819,18 +432,20 @@ const styles = StyleSheet.create({
     color: Colors.white,
     lineHeight: 22,
   },
-    tabSection: {
+  tabSection: {
     backgroundColor: Colors.orange,
+    paddingVertical: 5,
     paddingHorizontal: 20,
-    paddingVertical: 8,
-    position:'relative',
-    marginTop:-80,
-    paddingTop:150,
+    position: 'relative',
+    marginTop: 70,
+    // paddingTop: 10,
   },
-  upparrow:{ width:30, height:30, backgroundColor:Colors.lightSuccess, display:'flex', justifyContent:'center',
-    alignItems:'center',borderRadius:8,
+  upparrow: {
+    width: 30, height: 30, backgroundColor: Colors.lightSuccess, display: 'flex', justifyContent: 'center',
+    alignItems: 'center', borderRadius: 8,
   },
-  downarrow:{ width:30, height:30, backgroundColor:Colors.lightDenger, display:'flex', justifyContent:'center',
-    alignItems:'center',borderRadius:8,
+  downarrow: {
+    width: 30, height: 30, backgroundColor: Colors.lightDenger, display: 'flex', justifyContent: 'center',
+    alignItems: 'center', borderRadius: 8,
   },
 });

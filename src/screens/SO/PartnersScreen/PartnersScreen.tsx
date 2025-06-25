@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Animated,
   Dimensions,
   RefreshControl,
   SafeAreaView,
@@ -9,14 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import { SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import React, { useCallback, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   CirclePlus,
   Clock2,
@@ -24,9 +25,11 @@ import {
   Search,
   UserRoundPlus,
 } from 'lucide-react-native';
-import {Tab, TabView} from '@rneui/themed';
+import { Tab, TabView } from '@rneui/themed';
+import DistributorTabcontent from './DistributorTabcontent';
+import StoreTabContent from './StoreTabContent';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,8 +41,8 @@ type Props = {
   route: any;
 };
 
-const OrdersScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const OrdersScreen = ({ navigation }: Props) => {
+  const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
 
@@ -57,29 +60,40 @@ const OrdersScreen = ({navigation, route}: Props) => {
         {
           flex: 1,
           backgroundColor: Colors.lightBg,
+          position: 'relative',
         },
       ]}>
       {refreshing ? (
         <LoadingScreen />
       ) : (
-        <>
+        <Animated.ScrollView
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          stickyHeaderIndices={[1]} // Index of the Tab header
+          scrollEventThrottle={16}
+          contentContainerStyle={{ position: 'relative' }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           <View style={styles.headerSec}>
-            <View style={{ width:40, height:40,alignItems:'center', justifyContent:'center', backgroundColor:Colors.lightOrange,
-              borderRadius:15,
+            <View style={{
+              width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.lightOrange,
+              borderRadius: 15,
             }}>
-              <UserRoundPlus size={20} color={Colors.orange} strokeWidth={1.7}/>
+              <UserRoundPlus size={20} color={Colors.orange} strokeWidth={1.7} />
             </View>
-            <Text style={{fontFamily:Fonts.regular, fontSize:Size.sm, color:Colors.darkButton, marginTop:5}}>Total Customers</Text>
-            <Text style={{fontFamily:Fonts.semiBold, fontSize:Size.md, color:Colors.darkButton}}>400</Text>
+            <Text style={{ fontFamily: Fonts.regular, fontSize: Size.sm, color: Colors.darkButton, marginTop: 5 }}>Total Customers</Text>
+            <Text style={{ fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.darkButton }}>400</Text>
           </View>
           <View
             style={{
               backgroundColor: Colors.orange,
-              paddingTop: 60,
-              paddingBottom: 10,
+              paddingVertical: 5,
               paddingHorizontal: 20,
               position: 'relative',
-              marginTop: -50,
+              marginTop: 0,
             }}>
             <Tab
               value={index}
@@ -109,7 +123,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
               <Tab.Item
                 title="Store"
@@ -126,347 +140,38 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
             </Tab>
           </View>
-          <TabView value={index} onChange={setIndex} animationType="spring">
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    All Distributor
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Approved
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: North</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Submitted
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: South</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Submitted
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: East</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Approved
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: West</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AddDistributorScreen')}>
-                    <CirclePlus  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add Distributor
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    All Store
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Approved
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: North</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Submitted
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: South</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Submitted
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: East</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Approved
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View style={ {width:'80%'}}>
-                        <View style={{justifyContent:'space-between', flexDirection:'row'}}>
-                          <Text style={styles.contentText}>ID: dist-00123</Text>
-                          <Text style={styles.contentText}>Zone: West</Text>
-                        </View>
-                        <Text style={styles.contentText}>Distributor name</Text>
-                        <Text style={[styles.contentText,{fontFamily:Fonts.medium}]}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          City: New Delhi
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AddStoreScreen')}>
-                    <CirclePlus  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add Store
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-          </TabView>
-        </>
+          {/* Conditionally rendered tab content */}
+          {index === 0 ? (
+            <DistributorTabcontent navigation={navigation} />
+          ) : (
+            <StoreTabContent navigation={navigation} />
+          )}
+        </Animated.ScrollView>
       )}
+
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 3,
+          width: '100%',
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() => index === 0 ? navigation.navigate('AddDistributorScreen') : navigation.navigate('AddStoreScreen')}>
+          <CirclePlus strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>
+            {`Add ${index === 0 ? 'Distributor' : 'Store'}`}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -493,13 +198,13 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    paddingBottom:10,
-    textAlign:'center',
-    justifyContent:'center',
-    alignItems:'center',
+    paddingBottom: 10,
+    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
 
     // Android Shadow
     elevation: 2,
@@ -528,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -564,10 +269,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -719,7 +424,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 18,
     position: 'absolute',
-    bottom:-65,
+    bottom: 0,
     gap: 5,
     zIndex: 1,
     width: width * 0.9,
@@ -732,7 +437,7 @@ const styles = StyleSheet.create({
   },
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingVertical:10,
+    paddingVertical: 10,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -741,9 +446,9 @@ const styles = StyleSheet.create({
   },
   countBox: {
     backgroundColor: Colors.white,
-    width:'33.33%',
+    width: '33.33%',
     borderRadius: 15,
-    padding:10,
+    padding: 10,
     minHeight: 135,
     shadowColor: '#9F9D9D',
     shadowOffset: { width: 0, height: 2 },
@@ -759,22 +464,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius:15,
+    borderRadius: 15,
     marginBottom: 10,
-    marginLeft:'auto',
+    marginLeft: 'auto',
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
     color: Colors.darkButton,
     fontSize: Size.xs,
-    lineHeight:18,
+    lineHeight: 18,
   },
   countBoxDay: {
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
     fontSize: Size.xslg,
     lineHeight: 20,
-    position:'relative',
+    position: 'relative',
   },
   //countBox-section css end
 });

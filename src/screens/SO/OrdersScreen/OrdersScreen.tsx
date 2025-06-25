@@ -9,14 +9,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import { SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import React, { useCallback, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   AlarmClockMinus,
   CirclePlus,
@@ -25,9 +25,12 @@ import {
   Search,
   ShoppingCart,
 } from 'lucide-react-native';
-import {Tab, TabView} from '@rneui/themed';
+import { Tab, TabView } from '@rneui/themed';
+import { Animated } from 'react-native';
+import PurchaseOrder from './PurchaseOrder';
+import SalesOrder from './SalesOrder';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -39,8 +42,8 @@ type Props = {
   route: any;
 };
 
-const OrdersScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const OrdersScreen = ({ navigation }: Props) => {
+  const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
 
@@ -63,27 +66,37 @@ const OrdersScreen = ({navigation, route}: Props) => {
       {refreshing ? (
         <LoadingScreen />
       ) : (
-        <>
+        <Animated.ScrollView
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          stickyHeaderIndices={[1]} // Index of the Tab header
+          scrollEventThrottle={16}
+          contentContainerStyle={{ position: 'relative' }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           <View style={styles.headerSec}>
             <View style={styles.salesHeaderData}>
               <View style={styles.countBoxSection}>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon,{backgroundColor:Colors.lightBlue}]}>
-                    <ShoppingCart  strokeWidth={1.4} color={Colors.blue} />
+                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.lightBlue }]}>
+                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
                   </View>
                   <Text style={styles.countBoxDay}>05</Text>
                   <Text style={styles.countBoxTitle}>Total Order</Text>
                 </View>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon,{backgroundColor:Colors.lightSuccess}]}>
+                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.lightSuccess }]}>
                     <PackageOpen strokeWidth={1.4} color={Colors.success} />
                   </View>
                   <Text style={styles.countBoxDay}>03</Text>
                   <Text style={styles.countBoxTitle}>Delivered Order</Text>
                 </View>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon,{backgroundColor:Colors.holdLight}]}>
-                    <AlarmClockMinus  strokeWidth={1.4} color={Colors.orange} />
+                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.holdLight }]}>
+                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
                   </View>
                   <Text style={styles.countBoxDay}>02</Text>
                   <Text style={styles.countBoxTitle}>Pending Order</Text>
@@ -94,11 +107,10 @@ const OrdersScreen = ({navigation, route}: Props) => {
           <View
             style={{
               backgroundColor: Colors.orange,
-              paddingTop: 60,
-              paddingBottom: 10,
+              paddingVertical: 5,
               paddingHorizontal: 20,
               position: 'relative',
-              marginTop: -50,
+              marginTop: 0,
             }}>
             <Tab
               value={index}
@@ -128,7 +140,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
               <Tab.Item
                 title="Sales Orders"
@@ -145,378 +157,38 @@ const OrdersScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
             </Tab>
           </View>
-          <TabView value={index} onChange={setIndex} animationType="spring">
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    Recent Purchase Order
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Delivered
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.lateEntry, {marginLeft: 'auto'}]}>
-                        Pending
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        In Transit
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> PO ID: PO-1001</Text>
-                      </View>
-                      <Text style={[styles.absent, {marginLeft: 'auto'}]}>
-                        Cancelled
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <CirclePlus  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add Purchase Oders
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    Recent Sales Order
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> SO ID: SO-5001</Text>
-                      </View>
-                      <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                        Delivered
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> SO ID: SO-5002</Text>
-                      </View>
-                      <Text style={[styles.lateEntry, {marginLeft: 'auto'}]}>
-                        Pending
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}>SO ID: SO-5003</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        In Transit
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Text style={styles.time}> SO ID: SO-5003</Text>
-                      </View>
-                      <Text style={[styles.absent, {marginLeft: 'auto'}]}>
-                        Cancelled
-                      </Text>
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text style={styles.contentText}>
-                          Distributor: Shree Distributors
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PO Amount: ₹25,000
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <CirclePlus  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add Purchase Oders
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-          </TabView>
-        </>
+          {/* Conditionally rendered tab content */}
+          {index === 0 ? (
+            <PurchaseOrder navigation={navigation} />
+          ) : (
+            <SalesOrder navigation={navigation} />
+          )}
+        </Animated.ScrollView>
       )}
+
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 3,
+          width: '100%',
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() => navigation.navigate('AttendanceScreen')}>
+          <CirclePlus strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>
+             {`Add ${index === 0 ? 'Purchase' : 'Sales'} Orders`}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -543,10 +215,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    paddingBottom:20,
+    paddingBottom: 10,
 
     // Android Shadow
     elevation: 2,
@@ -575,7 +247,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -611,10 +283,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -766,7 +438,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 18,
     position: 'absolute',
-    bottom:-65,
+    bottom: 0,
     gap: 5,
     zIndex: 1,
     width: width * 0.9,
@@ -779,7 +451,7 @@ const styles = StyleSheet.create({
   },
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingVertical:10,
+    paddingVertical: 10,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -788,9 +460,9 @@ const styles = StyleSheet.create({
   },
   countBox: {
     backgroundColor: Colors.white,
-    width:'33.33%',
+    width: '33.33%',
     borderRadius: 15,
-    padding:10,
+    padding: 10,
     minHeight: 135,
     shadowColor: '#9F9D9D',
     shadowOffset: { width: 0, height: 2 },
@@ -806,22 +478,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius:15,
+    borderRadius: 15,
     marginBottom: 10,
-    marginLeft:'auto',
+    marginLeft: 'auto',
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
     color: Colors.darkButton,
     fontSize: Size.xs,
-    lineHeight:18,
+    lineHeight: 18,
   },
   countBoxDay: {
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
     fontSize: Size.xslg,
     lineHeight: 20,
-    position:'relative',
+    position: 'relative',
   },
   //countBox-section css end
 });

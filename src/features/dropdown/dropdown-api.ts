@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { apiBaseUrl } from '../apiBaseUrl';
-import { RCity, REmployee, RState } from '../../types/dropdownType';
+import { RCity, REmployee, RResponse, RState } from '../../types/dropdownType';
 
 //Dropdown api calling ---
 export const dropdownApi = createApi({
@@ -16,7 +16,7 @@ export const dropdownApi = createApi({
                 method: 'GET',
             }),
         }),
-        getZone: builder.query<RState, void>({
+        getZone: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_zone',
                 method: 'GET',
@@ -34,37 +34,37 @@ export const dropdownApi = createApi({
                 method: 'GET',
             }),
         }),
-        getDesignation: builder.query<RState, void>({
+        getDesignation: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_designation',
                 method: 'GET',
             }),
         }),
-        getDistributorGroup: builder.query<RState, void>({
+        getDistributorGroup: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_group',
                 method: 'GET',
             }),
         }),
-        getDistributor: builder.query<RState, void>({
+        getDistributor: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor',
                 method: 'GET',
             }),
         }),
-        getStoreType: builder.query<RState, void>({
+        getStoreType: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_type',
                 method: 'GET',
             }),
         }),
-        getStoreCategory: builder.query<RState, void>({
+        getStoreCategory: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_category',
                 method: 'GET',
             }),
         }),
-        getItemGroup: builder.query<RState, void>({
+        getItemGroup: builder.query<RResponse, void>({
             query: () => ({
                 url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
                 method: 'GET',

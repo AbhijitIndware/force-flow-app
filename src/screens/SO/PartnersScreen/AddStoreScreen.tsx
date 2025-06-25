@@ -8,7 +8,7 @@ import {
     View,
     ActivityIndicator,
 } from 'react-native';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import Toast from 'react-native-toast-message';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -110,7 +110,8 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
                     created_by_employee_designation: employee.designation, // Replace with actual designation
                 }
 
-                const payload = { data: formValues };
+                const payload = { data: value };
+                console.log("🚀 ~ onSubmit: ~ payload:", payload)
                 const res = await addStore(payload).unwrap();
                 console.log('Store API Response:', res);
 
@@ -120,7 +121,8 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
                         text1: `✅ ${res.message.message}`,
                         position: 'top',
                     });
-                    // actions.resetForm();
+                    actions.resetForm();
+                    navigation.navigate('PartnersScreen')
                 } else {
                     Toast.show({
                         type: 'error',
@@ -144,43 +146,80 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
 
     const transformList = (arr: { name: string }[] = []) => arr.map(i => ({ label: i.name, value: i.name }));
 
-    const cityList = transformList(cityData?.message?.data);
-    const stateList = transformList(stateData?.message?.data);
-    const zoneList = transformList(zoneData?.message?.data);
+    const zoneList = useMemo(() => transformList(zoneData?.message?.data), [zoneData]);
+    const stateList = useMemo(() => {
+        return transformList(stateData?.message?.data?.filter(state => state.zone === values.zone));
+    }, [stateData, values.zone]);
+
+    const cityList = useMemo(() => {
+        return transformList(cityData?.message?.data?.filter(city => city.state === values.state));
+    }, [cityData, values.state]);
+
     const distributorList = transformList(distributorData?.message?.data);
 
     const storeTypeList = transformList(typeData?.message?.data);
     const storeCategoryList = transformList(categoryData?.message?.data);
 
 
-    const renderInput = (label: string, field: keyof typeof values) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.label}>{label}</Text>
-            <TextInput
-                style={styles.input}
-                placeholder={`Enter ${label}`}
-                value={String(values[field])}
-                onChangeText={handleChange(field)}
-                onBlur={handleBlur(field)}
-                placeholderTextColor="#999"
-            />
-            {touched[field] && errors[field] && <Text style={styles.error}>{errors[field]}</Text>}
-        </View>
-    );
+    const renderInput = (label: string, field: keyof typeof values) => {
+        let keyboardType: 'default' | 'email-address' | 'numeric' = 'default';
 
-    const renderDropdown = (label: string, field: keyof typeof values, data: { label: string; value: string }[] = []) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.label}>{label}</Text>
-            <DropdownComponent
-                selectText={label}
-                data={data}
-                selectedId={values[field] ? String(values[field]) : null}
-                setSelectedId={(val: string) => setFieldValue(field, val)}
-                name={field}
-            />
-            {touched[field] && errors[field] && <Text style={styles.error}>{errors[field]}</Text>}
-        </View>
-    );
+        if (field === 'pin_code') {
+            keyboardType = 'numeric';
+        }
+
+        return (
+            <View style={styles.inputWrapper}>
+                <Text style={styles.label}>{label}</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder={`Enter ${label}`}
+                    value={values[field]}
+                    onChangeText={handleChange(field)}
+                    onBlur={handleBlur(field)}
+                    placeholderTextColor="#999"
+                    keyboardType={keyboardType}
+                />
+                {touched[field] && errors[field] && (
+                    <Text style={styles.error}>{errors[field]}</Text>
+                )}
+            </View>
+        );
+    };
+    const renderDropdown = (
+        label: string,
+        field: keyof typeof values,
+        data: { label: string; value: string }[] = []
+    ) => {
+        const handleSelect = (val: string) => {
+            setFieldValue(field, val);
+
+            // Reset dependent fields
+            if (field === 'zone') {
+                setFieldValue('state', ''); // Reset state
+                setFieldValue('city', '');  // Reset city
+            } else if (field === 'state') {
+                setFieldValue('city', '');  // Reset city
+            }
+        };
+
+        return (
+            <View style={styles.inputWrapper}>
+                <Text style={styles.label}>{label}</Text>
+                <DropdownComponent
+                    selectText={label}
+                    data={data}
+                    selectedId={values[field] ? String(values[field]) : null}
+                    setSelectedId={handleSelect}
+                    name={field}
+                />
+                {touched[field] && errors[field] && (
+                    <Text style={styles.error}>{errors[field]}</Text>
+                )}
+            </View>
+        );
+    };
+
 
     const renderTimePicker = (label: string, field: 'start_time' | 'end_time') => (
         <View style={styles.inputWrapper}>
@@ -221,7 +260,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
                     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
                     { useNativeDriver: false },
                 )}
-                scrollEventThrottle={16} contentContainerStyle={{ padding: 16 }}>                
+                scrollEventThrottle={16} contentContainerStyle={{ padding: 16 }}>
                 {renderInput('Store Name', 'store_name')}
                 {renderDropdown('Store Type', 'store_type', storeTypeList)}
                 {renderDropdown('Store Category', 'store_category', storeCategoryList)}

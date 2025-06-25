@@ -8,10 +8,10 @@ import {
     ActivityIndicator,
     Animated,
 } from 'react-native';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PromoterAppStackParamList } from '../../../types/Navigation';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
@@ -31,7 +31,7 @@ import Toast from 'react-native-toast-message';
 
 
 type NavigationProp = NativeStackNavigationProp<
-    PromoterAppStackParamList,
+    SoAppStackParamList,
     'AttendanceScreen'
 >;
 
@@ -62,7 +62,7 @@ const AddDistributorScreen = ({ navigation }: Props) => {
     const { data: zoneData } = useGetZoneQuery();
     const { data: employeeData } = useGetEmployeeQuery();
     const { data: designationData } = useGetDesignationQuery();
-    const { data: distributorGroupData, error } = useGetDistributorGroupQuery(); 
+    const { data: distributorGroupData, error } = useGetDistributorGroupQuery();
     const scrollY = useRef(new Animated.Value(0)).current;
 
     const [addDistributor] = useAddDistributorMutation();
@@ -81,10 +81,8 @@ const AddDistributorScreen = ({ navigation }: Props) => {
         onSubmit: async (formValues, actions) => {
             try {
                 setLoading(true);
-                const payload = { data: formValues }; // Matches IAddDistributorPayload
+                const payload = { data: formValues };
                 const res = await addDistributor(payload).unwrap();
-
-                console.log('Distributor API Response:', res);
 
                 if (res?.message?.status === 'success') {
                     Toast.show({
@@ -92,7 +90,8 @@ const AddDistributorScreen = ({ navigation }: Props) => {
                         text1: `✅ ${res.message.message}`,
                         position: 'top',
                     });
-                    // actions.resetForm();
+                    actions.resetForm();
+                    navigation.navigate('PartnersScreen')
                 } else {
                     Toast.show({
                         type: 'error',
@@ -126,50 +125,82 @@ const AddDistributorScreen = ({ navigation }: Props) => {
         }));
 
     const distributorGroupList = transformToDropdownList(distributorGroupData?.message?.data);
-   
+
     const employeeList = transformEmployeeList(employeeData?.message?.data);
-    const zoneList = transformToDropdownList(zoneData?.message?.data);
-    const stateList = transformToDropdownList(stateData?.message?.data);
-    const cityList = transformToDropdownList(cityData?.message?.data);
+    const zoneList = useMemo(() => transformToDropdownList(zoneData?.message?.data), [zoneData]);
+    const stateList = useMemo(() => {
+        return transformToDropdownList(stateData?.message?.data?.filter(state => state.zone === values.zone));
+    }, [stateData, values.zone]);
+
+    const cityList = useMemo(() => {
+        return transformToDropdownList(cityData?.message?.data?.filter(city => city.state === values.state));
+    }, [cityData, values.state]);
+
     const designationList = transformToDropdownList(designationData?.message?.data);
 
 
-    const renderInput = (label: string, field: keyof typeof values) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.label}>{label}</Text>
-            <TextInput
-                style={styles.input}
-                placeholder={`Enter ${label}`}
-                value={values[field]}
-                onChangeText={handleChange(field)}
-                onBlur={handleBlur(field)}
-                placeholderTextColor="#999"
-            />
-            {touched[field] && errors[field] && (
-                <Text style={styles.error}>{errors[field]}</Text>
-            )}
-        </View>
-    );
+    const renderInput = (label: string, field: keyof typeof values) => {
+        let keyboardType: 'default' | 'email-address' | 'numeric' = 'default';
+
+        if (field === 'email') {
+            keyboardType = 'email-address';
+        } else if (field === 'mobile') {
+            keyboardType = 'numeric';
+        }
+
+        return (
+            <View style={styles.inputWrapper}>
+                <Text style={styles.label}>{label}</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder={`Enter ${label}`}
+                    value={values[field]}
+                    onChangeText={handleChange(field)}
+                    onBlur={handleBlur(field)}
+                    placeholderTextColor="#999"
+                    keyboardType={keyboardType}
+                />
+                {touched[field] && errors[field] && (
+                    <Text style={styles.error}>{errors[field]}</Text>
+                )}
+            </View>
+        );
+    };
+
 
     const renderDropdown = (
         label: string,
         field: keyof typeof values,
         data: { label: string; value: string }[] = []
-    ) => (
-        <View style={styles.inputWrapper}>
-            <Text style={styles.label}>{label}</Text>
-            <DropdownComponent
-                selectText={label}
-                data={data}
-                selectedId={values[field]}
-                setSelectedId={(val: string) => setFieldValue(field, val)}
-                name={field}
-            />
-            {touched[field] && errors[field] && (
-                <Text style={styles.error}>{errors[field]}</Text>
-            )}
-        </View>
-    );
+    ) => {
+        const handleSelect = (val: string) => {
+            setFieldValue(field, val);
+
+            // Reset dependent fields
+            if (field === 'zone') {
+                setFieldValue('state', ''); // Reset state
+                setFieldValue('city', '');  // Reset city
+            } else if (field === 'state') {
+                setFieldValue('city', '');  // Reset city
+            }
+        };
+
+        return (
+            <View style={styles.inputWrapper}>
+                <Text style={styles.label}>{label}</Text>
+                <DropdownComponent
+                    selectText={label}
+                    data={data}
+                    selectedId={values[field] ? String(values[field]) : null}
+                    setSelectedId={handleSelect}
+                    name={field}
+                />
+                {touched[field] && errors[field] && (
+                    <Text style={styles.error}>{errors[field]}</Text>
+                )}
+            </View>
+        );
+    };
 
 
     return (
@@ -188,7 +219,7 @@ const AddDistributorScreen = ({ navigation }: Props) => {
                 {renderDropdown('Zone', 'zone', zoneList)}
                 {renderDropdown('State', 'state', stateList)}
                 {renderDropdown('City', 'city', cityList)}
-                {renderDropdown('Reports To', 'reports_to', employeeList)} {/* Same employee list */}
+                {renderDropdown('Reports To', 'reports_to', employeeList)}
                 {renderDropdown('Designation', 'designation', designationList)}
                 {renderInput('Distributor Code', 'distributor_code')}
                 {renderInput('Mobile', 'mobile')}

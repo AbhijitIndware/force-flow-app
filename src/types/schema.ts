@@ -39,31 +39,7 @@ export const storeSchema = Yup.object().shape({
   address: Yup.string().required('Address is required'),
   weekly_off: Yup.string().required('Weekly off is required'),
 
-  np_po_value_start: Yup.number().required('Required'),
-  np_po_value_end: Yup.number().required('Required'),
-  np_po_monthly_target: Yup.number().required('Required'),
-  np_units_start: Yup.number().required('Required'),
-  np_units_end: Yup.number().required('Required'),
-  np_units_monthly_target: Yup.number().required('Required'),
-
-  op_po_value_start: Yup.number().required('Required'),
-  op_po_value_end: Yup.number().required('Required'),
-  op_po_monthly_target: Yup.number().required('Required'),
-  op_units_start: Yup.number().required('Required'),
-  op_units_end: Yup.number().required('Required'),
-  op_units_monthly_target: Yup.number().required('Required'),
-
-  np_scheme_number: Yup.number().required('Required'),
-  op_scheme_number: Yup.number().required('Required'),
-
-  payout: Yup.number().required('Payout is required'),
-  item_group: Yup.string().required('Item group is required'),
-
-  amended_from: Yup.string().nullable(),
-  status: Yup.string().required('Status is required'),
   created_by_employee: Yup.string().nullable(),
   created_by_employee_name: Yup.string().nullable(),
   created_by_employee_designation: Yup.string().nullable(),
-  reports_to_name: Yup.string().nullable(),
-  reports_to_designation: Yup.string().nullable(),
 });

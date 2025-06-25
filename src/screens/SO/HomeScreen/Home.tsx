@@ -294,8 +294,7 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     backgroundColor: Colors.white,
     paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 15,
+    paddingVertical: 5,
     width: '100%',
     flexDirection: 'row',
     gap: 10,

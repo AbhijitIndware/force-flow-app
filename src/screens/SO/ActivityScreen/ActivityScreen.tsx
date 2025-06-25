@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Animated,
   Dimensions,
   RefreshControl,
   SafeAreaView,
@@ -9,14 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import { SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import React, { useCallback, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   ClipboardPenLine,
   Clock2,
@@ -26,11 +27,13 @@ import {
   MapPinCheck,
   Search,
 } from 'lucide-react-native';
-import {Tab, TabView} from '@rneui/themed';
-import {Button} from '@rneui/themed';
+import { Tab, TabView } from '@rneui/themed';
+import { Button } from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MarketVisitScreen from './MarketVisitScreen';
+import PJPScreen from './PjpScreen';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -42,8 +45,8 @@ type Props = {
   route: any;
 };
 
-const ActivityScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const ActivityScreen = ({ navigation, route }: Props) => {
+  const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
 
@@ -66,19 +69,29 @@ const ActivityScreen = ({navigation, route}: Props) => {
       {refreshing ? (
         <LoadingScreen />
       ) : (
-        <>
+        <Animated.ScrollView
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          stickyHeaderIndices={[1]} // Index of the Tab header
+          scrollEventThrottle={16}
+          contentContainerStyle={{ position: 'relative' }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
           <View style={styles.headerSec}>
             <View style={styles.salesHeaderData}>
               <View style={styles.countBoxSection}>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon,{backgroundColor:Colors.holdLight}]}>
-                    <ClipboardPenLine  strokeWidth={1.4} color={Colors.orange} />
+                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.holdLight }]}>
+                    <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
                   </View>
                   <Text style={styles.countBoxDay}>50</Text>
                   <Text style={styles.countBoxTitle}>Total call</Text>
                 </View>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon,{backgroundColor:Colors.lightSuccess}]}>
+                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.lightSuccess }]}>
                     <MapPinCheck strokeWidth={1.4} color={Colors.success} />
                   </View>
                   <Text style={styles.countBoxDay}>12</Text>
@@ -115,11 +128,10 @@ const ActivityScreen = ({navigation, route}: Props) => {
           <View
             style={{
               backgroundColor: Colors.orange,
-              paddingTop: 60,
-              paddingBottom: 10,
+              paddingVertical: 5,
               paddingHorizontal: 20,
               position: 'relative',
-              marginTop: -50,
+              marginTop: 0,
             }}>
             <Tab
               value={index}
@@ -149,7 +161,7 @@ const ActivityScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
               <Tab.Item
                 title="Market Visit"
@@ -166,304 +178,38 @@ const ActivityScreen = ({navigation, route}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
             </Tab>
           </View>
-          <TabView value={index} onChange={setIndex} animationType="spring">
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    Recent PJP
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        January
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of January
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        March
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>25</Text>
-                        <Text style={styles.monthText}>Mar</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of March
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        April
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>26</Text>
-                        <Text style={styles.monthText}>Apr</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of April
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <FileCheck  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add PJP
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-            <TabView.Item
-              style={{
-                width: '100%',
-                flex: 1,
-                backgroundColor: Colors.lightBg,
-                position: 'relative',
-              }}>
-              <View
-                style={[
-                  styles.bodyContent,
-                  {paddingHorizontal: 20, paddingTop: 10, paddingBottom:70},
-                ]}>
-                <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    Recent Market Visit
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
-                </View>
-                <ScrollView
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Product Audit
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          Remark : Display updated
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Order Collection
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>25</Text>
-                        <Text style={styles.monthText}>Mar</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          Remark : Display updated
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, {marginLeft: 'auto'}]}>
-                        Merchandising
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>26</Text>
-                        <Text style={styles.monthText}>Apr</Text>
-                      </View>
-                      <View>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          Remark : Display updated
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </ScrollView>
-                <View
-                  style={{
-                    paddingHorizontal: 20,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <FileCheck  strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>
-                      Add Market Visit
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-          </TabView>
-        </>
+          {/* Conditionally rendered tab content */}
+          {index === 0 ? (
+            <PJPScreen navigation={navigation} />
+          ) : (
+            <MarketVisitScreen navigation={navigation} />
+          )}
+        </Animated.ScrollView>
       )}
+
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 3,
+          width: '100%',
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() => index === 0 ? navigation.navigate('AddDistributorScreen') : navigation.navigate('AddStoreScreen')}>
+          <FileCheck strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>
+            {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -490,10 +236,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    paddingBottom:20,
+    paddingBottom: 20,
 
     // Android Shadow
     elevation: 2,
@@ -522,7 +268,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -558,10 +304,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -713,7 +459,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 18,
     position: 'absolute',
-    bottom:-65,
+    bottom: 0,
     gap: 5,
     zIndex: 1,
     width: width * 0.9,
@@ -726,7 +472,7 @@ const styles = StyleSheet.create({
   },
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingVertical:10,
+    paddingVertical: 10,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -753,9 +499,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius:15,
+    borderRadius: 15,
     marginBottom: 10,
-    marginLeft:'auto',
+    marginLeft: 'auto',
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
@@ -767,8 +513,8 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.xslg,
     lineHeight: 20,
-    position:'relative',
-    marginTop:-25,
+    position: 'relative',
+    marginTop: -25,
   },
   //countBox-section css end
 });
