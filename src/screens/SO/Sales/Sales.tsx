@@ -30,6 +30,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { Animated } from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
+import PageHeader from '../../../components/ui/PageHeader';
 //import { fonts } from '@rneui/base';
 
 const { width } = Dimensions.get('window');
@@ -65,6 +66,7 @@ const SalesScreen = ({ navigation }: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
+        <PageHeader title="Sales" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -144,7 +146,7 @@ const SalesScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -160,7 +162,7 @@ const SalesScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,

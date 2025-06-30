@@ -28,6 +28,7 @@ import {
 import { Tab, TabView } from '@rneui/themed';
 import DistributorTabcontent from './DistributorTabcontent';
 import StoreTabContent from './StoreTabContent';
+import PageHeader from '../../../components/ui/PageHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -63,6 +64,7 @@ const OrdersScreen = ({ navigation }: Props) => {
           position: 'relative',
         },
       ]}>
+        <PageHeader title="Partners" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -113,7 +115,7 @@ const OrdersScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -130,7 +132,7 @@ const OrdersScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,

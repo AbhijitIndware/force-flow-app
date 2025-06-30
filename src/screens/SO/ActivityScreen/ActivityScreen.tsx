@@ -32,6 +32,7 @@ import { Button } from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MarketVisitScreen from './MarketVisitScreen';
 import PJPScreen from './PjpScreen';
+import PageHeader from '../../../components/ui/PageHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -66,6 +67,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
+      <PageHeader title="Activity" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -151,7 +153,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -168,7 +170,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,

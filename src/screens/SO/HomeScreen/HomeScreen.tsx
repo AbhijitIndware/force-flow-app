@@ -247,7 +247,7 @@ const HomeScreen = ({navigation}: Props) => {
               ]}>
               Quick links
             </Text>
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity onPress={()=>navigation.navigate('AddStoreScreen')} style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -268,13 +268,13 @@ const HomeScreen = ({navigation}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+           <TouchableOpacity onPress={()=>navigation.navigate('AddDistributorScreen')} style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -295,13 +295,13 @@ const HomeScreen = ({navigation}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+           <TouchableOpacity style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -322,13 +322,13 @@ const HomeScreen = ({navigation}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -349,13 +349,13 @@ const HomeScreen = ({navigation}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -376,7 +376,7 @@ const HomeScreen = ({navigation}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}

@@ -29,6 +29,7 @@ import { Tab, TabView } from '@rneui/themed';
 import { Animated } from 'react-native';
 import PurchaseOrder from './PurchaseOrder';
 import SalesOrder from './SalesOrder';
+import PageHeader from '../../../components/ui/PageHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -63,6 +64,7 @@ const OrdersScreen = ({ navigation }: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
+        <PageHeader title="Orders" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -130,7 +132,7 @@ const OrdersScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -147,7 +149,7 @@ const OrdersScreen = ({ navigation }: Props) => {
                 titleStyle={{
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,

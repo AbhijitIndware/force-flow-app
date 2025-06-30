@@ -183,7 +183,8 @@ const AttendanceScreen = ({navigation}: Props) => {
                 titleStyle={{
                   fontSize: Size.xxs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
+                  paddingHorizontal:0
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -199,7 +200,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                 titleStyle={{
                   fontSize: Size.xxs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -215,7 +216,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                 titleStyle={{
                   fontSize: Size.xxs,
                   fontFamily: Fonts.medium,
-                  lineHeight: 6,
+                  lineHeight: 9,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -680,7 +681,7 @@ const styles = StyleSheet.create({
   },
   tabSection: {
     backgroundColor: Colors.orange,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingVertical: 8,
   },
   linkBox: {

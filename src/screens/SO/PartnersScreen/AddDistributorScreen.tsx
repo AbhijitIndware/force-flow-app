@@ -28,6 +28,7 @@ import {
 import { REmployee } from '../../../types/dropdownType';
 import { useAddDistributorMutation } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
+import AddDistributorForm from '../../../components/SO/Partner/Distributor/AddDistributorForm';
 
 
 type NavigationProp = NativeStackNavigationProp<
@@ -114,7 +115,6 @@ const AddDistributorScreen = ({ navigation }: Props) => {
         },
     });
 
-
     const transformToDropdownList = (arr: { name: string }[] = []) =>
         arr.map(item => ({ label: item.name, value: item.name }));
 
@@ -125,106 +125,30 @@ const AddDistributorScreen = ({ navigation }: Props) => {
         }));
 
     const distributorGroupList = transformToDropdownList(distributorGroupData?.message?.data);
-
     const employeeList = transformEmployeeList(employeeData?.message?.data);
     const zoneList = useMemo(() => transformToDropdownList(zoneData?.message?.data), [zoneData]);
     const stateList = useMemo(() => {
         return transformToDropdownList(stateData?.message?.data?.filter(state => state.zone === values.zone));
-    }, [stateData, values.zone]);
-
+    }, [stateData, values.zone])
     const cityList = useMemo(() => {
         return transformToDropdownList(cityData?.message?.data?.filter(city => city.state === values.state));
     }, [cityData, values.state]);
-
     const designationList = transformToDropdownList(designationData?.message?.data);
-
-
-    const renderInput = (label: string, field: keyof typeof values) => {
-        let keyboardType: 'default' | 'email-address' | 'numeric' = 'default';
-
-        if (field === 'email') {
-            keyboardType = 'email-address';
-        } else if (field === 'mobile') {
-            keyboardType = 'numeric';
-        }
-
-        return (
-            <View style={styles.inputWrapper}>
-                <Text style={styles.label}>{label}</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder={`Enter ${label}`}
-                    value={values[field]}
-                    onChangeText={handleChange(field)}
-                    onBlur={handleBlur(field)}
-                    placeholderTextColor="#999"
-                    keyboardType={keyboardType}
-                />
-                {touched[field] && errors[field] && (
-                    <Text style={styles.error}>{errors[field]}</Text>
-                )}
-            </View>
-        );
-    };
-
-
-    const renderDropdown = (
-        label: string,
-        field: keyof typeof values,
-        data: { label: string; value: string }[] = []
-    ) => {
-        const handleSelect = (val: string) => {
-            setFieldValue(field, val);
-
-            // Reset dependent fields
-            if (field === 'zone') {
-                setFieldValue('state', ''); // Reset state
-                setFieldValue('city', '');  // Reset city
-            } else if (field === 'state') {
-                setFieldValue('city', '');  // Reset city
-            }
-        };
-
-        return (
-            <View style={styles.inputWrapper}>
-                <Text style={styles.label}>{label}</Text>
-                <DropdownComponent
-                    selectText={label}
-                    data={data}
-                    selectedId={values[field] ? String(values[field]) : null}
-                    setSelectedId={handleSelect}
-                    name={field}
-                />
-                {touched[field] && errors[field] && (
-                    <Text style={styles.error}>{errors[field]}</Text>
-                )}
-            </View>
-        );
-    };
 
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
             <PageHeader title="Add Distributor" navigation={() => navigation.goBack()} />
-            <Animated.ScrollView
-                onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                    { useNativeDriver: false },
-                )}
-                scrollEventThrottle={16} contentContainerStyle={{ padding: 16 }}>
-                {renderInput('Distributor Name', 'distributor_name')}
-                {renderInput('SAP Code', 'distributor_sap_code')}
-                {renderDropdown('Group', 'distributor_group', distributorGroupList)}
-                {renderDropdown('Employee', 'employee', employeeList)}
-                {renderDropdown('Zone', 'zone', zoneList)}
-                {renderDropdown('State', 'state', stateList)}
-                {renderDropdown('City', 'city', cityList)}
-                {renderDropdown('Reports To', 'reports_to', employeeList)}
-                {renderDropdown('Designation', 'designation', designationList)}
-                {renderInput('Distributor Code', 'distributor_code')}
-                {renderInput('Mobile', 'mobile')}
-                {renderInput('Email', 'email')}
-            </Animated.ScrollView>
+           <AddDistributorForm
+        {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
+        scrollY={scrollY}
+        distributorGroupList={distributorGroupList}
+        employeeList={employeeList}
+        zoneList={zoneList}
+        stateList={stateList}
+        cityList={cityList}
+        designationList={designationList}
+      />
             <TouchableOpacity
                 style={[styles.submitBtn, loading && { opacity: 0.7 }]}
                 onPress={() => handleSubmit()}
@@ -242,29 +166,6 @@ const AddDistributorScreen = ({ navigation }: Props) => {
 export default AddDistributorScreen;
 
 const styles = StyleSheet.create({
-    inputWrapper: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 4,
-        color: Colors.black,
-    },
-    input: {
-        backgroundColor: Colors.white,
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        color: Colors.black,
-    },
-    error: {
-        fontSize: 12,
-        color: 'red',
-        marginTop: 4,
-    },
     submitBtn: {
         backgroundColor: Colors.primary,
         paddingVertical: 12,
