@@ -1,13 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import DropdownComponent from '../../../ui/CustomDropDown';
-import { Colors } from '../../../../utils/colors';
+import DropdownComponent from '../ui/CustomDropDown';
+import { Colors } from '../../utils/colors';
+
+
 interface DropdownOption {
   label: string;
   value: string;
 }
 
-interface DistributorDropdownProps {
+interface ReusableDropdownProps {
   label: string;
   field: string;
   value: string;
@@ -16,7 +18,7 @@ interface DistributorDropdownProps {
   onChange: (value: string) => void;
 }
 
-const DistributorDropdown: React.FC<DistributorDropdownProps> = ({
+const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   label,
   field,
   value,
@@ -45,4 +47,4 @@ const styles = StyleSheet.create({
   error: { fontSize: 12, color: 'red', marginTop: 4 },
 });
 
-export default DistributorDropdown;
+export default ReusableDropdown;

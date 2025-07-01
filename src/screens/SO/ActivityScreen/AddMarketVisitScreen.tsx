@@ -28,6 +28,7 @@ import moment from 'moment';
 import { useAppSelector } from '../../../store/hook';
 import { Animated } from 'react-native';
 import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
+import AddMarketForm from '../../../components/SO/Activity/MarketVisit/AddMarketForm';
 
 const initial = {
     store_name: '',
@@ -62,7 +63,7 @@ const weekOffList = [
 ];
 
 
-const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<SoAppStackParamList, 'AddStoreScreen'> }) => {
+const AddMarketVisitScreen = ({ navigation }: { navigation: NativeStackNavigationProp<SoAppStackParamList, 'AddMarketVisitScreen'> }) => {
     const [loading, setLoading] = useState(false);
     const [isTimePickerVisible, setTimePickerVisible] = useState(false);
     const [activeField, setActiveField] = useState<'start_time' | 'end_time' | null>(null);
@@ -152,7 +153,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
-            <PageHeader title="Add Store" navigation={() => navigation.goBack()} />
+            <PageHeader title="Add Market Vist" navigation={() => navigation.goBack()} />
             <DateTimePickerModal
                 isVisible={isTimePickerVisible}
                 mode="time"
@@ -165,7 +166,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
                 }}
                 onCancel={() => setTimePickerVisible(false)}
             />
-            <AddStoreForm
+            <AddMarketForm
                 values={values}
                 errors={errors}
                 touched={touched}
@@ -199,7 +200,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
     );
 };
 
-export default AddStoreScreen;
+export default AddMarketVisitScreen;
 
 const styles = StyleSheet.create({
     submitBtn: {

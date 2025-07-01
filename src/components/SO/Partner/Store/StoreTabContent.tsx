@@ -1,36 +1,22 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
-    Animated,
     Dimensions,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import { Colors } from '../../../../utils/colors';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 import {
-    CirclePlus,
     Clock2,
     Funnel,
     Search,
-    UserRoundPlus,
 } from 'lucide-react-native';
-import { Tab, TabView } from '@rneui/themed';
 
 const { width } = Dimensions.get('window');
 
-
-const DistributorTabcontent = ({ navigation }: any) => {
+const StoreTabContent = ({ navigation }: any) => {
     return (
         <View
             style={{
@@ -46,7 +32,7 @@ const DistributorTabcontent = ({ navigation }: any) => {
                 ]}>
                 <View style={styles.bodyHeader}>
                     <Text style={styles.bodyHeaderTitle}>
-                        All Distributor
+                        All Store
                     </Text>
                     <View style={styles.bodyHeaderIcon}>
                         <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
@@ -172,108 +158,16 @@ const DistributorTabcontent = ({ navigation }: any) => {
                             </View>
                         </View>
                     </View>
+
                 </View>
             </View>
         </View>
     )
 }
 
-export default DistributorTabcontent
+export default StoreTabContent
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.transparent,
-        position: 'relative',
-        paddingHorizontal: 20,
-    },
-
-    //header-box-section css start
-    headerSec: {
-        backgroundColor: Colors.white,
-        minHeight: 100,
-        width: '100%',
-        paddingHorizontal: 20,
-        borderBottomRightRadius: 40,
-        borderBottomLeftRadius: 40,
-        position: 'relative',
-        zIndex: 1,
-        // iOS Shadow
-        shadowColor: '#979797',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        paddingBottom: 10,
-        textAlign: 'center',
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        // Android Shadow
-        elevation: 2,
-    },
-    arrobox: {
-        width: 20,
-        height: 20,
-        backgroundColor: '#F0F2F6',
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 100,
-    },
-    salesHeaderData: {
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 0,
-    },
-
-    welcomeText: {
-        fontFamily: Fonts.light,
-        color: Colors.white,
-        fontSize: Size.xsmd,
-        textAlign: 'center',
-    },
-    name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
-    welcomBox: {
-        padding: 15,
-        backgroundColor: Colors.darkButton,
-        borderRadius: 15,
-        paddingVertical: 20,
-        marginTop: 10,
-        position: 'relative',
-        bottom: -0,
-        marginBottom: -30,
-    },
-
-    linkBox: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        backgroundColor: Colors.Orangelight,
-        borderRadius: 15,
-        padding: 12,
-        gap: 10,
-        borderTopWidth: 1,
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderColor: '#9C9C9C',
-    },
-    linkContent: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        color: Colors.white,
-        gap: 5,
-        alignItems: 'center',
-        width: width * 0.76,
-    },
-
-    paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
-
-    //bodyContent section css
     bodyContent: { flex: 1 },
     bodyHeader: {
         display: 'flex',

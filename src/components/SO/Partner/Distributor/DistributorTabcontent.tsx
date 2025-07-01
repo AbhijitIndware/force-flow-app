@@ -1,167 +1,184 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
-  Animated,
-  Dimensions,
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Dimensions,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
+import { flexCol } from '../../../../utils/styles';
+import { Colors } from '../../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
+import LoadingScreen from '../../../ui/LoadingScreen';
 import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import { SoAppStackParamList } from '../../../../types/Navigation';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 import {
-  ClipboardPenLine,
-  Clock2,
-  EllipsisVertical,
-  FileCheck,
-  Funnel,
-  MapPinCheck,
-  Search,
+    CirclePlus,
+    Clock2,
+    Funnel,
+    Search,
+    UserRoundPlus,
 } from 'lucide-react-native';
 import { Tab, TabView } from '@rneui/themed';
-import { Button } from '@rneui/themed';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 
-const PJPScreen = ({ navigation }: any) => {
+
+const DistributorTabcontent = ({ navigation }: any) => {
     return (
         <View
-              style={{
+            style={{
                 width: '100%',
                 flex: 1,
                 backgroundColor: Colors.lightBg,
                 position: 'relative',
-              }}>
-              <View
+            }}>
+            <View
                 style={[
-                  styles.bodyContent,
-                  { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
+                    styles.bodyContent,
+                    { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
                 ]}>
                 <View style={styles.bodyHeader}>
-                  <Text style={styles.bodyHeaderTitle}>
-                    Recent PJP
-                  </Text>
-                  <View style={styles.bodyHeaderIcon}>
-                    <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </View>
+                    <Text style={styles.bodyHeaderTitle}>
+                        All Distributor
+                    </Text>
+                    <View style={styles.bodyHeaderIcon}>
+                        <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
+                        <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+                    </View>
                 </View>
                 <View>
-                  {/* card section start here */}
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, { marginLeft: 'auto' }]}>
-                        January
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
+                    {/* card section start here */}
+                    <View style={styles.atteddanceCard}>
+                        <View style={styles.cardHeader}>
+                            <View style={styles.timeSection}>
+                                <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+                                <Text style={styles.time}> 11:03:45 AM</Text>
+                            </View>
+                            <Text style={[styles.present, { marginLeft: 'auto' }]}>
+                                Approved
+                            </Text>
+                        </View>
+                        <View style={styles.cardbody}>
+                            <View style={styles.dateBox}>
+                                <Text style={styles.dateText}>19</Text>
+                                <Text style={styles.monthText}>Jan</Text>
+                            </View>
+                            <View style={{ width: '80%' }}>
+                                <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                    <Text style={styles.contentText}>ID: dist-00123</Text>
+                                    <Text style={styles.contentText}>Zone: North</Text>
+                                </View>
+                                <Text style={styles.contentText}>Distributor name</Text>
+                                <Text style={[styles.contentText, { fontFamily: Fonts.medium }]}>
+                                    Accestisa new mart
+                                </Text>
+                                <Text style={styles.contentText}>
+                                    City: New Delhi
+                                </Text>
+                            </View>
+                        </View>
                     </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>19</Text>
-                        <Text style={styles.monthText}>Jan</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of January
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
+                    <View style={styles.atteddanceCard}>
+                        <View style={styles.cardHeader}>
+                            <View style={styles.timeSection}>
+                                <Text style={styles.time}> PO ID: PO-1001</Text>
+                            </View>
+                            <Text style={[styles.leave, { marginLeft: 'auto' }]}>
+                                Submitted
+                            </Text>
+                        </View>
+                        <View style={styles.cardbody}>
+                            <View style={styles.dateBox}>
+                                <Text style={styles.dateText}>19</Text>
+                                <Text style={styles.monthText}>Jan</Text>
+                            </View>
+                            <View style={{ width: '80%' }}>
+                                <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                    <Text style={styles.contentText}>ID: dist-00123</Text>
+                                    <Text style={styles.contentText}>Zone: South</Text>
+                                </View>
+                                <Text style={styles.contentText}>Distributor name</Text>
+                                <Text style={[styles.contentText, { fontFamily: Fonts.medium }]}>
+                                    Accestisa new mart
+                                </Text>
+                                <Text style={styles.contentText}>
+                                    City: New Delhi
+                                </Text>
+                            </View>
+                        </View>
                     </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, { marginLeft: 'auto' }]}>
-                        March
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
+                    <View style={styles.atteddanceCard}>
+                        <View style={styles.cardHeader}>
+                            <View style={styles.timeSection}>
+                                <Text style={styles.time}> PO ID: PO-1001</Text>
+                            </View>
+                            <Text style={[styles.leave, { marginLeft: 'auto' }]}>
+                                Submitted
+                            </Text>
+                        </View>
+                        <View style={styles.cardbody}>
+                            <View style={styles.dateBox}>
+                                <Text style={styles.dateText}>19</Text>
+                                <Text style={styles.monthText}>Jan</Text>
+                            </View>
+                            <View style={{ width: '80%' }}>
+                                <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                    <Text style={styles.contentText}>ID: dist-00123</Text>
+                                    <Text style={styles.contentText}>Zone: East</Text>
+                                </View>
+                                <Text style={styles.contentText}>Distributor name</Text>
+                                <Text style={[styles.contentText, { fontFamily: Fonts.medium }]}>
+                                    Accestisa new mart
+                                </Text>
+                                <Text style={styles.contentText}>
+                                    City: New Delhi
+                                </Text>
+                            </View>
+                        </View>
                     </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>25</Text>
-                        <Text style={styles.monthText}>Mar</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of March
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
+                    <View style={styles.atteddanceCard}>
+                        <View style={styles.cardHeader}>
+                            <View style={styles.timeSection}>
+                                <Text style={styles.time}> PO ID: PO-1001</Text>
+                            </View>
+                            <Text style={[styles.present, { marginLeft: 'auto' }]}>
+                                Approved
+                            </Text>
+                        </View>
+                        <View style={styles.cardbody}>
+                            <View style={styles.dateBox}>
+                                <Text style={styles.dateText}>19</Text>
+                                <Text style={styles.monthText}>Jan</Text>
+                            </View>
+                            <View style={{ width: '80%' }}>
+                                <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                    <Text style={styles.contentText}>ID: dist-00123</Text>
+                                    <Text style={styles.contentText}>Zone: West</Text>
+                                </View>
+                                <Text style={styles.contentText}>Distributor name</Text>
+                                <Text style={[styles.contentText, { fontFamily: Fonts.medium }]}>
+                                    Accestisa new mart
+                                </Text>
+                                <Text style={styles.contentText}>
+                                    City: New Delhi
+                                </Text>
+                            </View>
+                        </View>
                     </View>
-                  </View>
-                  <View style={styles.atteddanceCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.timeSection}>
-                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                        <Text style={styles.time}> 11:03:45 AM</Text>
-                      </View>
-                      <Text style={[styles.leave, { marginLeft: 'auto' }]}>
-                        April
-                      </Text>
-                      <EllipsisVertical size={20} color={Colors.darkButton} />
-                    </View>
-                    <View style={styles.cardbody}>
-                      <View style={styles.dateBox}>
-                        <Text style={styles.dateText}>26</Text>
-                        <Text style={styles.monthText}>Apr</Text>
-                      </View>
-                      <View>
-                        <Text
-                          style={{
-                            fontFamily: Fonts.semiBold,
-                            fontSize: Size.xsmd,
-                            color: Colors.darkButton,
-                          }}>
-                          PJP of April
-                        </Text>
-                        <Text style={styles.contentText}>Store name</Text>
-                        <Text style={styles.contentText}>
-                          Accestisa new mart
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
                 </View>
-              </View>
             </View>
+        </View>
     )
 }
 
-export default PJPScreen
-
+export default DistributorTabcontent
 
 const styles = StyleSheet.create({
     container: {
@@ -174,7 +191,7 @@ const styles = StyleSheet.create({
     //header-box-section css start
     headerSec: {
         backgroundColor: Colors.white,
-        minHeight: 150,
+        minHeight: 100,
         width: '100%',
         paddingHorizontal: 20,
         borderBottomRightRadius: 40,
@@ -186,7 +203,10 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.1,
         shadowRadius: 6,
-        paddingBottom: 20,
+        paddingBottom: 10,
+        textAlign: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
 
         // Android Shadow
         elevation: 2,

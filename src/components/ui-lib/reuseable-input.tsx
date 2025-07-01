@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TextInput, View, StyleSheet, TextInputProps } from 'react-native';
-import { Colors } from '../../../../utils/colors';
+import { Colors } from '../../utils/colors';
 
 interface DistributorInputProps {
   label: string;
@@ -11,7 +11,7 @@ interface DistributorInputProps {
   keyboardType?: TextInputProps['keyboardType'];
 }
 
-const DistributorInput: React.FC<DistributorInputProps> = ({
+const ReusableInput: React.FC<DistributorInputProps> = ({
   label,
   value,
   onChangeText,
@@ -49,4 +49,4 @@ const styles = StyleSheet.create({
   error: { fontSize: 12, color: 'red', marginTop: 4 },
 });
 
-export default DistributorInput;
+export default ReusableInput;

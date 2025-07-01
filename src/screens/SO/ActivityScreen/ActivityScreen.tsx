@@ -4,7 +4,6 @@ import {
   Dimensions,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,18 +19,14 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import {
   ClipboardPenLine,
-  Clock2,
-  EllipsisVertical,
   FileCheck,
-  Funnel,
   MapPinCheck,
-  Search,
 } from 'lucide-react-native';
-import { Tab, TabView } from '@rneui/themed';
+import { Tab } from '@rneui/themed';
 import { Button } from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MarketVisitScreen from './MarketVisitScreen';
-import PJPScreen from './PjpScreen';
+import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
+import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
 
 const { width } = Dimensions.get('window');
@@ -205,7 +200,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
         }}>
         <TouchableOpacity
           style={styles.checkinButton}
-          onPress={() => index === 0 ? navigation.navigate('AddDistributorScreen') : navigation.navigate('AddStoreScreen')}>
+          onPress={() => index === 0 ? navigation.navigate('AddPjpScreen') : navigation.navigate('AddMarketVisitScreen')}>
           <FileCheck strokeWidth={1.4} color={Colors.white} />
           <Text style={styles.checkinButtonText}>
             {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}

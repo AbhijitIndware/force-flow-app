@@ -26,7 +26,7 @@ interface Props {
   designationList: { label: string; value: string }[];
 }
 
-const AddDistributorForm: React.FC<Props> = ({
+const AddPjpForm: React.FC<Props> = ({
   values,
   errors,
   touched,
@@ -52,6 +52,7 @@ const AddDistributorForm: React.FC<Props> = ({
   };
 
   return (
+
     <Animated.ScrollView
       onScroll={Animated.event(
         [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -73,7 +74,9 @@ const AddDistributorForm: React.FC<Props> = ({
       <ReusableInput label="Mobile" value={values.mobile} onChangeText={handleChange('mobile')} onBlur={()=>handleBlur('mobile')} error={touched.mobile && errors.mobile} keyboardType="numeric" />
       <ReusableInput label="Email" value={values.email} onChangeText={handleChange('email')} onBlur={()=>handleBlur('email')} error={touched.email && errors.email} keyboardType="email-address" />
     </Animated.ScrollView>
+
+
   );
 };
 
-export default AddDistributorForm;
+export default AddPjpForm;

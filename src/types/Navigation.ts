@@ -29,6 +29,8 @@ export type SoAppStackParamList = {
   ProfileScreen: undefined;
   AddDistributorScreen:undefined
   AddStoreScreen:undefined
+  AddMarketVisitScreen: undefined;
+  AddPjpScreen: undefined;
 };
 
 export type menuType = {

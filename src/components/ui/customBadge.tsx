@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -8,
     right: -12,
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.Orangelight,
 
     display: 'flex',
     justifyContent: 'flex-start',

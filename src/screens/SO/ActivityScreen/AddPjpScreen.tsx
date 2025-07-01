@@ -25,12 +25,12 @@ import {
 import { REmployee } from '../../../types/dropdownType';
 import { useAddDistributorMutation } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import AddDistributorForm from '../../../components/SO/Partner/Distributor/AddDistributorForm';
+import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 
 
 type NavigationProp = NativeStackNavigationProp<
     SoAppStackParamList,
-    'AttendanceScreen'
+    'AddPjpScreen'
 >;
 
 type Props = {
@@ -53,7 +53,7 @@ let initial = {
     designation: '',
 }
 
-const AddDistributorScreen = ({ navigation }: Props) => {
+const AddPjpScreen = ({ navigation }: Props) => {
     const [loading, setLoading] = useState(false);
     const { data: cityData } = useGetCityQuery();
     const { data: stateData } = useGetStateQuery();
@@ -135,8 +135,8 @@ const AddDistributorScreen = ({ navigation }: Props) => {
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
-            <PageHeader title="Add Distributor" navigation={() => navigation.goBack()} />
-            <AddDistributorForm
+            <PageHeader title="Add Pjp" navigation={() => navigation.goBack()} />
+            <AddPjpForm
                 {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
                 scrollY={scrollY}
                 distributorGroupList={distributorGroupList}
@@ -160,7 +160,7 @@ const AddDistributorScreen = ({ navigation }: Props) => {
     );
 };
 
-export default AddDistributorScreen;
+export default AddPjpScreen;
 
 const styles = StyleSheet.create({
     submitBtn: {

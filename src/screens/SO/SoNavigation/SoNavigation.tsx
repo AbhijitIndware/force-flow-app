@@ -11,6 +11,8 @@ import PartnersScreen from '../PartnersScreen/PartnersScreen';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
 import AddDistributorScreen from '../PartnersScreen/AddDistributorScreen';
 import AddStoreScreen from '../PartnersScreen/AddStoreScreen';
+import AddPjpScreen from '../ActivityScreen/AddPjpScreen';
+import AddMarketVisitScreen from '../ActivityScreen/AddMarketVisitScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -65,6 +67,16 @@ const SoNavigation = () => {
       <Stack.Screen
         name="AddStoreScreen"
         component={AddStoreScreen}
+        options={{headerShown: false}}
+      />
+       <Stack.Screen
+        name="AddMarketVisitScreen"
+        component={AddMarketVisitScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddPjpScreen"
+        component={AddPjpScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
