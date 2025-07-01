@@ -31,6 +31,8 @@ export type SoAppStackParamList = {
   AddStoreScreen:undefined
   AddMarketVisitScreen: undefined;
   AddPjpScreen: undefined;
+  AddSaleScreen: undefined;
+  AddPurchaseScreen: undefined;
 };
 
 export type menuType = {

@@ -3,7 +3,6 @@ import {
   Dimensions,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,16 +19,14 @@ import { Size } from '../../../utils/fontSize';
 import {
   AlarmClockMinus,
   CirclePlus,
-  Funnel,
   PackageOpen,
-  Search,
   ShoppingCart,
 } from 'lucide-react-native';
-import { Tab, TabView } from '@rneui/themed';
+import { Tab } from '@rneui/themed';
 import { Animated } from 'react-native';
-import PurchaseOrder from './PurchaseOrder';
-import SalesOrder from './SalesOrder';
 import PageHeader from '../../../components/ui/PageHeader';
+import PurchaseOrder from '../../../components/SO/Order/Purchase/PurchaseOrder';
+import SalesOrder from '../../../components/SO/Order/Sale/SalesOrder';
 
 const { width } = Dimensions.get('window');
 
@@ -183,8 +180,7 @@ const OrdersScreen = ({ navigation }: Props) => {
           alignItems: 'center',
         }}>
         <TouchableOpacity
-          style={styles.checkinButton}
-          onPress={() => navigation.navigate('AttendanceScreen')}>
+          style={styles.checkinButton}onPress={() => index === 0 ? navigation.navigate('AddPurchaseScreen') : navigation.navigate('AddSaleScreen')}>
           <CirclePlus strokeWidth={1.4} color={Colors.white} />
           <Text style={styles.checkinButtonText}>
              {`Add ${index === 0 ? 'Purchase' : 'Sales'} Orders`}

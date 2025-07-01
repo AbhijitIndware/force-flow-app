@@ -1,32 +1,17 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
     Dimensions,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
 import {
-    AlarmClockMinus,
-    CirclePlus,
     Funnel,
-    PackageOpen,
     Search,
-    ShoppingCart,
 } from 'lucide-react-native';
-import { Tab, TabView } from '@rneui/themed';
-import { Animated } from 'react-native';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
+import { Colors } from '../../../../utils/colors';
 
 const { width } = Dimensions.get('window');
 const SalesOrder = ({ navigation }: any) => {
