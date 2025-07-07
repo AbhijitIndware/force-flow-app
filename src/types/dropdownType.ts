@@ -38,3 +38,15 @@ export type REmployee = {
         }[];
     };
 };
+
+export type RBeat = {
+    message: {
+        status: string;
+        data: {
+            name: string;
+            city: string;
+            state: string;
+            zone: string;
+        }[];
+    };
+};

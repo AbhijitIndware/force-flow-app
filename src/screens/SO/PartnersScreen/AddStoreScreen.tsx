@@ -15,6 +15,7 @@ import { Colors } from '../../../utils/colors';
 import { storeSchema } from '../../../types/schema';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import {
+    useGetBeatQuery,
     useGetCityQuery,
     useGetDistributorQuery,
     useGetStateQuery,
@@ -45,7 +46,7 @@ const initial = {
     distributor: '',
     address: '',
     weekly_off: '',
-
+    beat: '',
     created_by_employee: '',
     created_by_employee_name: '',
     created_by_employee_designation: '',
@@ -81,6 +82,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
     const { data: distributorData } = useGetDistributorQuery();
     const { data: typeData } = useGetStoreTypeQuery();
     const { data: categoryData } = useGetStoreCategoryQuery();
+    const { data: beatData } = useGetBeatQuery();
 
     const {
         values,
@@ -148,6 +150,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
     const distributorList = transformList(distributorData?.message?.data);
     const storeTypeList = transformList(typeData?.message?.data);
     const storeCategoryList = transformList(categoryData?.message?.data);
+    const beatList = transformList(beatData?.message?.data)
 
 
     return (
@@ -179,6 +182,7 @@ const AddStoreScreen = ({ navigation }: { navigation: NativeStackNavigationProp<
                 stateList={stateList}
                 cityList={cityList}
                 distributorList={distributorList}
+                beatList={beatList}
                 weekOffList={weekOffList}
                 onTimeSelect={(field) => {
                     setActiveField(field);

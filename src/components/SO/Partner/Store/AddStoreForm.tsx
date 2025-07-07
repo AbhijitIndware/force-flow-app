@@ -27,6 +27,7 @@ interface Props {
   zoneList: { label: string; value: string }[];
   stateList: { label: string; value: string }[];
   cityList: { label: string; value: string }[];
+  beatList: { label: string; value: string }[];
   distributorList: { label: string; value: string }[];
   weekOffList: { label: string; value: string }[];
   onTimeSelect: (field: 'start_time' | 'end_time') => void;
@@ -44,6 +45,7 @@ const AddStoreForm: React.FC<Props> = ({
   storeCategoryList,
   zoneList,
   stateList,
+  beatList,
   cityList,
   distributorList,
   weekOffList,
@@ -74,6 +76,7 @@ const AddStoreForm: React.FC<Props> = ({
       <ReusableDropdown label="Zone" field="zone" value={values.zone} data={zoneList} error={touched.zone && errors.zone} onChange={(val: string) => onSelect('zone', val)} />
       <ReusableDropdown label="State" field="state" value={values.state} data={stateList} error={touched.state && errors.state} onChange={(val: string) => onSelect('state', val)} />
       <ReusableDropdown label="City" field="city" value={values.city} data={cityList} error={touched.city && errors.city} onChange={(val: string) => onSelect('city', val)} />
+      <ReusableDropdown label="Beat" field="beat" value={values.beat} data={beatList} error={touched.beat && errors.beat} onChange={(val: string) => onSelect('beat', val)} />
       <ReusableDropdown label="Weekly Off" field="weekly_off" value={values.weekly_off} data={weekOffList} error={touched.weekly_off && errors.weekly_off} onChange={(val: string) => onSelect('weekly_off', val)} />
       <ReusableDropdown label="Distributor" field="distributor" value={values.distributor} data={distributorList} error={touched.distributor && errors.distributor} onChange={(val: string) => onSelect('distributor', val)} />
       <ReusableInput label="Map Location" value={values.map_location} onChangeText={handleChange('map_location')} onBlur={() => handleBlur('map_location')} error={touched.map_location && errors.map_location} />

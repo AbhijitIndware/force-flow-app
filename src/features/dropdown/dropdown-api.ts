@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { apiBaseUrl } from '../apiBaseUrl';
-import { RCity, REmployee, RResponse, RState } from '../../types/dropdownType';
+import { RBeat, RCity, REmployee, RResponse, RState } from '../../types/dropdownType';
 
 //Dropdown api calling ---
 export const dropdownApi = createApi({
@@ -70,6 +70,13 @@ export const dropdownApi = createApi({
                 method: 'GET',
             }),
         }),
+
+        getBeat: builder.query<RBeat, void>({
+            query: () => ({
+                url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_beat',
+                method: 'GET',
+            }),
+        }),
     }),
 });
-export const { useGetStateQuery, useGetCityQuery, useGetDesignationQuery, useGetDistributorGroupQuery, useGetDistributorQuery, useGetEmployeeQuery, useGetZoneQuery ,useGetItemGroupQuery,useGetStoreCategoryQuery,useGetStoreTypeQuery} = dropdownApi;
+export const { useGetStateQuery, useGetCityQuery, useGetDesignationQuery, useGetDistributorGroupQuery, useGetDistributorQuery, useGetEmployeeQuery, useGetZoneQuery, useGetItemGroupQuery, useGetStoreCategoryQuery, useGetStoreTypeQuery, useGetBeatQuery } = dropdownApi;
