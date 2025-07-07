@@ -77,6 +77,12 @@ export const dropdownApi = createApi({
                 method: 'GET',
             }),
         }),
+        getStore: builder.query<RBeat, void>({
+            query: () => ({
+                url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_beat',
+                method: 'GET',
+            }),
+        }),
     }),
 });
-export const { useGetStateQuery, useGetCityQuery, useGetDesignationQuery, useGetDistributorGroupQuery, useGetDistributorQuery, useGetEmployeeQuery, useGetZoneQuery, useGetItemGroupQuery, useGetStoreCategoryQuery, useGetStoreTypeQuery, useGetBeatQuery } = dropdownApi;
+export const { useGetStateQuery, useGetCityQuery, useGetDesignationQuery, useGetDistributorGroupQuery, useGetDistributorQuery, useGetEmployeeQuery, useGetZoneQuery, useGetItemGroupQuery, useGetStoreCategoryQuery, useGetStoreTypeQuery, useGetBeatQuery, useGetStoreQuery } = dropdownApi;

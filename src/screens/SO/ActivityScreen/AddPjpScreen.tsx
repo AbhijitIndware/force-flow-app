@@ -13,17 +13,18 @@ import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
-import { distributorSchema } from '../../../types/schema';
+import { dailyPjpSchema, distributorSchema } from '../../../types/schema';
 import {
     useGetCityQuery,
     useGetDesignationQuery,
     useGetDistributorGroupQuery,
     useGetEmployeeQuery,
     useGetStateQuery,
+    useGetStoreQuery,
     useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
 import { REmployee } from '../../../types/dropdownType';
-import { useAddDistributorMutation } from '../../../features/base/base-api';
+import { useAddDailyPjpMutation, useAddDistributorMutation } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 
@@ -39,31 +40,18 @@ type Props = {
 };
 
 let initial = {
-    distributor_name: '',
-    distributor_sap_code: '',
-    distributor_group: '',
-    distributor_code: '',
-    mobile: '',
-    email: '',
+    date: "",
     employee: '',
-    zone: '',
-    state: '',
-    city: '',
-    reports_to: '',
-    designation: '',
+    stores: [{ store: "" }]
 }
 
 const AddPjpScreen = ({ navigation }: Props) => {
     const [loading, setLoading] = useState(false);
-    const { data: cityData } = useGetCityQuery();
-    const { data: stateData } = useGetStateQuery();
-    const { data: zoneData } = useGetZoneQuery();
     const { data: employeeData } = useGetEmployeeQuery();
-    const { data: designationData } = useGetDesignationQuery();
-    const { data: distributorGroupData, error } = useGetDistributorGroupQuery();
+    const { data: storeData } = useGetStoreQuery();
     const scrollY = useRef(new Animated.Value(0)).current;
 
-    const [addDistributor] = useAddDistributorMutation();
+    const [addDailyPjp] = useAddDailyPjpMutation();
 
     const {
         values,
@@ -75,12 +63,12 @@ const AddPjpScreen = ({ navigation }: Props) => {
         setFieldValue,
     } = useFormik({
         initialValues: initial,
-        validationSchema: distributorSchema,
+        validationSchema: dailyPjpSchema,
         onSubmit: async (formValues, actions) => {
             try {
                 setLoading(true);
                 const payload = { data: formValues };
-                const res = await addDistributor(payload).unwrap();
+                const res = await addDailyPjp(payload).unwrap();
 
                 if (res?.message?.status === 'success') {
                     Toast.show({
@@ -117,20 +105,12 @@ const AddPjpScreen = ({ navigation }: Props) => {
 
     const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
         arr.map(item => ({
-            label: `${item.employee_name} (${item.designation})`,
+            label: `${item.employee_name}`,
             value: item.name,
         }));
 
-    const distributorGroupList = transformToDropdownList(distributorGroupData?.message?.data);
     const employeeList = transformEmployeeList(employeeData?.message?.data);
-    const zoneList = useMemo(() => transformToDropdownList(zoneData?.message?.data), [zoneData]);
-    const stateList = useMemo(() => {
-        return transformToDropdownList(stateData?.message?.data?.filter(state => state.zone === values.zone));
-    }, [stateData, values.zone])
-    const cityList = useMemo(() => {
-        return transformToDropdownList(cityData?.message?.data?.filter(city => city.state === values.state));
-    }, [cityData, values.state]);
-    const designationList = transformToDropdownList(designationData?.message?.data);
+    const storeList = transformToDropdownList(storeData?.message?.data);
 
 
     return (
@@ -139,12 +119,8 @@ const AddPjpScreen = ({ navigation }: Props) => {
             <AddPjpForm
                 {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
                 scrollY={scrollY}
-                distributorGroupList={distributorGroupList}
                 employeeList={employeeList}
-                zoneList={zoneList}
-                stateList={stateList}
-                cityList={cityList}
-                designationList={designationList}
+                storeList={storeList}
             />
             <TouchableOpacity
                 style={[styles.submitBtn, loading && { opacity: 0.7 }]}

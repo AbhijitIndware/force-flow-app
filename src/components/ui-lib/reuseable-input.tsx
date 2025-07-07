@@ -9,6 +9,7 @@ interface DistributorInputProps {
   onBlur: () => void;
   error?: string | false;
   keyboardType?: TextInputProps['keyboardType'];
+  disabled?: boolean;
 }
 
 const ReusableInput: React.FC<DistributorInputProps> = ({
@@ -18,6 +19,7 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
   onBlur,
   error,
   keyboardType = 'default',
+  disabled = false,
 }) => (
   <View style={styles.inputWrapper}>
     <Text style={styles.label}>{label}</Text>
@@ -29,6 +31,8 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
       onBlur={onBlur}
       placeholderTextColor="#999"
       keyboardType={keyboardType}
+
+      editable={!disabled}
     />
     {error && <Text style={styles.error}>{error}</Text>}
   </View>

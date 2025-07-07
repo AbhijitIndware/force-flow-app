@@ -43,3 +43,13 @@ export const storeSchema = Yup.object().shape({
   created_by_employee_name: Yup.string().nullable(),
   created_by_employee_designation: Yup.string().nullable(),
 });
+
+export const dailyPjpSchema = Yup.object().shape({
+  date: Yup.string().required('Date is required'),
+  employee: Yup.string().required('Employee is required'),
+  stores: Yup.array().of(
+    Yup.object().shape({
+      store: Yup.string().required('Store is required'),
+    })
+  ),
+});

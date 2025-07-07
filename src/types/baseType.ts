@@ -20,27 +20,39 @@ export interface IAddDistributorPayload {
 
 
 export interface IAddStorePayload {
-  data: {
-    store_name: string;
-    store_type: string;
-    store_category: string;
-    zone: string;
-    state: string;
-    map_location: string;
-    start_time: string; // Format: "HH:mm:ss"
-    end_time: string;   // Format: "HH:mm:ss"
-    pan_no: string;
-    gst_no: string;
-    city: string;
-    pin_code: string;
-    distributor: string;
-    address: string;
-    weekly_off: string;
-    created_by_employee: string;
-    created_by_employee_name: string;
-    created_by_employee_designation: string;
-  };
+    data: {
+        store_name: string;
+        store_type: string;
+        store_category: string;
+        zone: string;
+        state: string;
+        map_location: string;
+        start_time: string; // Format: "HH:mm:ss"
+        end_time: string;   // Format: "HH:mm:ss"
+        pan_no: string;
+        gst_no: string;
+        city: string;
+        pin_code: string;
+        distributor: string;
+        address: string;
+        weekly_off: string;
+        created_by_employee: string;
+        created_by_employee_name: string;
+        created_by_employee_designation: string;
+    };
 }
+
+type StoreEntry = {
+    store: string;
+};
+
+export type IAddPjpPayload = {
+    data: {
+        date: string;
+        employee: string;
+        stores: StoreEntry[];
+    }
+};
 
 
 export interface IAddDistributorResponse extends ApiResponse {
