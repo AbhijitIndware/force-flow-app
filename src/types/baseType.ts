@@ -55,6 +55,15 @@ export type IAddPjpPayload = {
 };
 
 
+export type IAddCheckIn = {
+    data: {
+        date: string;
+        employee: string;
+        store: string;
+    }
+};
+
+
 export interface IAddDistributorResponse extends ApiResponse {
     message: {
         status: string;

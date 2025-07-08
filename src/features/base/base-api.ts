@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuthGuard } from '../utility';
 import { apiBaseUrl } from '../apiBaseUrl';
-import { IAddDistributorPayload, IAddPjpPayload, IAddStorePayload } from '../../types/baseType';
+import { IAddCheckIn, IAddDistributorPayload, IAddPjpPayload, IAddStorePayload } from '../../types/baseType';
 
 // Base api calling ---
 export const baseApi = createApi({
@@ -33,6 +33,13 @@ export const baseApi = createApi({
                 body,
             }),
         }),
+        addCheckIn: builder.mutation<any, IAddCheckIn>({
+            query: body => ({
+                url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.create_pjp_daily_stores',
+                method: 'POST',
+                body,
+            }),
+        }),
     }),
 });
-export const { useAddDistributorMutation, useAddStoreMutation, useAddDailyPjpMutation } = baseApi;
+export const { useAddDistributorMutation, useAddStoreMutation, useAddDailyPjpMutation, useAddCheckInMutation } = baseApi;

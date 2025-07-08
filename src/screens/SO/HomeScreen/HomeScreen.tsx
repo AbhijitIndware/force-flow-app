@@ -9,16 +9,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
+import React, { useCallback, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Size} from '../../../utils/fontSize';
-import {Divider} from '@rneui/themed';
+import { Size } from '../../../utils/fontSize';
+import { Divider } from '@rneui/themed';
 import {
   ArrowRight,
   BaggageClaim,
@@ -32,9 +32,9 @@ import {
   ShoppingCart,
   UsersRound,
 } from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
+import { useAppSelector } from '../../../store/hook';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -46,7 +46,7 @@ type Props = {
   route: any;
 };
 
-const HomeScreen = ({navigation}: Props) => {
+const HomeScreen = ({ navigation }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -77,7 +77,7 @@ const HomeScreen = ({navigation}: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{position: 'relative', marginBottom: -100}}>
+            <View style={{ position: 'relative', marginBottom: -100 }}>
               <View style={styles.welcomBox}>
                 <Text style={styles.welcomeText}>
                   Hello <Text style={styles.name}>{user?.full_name}</Text>
@@ -94,9 +94,9 @@ const HomeScreen = ({navigation}: Props) => {
                     <Text style={styles.paraText}>Store- New mart</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.checkinButton}>
+                <TouchableOpacity style={styles.checkinButton} onPress={() => navigation.navigate('CheckInForm')}>
                   <Text style={styles.checkinButtonText}>
-                    Check Out from New mart
+                    {/* Check Out from New mart */} Check In
                   </Text>
                   <Ionicons
                     name="chevron-forward-circle-sharp"
@@ -107,7 +107,7 @@ const HomeScreen = ({navigation}: Props) => {
               </View>
               <View style={styles.planLink}>
                 <TouchableOpacity
-                  style={{flexDirection: 'row', alignItems: 'center'}}
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
                   onPress={() => navigation.navigate('AttendanceScreen')}>
                   <Text
                     style={{
@@ -132,7 +132,7 @@ const HomeScreen = ({navigation}: Props) => {
               <View
                 style={[
                   styles.countBoxIcon,
-                  {backgroundColor: Colors.holdLight},
+                  { backgroundColor: Colors.holdLight },
                 ]}>
                 <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
               </View>
@@ -143,7 +143,7 @@ const HomeScreen = ({navigation}: Props) => {
               <View
                 style={[
                   styles.countBoxIcon,
-                  {backgroundColor: Colors.lightSuccess},
+                  { backgroundColor: Colors.lightSuccess },
                 ]}>
                 <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
@@ -151,10 +151,10 @@ const HomeScreen = ({navigation}: Props) => {
               <Text style={styles.countBoxTitle}>Productive Call</Text>
             </View>
           </View>
-          <View style={[styles.container, {paddingTop: 35}]}>
+          <View style={[styles.container, { paddingTop: 35 }]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
-              <Text style={{fontFamily: Fonts.regular}}>(Qty)</Text>
+              <Text style={{ fontFamily: Fonts.regular }}>(Qty)</Text>
             </Text>
             <View style={styles.dataBoxSection}>
               <View style={styles.dataBox}>
@@ -189,7 +189,7 @@ const HomeScreen = ({navigation}: Props) => {
               </View>
             </View>
           </View>
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Team Performance</Text>
             <View
               style={[
@@ -239,15 +239,15 @@ const HomeScreen = ({navigation}: Props) => {
           </View>
 
           <View
-            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 20}]}>
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 20 }]}>
             <Text
               style={[
                 styles.SectionHeading,
-                {marginBottom: 10, paddingHorizontal: 20},
+                { marginBottom: 10, paddingHorizontal: 20 },
               ]}>
               Quick links
             </Text>
-            <TouchableOpacity onPress={()=>navigation.navigate('AddStoreScreen')} style={styles.IconlinkBox}>
+            <TouchableOpacity onPress={() => navigation.navigate('AddStoreScreen')} style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -261,7 +261,7 @@ const HomeScreen = ({navigation}: Props) => {
                 <Hotel strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add Store</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -272,9 +272,9 @@ const HomeScreen = ({navigation}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
-           <TouchableOpacity onPress={()=>navigation.navigate('AddDistributorScreen')} style={styles.IconlinkBox}>
+            <TouchableOpacity onPress={() => navigation.navigate('AddDistributorScreen')} style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -288,7 +288,7 @@ const HomeScreen = ({navigation}: Props) => {
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add Distributor</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -299,9 +299,9 @@ const HomeScreen = ({navigation}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
-           <TouchableOpacity style={styles.IconlinkBox}>
+            <TouchableOpacity style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
@@ -315,7 +315,7 @@ const HomeScreen = ({navigation}: Props) => {
                 <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Sales Order</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -326,7 +326,7 @@ const HomeScreen = ({navigation}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity style={styles.IconlinkBox}>
               <View
@@ -342,7 +342,7 @@ const HomeScreen = ({navigation}: Props) => {
                 <ShoppingCart strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Purchase Order</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -353,7 +353,7 @@ const HomeScreen = ({navigation}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity style={styles.IconlinkBox}>
               <View
@@ -369,7 +369,7 @@ const HomeScreen = ({navigation}: Props) => {
                 <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add PJP</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -416,7 +416,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
+  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: {paddingTop: 15},
+  dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
+  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: {backgroundColor: Colors.white},
+  LinkSection: { backgroundColor: Colors.white },
 
   IconlinkBox: {
     display: 'flex',

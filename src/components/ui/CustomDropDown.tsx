@@ -45,7 +45,7 @@ const DropdownComponent = ({
               selected && styles.selectedItem, // Highlight selected item
             ]}>
             <Text style={[styles.itemText,
-              selected && styles.selectedItemText, ]}>{item.label}</Text>
+            selected && styles.selectedItemText,]}>{item.label}</Text>
           </View>
         )}
         itemContainerStyle={{ padding: 0, }}
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     color: Colors.inputBorder,
     margin: 0
   },
-  selectedItemText:{
+  selectedItemText: {
     paddingHorizontal: 5,
     color: Colors.white,
     fontFamily: Fonts.regular,

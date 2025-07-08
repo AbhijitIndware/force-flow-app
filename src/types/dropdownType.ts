@@ -50,3 +50,16 @@ export type RBeat = {
         }[];
     };
 };
+
+
+export type RStore = {
+    message: {
+        status: string;
+        data: {
+            name: string;
+            city: string;
+            state: string;
+            store_name: string;
+        }[];
+    };
+};

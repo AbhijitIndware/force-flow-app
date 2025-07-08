@@ -27,12 +27,13 @@ export type SoAppStackParamList = {
   OrdersScreen: undefined;
   PartnersScreen: undefined;
   ProfileScreen: undefined;
-  AddDistributorScreen:undefined
-  AddStoreScreen:undefined
+  AddDistributorScreen: undefined
+  AddStoreScreen: undefined
   AddMarketVisitScreen: undefined;
   AddPjpScreen: undefined;
   AddSaleScreen: undefined;
   AddPurchaseScreen: undefined;
+  CheckInForm: undefined;
 };
 
 export type menuType = {
@@ -45,8 +46,8 @@ export type DropDownList = {
 };
 
 export type ApiResponse = {
-   message: {
-        status: string,
-    }
+  message: {
+    status: string,
+  }
 };
 
