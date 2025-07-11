@@ -77,7 +77,7 @@ const AddPjpScreen = ({ navigation }: Props) => {
                         position: 'top',
                     });
                     actions.resetForm();
-                    navigation.navigate('PartnersScreen')
+                    navigation.navigate('ActivityScreen')
                 } else {
                     Toast.show({
                         type: 'error',
