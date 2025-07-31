@@ -71,10 +71,11 @@ const CheckInForm = ({navigation}: Props) => {
       try {
         setLoading(true);
 
+        const location = await getCurrentLocation();
         let value = {
           store: formValues.store,
           image: formValues.image,
-          current_location: formValues.current_location,
+          current_location: location,
         };
 
         const payload = {data: value};
@@ -110,9 +111,9 @@ const CheckInForm = ({navigation}: Props) => {
     },
   });
 
-  const storeDailyList = (storeData?.message?.data ?? []).map(i => ({
-    label: i.name,
-    value: i.name,
+  const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
+    label: i.store_name,
+    value: i.store,
   }));
 
   const handleVerifyLocation = async () => {
@@ -159,7 +160,7 @@ const CheckInForm = ({navigation}: Props) => {
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
 
-      {!locationVerified ? (
+      {/* {!locationVerified ? (
         <TouchableOpacity
           style={[styles.submitBtn, verifying && {opacity: 0.7}]}
           onPress={handleVerifyLocation}
@@ -170,30 +171,30 @@ const CheckInForm = ({navigation}: Props) => {
             <Text style={styles.submitText}>Verify Location</Text>
           )}
         </TouchableOpacity>
-      ) : (
-        <>
-          <AddCheckInForm
-            values={values}
-            errors={errors}
-            touched={touched}
-            handleChange={handleChange}
-            handleBlur={handleBlur}
-            setFieldValue={setFieldValue}
-            scrollY={scrollY}
-            storeList={storeDailyList}
-          />
-          <TouchableOpacity
-            style={[styles.submitBtn, loading && {opacity: 0.7}]}
-            onPress={() => handleSubmit()}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <Text style={styles.submitText}>CheckIn</Text>
-            )}
-          </TouchableOpacity>
-        </>
-      )}
+      ) : ( */}
+      <>
+        <AddCheckInForm
+          values={values}
+          errors={errors}
+          touched={touched}
+          handleChange={handleChange}
+          handleBlur={handleBlur}
+          setFieldValue={setFieldValue}
+          scrollY={scrollY}
+          storeList={storeDailyList}
+        />
+        <TouchableOpacity
+          style={[styles.submitBtn, loading && {opacity: 0.7}]}
+          onPress={() => handleSubmit()}
+          disabled={loading}>
+          {loading ? (
+            <ActivityIndicator size="small" color={Colors.white} />
+          ) : (
+            <Text style={styles.submitText}>CheckIn</Text>
+          )}
+        </TouchableOpacity>
+      </>
+      {/* )} */}
     </SafeAreaView>
   );
 };

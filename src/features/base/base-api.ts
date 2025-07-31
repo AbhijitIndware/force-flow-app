@@ -8,6 +8,7 @@ import {
   IAddStorePayload,
   ILocationVerify,
   IMarkActivity,
+  RPjpInitialize,
 } from '../../types/baseType';
 
 // Base api calling ---
@@ -43,7 +44,7 @@ export const baseApi = createApi({
     }),
 
     //Daily PJP Activity Check-in ---
-    pjpInitialize: builder.mutation<any, void>({
+    pjpInitialize: builder.mutation<RPjpInitialize, void>({
       query: () => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_initialize',
         method: 'POST',

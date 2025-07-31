@@ -52,6 +52,22 @@ export type IAddPjpPayload = {
   };
 };
 
+export interface RPjpInitialize extends ApiResponse {
+  data: {
+    employee: {
+      employee_id: string; // Changed to string for general use
+      employee_name: string;
+      store: string;
+      check_out_time: string | null; // Assuming it could be a string date/time or null
+    };
+    stores: string[]; // Changed to array of strings for general use
+    store_category_validation: {
+      valid: boolean; // Assuming true/false
+      message: string;
+    };
+    date: string;
+  };
+}
 export type ILocationVerify = {
   store: string;
   current_location: string;
