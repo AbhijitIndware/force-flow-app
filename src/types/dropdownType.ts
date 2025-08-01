@@ -88,3 +88,12 @@ export type IDailyStore = {
   date: string;
   user: string;
 };
+
+export type RActivityPjp = {
+  message: {
+    status: string;
+    data: {
+      name: string;
+    }[];
+  };
+};

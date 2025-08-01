@@ -86,6 +86,27 @@ export type IAddCheckIn = {
   };
   current_location: string;
 };
+export type RAddCheckIn = {
+  message: {
+    status: string;
+    data: {
+      check_in_time: string;
+      image_mime: string;
+      image_url: string;
+      store: string;
+      targets: {
+        achieved_qty: string;
+        target_qty: string;
+      };
+      times: {
+        check_in_time: string;
+        check_out_time: string;
+        image: string;
+      };
+      employee: string;
+    };
+  };
+};
 export type IMarkActivity = {
   store: string;
   activity_type: {activity_type: string}[];

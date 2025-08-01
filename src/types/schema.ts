@@ -60,3 +60,12 @@ export const checkInSchema = Yup.object().shape({
   // store: Yup.string().required('Store is required'),
   // image: Yup.string().required('Live image is required'),
 });
+
+export const markActivitySchema = Yup.object().shape({
+  store: Yup.string().required('Store is required'),
+  activity_type: Yup.array().of(
+    Yup.object().shape({
+      activity_type: Yup.string().required('Activity type is required'),
+    }),
+  ),
+});

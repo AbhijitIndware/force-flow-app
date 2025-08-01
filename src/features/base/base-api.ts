@@ -72,10 +72,11 @@ export const baseApi = createApi({
         body,
       }),
     }),
-    checkOut: builder.mutation<any, void>({
-      query: () => ({
+    checkOut: builder.mutation<any, IMarkActivity>({
+      query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_check_out',
         method: 'POST',
+        body,
       }),
     }),
   }),

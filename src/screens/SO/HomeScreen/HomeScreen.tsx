@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  ActivityIndicator,
   Dimensions,
   RefreshControl,
   SafeAreaView,
@@ -33,7 +34,11 @@ import {
   UsersRound,
 } from 'lucide-react-native';
 import {useAppSelector} from '../../../store/hook';
-import {usePjpInitializeMutation} from '../../../features/base/base-api';
+import {
+  useCheckOutMutation,
+  usePjpInitializeMutation,
+} from '../../../features/base/base-api';
+import Toast from 'react-native-toast-message';
 
 const {width} = Dimensions.get('window');
 
@@ -54,6 +59,7 @@ const HomeScreen = ({navigation}: Props) => {
   );
 
   const [pjpInitialize, {data, error}] = usePjpInitializeMutation();
+  const [checkOut, {isLoading}] = useCheckOutMutation();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -63,9 +69,40 @@ const HomeScreen = ({navigation}: Props) => {
     }, 2000);
   }, []);
 
+  const handleCheckOut = async () => {
+    try {
+      const res = await checkOut({
+        store: '',
+        activity_type: [{activity_type: ''}],
+      }).unwrap();
+
+      if (res?.message?.status === 'success') {
+        Toast.show({
+          type: 'success',
+          text1: `✅ ${res.message.message || 'Checked out successfully'}`,
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: `❌ ${res.message?.message || 'Check-out failed'}`,
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      Toast.show({
+        type: 'error',
+        text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`,
+        text2: 'Please try again later.',
+        position: 'top',
+      });
+    }
+  };
+
   useEffect(() => {
     pjpInitialize();
-  }, []);
+  }, [user]);
 
   return (
     <SafeAreaView
@@ -102,18 +139,53 @@ const HomeScreen = ({navigation}: Props) => {
                     <Text style={styles.paraText}>Store- New mart</Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  style={styles.checkinButton}
-                  onPress={() => navigation.navigate('CheckInForm')}>
-                  <Text style={styles.checkinButtonText}>
-                    {/* Check Out from New mart */} Check In
-                  </Text>
-                  <Ionicons
-                    name="chevron-forward-circle-sharp"
-                    size={24}
-                    color={Colors.white}
-                  />
-                </TouchableOpacity>
+                {data?.message?.data?.store_category_validation?.valid ? (
+                  <View>
+                    <TouchableOpacity
+                      style={styles.checkinButton}
+                      onPress={handleCheckOut}
+                      disabled={isLoading}>
+                      <Text style={styles.checkinButtonText}>
+                        {/* Check Out from New mart */} Check Out
+                      </Text>
+
+                      {isLoading ? (
+                        <ActivityIndicator size="small" />
+                      ) : (
+                        <Ionicons
+                          name="chevron-forward-circle-sharp"
+                          size={24}
+                          color={Colors.white}
+                        />
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.checkinButton}
+                      onPress={() => navigation.navigate('MarkActivityScreen')}>
+                      <Text style={styles.checkinButtonText}>
+                        {/* Check Out from New mart */} Mark Activity
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward-circle-sharp"
+                        size={24}
+                        color={Colors.white}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.checkinButton}
+                    onPress={() => navigation.navigate('CheckInForm')}>
+                    <Text style={styles.checkinButtonText}>
+                      {/* Check Out from New mart */} Check In
+                    </Text>
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={24}
+                      color={Colors.white}
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.planLink}>
                 <TouchableOpacity

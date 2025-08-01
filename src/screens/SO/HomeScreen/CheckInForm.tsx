@@ -15,10 +15,7 @@ import {
   useAddCheckInMutation,
   useLocationVerificationMutation,
 } from '../../../features/base/base-api';
-import {
-  useGetDailyStoreQuery,
-  useLazyGetDailyStoreQuery,
-} from '../../../features/dropdown/dropdown-api';
+import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
 import {checkInSchema} from '../../../types/schema';
 import Toast from 'react-native-toast-message';
 import {flexCol} from '../../../utils/styles';
@@ -47,7 +44,6 @@ const initial = {
 };
 const CheckInForm = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
-  console.log('🚀 ~ CheckInForm ~ loading:', loading);
   const [locationVerified, setLocationVerified] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -64,8 +60,7 @@ const CheckInForm = ({navigation}: Props) => {
     useLazyGetDailyStoreQuery();
 
   const getCurrentLocation = async (): Promise<string> => {
-    // For now, return dummy lat,long
-    return '22.5726,88.3639'; // Kolkata lat, long (as string)
+    return '11.54,23.65'; // Kolkata lat, long (as string)
   };
 
   const {
@@ -90,25 +85,15 @@ const CheckInForm = ({navigation}: Props) => {
           current_location: location,
         };
 
-        // const payload = {data: value};
-        console.log('🚀 ~ CheckInForm ~ payload:', value);
         const res = await addCheckIn(value).unwrap();
-        console.log('🚀 ~ CheckInForm ~ res:', res);
-
-        if (res?.message?.status === 'success') {
+        if (res?.message?.success === true) {
           Toast.show({
             type: 'success',
             text1: `✅ ${res.message.message}`,
             position: 'top',
           });
           actions.resetForm();
-          navigation.navigate('PartnersScreen');
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
-            position: 'top',
-          });
+          navigation.navigate('Home');
         }
       } catch (error: any) {
         Toast.show({
@@ -124,7 +109,6 @@ const CheckInForm = ({navigation}: Props) => {
       }
     },
   });
-  console.log('🚀 ~ CheckInForm ~ errors:', errors);
 
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
     label: i.store_name,

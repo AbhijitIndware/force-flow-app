@@ -2,6 +2,7 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
   IDailyStore,
+  RActivityPjp,
   RBeat,
   RCity,
   RDailyStore,
@@ -103,6 +104,12 @@ export const dropdownApi = createApi({
         },
       }),
     }),
+    getActivityForPjp: builder.query<RActivityPjp, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_pjp_activity_types',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 export const {
@@ -120,4 +127,5 @@ export const {
   useGetStoreQuery,
   useGetDailyStoreQuery,
   useLazyGetDailyStoreQuery,
+  useGetActivityForPjpQuery,
 } = dropdownApi;
