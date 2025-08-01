@@ -78,11 +78,11 @@ const AddCheckInForm: React.FC<Props> = ({
       contentContainerStyle={{padding: 16}}>
       <ReusableDropdown
         label="Store"
-        field="store"
+        field="value"
         value={values.store}
         data={storeList}
         error={touched.store && errors.store}
-        onChange={(val: string) => onSelect('zone', val)}
+        onChange={(val: string) => onSelect('store', val)}
       />
 
       <TouchableOpacity

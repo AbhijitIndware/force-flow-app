@@ -83,3 +83,8 @@ export type RDailyStore = {
     pjp_daily_store_doc: string;
   };
 };
+
+export type IDailyStore = {
+  date: string;
+  user: string;
+};

@@ -10,6 +10,7 @@ import {
   IMarkActivity,
   RPjpInitialize,
 } from '../../types/baseType';
+import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 // Base api calling ---
 export const baseApi = createApi({
@@ -90,3 +91,51 @@ export const {
   useMarkActivityMutation,
   useCheckOutMutation,
 } = baseApi;
+
+interface PjpState {
+  loading: boolean;
+  error: boolean;
+  status: 'idle' | 'pending' | 'fulfilled' | 'rejected';
+  pjpInitializedData?: RPjpInitialize | null;
+}
+
+const initialState: PjpState = {
+  loading: false,
+  error: false,
+  status: 'idle',
+  pjpInitializedData: null,
+};
+
+export const pjpSlice = createSlice({
+  name: 'pjp',
+  initialState,
+  reducers: {
+    resetPjpState: () => initialState,
+  },
+  extraReducers: builder => {
+    builder
+      .addMatcher(baseApi.endpoints.pjpInitialize.matchPending, state => {
+        state.status = 'pending';
+        state.loading = true;
+        state.error = false;
+      })
+      .addMatcher(
+        baseApi.endpoints.pjpInitialize.matchFulfilled,
+        (state, action) => {
+          state.status = 'fulfilled';
+          state.loading = false;
+          state.error = false;
+          state.pjpInitializedData = action.payload;
+        },
+      )
+      .addMatcher(baseApi.endpoints.pjpInitialize.matchRejected, state => {
+        state.status = 'rejected';
+        state.loading = false;
+        state.error = true;
+        state.pjpInitializedData = null;
+      });
+  },
+});
+
+export const {resetPjpState} = pjpSlice.actions;
+export default pjpSlice.reducer;

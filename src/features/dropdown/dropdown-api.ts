@@ -1,6 +1,7 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
+  IDailyStore,
   RBeat,
   RCity,
   RDailyStore,
@@ -92,10 +93,14 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getDailyStore: builder.query<RDailyStore, void>({
-      query: () => ({
+    getDailyStore: builder.query<RDailyStore, IDailyStore>({
+      query: ({date, user}) => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_stores',
         method: 'GET',
+        params: {
+          date,
+          user,
+        },
       }),
     }),
   }),
@@ -114,4 +119,5 @@ export const {
   useGetBeatQuery,
   useGetStoreQuery,
   useGetDailyStoreQuery,
+  useLazyGetDailyStoreQuery,
 } = dropdownApi;

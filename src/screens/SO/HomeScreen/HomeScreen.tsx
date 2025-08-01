@@ -54,7 +54,6 @@ const HomeScreen = ({navigation}: Props) => {
   );
 
   const [pjpInitialize, {data, error}] = usePjpInitializeMutation();
-  console.log('🚀 ~ HomeScreen ~ data:', data, error);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

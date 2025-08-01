@@ -50,13 +50,13 @@ export const dailyPjpSchema = Yup.object().shape({
   stores: Yup.array().of(
     Yup.object().shape({
       store: Yup.string().required('Store is required'),
-    })
+    }),
   ),
 });
 
 export const checkInSchema = Yup.object().shape({
-  date: Yup.string().required('Date is required'),
-  employee: Yup.string().required('Employee is required'),
-  store: Yup.string().required('Store is required'),
-  image: Yup.string().required('Live image is required'),
+  // date: Yup.string().required('Date is required'),
+  // employee: Yup.string().required('Employee is required'),
+  // store: Yup.string().required('Store is required'),
+  // image: Yup.string().required('Live image is required'),
 });

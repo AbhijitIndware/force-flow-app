@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -15,12 +15,16 @@ import {
   useAddCheckInMutation,
   useLocationVerificationMutation,
 } from '../../../features/base/base-api';
-import {useGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
+import {
+  useGetDailyStoreQuery,
+  useLazyGetDailyStoreQuery,
+} from '../../../features/dropdown/dropdown-api';
 import {checkInSchema} from '../../../types/schema';
 import Toast from 'react-native-toast-message';
 import {flexCol} from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
 import AddCheckInForm from '../../../components/SO/Home/check-in-form';
+import {useAppSelector} from '../../../store/hook';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -43,13 +47,21 @@ const initial = {
 };
 const CheckInForm = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
+  console.log('🚀 ~ CheckInForm ~ loading:', loading);
   const [locationVerified, setLocationVerified] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const pjpInitializedData = useAppSelector(
+    state => state.pjpSlice?.pjpInitializedData,
+  );
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
   const [verifyLocation, {isLoading: verifying}] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
-  const {data: storeData} = useGetDailyStoreQuery();
+  const [triggerStoreFetch, {data: storeData, isFetching, error}] =
+    useLazyGetDailyStoreQuery();
 
   const getCurrentLocation = async (): Promise<string> => {
     // For now, return dummy lat,long
@@ -78,8 +90,10 @@ const CheckInForm = ({navigation}: Props) => {
           current_location: location,
         };
 
-        const payload = {data: value};
-        const res = await addCheckIn(payload).unwrap();
+        // const payload = {data: value};
+        console.log('🚀 ~ CheckInForm ~ payload:', value);
+        const res = await addCheckIn(value).unwrap();
+        console.log('🚀 ~ CheckInForm ~ res:', res);
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -110,6 +124,7 @@ const CheckInForm = ({navigation}: Props) => {
       }
     },
   });
+  console.log('🚀 ~ CheckInForm ~ errors:', errors);
 
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
     label: i.store_name,
@@ -155,6 +170,15 @@ const CheckInForm = ({navigation}: Props) => {
       });
     }
   };
+
+  useEffect(() => {
+    if (user?.email && pjpInitializedData?.message?.data?.date) {
+      triggerStoreFetch({
+        user: user.email,
+        date: pjpInitializedData?.message?.data?.date,
+      });
+    }
+  }, [user?.email, pjpInitializedData?.message?.data?.date]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
