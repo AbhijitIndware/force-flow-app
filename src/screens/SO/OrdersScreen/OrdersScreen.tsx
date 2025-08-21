@@ -42,15 +42,7 @@ type Props = {
 
 const OrdersScreen = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
 
   return (
     <SafeAreaView
@@ -62,151 +54,146 @@ const OrdersScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader title="Orders" navigation={() => navigation.goBack()} />
-      {refreshing ? (
-        <LoadingScreen />
-      ) : (
-        <Animated.ScrollView
-          onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
-          )}
-          stickyHeaderIndices={[1]} // Index of the Tab header
-          scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
-          <View style={styles.headerSec}>
-            <View style={styles.salesHeaderData}>
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      {backgroundColor: Colors.lightBlue},
-                    ]}>
-                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
-                  </View>
-                  <Text style={styles.countBoxDay}>05</Text>
-                  <Text style={styles.countBoxTitle}>Total Order</Text>
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false},
+        )}
+        stickyHeaderIndices={[1]} // Index of the Tab header
+        scrollEventThrottle={16}
+        nestedScrollEnabled={true}
+        contentContainerStyle={{position: 'relative'}}>
+        <View style={styles.headerSec}>
+          <View style={styles.salesHeaderData}>
+            <View style={styles.countBoxSection}>
+              <View style={styles.countBox}>
+                <View
+                  style={[
+                    styles.countBoxIcon,
+                    {backgroundColor: Colors.lightBlue},
+                  ]}>
+                  <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      {backgroundColor: Colors.lightSuccess},
-                    ]}>
-                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>03</Text>
-                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
+                <Text style={styles.countBoxDay}>05</Text>
+                <Text style={styles.countBoxTitle}>Total Order</Text>
+              </View>
+              <View style={styles.countBox}>
+                <View
+                  style={[
+                    styles.countBoxIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <PackageOpen strokeWidth={1.4} color={Colors.success} />
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      {backgroundColor: Colors.holdLight},
-                    ]}>
-                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>02</Text>
-                  <Text style={styles.countBoxTitle}>Pending Order</Text>
+                <Text style={styles.countBoxDay}>03</Text>
+                <Text style={styles.countBoxTitle}>Delivered Order</Text>
+              </View>
+              <View style={styles.countBox}>
+                <View
+                  style={[
+                    styles.countBoxIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
                 </View>
+                <Text style={styles.countBoxDay}>02</Text>
+                <Text style={styles.countBoxTitle}>Pending Order</Text>
               </View>
             </View>
           </View>
-          <View
+        </View>
+        <View
+          style={{
+            backgroundColor: Colors.orange,
+            paddingVertical: 5,
+            paddingHorizontal: 20,
+            position: 'relative',
+            marginTop: 0,
+          }}>
+          <Tab
+            value={index}
+            onChange={e => setIndex(e)}
+            indicatorStyle={{
+              height: 0,
+            }}
+            variant="primary"
             style={{
-              backgroundColor: Colors.orange,
-              paddingVertical: 5,
-              paddingHorizontal: 20,
-              position: 'relative',
-              marginTop: 0,
+              backgroundColor: Colors.transparent,
+              padding: 0,
+              margin: 0,
+              gap: 0,
             }}>
-            <Tab
-              value={index}
-              onChange={e => setIndex(e)}
-              indicatorStyle={{
-                height: 0,
+            <Tab.Item
+              title="Purchase Orders"
+              titleStyle={{
+                fontSize: Size.xs,
+                fontFamily: Fonts.medium,
+                lineHeight: 9,
               }}
-              variant="primary"
-              style={{
-                backgroundColor: Colors.transparent,
-                padding: 0,
-                margin: 0,
-                gap: 0,
-              }}>
-              <Tab.Item
-                title="Purchase Orders"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-                buttonStyle={{paddingHorizontal: 0}}
-              />
-              <Tab.Item
-                title="Sales Orders"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-                buttonStyle={{paddingHorizontal: 0}}
-              />
-            </Tab>
-          </View>
-          {/* Conditionally rendered tab content */}
-          {index === 0 ? (
-            <PurchaseOrder navigation={navigation} />
-          ) : (
-            <SalesOrder navigation={navigation} />
-          )}
-        </Animated.ScrollView>
-      )}
+              containerStyle={active => ({
+                backgroundColor: active ? Colors.Orangelight : undefined,
+                borderRadius: active ? 10 : undefined,
+                borderColor: active ? '#FFBF83' : undefined,
+                borderTopWidth: active ? 1 : undefined,
+                borderLeftWidth: active ? 1 : undefined,
+                borderRightWidth: active ? 1 : undefined,
+              })}
+              buttonStyle={{paddingHorizontal: 0}}
+            />
+            <Tab.Item
+              title="Sales Orders"
+              titleStyle={{
+                fontSize: Size.xs,
+                fontFamily: Fonts.medium,
+                lineHeight: 9,
+              }}
+              containerStyle={active => ({
+                backgroundColor: active ? Colors.Orangelight : undefined,
+                borderRadius: active ? 10 : undefined,
+                borderColor: active ? '#FFBF83' : undefined,
+                borderTopWidth: active ? 1 : undefined,
+                borderLeftWidth: active ? 1 : undefined,
+                borderRightWidth: active ? 1 : undefined,
+              })}
+              buttonStyle={{paddingHorizontal: 0}}
+            />
+          </Tab>
+        </View>
+        {/* Conditionally rendered tab content */}
+        {index === 0 ? (
+          <PurchaseOrder navigation={navigation} />
+        ) : (
+          <SalesOrder navigation={navigation} />
+        )}
+      </Animated.ScrollView>
 
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 3,
-          width: '100%',
-          paddingHorizontal: 20,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        <TouchableOpacity
-          style={styles.checkinButton}
-          onPress={() =>
-            index === 0
-              ? navigation.navigate('AddPurchaseScreen')
-              : // : navigation.navigate('AddSaleScreen')
-                navigation.navigate('SaleDetailScreen', {
-                  id: 'SAL-ORD-2025-00007',
-                })
-          }>
-          <CirclePlus strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>
-            {`Add ${index === 0 ? 'Purchase' : 'Sales'} Orders`}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {index !== 0 && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 3,
+            width: '100%',
+            paddingHorizontal: 20,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity
+            style={styles.checkinButton}
+            onPress={() =>
+              index === 0
+                ? navigation.navigate('AddPurchaseScreen')
+                : navigation.navigate('AddSaleScreen', {
+                    orderId: undefined,
+                  })
+            }>
+            <CirclePlus strokeWidth={1.4} color={Colors.white} />
+            <Text style={styles.checkinButtonText}>
+              {`Add ${index === 0 ? 'Purchase' : 'Sales'} Orders`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

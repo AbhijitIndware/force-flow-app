@@ -8,6 +8,7 @@ import {
   IAddPurchaseOrder,
   IAddSalesOrder,
   IAddStorePayload,
+  IAmendPO,
   IAmendSO,
   ICancelSO,
   ILocationVerify,
@@ -16,6 +17,8 @@ import {
   IUpdateSOAction,
   RAddSalesOrder,
   RPjpInitialize,
+  RPoDetails,
+  RPoList,
   RSoDetails,
   RSoList,
 } from '../../types/baseType';
@@ -30,7 +33,7 @@ export const baseApi = createApi({
     baseUrl: apiBaseUrl,
     credentials: 'include',
   }),
-  tagTypes: ['Customer', 'SO'],
+  tagTypes: ['Customer', 'SO', 'PO'],
   endpoints: builder => ({
     addDistributor: builder.mutation<any, IAddDistributorPayload>({
       query: body => ({
@@ -153,13 +156,62 @@ export const baseApi = createApi({
     }),
 
     //Purchase Order
+    getPurchaseOrderList: builder.query<
+      RPoList,
+      Pick<PaginationInfo, 'page' | 'page_size'> & {status: string}
+    >({
+      query: ({page, page_size, status}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.get_purchase_orders_list`,
+        method: 'GET',
+        params: {
+          page: page,
+          limit: page_size,
+          status: status,
+        },
+      }),
+      providesTags: ['PO'],
+    }),
+    getPurchaseOrderById: builder.query<RPoDetails, string>({
+      query: id => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.get_purchase_order_details',
+        method: 'GET',
+        params: {
+          order_id: id,
+        },
+      }),
+      providesTags: ['PO'],
+    }),
     createPurchaseOrder: builder.mutation<RAddSalesOrder, IAddPurchaseOrder>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.create_purchase_order_from_sales_orders',
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'PO'],
+    }),
+    submitPurchaseOrder: builder.mutation<RAddSalesOrder, IUpdateSOAction>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.submit_purchase_order',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PO'],
+    }),
+    cancelPurchaseOrder: builder.mutation<RAddSalesOrder, ICancelSO>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.cancel_purchase_order',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PO'],
+    }),
+    amendPurchaseOrder: builder.mutation<RAddSalesOrder, IAmendPO>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.amend_purchase_order',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PO'],
     }),
   }),
 });
@@ -183,6 +235,11 @@ export const {
   useUpdateSaleOrderMutation,
   //Purchase Order
   useCreatePurchaseOrderMutation,
+  useAmendPurchaseOrderMutation,
+  useCancelPurchaseOrderMutation,
+  useSubmitPurchaseOrderMutation,
+  useGetPurchaseOrderByIdQuery,
+  useGetPurchaseOrderListQuery,
 } = baseApi;
 
 interface PjpState {

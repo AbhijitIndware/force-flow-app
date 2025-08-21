@@ -36,6 +36,7 @@ export type SoAppStackParamList = {
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
   SaleDetailScreen: {id: string};
+  PurchaseDetailScreen: {id: string};
 };
 
 export type menuType = {

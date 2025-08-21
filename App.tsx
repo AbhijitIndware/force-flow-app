@@ -16,6 +16,7 @@ function App(): React.JSX.Element {
       <PersistGate loading={null} persistor={persistor}>
         <NavigationContainer>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+
           <MainNavigation />
           <Toast config={toastConfig} />
         </NavigationContainer>

@@ -61,12 +61,18 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
         <Text style={styles.title}>Purchase Order</Text>
 
         {order_details.custom_purchase_order ? (
-          <View style={styles.itemRow}>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('PurchaseDetailScreen', {
+                id: order_details.custom_purchase_order,
+              })
+            }
+            style={styles.itemRow}>
             <Text>PO No: {order_details.custom_purchase_order}</Text>
             <Text style={{color: Colors.black, fontWeight: '600'}}>
               ✅ Purchase Order already created
             </Text>
-          </View>
+          </TouchableOpacity>
         ) : (
           <View style={styles.itemRow}>
             <Text style={{color: Colors.black, fontWeight: '600'}}>

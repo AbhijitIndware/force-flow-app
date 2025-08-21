@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -79,7 +79,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   >(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const {orderId} = route.params;
-  console.log('🚀 ~ AddSaleScreen ~ id:', orderId);
+  const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
 
   const [addSalesOrder] = useAddSaleOrderMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
@@ -88,10 +88,12 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     skip: orderId === null || orderId === undefined,
   });
 
-  // build initial values: if editing, map from API, else blank
-  const initialValues: IAddSalesOrder = salesDetails?.message?.data
-    ? mapSalesDetailToForm(salesDetails.message.data)
-    : initial;
+  useEffect(() => {
+    if (salesDetails?.message?.data) {
+      let _initial_value = mapSalesDetailToForm(salesDetails.message.data);
+      setInitialValues(_initial_value);
+    }
+  }, [salesDetails, orderId]);
 
   const {
     values,
@@ -104,6 +106,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   } = useFormik<IAddSalesOrder>({
     initialValues: initialValues,
     validationSchema: addSalesOrderSchema,
+    enableReinitialize: true,
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
@@ -161,6 +164,18 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     value: store.warehouse_id, // what will be stored
     label: `${store.warehouse_name} | ${store.store_name} | ${store.distributor_name}`,
   }));
+
+  if (orderId && isFetching) {
+    return (
+      <SafeAreaView
+        style={[
+          flexCol,
+          {flex: 1, justifyContent: 'center', alignItems: 'center'},
+        ]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

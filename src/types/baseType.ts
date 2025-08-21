@@ -176,6 +176,7 @@ export type RSoDetailData = {
     created_by: string;
     creation: string; // timestamp
     modified: string; // timestamp
+    docstatus: number;
   };
   items: {
     item_code: string;
@@ -275,4 +276,98 @@ export type IAddPurchaseOrder = {
   sales_orders: string[];
   schedule_date: string;
   submit_order: boolean;
+};
+export type IAmendPO = {
+  order_id: string;
+  amendments: {
+    schedule_date?: string; // ISO date string (optional, since not always amended)
+    supplier: string;
+    items?: {
+      item_code: string;
+      qty: number;
+      rate: number;
+      sales_order?: string; // ISO date string (optional for amendment)
+    }[];
+  };
+};
+export interface PurchaseOrder {
+  order_id: string;
+  supplier: string;
+  supplier_name: string;
+  transaction_date: string; // ISO date string
+  schedule_date: string; // ISO date string
+  grand_total: number;
+  status: string;
+  per_received: number;
+  per_billed: number;
+  item_count: number;
+  linked_sales_orders: string[];
+  linked_so_count: number;
+}
+
+export interface PurchaseOrderResponseData {
+  purchase_orders: PurchaseOrder[];
+  total_count: number;
+  has_more: boolean;
+}
+export type RPoList = {
+  message: {
+    success: boolean;
+    data: PurchaseOrderResponseData;
+  };
+};
+
+export interface POOrderDetails {
+  order_id: string;
+  supplier: string;
+  supplier_name: string;
+  transaction_date: string; // ISO date string
+  schedule_date: string; // ISO date string
+  status: string;
+  grand_total: number;
+  total_qty: number;
+  per_received: number;
+  per_billed: number;
+  terms: string | null;
+  creation: string; // datetime string
+  modified: string; // datetime string
+  docstatus: number;
+}
+export interface POOrderItem {
+  item_code: string;
+  item_name: string;
+  description: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  uom: string;
+  warehouse: string;
+  schedule_date: string; // ISO date string
+  sales_order: string | null;
+  received_qty: number;
+  billed_amt: number;
+}
+
+export interface Totals {
+  total: number;
+  total_taxes_and_charges: number;
+  grand_total: number;
+  rounded_total: number;
+}
+export interface POOrderData {
+  order_details: POOrderDetails;
+  items: POOrderItem[];
+  linked_sales_orders: {
+    sales_order: string;
+    customer_name: string;
+    grand_total: number;
+  }[]; // can replace `any` with correct type if structure is known
+  totals: Totals;
+}
+
+export type RPoDetails = {
+  message: {
+    success: boolean;
+    data: POOrderData;
+  };
 };

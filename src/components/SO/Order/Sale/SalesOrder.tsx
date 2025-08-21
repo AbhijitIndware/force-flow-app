@@ -2,6 +2,7 @@
 import {
   ActivityIndicator,
   Dimensions,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -11,28 +12,47 @@ import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
 import {Colors} from '../../../../utils/colors';
 import {useGetSalesOrderListQuery} from '../../../../features/base/base-api';
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {SalesOrderType} from '../../../../types/baseType';
 import {FlatList} from 'react-native';
-import {windowHeight} from '../../../../utils/utils';
+import {soStatusColors, windowHeight} from '../../../../utils/utils';
+import {TouchableOpacity} from 'react-native';
+import {flexRow} from '../../../../utils/styles';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 const SalesOrder = ({navigation}: any) => {
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<SalesOrderType[]>([]);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data, isLoading, isFetching} = useGetSalesOrderListQuery({
-    page,
-    page_size: PAGE_SIZE,
-  });
+  const {data, isLoading, isFetching, refetch, isUninitialized} =
+    useGetSalesOrderListQuery({
+      page,
+      page_size: PAGE_SIZE,
+    });
 
   // append new data when page changes
   useEffect(() => {
     if (data?.message?.data?.sales_orders) {
-      setOrders(prev => [...prev, ...data.message.data.sales_orders]);
+      setOrders(prev => {
+        const map = new Map();
+        [...prev, ...data.message.data.sales_orders].forEach(item => {
+          map.set(item.order_id, item);
+        });
+        return Array.from(map.values());
+      });
     }
   }, [data]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      if (!isUninitialized) refetch();
+    }, 2000);
+  }, []);
 
   const loadMore = () => {
     if (
@@ -51,11 +71,70 @@ const SalesOrder = ({navigation}: any) => {
         <View style={styles.timeSection}>
           <Text style={styles.time}>SO ID: {item.order_id}</Text>
         </View>
-        <Text style={[styles.present, {marginLeft: 'auto'}]}>
-          {item.status}
-        </Text>
+        <View style={[flexRow, {gap: 10, position: 'relative'}]}>
+          <Text
+            style={[
+              styles.present,
+              {
+                backgroundColor:
+                  `${soStatusColors[item.status]}30` || Colors.lightSuccess,
+                color: soStatusColors[item.status] || '#fff',
+              },
+            ]}>
+            {item.status}
+          </Text>
+          {/* Three dot menu */}
+          <TouchableOpacity
+            onPress={() =>
+              setSelectedOrderId(
+                selectedOrderId === item.order_id ? null : item.order_id,
+              )
+            }>
+            <Text style={styles.threeDot}>⋮</Text>
+          </TouchableOpacity>
+          {/* Modal for dropdown */}
+          {selectedOrderId === item.order_id && (
+            <>
+              {/* Backdrop to detect outside press */}
+              <TouchableOpacity
+                style={StyleSheet.absoluteFillObject}
+                activeOpacity={1}
+                onPress={() => setSelectedOrderId(null)}
+              />
+              <View style={styles.dropdownMenu}>
+                {item?.status === 'Draft' && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedOrderId(null);
+                      navigation.navigate('AddSaleScreen', {
+                        orderId: item?.order_id,
+                      });
+                    }}>
+                    <Text style={styles.menuItem}>Edit</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedOrderId(null);
+                    navigation.navigate('SaleDetailScreen', {
+                      id: item.order_id,
+                    });
+                  }}>
+                  <Text style={styles.menuItem}>View</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
       </View>
-      <View style={styles.cardbody}>
+      <TouchableOpacity
+        onPress={() => {
+          // setModalVisible(false);
+          navigation.navigate('SaleDetailScreen', {
+            id: item.order_id,
+          });
+        }}
+        style={styles.cardbody}>
         <View style={styles.dateBox}>
           <Text style={styles.dateText}>
             {new Date(item.transaction_date).getDate()}
@@ -80,7 +159,7 @@ const SalesOrder = ({navigation}: any) => {
             PO Amount: ₹{item.grand_total}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -91,6 +170,7 @@ const SalesOrder = ({navigation}: any) => {
         flex: 1,
         backgroundColor: Colors.lightBg,
         position: 'relative',
+        marginBottom: 20,
       }}>
       <View
         style={[
@@ -108,11 +188,17 @@ const SalesOrder = ({navigation}: any) => {
           style={{
             flex: 1,
             backgroundColor: Colors.lightBg,
-            justifyContent: 'center',
-            alignItems: 'center',
           }}>
           {isLoading && page === 1 ? (
-            <ActivityIndicator size="large" />
+            <View
+              style={{
+                height: windowHeight * 0.5,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <ActivityIndicator size="large" />
+            </View>
           ) : orders.length === 0 ? (
             <View
               style={{
@@ -128,8 +214,13 @@ const SalesOrder = ({navigation}: any) => {
           ) : (
             <FlatList
               data={orders}
+              nestedScrollEnabled={true}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
               renderItem={renderItem}
               keyExtractor={(item, index) => item.order_id + index}
+              showsVerticalScrollIndicator={false}
               onEndReached={loadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
@@ -446,4 +537,28 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   //countBox-section css end
+  dropdownMenu: {
+    position: 'absolute',
+    top: 25, // adjust based on where you want it
+    right: 0, // aligns to right of parent
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: {width: 0, height: 2},
+    shadowRadius: 4,
+    elevation: 5,
+    zIndex: 999,
+  },
+  menuItem: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  threeDot: {
+    fontSize: 20,
+    paddingHorizontal: 10,
+    color: '#374151',
+  },
 });

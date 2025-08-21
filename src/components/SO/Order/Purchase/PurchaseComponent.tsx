@@ -1,160 +1,121 @@
-/* eslint-disable react-native/no-inline-styles */
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import {Funnel, Search} from 'lucide-react-native';
-import {Colors} from '../../../../utils/colors';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
-import {useCallback, useEffect, useState} from 'react';
-import {useGetPurchaseOrderListQuery} from '../../../../features/base/base-api';
+import {StyleSheet, Text, View} from 'react-native';
+import React, {useState} from 'react';
 import {PurchaseOrder} from '../../../../types/baseType';
-import PurchaseComponent from './PurchaseComponent';
-import {windowHeight} from '../../../../utils/utils';
+import {Fonts} from '../../../../constants';
+import {Colors} from '../../../../utils/colors';
+import {Size} from '../../../../utils/fontSize';
+import {soStatusColors, windowWidth} from '../../../../utils/utils';
+import {flexRow} from '../../../../utils/styles';
+import {TouchableOpacity} from 'react-native';
 
-const {width} = Dimensions.get('window');
-const PAGE_SIZE = 10;
-
-const PurchaseOrderScreen = ({navigation}: any) => {
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(1);
-  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const {data, isFetching, isLoading, refetch, isUninitialized} =
-    useGetPurchaseOrderListQuery({
-      page,
-      page_size: PAGE_SIZE,
-      status: '',
-    });
-
-  // append new data when API responds
-  useEffect(() => {
-    if (data?.message?.data?.purchase_orders) {
-      if (page === 1) {
-        // reset on first page
-        setOrders(data.message.data.purchase_orders);
-      } else {
-        // append & dedupe
-        setOrders(prev => {
-          const combined = [...prev, ...data.message.data.purchase_orders];
-          const map = new Map();
-          combined.forEach(item => {
-            map.set(item.order_id, item); // last occurrence wins
-          });
-          return Array.from(map.values());
-        });
-      }
-    }
-  }, [data, page]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
-  }, []);
-
-  const loadMore = () => {
-    if (!isFetching && data?.message?.data?.has_more) {
-      setPage(prev => prev + 1);
-    }
-  };
-
+const PurchaseComponent = ({
+  item,
+  navigation,
+  selectedOrderId,
+  setSelectedOrderId,
+}: {
+  item: PurchaseOrder;
+  navigation: any;
+  selectedOrderId: string | null;
+  setSelectedOrderId: any;
+}) => {
   return (
-    <View
-      style={{
-        width: '100%',
-        flex: 1,
-        backgroundColor: Colors.lightBg,
-        position: 'relative',
-        marginBottom: 20,
-      }}>
-      <View
-        style={[
-          styles.bodyContent,
-          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
-        ]}>
-        <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>Recent Purchase Orders</Text>
-          <View style={styles.bodyHeaderIcon}>
-            <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-            <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-          </View>
+    <View style={styles.atteddanceCard}>
+      <View style={styles.cardHeader}>
+        <View style={styles.timeSection}>
+          <Text style={styles.time}> PO ID: {item.order_id}</Text>
         </View>
-
-        {/* FlatList with pagination */}
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: Colors.lightBg,
-          }}>
-          {isLoading && page === 1 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <ActivityIndicator size="large" />
-            </View>
-          ) : orders.length === 0 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Text style={{fontSize: 16, color: 'gray'}}>
-                No Sale Order Found
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={orders}
-              nestedScrollEnabled={true}
-              keyExtractor={(item, index) => item.order_id + index}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              renderItem={({item}) => (
-                <PurchaseComponent
-                  item={item}
-                  navigation={navigation}
-                  selectedOrderId={selectedOrderId}
-                  setSelectedOrderId={setSelectedOrderId}
-                />
-              )}
-              showsVerticalScrollIndicator={false}
-              onEndReached={loadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                isFetching ? (
-                  <ActivityIndicator
-                    size="small"
-                    color={Colors.darkButton}
-                    style={{marginVertical: 15}}
-                  />
-                ) : null
-              }
-            />
+        <View style={[flexRow, {gap: 10, position: 'relative'}]}>
+          <Text
+            style={[
+              styles.present,
+              {
+                backgroundColor:
+                  `${soStatusColors[item.status]}30` || Colors.lightSuccess,
+                color: soStatusColors[item.status] || '#fff',
+              },
+            ]}>
+            {item.status}
+          </Text>
+          {/* Three dot menu */}
+          <TouchableOpacity
+            onPress={() =>
+              setSelectedOrderId(
+                selectedOrderId === item.order_id ? null : item.order_id,
+              )
+            }>
+            <Text style={styles.threeDot}>⋮</Text>
+          </TouchableOpacity>
+          {/* Modal for dropdown */}
+          {selectedOrderId === item.order_id && (
+            <>
+              {/* Backdrop to detect outside press */}
+              <TouchableOpacity
+                style={StyleSheet.absoluteFillObject}
+                activeOpacity={1}
+                onPress={() => setSelectedOrderId(null)}
+              />
+              <View style={styles.dropdownMenu}>
+                {/* {item?.status === 'Draft' && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedOrderId(null); 
+                    }}>
+                    <Text style={styles.menuItem}>Edit</Text>
+                  </TouchableOpacity>
+                )} */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedOrderId(null);
+                    navigation.navigate('PurchaseDetailScreen', {
+                      id: item.order_id,
+                    });
+                  }}>
+                  <Text style={styles.menuItem}>View</Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
         </View>
       </View>
+      <TouchableOpacity
+        onPress={() => {
+          setSelectedOrderId(null);
+          navigation.navigate('PurchaseDetailScreen', {
+            id: item.order_id,
+          });
+        }}
+        style={styles.cardbody}>
+        <View style={styles.dateBox}>
+          <Text style={styles.dateText}>
+            {new Date(item.transaction_date).getDate()}
+          </Text>
+          <Text style={styles.monthText}>
+            {new Date(item.transaction_date).toLocaleString('default', {
+              month: 'short',
+            })}
+          </Text>
+        </View>
+        <View>
+          <Text style={styles.contentText}>Supplier: {item.supplier_name}</Text>
+          <Text style={styles.contentText}>
+            Schedule Date: {item.schedule_date}
+          </Text>
+          <Text
+            style={{
+              fontFamily: Fonts.semiBold,
+              fontSize: Size.xsmd,
+              color: Colors.darkButton,
+            }}>
+            PO Amount: ₹{item.grand_total.toLocaleString()}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
 
-export default PurchaseOrderScreen;
+export default PurchaseComponent;
 
 const styles = StyleSheet.create({
   container: {
@@ -245,7 +206,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     gap: 5,
     alignItems: 'center',
-    width: width * 0.76,
+    width: windowWidth * 0.76,
   },
 
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
@@ -407,7 +368,7 @@ const styles = StyleSheet.create({
     bottom: -65,
     gap: 5,
     zIndex: 1,
-    width: width * 0.9,
+    width: windowWidth * 0.9,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,

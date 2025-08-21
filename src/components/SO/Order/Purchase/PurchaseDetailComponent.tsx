@@ -3,6 +3,7 @@ import {
   Text,
   View,
   FlatList,
+  Button,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -11,35 +12,36 @@ import {
   RefreshControl,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
-import {RSoDetailData} from '../../../../types/baseType';
+import {POOrderData, RSoDetailData} from '../../../../types/baseType';
 import {soStatusColors} from '../../../../utils/utils';
 import {
-  useAmendSaleOrderMutation,
-  useCancelSaleOrderMutation,
-  useSubmitSaleOrderMutation,
+  useAmendPurchaseOrderMutation,
+  useCancelPurchaseOrderMutation,
+  useCreatePurchaseOrderMutation,
+  useSubmitPurchaseOrderMutation,
 } from '../../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import {Colors} from '../../../../utils/colors';
-import CreatePoFromSo from './CreatePoFromSo';
 
 type Props = {
-  detail: RSoDetailData;
+  detail: POOrderData;
   navigation: any;
   refetch: any;
 };
 
-const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
-  const {order_details, items, store_details, totals} = detail;
+const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
+  const {order_details, items, totals} = detail;
+
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const [submitSaleOrder, {isLoading: isSubmitLoading}] =
-    useSubmitSaleOrderMutation();
-  const [cancelSaleOrder, {isLoading: isCancelLoading}] =
-    useCancelSaleOrderMutation();
-  const [amendSaleOrder, {isLoading: isAmendLoading}] =
-    useAmendSaleOrderMutation();
+  const [submitPurchaseOrder, {isLoading: isSubmitLoading}] =
+    useSubmitPurchaseOrderMutation();
+  const [cancelPurchaseOrder, {isLoading: isCancelLoading}] =
+    useCancelPurchaseOrderMutation();
+  const [amendPurchaseOrder, {isLoading: isAmendLoading}] =
+    useAmendPurchaseOrderMutation();
 
   const onConfirmCancel = () => {
     setCancelModalVisible(false);
@@ -52,7 +54,8 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         order_id: order_details?.order_id,
         action: 'Approve',
       };
-      const res = await submitSaleOrder(payload).unwrap();
+      const res = await submitPurchaseOrder(payload).unwrap();
+      console.log('🚀 ~ handleSubmit ~ res:', res);
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
@@ -68,7 +71,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         });
       }
     } catch (error: any) {
-      // console.error('Sales Order API Error:', error);
+      console.error('Sales Order API Error:', error);
       Toast.show({
         type: 'error',
         text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
@@ -85,7 +88,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         action: 'Reject',
         reason: cancelReason,
       };
-      const res = await cancelSaleOrder(payload).unwrap();
+      const res = await cancelPurchaseOrder(payload).unwrap();
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
@@ -115,19 +118,20 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
   const handleAmend = async () => {
     try {
       let _amendment = {
-        delivery_date: order_details?.delivery_date,
+        schedule_date: order_details?.schedule_date,
+        supplier: order_details?.supplier,
         items: items?.map(item => ({
           item_code: item?.item_code,
           qty: item?.qty,
           rate: item?.rate,
-          delivery_date: item?.delivery_date,
+          sales_order: item?.sales_order as string,
         })),
       };
       let payload = {
         order_id: order_details?.order_id,
         amendments: _amendment,
       };
-      const res = await amendSaleOrder(payload).unwrap();
+      const res = await amendPurchaseOrder(payload).unwrap();
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
@@ -153,6 +157,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
       });
     }
   };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
@@ -172,36 +177,28 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
       <View style={styles.card}>
         <Text style={styles.title}>Order Details</Text>
         <Text>Order ID: {order_details.order_id}</Text>
-        <Text>Customer: {order_details.customer_name}</Text>
+        <Text>Supplier: {order_details.supplier_name}</Text>
         <Text>Transaction Date: {order_details.transaction_date}</Text>
-        <Text>Delivery Date: {order_details.delivery_date}</Text>
+        <Text>Schedule Date: {order_details.schedule_date}</Text>
         <View
           style={{
             backgroundColor:
-              `${soStatusColors[detail.order_details.status]}40` || '#E5E7EB40',
+              `${soStatusColors[order_details.status]}40` || '#E5E7EB40',
             padding: 8,
             borderRadius: 6,
             width: 'auto',
           }}>
           <Text
             style={{
-              color: soStatusColors[detail.order_details.status] || '#E5E7EB',
+              color: soStatusColors[order_details.status] || '#E5E7EB',
               fontWeight: '700',
               fontSize: 16,
             }}>
-            {detail.order_details.status}
+            {order_details.status}
           </Text>
         </View>
         <Text>Grand Total: {order_details.grand_total}</Text>
         <Text>Total Qty: {order_details.total_qty}</Text>
-      </View>
-
-      {/* Store Details */}
-      <View style={styles.card}>
-        <Text style={styles.title}>Store Details</Text>
-        <Text>Warehouse: {store_details.warehouse_name}</Text>
-        <Text>Store: {store_details.store}</Text>
-        <Text>Distributor: {store_details.distributor}</Text>
       </View>
 
       {/* Items List */}
@@ -213,10 +210,14 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
           keyExtractor={(item, index) => `${item.item_code}-${index}`}
           renderItem={({item}) => (
             <View style={styles.itemRow}>
-              <Text style={styles.itemName}>{item.item_name}</Text>
+              <Text style={styles.itemName}>Item Name: {item.item_name}</Text>
+              <Text>Description: {item.description}</Text>
+              <Text>Sales Order: {item.sales_order}</Text>
               <Text>Qty: {item.qty}</Text>
               <Text>Rate: {item.rate}</Text>
               <Text>Amount: {item.amount}</Text>
+              <Text>Warehouse: {item.warehouse}</Text>
+              <Text>Schedule Date: {item.schedule_date}</Text>
             </View>
           )}
         />
@@ -230,12 +231,6 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <Text>Grand Total: {totals.grand_total}</Text>
         <Text>Rounded: {totals.rounded_total}</Text>
       </View>
-
-      {/* Purchase Order Section */}
-      <CreatePoFromSo
-        detail={detail as RSoDetailData}
-        navigation={navigation}
-      />
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
@@ -258,9 +253,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            (isCancelLoading ||
-              order_details.status ||
-              order_details.docstatus !== 1) && {
+            (isCancelLoading || order_details.docstatus !== 1) && {
               opacity: 0.7,
             },
             {
@@ -309,8 +302,8 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
               <TextInput
                 style={styles.input}
                 placeholder="Enter reason for cancellation"
-                value={cancelReason}
                 placeholderTextColor={Colors.black}
+                value={cancelReason}
                 onChangeText={setCancelReason}
                 multiline
               />
@@ -335,7 +328,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
   );
 };
 
-export default SaleDetailComponent;
+export default PurchaseDetailComponent;
 
 const styles = StyleSheet.create({
   container: {

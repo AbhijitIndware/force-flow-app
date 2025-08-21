@@ -12,4 +12,5 @@ export const soStatusColors: Record<string, string> = {
   Reject: '#EF4444', // red
   Cancelled: '#EF4444', // same as Reject
   'To Deliver and Bill': '#22C55E',
+  'To Receive and Bill': '#22C55E',
 };
