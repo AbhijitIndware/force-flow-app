@@ -51,21 +51,21 @@ export const Colors = {
   darkGray: '#6E6E6E',
   darkerGray: '#3C3C3C',
   lightestGray: '#F2F2F2',
+  green: '#32CD32',
 
   // Other Custom
   orange: '#FF7B00',
-  greyDark:'#4A4A4A',
-  midBlack:'#111111',
-  lightBg:'#F0F2F6',
-  Orangelight:'#FF9533',
-  darkButton:'#2D2D2D',
-  lightSuccess:'#E7F8EA',
-  sucess:'#0AB72A',
-  lightDenger:'#FBE8E8',
-  denger:'#D31010',
-  holdLight:'#FFE9D4',
-  blue:'#367CFF',
-
+  greyDark: '#4A4A4A',
+  midBlack: '#111111',
+  lightBg: '#F0F2F6',
+  Orangelight: '#FF9533',
+  darkButton: '#2D2D2D',
+  lightSuccess: '#E7F8EA',
+  sucess: '#0AB72A',
+  lightDenger: '#FBE8E8',
+  denger: '#D31010',
+  holdLight: '#FFE9D4',
+  blue: '#367CFF',
 
   // Transparent variants
   transparent: 'transparent',

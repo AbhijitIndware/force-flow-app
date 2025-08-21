@@ -1,4 +1,4 @@
-import {ApiResponse} from './Navigation';
+import {ApiResponse, PaginationInfo} from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -131,3 +131,148 @@ export interface IAddDistributorResponse extends ApiResponse {
     };
   };
 }
+
+//Sales Order
+export interface SalesOrderType {
+  order_id: string;
+  customer: string;
+  customer_name: string;
+  transaction_date: string; // ISO string
+  delivery_date: string; // ISO string or empty
+  grand_total: number;
+  status: string;
+  workflow_state: string;
+  store_warehouse: string;
+  store_name: string;
+  distributor: string;
+  purchase_order: string | null;
+  created_by: string;
+  item_count: number;
+}
+export type RSoList = {
+  message: {
+    success: boolean;
+    data: {
+      sales_orders: SalesOrderType[]; // empty array in sample, but define type
+      pagination: PaginationInfo;
+    };
+  };
+};
+export type RSoDetailData = {
+  order_details: {
+    order_id: string;
+    customer: string;
+    customer_name: string;
+    transaction_date: string; // ISO Date string
+    delivery_date: string; // ISO Date string
+    status: string;
+    workflow_state: string;
+    grand_total: number;
+    total_qty: number;
+    custom_warehouse: string;
+    custom_supplier: string;
+    custom_purchase_order: string | null;
+    terms: string | null;
+    created_by: string;
+    creation: string; // timestamp
+    modified: string; // timestamp
+  };
+  items: {
+    item_code: string;
+    item_name: string;
+    description: string;
+    qty: number;
+    rate: number;
+    amount: number;
+    uom: string;
+    warehouse: string;
+    delivery_date: string; // ISO Date string
+  }[];
+  store_details: {
+    warehouse_name: string;
+    store: string;
+    distributor: string;
+  };
+  totals: {
+    total: number;
+    total_taxes_and_charges: number;
+    grand_total: number;
+    rounded_total: number;
+  };
+};
+export type RSoDetails = {
+  message: {
+    success: boolean;
+    data: RSoDetailData;
+  };
+};
+
+export type IAddSalesOrder = {
+  transaction_date: string; // ISO date string
+  delivery_date: string; // ISO date string
+  custom_warehouse: string;
+  items: {
+    item_code: string;
+    qty: number;
+    rate: number;
+    delivery_date: string; // ISO date string
+  }[];
+  terms: string | null;
+  submit_order: boolean;
+};
+export type RAddSalesOrder = {
+  message: {
+    success: boolean;
+    message: string;
+    data: {
+      order_id?: string;
+      original_order_id?: string;
+      amended_order_id?: string;
+      status: string;
+      workflow_state: string;
+      grand_total: number;
+      total_qty: number;
+      docstatus: number;
+    };
+  };
+};
+
+// 🔹 Update type
+export type IUpdateSalesOrder = Pick<
+  IAddSalesOrder,
+  'transaction_date' | 'delivery_date' | 'items'
+> & {
+  order_id: string;
+  items: (Omit<IAddSalesOrder['items'][number], 'delivery_date'> & {
+    delivery_date?: string; // make it optional
+  })[];
+};
+
+export type IUpdateSOAction = {
+  order_id: string;
+  action: 'Approve' | 'Reject' | 'Cancel' | string; // extendable for other actions
+};
+
+export type ICancelSO = Pick<IUpdateSOAction, 'action' | 'order_id'> & {
+  reason: string;
+};
+
+export type IAmendSO = {
+  order_id: string;
+  amendments: {
+    delivery_date?: string; // ISO date string (optional, since not always amended)
+    items?: {
+      item_code: string;
+      qty: number;
+      rate: number;
+      delivery_date?: string; // ISO date string (optional for amendment)
+    }[];
+  };
+};
+
+//Purchase Order
+export type IAddPurchaseOrder = {
+  sales_orders: string[];
+  schedule_date: string;
+  submit_order: boolean;
+};

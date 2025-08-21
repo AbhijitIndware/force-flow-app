@@ -6,6 +6,7 @@ import {PersistGate} from 'redux-persist/integration/react';
 import {persistor, store} from './src/store/store';
 import MainNavigation from './src/screens/MainNavigation/MainNavigation';
 import Toast from 'react-native-toast-message';
+import {toastConfig} from './src/components/ui-lib/custom-toast';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -16,7 +17,7 @@ function App(): React.JSX.Element {
         <NavigationContainer>
           <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
           <MainNavigation />
-          <Toast />
+          <Toast config={toastConfig} />
         </NavigationContainer>
       </PersistGate>
     </Provider>

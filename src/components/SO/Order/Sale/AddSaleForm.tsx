@@ -1,35 +1,34 @@
-// AddDistributorForm.tsx
-import React from 'react';
-import { Animated, StyleSheet, TouchableOpacity } from 'react-native';
+// AddSaleForm.tsx
+import React, {useState} from 'react';
+import {Animated, StyleSheet, TouchableOpacity, View, Text} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
-import { Text } from 'react-native';
 import moment from 'moment';
-import { Colors } from '../../../../utils/colors';
-import { View } from 'react-native';
+import {Colors} from '../../../../utils/colors';
+import {IAddSalesOrder} from '../../../../types/baseType';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 
 interface Props {
-  values: Record<string, string>;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
+  values: IAddSalesOrder;
+  errors: any;
+  touched: any;
   handleBlur: {
     (e: React.FocusEvent<any, Element>): void;
     <T = any>(fieldOrEvent: T): T extends string ? (e: any) => void : void;
   };
   handleChange: {
     (e: React.ChangeEvent<any>): void;
-    <T_1 = string | React.ChangeEvent<any>>(field: T_1): T_1 extends React.ChangeEvent<any> ? void : (e: string | React.ChangeEvent<any>) => void;
+    <T_1 = string | React.ChangeEvent<any>>(
+      field: T_1,
+    ): T_1 extends React.ChangeEvent<any>
+      ? void
+      : (e: string | React.ChangeEvent<any>) => void;
   };
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  storeTypeList: { label: string; value: string }[];
-  storeCategoryList: { label: string; value: string }[];
-  zoneList: { label: string; value: string }[];
-  stateList: { label: string; value: string }[];
-  cityList: { label: string; value: string }[];
-  distributorList: { label: string; value: string }[];
-  weekOffList: { label: string; value: string }[];
-  onTimeSelect: (field: 'start_time' | 'end_time') => void;
+  warehouseList: {label: string; value: string}[];
+  itemList: {label: string; value: string}[];
+  onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -40,65 +39,152 @@ const AddSaleForm: React.FC<Props> = ({
   handleBlur,
   setFieldValue,
   scrollY,
-  storeTypeList,
-  storeCategoryList,
-  zoneList,
-  stateList,
-  cityList,
-  distributorList,
-  weekOffList,
-  onTimeSelect,
+  warehouseList,
+  itemList,
+  onDateSelect,
 }) => {
-  const onSelect = (field: string, val: string) => {
-    setFieldValue(field, val);
-    if (field === 'zone') {
-      setFieldValue('state', '');
-      setFieldValue('city', '');
-    } else if (field === 'state') {
-      setFieldValue('city', '');
-    }
+  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const addNewItem = () => {
+    const newItem = {
+      item_code: '',
+      qty: 0,
+      rate: 0,
+      delivery_date: values.delivery_date,
+    };
+    setFieldValue('items', [...values.items, newItem]);
+  };
+
+  const removeItem = (index: number) => {
+    const updatedItems = values.items.filter((_, i) => i !== index);
+    setFieldValue('items', updatedItems);
   };
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: false }
-      )}
+      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+        useNativeDriver: false,
+      })}
       scrollEventThrottle={16}
-      contentContainerStyle={{ padding: 16 }}
-    >
-      <ReusableInput label="Store Name" value={values.store_name} onChangeText={handleChange('store_name')} onBlur={() => handleBlur('store_name')} error={touched.store_name && errors.store_name} />
-      <ReusableDropdown label="Store Type" field="store_type" value={values.store_type} data={storeTypeList} error={touched.store_type && errors.store_type} onChange={(val: string) => onSelect('store_type', val)} />
-      <ReusableDropdown label="Store Category" field="store_category" value={values.store_category} data={storeCategoryList} error={touched.store_category && errors.store_category} onChange={(val: string) => onSelect('store_category', val)} />
-      <ReusableDropdown label="Zone" field="zone" value={values.zone} data={zoneList} error={touched.zone && errors.zone} onChange={(val: string) => onSelect('zone', val)} />
-      <ReusableDropdown label="State" field="state" value={values.state} data={stateList} error={touched.state && errors.state} onChange={(val: string) => onSelect('state', val)} />
-      <ReusableDropdown label="City" field="city" value={values.city} data={cityList} error={touched.city && errors.city} onChange={(val: string) => onSelect('city', val)} />
-      <ReusableDropdown label="Weekly Off" field="weekly_off" value={values.weekly_off} data={weekOffList} error={touched.weekly_off && errors.weekly_off} onChange={(val: string) => onSelect('weekly_off', val)} />
-      <ReusableDropdown label="Distributor" field="distributor" value={values.distributor} data={distributorList} error={touched.distributor && errors.distributor} onChange={(val: string) => onSelect('distributor', val)} />
-      <ReusableInput label="Map Location" value={values.map_location} onChangeText={handleChange('map_location')} onBlur={() => handleBlur('map_location')} error={touched.map_location && errors.map_location} />
+      contentContainerStyle={{padding: 16}}>
+      {/* Transaction Date */}
       <View style={styles.inputWrapper}>
-
-        <Text style={styles.label}>Start Time</Text>
-        <TouchableOpacity style={styles.timeInput} onPress={() => onTimeSelect('start_time')}>
+        <Text style={styles.label}>Transaction Date</Text>
+        <TouchableOpacity
+          style={styles.timeInput}
+          onPress={() => onDateSelect('transaction_date')}>
           <Text style={styles.timeText}>
-            {values.start_time ? moment(values.start_time, 'HH:mm:ss').format('hh:mm A') : 'Select Start Time'}
+            {values.transaction_date
+              ? moment(values.transaction_date).format('YYYY-MM-DD')
+              : 'Select Date'}
           </Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.inputWrapper}>
 
-        <Text style={styles.label}>End Time</Text>
-        <TouchableOpacity style={styles.timeInput} onPress={() => onTimeSelect('end_time')}>
+      {/* Delivery Date */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.label}>Delivery Date</Text>
+        <TouchableOpacity
+          style={styles.timeInput}
+          onPress={() => onDateSelect('delivery_date')}>
           <Text style={styles.timeText}>
-            {values.end_time ? moment(values.end_time, 'HH:mm:ss').format('hh:mm A') : 'Select End Time'}
+            {values.delivery_date
+              ? moment(values.delivery_date).format('YYYY-MM-DD')
+              : 'Select Date'}
           </Text>
         </TouchableOpacity>
       </View>
-      <ReusableInput label="PAN No" value={values.pan_no} onChangeText={handleChange('pan_no')} onBlur={() => handleBlur('pan_no')} error={touched.pan_no && errors.pan_no} />
-      <ReusableInput label="GST No" value={values.gst_no} onChangeText={handleChange('gst_no')} onBlur={() => handleBlur('gst_no')} error={touched.gst_no && errors.gst_no} />
-      <ReusableInput label="PIN Code" value={values.pin_code} onChangeText={handleChange('pin_code')} onBlur={() => handleBlur('pin_code')} error={touched.pin_code && errors.pin_code} keyboardType="numeric" />
-      <ReusableInput label="Address" value={values.address} onChangeText={handleChange('address')} onBlur={() => handleBlur('address')} error={touched.address && errors.address} />
+
+      {/* Warehouse */}
+      <ReusableDropdown
+        label="Warehouse"
+        field="custom_warehouse"
+        value={values.custom_warehouse}
+        data={warehouseList}
+        error={touched.custom_warehouse && errors.custom_warehouse}
+        onChange={(val: string) => setFieldValue('custom_warehouse', val)}
+      />
+
+      {/* Items */}
+      {values.items.map((item, index) => (
+        <View key={index} style={styles.itemBlock}>
+          <DateTimePickerModal
+            isVisible={isTimePickerVisible}
+            mode="date"
+            onConfirm={(date: Date) => {
+              const formatted = moment(date).format('YYYY-MM-DD');
+              setFieldValue(`items[${index}].delivery_date`, formatted);
+
+              setTimePickerVisible(false);
+            }}
+            onCancel={() => setTimePickerVisible(false)}
+          />
+          <ReusableDropdown
+            label="Item"
+            field={`items[${index}].item_code`}
+            value={item.item_code}
+            data={itemList}
+            error={
+              touched[`items.${index}.item_code`] &&
+              errors[`items.${index}.item_code`]
+            }
+            onChange={(val: string) =>
+              setFieldValue(`items[${index}].item_code`, val)
+            }
+          />
+          <ReusableInput
+            label="Quantity"
+            value={item.qty ? String(item.qty) : ''}
+            keyboardType="numeric"
+            onChangeText={text =>
+              setFieldValue(
+                `items[${index}].qty`,
+                Number(text.replace(/[^0-9]/g, '')),
+              )
+            }
+            onBlur={() => handleBlur(`items[${index}].qty`)}
+            error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
+          />
+
+          <ReusableInput
+            label="Rate"
+            value={item.rate ? String(item.rate) : ''}
+            keyboardType="numeric"
+            onChangeText={text =>
+              setFieldValue(
+                `items[${index}].rate`,
+                Number(text.replace(/[^0-9]/g, '')),
+              )
+            }
+            onBlur={() => handleBlur(`items[${index}].rate`)}
+            error={touched.items?.[index]?.rate && errors.items?.[index]?.rate}
+          />
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Item Delivery Date</Text>
+            <TouchableOpacity
+              style={styles.timeInput}
+              onPress={() => setTimePickerVisible(true)}>
+              <Text style={styles.timeText}>
+                {item.delivery_date
+                  ? moment(item.delivery_date).format('YYYY-MM-DD')
+                  : 'Select Date'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/* Remove button (only if index > 0) */}
+          {index > 0 && (
+            <TouchableOpacity
+              onPress={() => removeItem(index)}
+              style={styles.removeButton}>
+              <Text style={styles.removeButtonText}>Remove</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
+      {/* ➕ Add More Button */}
+      <TouchableOpacity style={styles.addMoreBtn} onPress={addNewItem}>
+        <Text style={styles.addMoreText}>+ Add More Item</Text>
+      </TouchableOpacity>
     </Animated.ScrollView>
   );
 };
@@ -126,5 +212,36 @@ const styles = StyleSheet.create({
   timeText: {
     color: Colors.black,
     fontSize: 14,
+  },
+  itemBlock: {
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: '#ddd',
+    backgroundColor: '#fafafa',
+  },
+  addMoreBtn: {
+    backgroundColor: Colors.primary,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  addMoreText: {
+    color: Colors.white,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  removeButton: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: 'red',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

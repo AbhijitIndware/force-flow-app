@@ -31,10 +31,11 @@ export type SoAppStackParamList = {
   AddStoreScreen: undefined;
   AddMarketVisitScreen: undefined;
   AddPjpScreen: undefined;
-  AddSaleScreen: undefined;
+  AddSaleScreen: {orderId?: string} | undefined;
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
+  SaleDetailScreen: {id: string};
 };
 
 export type menuType = {
@@ -51,3 +52,9 @@ export type ApiResponse = {
     status: string;
   };
 };
+export interface PaginationInfo {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}

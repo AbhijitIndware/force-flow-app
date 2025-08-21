@@ -3,6 +3,7 @@ import {apiBaseUrl} from '../apiBaseUrl';
 import {
   IDailyStore,
   RActivityPjp,
+  RAllMasterForSO,
   RBeat,
   RCity,
   RDailyStore,
@@ -110,6 +111,14 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
+
+    //Sales Order
+    getAllDropdownForSalesOrder: builder.query<RAllMasterForSO, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.get_sales_order_master_data',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 export const {
@@ -128,4 +137,7 @@ export const {
   useGetDailyStoreQuery,
   useLazyGetDailyStoreQuery,
   useGetActivityForPjpQuery,
+
+  //Sales Order
+  useGetAllDropdownForSalesOrderQuery,
 } = dropdownApi;

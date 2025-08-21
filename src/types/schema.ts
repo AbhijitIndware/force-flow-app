@@ -69,3 +69,28 @@ export const markActivitySchema = Yup.object().shape({
     }),
   ),
 });
+
+//Sales Order
+export const addSalesOrderSchema = Yup.object().shape({
+  transaction_date: Yup.string().required('Transaction date is required'),
+  delivery_date: Yup.string().required('Delivery date is required'),
+  custom_warehouse: Yup.string().required('Warehouse is required'),
+  items: Yup.array()
+    .of(
+      Yup.object().shape({
+        item_code: Yup.string().required('Item code is required'),
+        qty: Yup.number()
+          .typeError('Quantity must be a number')
+          .positive('Quantity must be greater than 0')
+          .required('Quantity is required'),
+        rate: Yup.number()
+          .typeError('Rate must be a number')
+          .positive('Rate must be greater than 0')
+          .required('Rate is required'),
+        delivery_date: Yup.string().required('Item delivery date is required'),
+      }),
+    )
+    .min(1, 'At least one item is required'),
+  terms: Yup.string().nullable(),
+  submit_order: Yup.boolean().required(),
+});
