@@ -19,7 +19,7 @@ export type PromoterAppStackParamList = {
 };
 
 export type SoAppStackParamList = {
-  Home: undefined;
+  Home: {routeName?: string} | undefined;
   HomeScreen: undefined;
   AttendanceScreen: undefined;
   SalesScreen: undefined;

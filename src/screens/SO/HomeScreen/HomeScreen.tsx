@@ -80,6 +80,7 @@ const HomeScreen = ({navigation}: Props) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedStoreValue, setSelectedStoreValue] =
     useState<StoreData | null>(null);
+  console.log('🚀 ~ HomeScreen ~ selectedStoreValue:', selectedStoreValue);
   const dispatch = useAppDispatch();
 
   const user = useAppSelector(
@@ -102,11 +103,12 @@ const HomeScreen = ({navigation}: Props) => {
 
   const handleCheckOut = async () => {
     try {
-      const res = await checkOut({
-        store: '',
-      }).unwrap();
+      let payload = {store: selectedStore as string};
+      console.log('Checkout payload:', payload);
+      const res = await checkOut(payload).unwrap();
+      console.log('🚀 ~ handleCheckOut ~ res:', res);
 
-      if (res?.message?.status === 'success') {
+      if (res?.message?.success) {
         Toast.show({
           type: 'success',
           text1: `✅ ${res.message.message || 'Checked out successfully'}`,
@@ -114,6 +116,7 @@ const HomeScreen = ({navigation}: Props) => {
         });
         dispatch(setSelectedStore(''));
         dispatch(resetLocation());
+        setSelectedStoreValue(null);
       } else {
         Toast.show({
           type: 'error',

@@ -60,7 +60,12 @@ const OrdersScreen = ({navigation, route}: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      <PageHeader title="Orders" navigation={() => navigation.goBack()} />
+      <PageHeader
+        title="Orders"
+        navigation={() =>
+          navigation.navigate('Home', {routeName: 'HomeScreen'})
+        }
+      />
       <Animated.ScrollView
         onScroll={Animated.event(
           [{nativeEvent: {contentOffset: {y: scrollY}}}],
