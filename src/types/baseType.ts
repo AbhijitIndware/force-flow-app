@@ -148,6 +148,7 @@ export type IAddCheckIn = {
     data: string;
   };
   current_location: string;
+  bypass_store_category: boolean;
 };
 export type RAddCheckIn = {
   message: {

@@ -48,6 +48,7 @@ const initial = {
     data: '',
   },
   current_location: '',
+  bypass_store_category: true,
 };
 
 const CheckInForm = ({navigation}: Props) => {
@@ -96,6 +97,7 @@ const CheckInForm = ({navigation}: Props) => {
           store: formValues.store,
           image: formValues.image,
           current_location: values.current_location,
+          bypass_store_category: formValues.bypass_store_category,
         };
         console.log('🚀 ~ CheckInForm ~ value:', value);
 
