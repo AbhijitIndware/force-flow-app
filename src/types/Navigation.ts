@@ -24,7 +24,7 @@ export type SoAppStackParamList = {
   AttendanceScreen: undefined;
   SalesScreen: undefined;
   ActivityScreen: undefined;
-  OrdersScreen: undefined;
+  OrdersScreen: {index?: number} | undefined;
   PartnersScreen: undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: undefined;

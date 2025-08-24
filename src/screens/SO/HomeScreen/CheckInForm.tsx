@@ -206,7 +206,7 @@ const CheckInForm = ({navigation}: Props) => {
         <ReusableDropdown
           label="Store"
           field="value"
-          value={selectedStore || ''}
+          value={values.store}
           data={storeDailyList}
           error={touched.store && errors.store}
           onChange={(val: string) => onSelect('store', val)}

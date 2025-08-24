@@ -120,7 +120,9 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           }).unwrap();
         } else {
           // 🔹 Add API
+          console.log('🚀 ~ AddSaleScreen ~ formValues:', formValues);
           res = await addSalesOrder(formValues).unwrap();
+          console.log('🚀 ~ AddSaleScreen ~ res:', res);
         }
 
         if (res?.message?.success) {
@@ -130,7 +132,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
             position: 'top',
           });
           actions.resetForm();
-          navigation.navigate('OrdersScreen');
+          navigation.navigate('OrdersScreen', {index: 1});
         } else {
           Toast.show({
             type: 'error',
@@ -181,7 +183,10 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
         title="Add Sales Order"
-        navigation={() => navigation.goBack()}
+        navigation={
+          () => navigation.navigate('OrdersScreen', {index: 1})
+          //  navigation.navigate('Home')
+        }
       />
       <DateTimePickerModal
         isVisible={isTimePickerVisible}

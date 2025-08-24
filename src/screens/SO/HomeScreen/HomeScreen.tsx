@@ -112,6 +112,8 @@ const HomeScreen = ({navigation}: Props) => {
           text1: `✅ ${res.message.message || 'Checked out successfully'}`,
           position: 'top',
         });
+        dispatch(setSelectedStore(''));
+        dispatch(resetLocation());
       } else {
         Toast.show({
           type: 'error',
@@ -182,21 +184,24 @@ const HomeScreen = ({navigation}: Props) => {
                   Hello <Text style={styles.name}>{user?.full_name}</Text>
                 </Text>
                 <View style={styles.linkBox}>
-                  <View style={styles.dateBox}>
-                    <Text style={styles.dateText}>21</Text>
-                    <Text style={styles.monthText}>APR</Text>
-                  </View>
-                  <View style={styles.linkContent}>
-                    <Text style={styles.paraText}>
-                      Last check-in at{' '}
-                      {moment(
-                        selectedStoreValue?.times.check_in_time,
-                        'HH:mm:ss.SSSSS',
-                      ).format('hh:mm A')}
-                      .
-                    </Text>
-                    <Text style={styles.paraText}>Store- New mart</Text>
-                  </View>
+                  <DateBox />
+                  {selectedStoreValue && (
+                    <View style={styles.linkContent}>
+                      {selectedStoreValue?.times?.check_in_time && (
+                        <Text style={styles.paraText}>
+                          Last check-in at{' '}
+                          {moment(
+                            selectedStoreValue?.times.check_in_time,
+                            'HH:mm:ss.SSSSS',
+                          ).format('hh:mm A')}
+                          .
+                        </Text>
+                      )}
+                      <Text style={styles.paraText}>
+                        Store- {selectedStoreValue?.name}
+                      </Text>
+                    </View>
+                  )}
                 </View>
                 {selectedStoreValue?.actions?.can_check_out ||
                 selectedStoreValue?.actions?.can_mark_activity ? (
@@ -543,6 +548,19 @@ const HomeScreen = ({navigation}: Props) => {
         </ScrollView>
       )}
     </SafeAreaView>
+  );
+};
+
+const DateBox = () => {
+  const today = moment(); // current date
+  const day = today.format('DD'); // e.g. "21"
+  const month = today.format('MMM').toUpperCase(); // e.g. "APR"
+
+  return (
+    <View style={styles.dateBox}>
+      <Text style={styles.dateText}>{day}</Text>
+      <Text style={styles.monthText}>{month}</Text>
+    </View>
   );
 };
 

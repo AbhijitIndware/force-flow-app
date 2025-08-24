@@ -12,7 +12,7 @@ import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
@@ -40,9 +40,16 @@ type Props = {
   route: any;
 };
 
-const OrdersScreen = ({navigation}: Props) => {
+const OrdersScreen = ({navigation, route}: Props) => {
+  const {index: initialIndex} = route.params || {};
   const scrollY = useRef(new Animated.Value(0)).current;
   const [index, setIndex] = React.useState(0);
+
+  useEffect(() => {
+    if (initialIndex !== undefined) {
+      setIndex(initialIndex);
+    }
+  }, [initialIndex]);
 
   return (
     <SafeAreaView
