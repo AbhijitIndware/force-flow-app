@@ -12,13 +12,13 @@ const persistConfig = {
 
 const authReducer = combineReducers({
   authSlice: authSlice.reducer,
+  pjpSlice: pjpSlice.reducer,
 });
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({
   reducer: {
     persistedReducer,
-    pjpSlice: pjpSlice.reducer,
 
     [authApi.reducerPath]: authApi.reducer,
     [dropdownApi.reducerPath]: dropdownApi.reducer,

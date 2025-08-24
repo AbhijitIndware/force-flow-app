@@ -52,6 +52,36 @@ export type IAddPjpPayload = {
   };
 };
 
+export type StoreStatus = {
+  checked_in: boolean;
+  activity_marked: boolean;
+  checked_out: boolean;
+};
+
+export type StoreActions = {
+  can_check_in: boolean;
+  can_mark_activity: boolean;
+  can_check_out: boolean;
+};
+
+export type StoreTimes = {
+  check_in_time: string | null;
+  check_out_time: string | null;
+  image: string | null;
+};
+
+export type StoreTargets = {
+  target_qty: number | null;
+  achieved_qty: number | null;
+};
+export type StoreData = {
+  name: string;
+  store: string;
+  status: StoreStatus;
+  actions: StoreActions;
+  times: StoreTimes;
+  targets: StoreTargets;
+};
 export type RPjpInitialize = {
   message: {
     success: boolean;
@@ -62,7 +92,7 @@ export type RPjpInitialize = {
         store: string;
         check_out_time: string | null; // Assuming it could be a string date/time or null
       };
-      stores: string[]; // Changed to array of strings for general use
+      stores: StoreData[];
       store_category_validation: {
         valid: boolean; // Assuming true/false
         message: string;
@@ -78,6 +108,39 @@ export type ILocationVerify = {
   current_location: string;
   validate_location: boolean;
 };
+export type RLocationVerify = {
+  message: {
+    success: boolean;
+    data: {
+      store: string;
+      employee: string;
+      status: {
+        checked_in: boolean;
+        activity_marked: boolean;
+        checked_out: boolean;
+      };
+      actions: {
+        can_check_in: boolean;
+        can_mark_activity: boolean;
+        can_check_out: boolean;
+      };
+      times: {
+        check_in_time: string | null; // ISO time string
+        check_out_time: string | null;
+        image: string | null;
+      };
+      targets: {
+        target_qty: number | null;
+        achieved_qty: number | null;
+      };
+      location_validation: {
+        valid: boolean;
+        message: string;
+      };
+    };
+  };
+};
+
 export type IAddCheckIn = {
   store: string;
   image: {

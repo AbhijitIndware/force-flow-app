@@ -16,6 +16,7 @@ import {
   IUpdateSalesOrder,
   IUpdateSOAction,
   RAddSalesOrder,
+  RLocationVerify,
   RPjpInitialize,
   RPoDetails,
   RPoList,
@@ -64,7 +65,7 @@ export const baseApi = createApi({
         method: 'POST',
       }),
     }),
-    locationVerification: builder.mutation<any, ILocationVerify>({
+    locationVerification: builder.mutation<RLocationVerify, ILocationVerify>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_store_selection',
         method: 'POST',
@@ -85,7 +86,7 @@ export const baseApi = createApi({
         body,
       }),
     }),
-    checkOut: builder.mutation<any, IMarkActivity>({
+    checkOut: builder.mutation<any, {store: string}>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_check_out',
         method: 'POST',
@@ -247,6 +248,8 @@ interface PjpState {
   error: boolean;
   status: 'idle' | 'pending' | 'fulfilled' | 'rejected';
   pjpInitializedData?: RPjpInitialize | null;
+  locationVerifyData?: RLocationVerify | null;
+  selectedStore?: string | null;
 }
 
 const initialState: PjpState = {
@@ -254,6 +257,8 @@ const initialState: PjpState = {
   error: false,
   status: 'idle',
   pjpInitializedData: null,
+  locationVerifyData: null,
+  selectedStore: null,
 };
 
 export const pjpSlice = createSlice({
@@ -261,6 +266,10 @@ export const pjpSlice = createSlice({
   initialState,
   reducers: {
     resetPjpState: () => initialState,
+    setSelectedStore: (state, action: PayloadAction<string>) => {
+      state.selectedStore = action.payload;
+    },
+    resetLocation: () => initialState,
   },
   extraReducers: builder => {
     builder
@@ -283,9 +292,36 @@ export const pjpSlice = createSlice({
         state.loading = false;
         state.error = true;
         state.pjpInitializedData = null;
-      });
+      })
+      .addMatcher(
+        baseApi.endpoints.locationVerification.matchPending,
+        state => {
+          state.status = 'pending';
+          state.loading = true;
+          state.error = false;
+        },
+      )
+      .addMatcher(
+        baseApi.endpoints.locationVerification.matchFulfilled,
+        (state, action) => {
+          state.status = 'fulfilled';
+          state.loading = false;
+          state.error = false;
+          state.locationVerifyData = action.payload;
+        },
+      )
+      .addMatcher(
+        baseApi.endpoints.locationVerification.matchRejected,
+        state => {
+          state.status = 'rejected';
+          state.loading = false;
+          state.error = true;
+          state.pjpInitializedData = null;
+        },
+      );
   },
 });
 
-export const {resetPjpState} = pjpSlice.actions;
+export const {resetPjpState, setSelectedStore, resetLocation} =
+  pjpSlice.actions;
 export default pjpSlice.reducer;

@@ -48,6 +48,8 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>UIAppFonts</key>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to verify store check-in</string>
 	<array>
 		<string>Nunito-Bold.ttf</string>
 		<string>Nunito-Light.ttf</string>

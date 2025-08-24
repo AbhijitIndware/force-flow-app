@@ -32,16 +32,6 @@ const AddCheckInForm: React.FC<Props> = ({
   scrollY,
   storeList,
 }) => {
-  const onSelect = (field: string, val: string) => {
-    setFieldValue(field, val);
-    if (field === 'zone') {
-      setFieldValue('state', '');
-      setFieldValue('city', '');
-    } else if (field === 'state') {
-      setFieldValue('city', '');
-    }
-  };
-
   const handleOpenCamera = async () => {
     launchCamera(
       {
@@ -76,15 +66,6 @@ const AddCheckInForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={{padding: 16}}>
-      <ReusableDropdown
-        label="Store"
-        field="value"
-        value={values.store}
-        data={storeList}
-        error={touched.store && errors.store}
-        onChange={(val: string) => onSelect('store', val)}
-      />
-
       <TouchableOpacity
         onPress={handleOpenCamera}
         style={{

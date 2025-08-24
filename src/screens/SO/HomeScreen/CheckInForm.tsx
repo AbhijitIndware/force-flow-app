@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
+  View,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {Colors} from '../../../utils/colors';
@@ -12,6 +13,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {useFormik} from 'formik';
 import {
+  setSelectedStore,
   useAddCheckInMutation,
   useLocationVerificationMutation,
 } from '../../../features/base/base-api';
@@ -21,7 +23,12 @@ import Toast from 'react-native-toast-message';
 import {flexCol} from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
 import AddCheckInForm from '../../../components/SO/Home/check-in-form';
-import {useAppSelector} from '../../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {
+  getCurrentLocation,
+  requestLocationPermission,
+} from '../../../utils/utils';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -42,25 +49,32 @@ const initial = {
   },
   current_location: '',
 };
+
 const CheckInForm = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
   const [locationVerified, setLocationVerified] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const dispatch = useAppDispatch();
 
   const pjpInitializedData = useAppSelector(
-    state => state.pjpSlice?.pjpInitializedData,
+    state => state?.persistedReducer?.pjpSlice?.pjpInitializedData,
   );
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+  const selectedStore = useAppSelector(
+    state => state?.persistedReducer?.pjpSlice?.selectedStore,
+  );
+
   const [verifyLocation, {isLoading: verifying}] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
   const [triggerStoreFetch, {data: storeData, isFetching, error}] =
     useLazyGetDailyStoreQuery();
 
-  const getCurrentLocation = async (): Promise<string> => {
-    return '11.54,23.65'; // Kolkata lat, long (as string)
+  const onSelect = (field: string, val: string) => {
+    dispatch(setSelectedStore(val));
+    setFieldValue(field, val);
   };
 
   const {
@@ -78,14 +92,15 @@ const CheckInForm = ({navigation}: Props) => {
       try {
         setLoading(true);
 
-        const location = await getCurrentLocation();
         let value = {
           store: formValues.store,
           image: formValues.image,
-          current_location: location,
+          current_location: values.current_location,
         };
+        console.log('🚀 ~ CheckInForm ~ value:', value);
 
         const res = await addCheckIn(value).unwrap();
+        console.log('🚀 ~ CheckInForm ~ res:', res);
         if (res?.message?.success === true) {
           Toast.show({
             type: 'success',
@@ -93,7 +108,14 @@ const CheckInForm = ({navigation}: Props) => {
             position: 'top',
           });
           actions.resetForm();
+          handleVerifyLocation();
           navigation.navigate('Home');
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            position: 'top',
+          });
         }
       } catch (error: any) {
         Toast.show({
@@ -117,10 +139,7 @@ const CheckInForm = ({navigation}: Props) => {
 
   const handleVerifyLocation = async () => {
     try {
-      const location = await getCurrentLocation();
-      setFieldValue('current_location', location); // update form field
-
-      if (!values.store) {
+      if (!selectedStore) {
         Toast.show({
           type: 'error',
           text1: '❌ Please select a store before verifying location',
@@ -129,12 +148,12 @@ const CheckInForm = ({navigation}: Props) => {
       }
 
       const res = await verifyLocation({
-        store: values.store,
-        current_location: location,
-        validate_location: true,
+        store: selectedStore as string,
+        current_location: values?.current_location,
+        validate_location: false,
       }).unwrap();
 
-      if (res?.message?.validate_location) {
+      if (res?.message?.data?.location_validation?.valid) {
         Toast.show({
           type: 'success',
           text1: '✅ Location verified',
@@ -155,7 +174,22 @@ const CheckInForm = ({navigation}: Props) => {
     }
   };
 
+  const handleCallLocationPermission = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      throw new Error('Location permission not granted');
+    } else {
+      handleSetValue();
+    }
+  };
+
+  const handleSetValue = async () => {
+    const location = await getCurrentLocation();
+    setFieldValue('current_location', location);
+  };
+
   useEffect(() => {
+    handleCallLocationPermission();
     if (user?.email && pjpInitializedData?.message?.data?.date) {
       triggerStoreFetch({
         user: user.email,
@@ -168,7 +202,18 @@ const CheckInForm = ({navigation}: Props) => {
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
 
-      {/* {!locationVerified ? (
+      <View style={{padding: 20}}>
+        <ReusableDropdown
+          label="Store"
+          field="value"
+          value={selectedStore || ''}
+          data={storeDailyList}
+          error={touched.store && errors.store}
+          onChange={(val: string) => onSelect('store', val)}
+        />
+      </View>
+
+      {!locationVerified ? (
         <TouchableOpacity
           style={[styles.submitBtn, verifying && {opacity: 0.7}]}
           onPress={handleVerifyLocation}
@@ -179,30 +224,30 @@ const CheckInForm = ({navigation}: Props) => {
             <Text style={styles.submitText}>Verify Location</Text>
           )}
         </TouchableOpacity>
-      ) : ( */}
-      <>
-        <AddCheckInForm
-          values={values}
-          errors={errors}
-          touched={touched}
-          handleChange={handleChange}
-          handleBlur={handleBlur}
-          setFieldValue={setFieldValue}
-          scrollY={scrollY}
-          storeList={storeDailyList}
-        />
-        <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
-          onPress={() => handleSubmit()}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <Text style={styles.submitText}>CheckIn</Text>
-          )}
-        </TouchableOpacity>
-      </>
-      {/* )} */}
+      ) : (
+        <>
+          <AddCheckInForm
+            values={values}
+            errors={errors}
+            touched={touched}
+            handleChange={handleChange}
+            handleBlur={handleBlur}
+            setFieldValue={setFieldValue}
+            scrollY={scrollY}
+            storeList={storeDailyList}
+          />
+          <TouchableOpacity
+            style={[styles.submitBtn, loading && {opacity: 0.7}]}
+            onPress={() => handleSubmit()}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Text style={styles.submitText}>CheckIn</Text>
+            )}
+          </TouchableOpacity>
+        </>
+      )}
     </SafeAreaView>
   );
 };

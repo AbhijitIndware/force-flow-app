@@ -16,13 +16,17 @@ import {
   useGetActivityForPjpQuery,
   useGetEmployeeQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {useMarkActivityMutation} from '../../../features/base/base-api';
+import {
+  useLocationVerificationMutation,
+  useMarkActivityMutation,
+} from '../../../features/base/base-api';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import PageHeader from '../../../components/ui/PageHeader';
 import {flexCol} from '../../../utils/styles';
 import {dailyPjpSchema, markActivitySchema} from '../../../types/schema';
 import {useAppSelector} from '../../../store/hook';
+import {getCurrentLocation} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -44,8 +48,8 @@ const MarkActivityScreen = ({navigation}: Props) => {
 
   const {data: activityForPjp} = useGetActivityForPjpQuery();
   const [markActivity] = useMarkActivityMutation();
-  const pjpInitialize = useAppSelector(
-    state => state?.pjpSlice?.pjpInitializedData,
+  const selectedStore = useAppSelector(
+    state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
 
   const {
@@ -101,10 +105,10 @@ const MarkActivityScreen = ({navigation}: Props) => {
   const activityList = transformToDropdownList(activityForPjp?.message?.data);
 
   useEffect(() => {
-    if (pjpInitialize?.message?.data?.employee?.store) {
-      setFieldValue('store', pjpInitialize?.message?.data?.employee?.store);
+    if (selectedStore) {
+      setFieldValue('store', selectedStore);
     }
-  }, [pjpInitialize, pjpInitialize?.message?.data?.employee?.store]);
+  }, [selectedStore]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

@@ -33,12 +33,16 @@ import {
   ShoppingCart,
   UsersRound,
 } from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {
+  resetLocation,
+  setSelectedStore,
   useCheckOutMutation,
   usePjpInitializeMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
+import {StoreData} from '../../../types/baseType';
+import moment from 'moment';
 
 const {width} = Dimensions.get('window');
 
@@ -52,13 +56,40 @@ type Props = {
   route: any;
 };
 
+function extractServerMessage(resp: any): string | null {
+  try {
+    if (!resp?._server_messages) return null;
+
+    // Step 1: Parse outer array
+    const messagesArray = JSON.parse(resp._server_messages);
+
+    if (!messagesArray?.length) return null;
+
+    // Step 2: Parse the first element into object
+    const messageObj = JSON.parse(messagesArray[0]);
+
+    return messageObj.message || null;
+  } catch (err) {
+    console.error('Failed to parse server message:', err);
+    return null;
+  }
+}
+
 const HomeScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [selectedStoreValue, setSelectedStoreValue] =
+    useState<StoreData | null>(null);
+  const dispatch = useAppDispatch();
+
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+  const selectedStore = useAppSelector(
+    state => state?.persistedReducer?.pjpSlice?.selectedStore,
+  );
 
-  const [pjpInitialize, {data, error}] = usePjpInitializeMutation();
+  const [pjpInitialize, {data}] = usePjpInitializeMutation();
   const [checkOut, {isLoading}] = useCheckOutMutation();
 
   const onRefresh = useCallback(() => {
@@ -73,7 +104,6 @@ const HomeScreen = ({navigation}: Props) => {
     try {
       const res = await checkOut({
         store: '',
-        activity_type: [{activity_type: ''}],
       }).unwrap();
 
       if (res?.message?.status === 'success') {
@@ -102,7 +132,31 @@ const HomeScreen = ({navigation}: Props) => {
 
   useEffect(() => {
     pjpInitialize();
-  }, [user]);
+  }, [pjpInitialize]);
+
+  useEffect(() => {
+    if (selectedStore) {
+      data?.message?.data?.stores?.find(
+        store => store.store === selectedStore,
+      ) &&
+        setSelectedStoreValue(
+          data?.message?.data?.stores?.find(
+            store => store.store === selectedStore,
+          ) || null,
+        );
+    }
+  }, [selectedStore, data]);
+
+  useEffect(() => {
+    if (data?._server_messages) {
+      let _data = extractServerMessage(data);
+      setErrorMessage(_data || '');
+    }
+    if (data?.message?.success === false) {
+      dispatch(setSelectedStore(''));
+      dispatch(resetLocation());
+    }
+  }, [data]);
 
   return (
     <SafeAreaView
@@ -134,17 +188,25 @@ const HomeScreen = ({navigation}: Props) => {
                   </View>
                   <View style={styles.linkContent}>
                     <Text style={styles.paraText}>
-                      Last check-in at 11:05 pm.
+                      Last check-in at{' '}
+                      {moment(
+                        selectedStoreValue?.times.check_in_time,
+                        'HH:mm:ss.SSSSS',
+                      ).format('hh:mm A')}
+                      .
                     </Text>
                     <Text style={styles.paraText}>Store- New mart</Text>
                   </View>
                 </View>
-                {data?.message?.data?.store_category_validation?.valid ? (
+                {selectedStoreValue?.actions?.can_check_out ||
+                selectedStoreValue?.actions?.can_mark_activity ? (
                   <View>
                     <TouchableOpacity
                       style={styles.checkinButton}
                       onPress={handleCheckOut}
-                      disabled={isLoading}>
+                      disabled={
+                        !selectedStoreValue?.actions?.can_check_out || isLoading
+                      }>
                       <Text style={styles.checkinButtonText}>
                         {/* Check Out from New mart */} Check Out
                       </Text>
@@ -161,7 +223,10 @@ const HomeScreen = ({navigation}: Props) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.checkinButton}
-                      onPress={() => navigation.navigate('MarkActivityScreen')}>
+                      onPress={() => navigation.navigate('MarkActivityScreen')}
+                      disabled={
+                        !selectedStoreValue?.actions?.can_mark_activity
+                      }>
                       <Text style={styles.checkinButtonText}>
                         {/* Check Out from New mart */} Mark Activity
                       </Text>
@@ -175,7 +240,18 @@ const HomeScreen = ({navigation}: Props) => {
                 ) : (
                   <TouchableOpacity
                     style={styles.checkinButton}
-                    onPress={() => navigation.navigate('CheckInForm')}>
+                    // disabled={!locationVerifyData?.message?.data?.actions?.can_check_in}
+                    onPress={() => {
+                      if (errorMessage !== '') {
+                        Toast.show({
+                          type: 'error',
+                          text1: `❌ ${errorMessage}`,
+                          position: 'top',
+                        });
+                      } else {
+                        navigation.navigate('CheckInForm');
+                      }
+                    }}>
                     <Text style={styles.checkinButtonText}>
                       {/* Check Out from New mart */} Check In
                     </Text>
