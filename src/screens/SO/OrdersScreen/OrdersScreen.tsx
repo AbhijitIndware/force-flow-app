@@ -36,7 +36,7 @@ type NavigationProp = NativeStackNavigationProp<
 >;
 
 type Props = {
-  navigation: NavigationProp;
+  navigation: any;
   route: any;
 };
 
@@ -62,9 +62,11 @@ const OrdersScreen = ({navigation, route}: Props) => {
       ]}>
       <PageHeader
         title="Orders"
-        navigation={() =>
-          navigation.navigate('Home', {routeName: 'HomeScreen'})
-        }
+        navigation={() => {
+          navigation.navigate('Home', {
+            screen: 'HomeScreen', // Use 'screen' to specify the nested tab
+          });
+        }}
       />
       <Animated.ScrollView
         onScroll={Animated.event(

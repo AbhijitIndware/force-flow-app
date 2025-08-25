@@ -471,7 +471,9 @@ const HomeScreen = ({navigation}: Props) => {
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <TouchableOpacity style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('OrdersScreen', {index: 1})}>
               <View
                 style={[
                   styles.iconbox,
@@ -498,7 +500,9 @@ const HomeScreen = ({navigation}: Props) => {
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <TouchableOpacity style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('OrdersScreen', {index: 0})}>
               <View
                 style={[
                   styles.iconbox,
@@ -525,7 +529,9 @@ const HomeScreen = ({navigation}: Props) => {
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <TouchableOpacity style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('AddPjpScreen')}>
               <View
                 style={[
                   styles.iconbox,

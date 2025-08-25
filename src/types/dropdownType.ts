@@ -60,15 +60,16 @@ export type RBeat = {
   };
 };
 
-export type RStore = {
-  message: {
-    status: string;
-    data: {
+export type StoreType= {
       name: string;
       city: string;
       state: string;
       store_name: string;
-    }[];
+    }
+export type RStore = {
+  message: {
+    status: string;
+    data:StoreType[];
   };
 };
 export type RDailyStore = {

@@ -17,12 +17,12 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import HomeScreen from './HomeScreen';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import { useAppDispatch, useAppSelector } from '../../../store/hook';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {
   ChartNoAxesCombined,
   Handshake,
@@ -34,11 +34,11 @@ import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
-import { Modal } from 'react-native';
-import { useState } from 'react';
-import { logout } from '../../../features/auth/auth';
+import {Modal} from 'react-native';
+import {useEffect, useState} from 'react';
+import {logout} from '../../../features/auth/auth';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
 
 type Props = {
@@ -48,20 +48,20 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({ state, descriptors, navigation }: any) {
+function MyTabBar({state, descriptors, navigation}: any) {
   return (
     <View
       style={{
         flexDirection: 'row',
       }}>
       {state.routes.map((route: any, index: any) => {
-        const { options } = descriptors[route.key];
+        const {options} = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-              ? options.title
-              : route.name;
+            ? options.title
+            : route.name;
 
         const isFocused = state.index === index;
 
@@ -95,7 +95,7 @@ function MyTabBar({ state, descriptors, navigation }: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityState={isFocused ? {selected: true} : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -167,13 +167,23 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const Home = ({ navigation, route }: Props) => {
+const Home = ({navigation, route}: Props) => {
+  // const [routeName, setRouteName] = useState('HomeScreen');
+
+  // useEffect(() => {
+  //   console.log(
+  //     '🚀 ~ Home ~ route?.params?.routeName:',
+  //     route?.params?.routeName,
+  //   );
+  //   if (route?.params?.routeName) {
+  //     setRouteName(route?.params?.routeName);
+  //   }
+  // }, [route?.params, route?.params?.routeName]);
+
   return (
     <>
       <Tab.Navigator
-        initialRouteName={
-          route?.params ? route?.params?.routeName : 'HomeScreen'
-        }
+        initialRouteName={'HomeScreen'}
         screenOptions={{
           tabBarHideOnKeyboard: true,
           headerShown: true,
@@ -185,17 +195,15 @@ const Home = ({ navigation, route }: Props) => {
           },
         }}
         tabBar={props => {
-        let index = props.state.index;
-          return (
-            index===0?<MyTabBar {...props} />:null
-          )
+          let index = props.state.index;
+          return index === 0 ? <MyTabBar {...props} /> : null;
         }}>
         <Tab.Screen
           name="HomeScreen"
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <House
                   strokeWidth={2}
@@ -212,7 +220,7 @@ const Home = ({ navigation, route }: Props) => {
           options={{
             tabBarLabel: 'Partners',
             headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <Handshake
                   strokeWidth={2}
@@ -229,7 +237,7 @@ const Home = ({ navigation, route }: Props) => {
           options={{
             tabBarLabel: 'Sales',
             headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <ChartNoAxesCombined
                   strokeWidth={2}
@@ -246,7 +254,7 @@ const Home = ({ navigation, route }: Props) => {
           options={{
             tabBarLabel: 'Activity',
             headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <Lightbulb
                   strokeWidth={2}
@@ -263,7 +271,7 @@ const Home = ({ navigation, route }: Props) => {
           options={{
             tabBarLabel: 'Orders',
             headerShown: false,
-            tabBarIcon: ({ focused }) => (
+            tabBarIcon: ({focused}) => (
               <ShoppingCart
                 strokeWidth={2}
                 color={focused ? Colors.white : Colors.white}
@@ -303,7 +311,7 @@ const styles = StyleSheet.create({
     height: 36,
   },
 
-  notification: { position: 'relative', top: 6 },
+  notification: {position: 'relative', top: 6},
   notificationBatch: {
     width: 26,
     height: 26,
@@ -319,9 +327,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: { color: Colors.white },
+  notificationCount: {color: Colors.white},
 
-  userInfo: { overflow: 'hidden', borderRadius: 15 },
+  userInfo: {overflow: 'hidden', borderRadius: 15},
   avtarImage: {
     width: width * 0.12,
     height: 50,
