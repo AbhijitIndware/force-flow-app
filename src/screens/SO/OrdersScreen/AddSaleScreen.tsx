@@ -57,14 +57,14 @@ const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrder => {
 // ✅ Initial values for Sales Order
 const initial: IAddSalesOrder = {
   transaction_date: moment().format('YYYY-MM-DD'),
-  delivery_date: '',
+  delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
   custom_warehouse: '',
   items: [
     {
       item_code: '',
       qty: 0,
       rate: 0,
-      delivery_date: '',
+      delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
     },
   ],
   terms: null,
@@ -154,17 +154,16 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       }
     },
   });
-
   // ✅ Transform Items for dropdown
   const itemList = data?.message?.data?.items?.map((item: SoItem) => ({
     value: item.item_code, // what will be stored in form
-    label: `${item.item_name} (${item.item_code}) - ₹${item.buying_rate}`,
+    label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
   }));
 
   // ✅ Transform Stores/Warehouses for dropdown
   const warehouseList = data?.message?.data?.stores?.map((store: SoStore) => ({
     value: store.warehouse_id, // what will be stored
-    label: `${store.warehouse_name} | ${store.store_name} | ${store.distributor_name}`,
+    label: `${store.store_name} | ${store.warehouse_name} | ${store.distributor_name}`,
   }));
 
   if (orderId && isFetching) {
@@ -218,6 +217,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         setFieldValue={setFieldValue}
         scrollY={scrollY}
         itemList={itemList || []}
+        originalItemList={data?.message?.data?.items || []}
         warehouseList={warehouseList || []}
         onDateSelect={field => {
           setActiveField(field);

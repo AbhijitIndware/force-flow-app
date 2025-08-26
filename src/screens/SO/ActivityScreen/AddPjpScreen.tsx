@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   Animated,
 } from 'react-native';
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -22,6 +22,7 @@ import {REmployee, StoreType} from '../../../types/dropdownType';
 import {useAddDailyPjpMutation} from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
+import {useAppSelector} from '../../../store/hook';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -44,6 +45,9 @@ const AddPjpScreen = ({navigation}: Props) => {
   const {data: employeeData} = useGetEmployeeQuery();
   const {data: storeData} = useGetStoreQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
   const [addDailyPjp] = useAddDailyPjpMutation();
 
@@ -96,7 +100,7 @@ const AddPjpScreen = ({navigation}: Props) => {
   });
 
   const transformToDropdownList = (arr: StoreType[] = []) =>
-    arr.map(item => ({label: item.name, value: item.store_name}));
+    arr.map(item => ({label: item.store_name, value: item.name}));
 
   const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
     arr.map(item => ({
@@ -106,6 +110,12 @@ const AddPjpScreen = ({navigation}: Props) => {
 
   const employeeList = transformEmployeeList(employeeData?.message?.data);
   const storeList = transformToDropdownList(storeData?.message?.data);
+
+  useEffect(() => {
+    if (employee?.id) {
+      setFieldValue('employee', employee?.id);
+    }
+  }, [employee]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

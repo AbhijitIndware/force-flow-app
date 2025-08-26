@@ -7,6 +7,7 @@ import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
 import {IAddSalesOrder} from '../../../../types/baseType';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {SoItem} from '../../../../types/dropdownType';
 
 interface Props {
   values: IAddSalesOrder;
@@ -28,6 +29,7 @@ interface Props {
   scrollY: Animated.Value;
   warehouseList: {label: string; value: string}[];
   itemList: {label: string; value: string}[];
+  originalItemList: SoItem[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
 }
 
@@ -41,6 +43,7 @@ const AddSaleForm: React.FC<Props> = ({
   scrollY,
   warehouseList,
   itemList,
+  originalItemList,
   onDateSelect,
 }) => {
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
@@ -59,6 +62,15 @@ const AddSaleForm: React.FC<Props> = ({
     setFieldValue('items', updatedItems);
   };
 
+  const handleSelectedItemValues = (itemCode: string, index: number) => {
+    const selectedItem = originalItemList.find(
+      item => item.item_code === itemCode,
+    );
+    if (selectedItem) {
+      setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
+    }
+  };
+
   return (
     <Animated.ScrollView
       onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
@@ -71,7 +83,8 @@ const AddSaleForm: React.FC<Props> = ({
         <Text style={styles.label}>Transaction Date</Text>
         <TouchableOpacity
           style={styles.timeInput}
-          onPress={() => onDateSelect('transaction_date')}>
+          // onPress={() => onDateSelect('transaction_date')}
+        >
           <Text style={styles.timeText}>
             {values.transaction_date
               ? moment(values.transaction_date).format('YYYY-MM-DD')
@@ -92,11 +105,15 @@ const AddSaleForm: React.FC<Props> = ({
               : 'Select Date'}
           </Text>
         </TouchableOpacity>
+
+        {touched.delivery_date && errors.delivery_date && (
+          <Text style={styles.error}>{errors.delivery_date}</Text>
+        )}
       </View>
 
       {/* Warehouse */}
       <ReusableDropdown
-        label="Warehouse"
+        label="Store"
         field="custom_warehouse"
         value={values.custom_warehouse}
         data={warehouseList}
@@ -123,13 +140,18 @@ const AddSaleForm: React.FC<Props> = ({
             field={`items[${index}].item_code`}
             value={item.item_code}
             data={itemList}
+            // error={
+            //   touched[`items.${index}.item_code`] &&
+            //   errors[`items.${index}.item_code`]
+            // }
             error={
-              touched[`items.${index}.item_code`] &&
-              errors[`items.${index}.item_code`]
+              touched.items?.[index]?.item_code &&
+              errors.items?.[index]?.item_code
             }
-            onChange={(val: string) =>
-              setFieldValue(`items[${index}].item_code`, val)
-            }
+            onChange={(val: string) => {
+              setFieldValue(`items[${index}].item_code`, val);
+              handleSelectedItemValues(val, index);
+            }}
           />
           <ReusableInput
             label="Quantity"
@@ -160,6 +182,18 @@ const AddSaleForm: React.FC<Props> = ({
           />
 
           <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Amount</Text>
+            <TouchableOpacity
+              style={styles.timeInput}
+              // onPress={() => onDateSelect('transaction_date')}
+            >
+              <Text style={styles.timeText}>
+                {item.qty > 0 ? item.qty * item.rate : 'Total Amount'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputWrapper}>
             <Text style={styles.label}>Item Delivery Date</Text>
             <TouchableOpacity
               style={styles.timeInput}
@@ -170,6 +204,13 @@ const AddSaleForm: React.FC<Props> = ({
                   : 'Select Date'}
               </Text>
             </TouchableOpacity>
+
+            {touched.items?.[index]?.delivery_date &&
+              errors.items?.[index]?.delivery_date && (
+                <Text style={styles.error}>
+                  {errors.items?.[index]?.delivery_date}
+                </Text>
+              )}
           </View>
           {/* Remove button (only if index > 0) */}
           {index > 0 && (
@@ -244,4 +285,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  error: {fontSize: 12, color: 'red', marginTop: 4},
 });

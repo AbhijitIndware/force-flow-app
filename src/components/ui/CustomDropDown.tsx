@@ -1,12 +1,12 @@
 /* eslint-disable react-native/no-inline-styles */
-import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {useState} from 'react';
+import {StyleSheet, Text, View} from 'react-native';
 
-import { Dropdown } from 'react-native-element-dropdown';
-import { Fonts } from '../../constants';
-import { Colors } from '../../utils/colors';
-import { DropDownList } from '../../types/Navigation';
-import { color } from '@rneui/base';
+import {Dropdown} from 'react-native-element-dropdown';
+import {Fonts} from '../../constants';
+import {Colors} from '../../utils/colors';
+import {DropDownList} from '../../types/Navigation';
+import {color} from '@rneui/base';
 
 type Props = {
   selectText: string;
@@ -44,11 +44,13 @@ const DropdownComponent = ({
               styles.item,
               selected && styles.selectedItem, // Highlight selected item
             ]}>
-            <Text style={[styles.itemText,
-            selected && styles.selectedItemText,]}>{item.label}</Text>
+            <Text
+              style={[styles.itemText, selected && styles.selectedItemText]}>
+              {item.label}
+            </Text>
           </View>
         )}
-        itemContainerStyle={{ padding: 0, }}
+        itemContainerStyle={{padding: 0}}
         placeholderStyle={styles.placeholderStyle}
         selectedTextStyle={styles.selectedTextStyle}
         itemTextStyle={styles.itemTextStyle}
@@ -60,10 +62,13 @@ const DropdownComponent = ({
         value={selectedId}
         onFocus={() => setIsFocus(true)}
         onBlur={() => setIsFocus(false)}
-        onChange={(item: { value: any }) => {
+        onChange={(item: {value: any}) => {
           setSelectedId(item?.value);
           setIsFocus(false);
         }}
+        search
+        searchPlaceholder="Search..."
+        inputSearchStyle={styles.inputSearchStyle}
       />
     </View>
   );
@@ -115,7 +120,7 @@ const styles = StyleSheet.create({
   itemTextStyle: {
     fontSize: 15,
     color: Colors.inputBorder,
-    margin: 0
+    margin: 0,
   },
   selectedItemText: {
     paddingHorizontal: 5,
@@ -128,5 +133,13 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: Fonts.regular,
     fontSize: 15,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 15,
+    color: Colors.black,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+    paddingHorizontal: 10,
   },
 });

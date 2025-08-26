@@ -211,6 +211,21 @@ const HomeScreen = ({navigation}: Props) => {
                   <View>
                     <TouchableOpacity
                       style={styles.checkinButton}
+                      onPress={() => navigation.navigate('MarkActivityScreen')}
+                      disabled={
+                        !selectedStoreValue?.actions?.can_mark_activity
+                      }>
+                      <Text style={styles.checkinButtonText}>
+                        {/* Check Out from New mart */} Mark Activity
+                      </Text>
+                      <Ionicons
+                        name="chevron-forward-circle-sharp"
+                        size={24}
+                        color={Colors.white}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.checkinButton}
                       onPress={handleCheckOut}
                       disabled={
                         !selectedStoreValue?.actions?.can_check_out || isLoading
@@ -228,21 +243,6 @@ const HomeScreen = ({navigation}: Props) => {
                           color={Colors.white}
                         />
                       )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.checkinButton}
-                      onPress={() => navigation.navigate('MarkActivityScreen')}
-                      disabled={
-                        !selectedStoreValue?.actions?.can_mark_activity
-                      }>
-                      <Text style={styles.checkinButtonText}>
-                        {/* Check Out from New mart */} Mark Activity
-                      </Text>
-                      <Ionicons
-                        name="chevron-forward-circle-sharp"
-                        size={24}
-                        color={Colors.white}
-                      />
                     </TouchableOpacity>
                   </View>
                 ) : (

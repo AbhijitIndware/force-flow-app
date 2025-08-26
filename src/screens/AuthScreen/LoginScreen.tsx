@@ -78,11 +78,13 @@ const LoginScreen = () => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      <ScrollView nestedScrollEnabled={true}>
+      <ScrollView
+        nestedScrollEnabled={true}
+        contentContainerStyle={{flexGrow: 1}}>
         <View style={styles.header}>
           <Image
-            source={require('../../assets/images/brand.png')}
-            resizeMode="cover"
+            source={require('../../assets/images/softsence-logo-login.png')}
+            resizeMode="contain"
             style={styles.logoImage}
           />
         </View>
@@ -186,6 +188,13 @@ const LoginScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.footer}>
+          <Image
+            source={require('../../assets/images/brand.png')}
+            resizeMode="contain"
+            style={styles.footerLogoImage}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -216,6 +225,18 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     width: width * 0.6,
+    height: 120,
+  },
+  footer: {
+    minHeight: 100,
+    width: '100%',
+    paddingHorizontal: 20,
+    zIndex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
+  },
+  footerLogoImage: {
+    width: width * 0.3,
     height: 50,
   },
   LoginBody: {
@@ -229,6 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 20,
     justifyContent: 'center',
+    // flex: 1,
   },
   inputBox: {
     color: Colors.white,
