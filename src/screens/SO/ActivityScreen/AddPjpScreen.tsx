@@ -15,14 +15,24 @@ import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {dailyPjpSchema} from '../../../types/schema';
 import {
+  useGetDailyStoreQuery,
   useGetEmployeeQuery,
   useGetStoreQuery,
 } from '../../../features/dropdown/dropdown-api';
 import {REmployee, StoreType} from '../../../types/dropdownType';
-import {useAddDailyPjpMutation} from '../../../features/base/base-api';
+import {
+  useAddDailyPjpMutation,
+  useGetDailyPjpByIdQuery,
+  useUpdateDailyPjpMutation,
+} from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 import {useAppSelector} from '../../../store/hook';
+import {
+  IAddPjpPayload,
+  PjpDailyStore,
+  PjpDailyStoreDetail,
+} from '../../../types/baseType';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -34,13 +44,26 @@ type Props = {
   route: any;
 };
 
-let initial = {
+const initial = {
   date: '',
   employee: '',
   stores: [{store: ''}],
 };
 
-const AddPjpScreen = ({navigation}: Props) => {
+// helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
+const mapPjpDetailToForm = (detail: PjpDailyStoreDetail): any => {
+  return {
+    date: detail.pjp_date,
+    employee: detail.pjp_emp,
+    stores: detail.stores.map(s => ({
+      store: s.store, // or s.store if API expects that
+    })),
+  };
+};
+
+const AddPjpScreen = ({navigation, route}: Props) => {
+  const {id} = route.params;
+  const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
   const {data: employeeData} = useGetEmployeeQuery();
   const {data: storeData} = useGetStoreQuery();
@@ -49,7 +72,12 @@ const AddPjpScreen = ({navigation}: Props) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
+  const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
+    skip: id === null || id === undefined,
+  });
+
   const [addDailyPjp] = useAddDailyPjpMutation();
+  const [updateDailyPjp] = useUpdateDailyPjpMutation();
 
   const {
     values,
@@ -59,14 +87,29 @@ const AddPjpScreen = ({navigation}: Props) => {
     handleBlur,
     handleSubmit,
     setFieldValue,
+    resetForm,
   } = useFormik({
-    initialValues: initial,
+    initialValues: initialValues,
     validationSchema: dailyPjpSchema,
+    enableReinitialize: true, // 👈 important
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
+
+        // if record exists → update, else → add
         const payload = {data: formValues};
-        const res = await addDailyPjp(payload).unwrap();
+        let res;
+
+        if (id) {
+          res = await updateDailyPjp({
+            data: {
+              ...formValues,
+              document_name: id,
+            },
+          }).unwrap();
+        } else {
+          res = await addDailyPjp(payload).unwrap();
+        }
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -74,7 +117,7 @@ const AddPjpScreen = ({navigation}: Props) => {
             text1: `✅ ${res.message.message}`,
             position: 'top',
           });
-          actions.resetForm();
+          resetForm();
           navigation.navigate('ActivityScreen');
         } else {
           Toast.show({
@@ -83,10 +126,8 @@ const AddPjpScreen = ({navigation}: Props) => {
             position: 'top',
           });
         }
-
-        setLoading(false);
       } catch (error: any) {
-        console.error('Distributor API Error:', error);
+        console.error('PJP API Error:', error);
         Toast.show({
           type: 'error',
           text1:
@@ -94,6 +135,7 @@ const AddPjpScreen = ({navigation}: Props) => {
           text2: 'Please try again later.',
           position: 'top',
         });
+      } finally {
         setLoading(false);
       }
     },
@@ -116,6 +158,13 @@ const AddPjpScreen = ({navigation}: Props) => {
       setFieldValue('employee', employee?.id);
     }
   }, [employee]);
+
+  useEffect(() => {
+    if (pjpDetails?.message) {
+      let _initial_value = mapPjpDetailToForm(pjpDetails.message);
+      setInitialValues(_initial_value);
+    }
+  }, [pjpDetails, id]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

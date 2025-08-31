@@ -13,10 +13,13 @@ import {
   ICancelSO,
   ILocationVerify,
   IMarkActivity,
+  IUpdatePjpPayload,
   IUpdateSalesOrder,
   IUpdateSOAction,
   RAddSalesOrder,
   RLocationVerify,
+  RPjpDailyById,
+  RPjpDailyStores,
   RPjpInitialize,
   RPoDetails,
   RPoList,
@@ -34,7 +37,7 @@ export const baseApi = createApi({
     baseUrl: apiBaseUrl,
     credentials: 'include',
   }),
-  tagTypes: ['Customer', 'SO', 'PO'],
+  tagTypes: ['Customer', 'SO', 'PO', 'PJP'],
   endpoints: builder => ({
     addDistributor: builder.mutation<any, IAddDistributorPayload>({
       query: body => ({
@@ -46,13 +49,6 @@ export const baseApi = createApi({
     addStore: builder.mutation<any, IAddStorePayload>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
-        method: 'POST',
-        body,
-      }),
-    }),
-    addDailyPjp: builder.mutation<any, IAddPjpPayload>({
-      query: body => ({
-        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.create_pjp_daily_stores',
         method: 'POST',
         body,
       }),
@@ -214,12 +210,54 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PO'],
     }),
+
+    //PJP
+    getDailyPjpList: builder.query<
+      RPjpDailyStores,
+      Pick<PaginationInfo, 'page' | 'page_size'> & {status: string}
+    >({
+      query: ({page, page_size, status}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_daily_stores_list`,
+        method: 'GET',
+        params: {
+          page: page,
+          limit: page_size,
+          // status: status,
+        },
+      }),
+      providesTags: ['PJP'],
+    }),
+    getDailyPjpById: builder.query<RPjpDailyById, string>({
+      query: id => ({
+        url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_store_by_id`,
+        method: 'GET',
+        params: {
+          pjp_doc_name: id,
+        },
+      }),
+      providesTags: ['PJP'],
+    }),
+    addDailyPjp: builder.mutation<any, IAddPjpPayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.create_pjp_daily_stores',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
+    updateDailyPjp: builder.mutation<any, IUpdatePjpPayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.modify_pjp_daily_stores',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
   }),
 });
 export const {
   useAddDistributorMutation,
   useAddStoreMutation,
-  useAddDailyPjpMutation,
   //Daily PJP Activity Check-in ---
   usePjpInitializeMutation,
   useLocationVerificationMutation,
@@ -241,6 +279,11 @@ export const {
   useSubmitPurchaseOrderMutation,
   useGetPurchaseOrderByIdQuery,
   useGetPurchaseOrderListQuery,
+  //PJP
+  useGetDailyPjpListQuery,
+  useGetDailyPjpByIdQuery,
+  useUpdateDailyPjpMutation,
+  useAddDailyPjpMutation,
 } = baseApi;
 
 interface PjpState {

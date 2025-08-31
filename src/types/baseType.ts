@@ -44,14 +44,6 @@ type StoreEntry = {
   store: string;
 };
 
-export type IAddPjpPayload = {
-  data: {
-    date: string;
-    employee: string;
-    stores: StoreEntry[];
-  };
-};
-
 export type StoreStatus = {
   checked_in: boolean;
   activity_marked: boolean;
@@ -433,5 +425,78 @@ export type RPoDetails = {
   message: {
     success: boolean;
     data: POOrderData;
+  };
+};
+
+//PJP
+export interface RPjpDailyStores {
+  message: {
+    status: string; // e.g. "success"
+    data: {
+      pjp_daily_stores: PjpDailyStore[];
+      pagination: PaginationInfo;
+    };
+  };
+}
+export type PjpDailyStoreDetail = {
+  status: string;
+  message: string;
+  stores: {
+    store: string;
+    store_name: string;
+    store_category: string;
+  }[];
+  pjp_daily_store_doc: string;
+  pjp_date: string; // ISO date string "2025-08-29"
+  pjp_emp: string;
+};
+export interface RPjpDailyById {
+  message: PjpDailyStoreDetail;
+}
+
+export interface PjpDailyStore {
+  pjp_daily_store_id: string;
+  date: string; // ISO date string "2025-08-29"
+  employee: string;
+  employee_name: string;
+  creation: string; // timestamp
+  modified: string; // timestamp
+  stores: Store[];
+  total_stores: number;
+}
+
+export interface Store {
+  store_id: string;
+  store_name: string;
+  store_category: string;
+  city: string | null;
+  state: string | null;
+  warehouse: Warehouse[];
+}
+
+export interface Warehouse {
+  warehouse_id: string;
+  warehouse_name: string;
+  distributor_id: string;
+  distributor_name: string;
+  is_group: number; // looks like 0/1 instead of boolean
+  parent_warehouse: string;
+  company: string;
+}
+
+export type IAddPjpPayload = {
+  data: {
+    date: string;
+    employee: string;
+    stores: StoreEntry[];
+  };
+};
+
+export type IUpdatePjpPayload = {
+  data: {
+    date: string;
+    employee: string;
+    stores: StoreEntry[];
+    document_name: string;
   };
 };

@@ -1,3 +1,5 @@
+import {PjpDailyStore} from './baseType';
+
 //Stack ParamList Type
 export type MainNavigationStackParamList = {
   PromoterNavigation: undefined;
@@ -30,13 +32,14 @@ export type SoAppStackParamList = {
   AddDistributorScreen: undefined;
   AddStoreScreen: undefined;
   AddMarketVisitScreen: undefined;
-  AddPjpScreen: undefined;
+  AddPjpScreen: {id?: string} | undefined;
   AddSaleScreen: {orderId?: string} | undefined;
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
   SaleDetailScreen: {id: string};
   PurchaseDetailScreen: {id: string};
+  PjpDetailScreen: {details: PjpDailyStore};
 };
 
 export type menuType = {

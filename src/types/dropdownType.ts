@@ -60,29 +60,30 @@ export type RBeat = {
   };
 };
 
-export type StoreType= {
-      name: string;
-      city: string;
-      state: string;
-      store_name: string;
-    }
+export type StoreType = {
+  name: string;
+  city: string;
+  state: string;
+  store_name: string;
+};
 export type RStore = {
   message: {
     status: string;
-    data:StoreType[];
+    data: StoreType[];
   };
 };
+export type DailyStoreType = {
+  status: string;
+  message: string;
+  stores: {
+    store: string;
+    store_name: string;
+    store_category: string;
+  }[];
+  pjp_daily_store_doc: string;
+};
 export type RDailyStore = {
-  message: {
-    status: string;
-    message: string;
-    stores: {
-      store: string;
-      store_name: string;
-      store_category: string;
-    }[];
-    pjp_daily_store_doc: string;
-  };
+  message: DailyStoreType;
 };
 
 export type IDailyStore = {
