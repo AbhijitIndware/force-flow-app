@@ -9,27 +9,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import {
-  ClipboardPenLine,
-  FileCheck,
-  MapPinCheck,
-} from 'lucide-react-native';
-import { Tab } from '@rneui/themed';
-import { Button } from '@rneui/themed';
+import React, {useCallback, useRef, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {ClipboardPenLine, FileCheck, MapPinCheck} from 'lucide-react-native';
+import {Tab} from '@rneui/themed';
+import {Button} from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
+import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -41,7 +38,7 @@ type Props = {
   route: any;
 };
 
-const ActivityScreen = ({ navigation, route }: Props) => {
+const ActivityScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
@@ -68,12 +65,12 @@ const ActivityScreen = ({ navigation, route }: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
+          contentContainerStyle={{position: 'relative'}}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
@@ -81,14 +78,22 @@ const ActivityScreen = ({ navigation, route }: Props) => {
             <View style={styles.salesHeaderData}>
               <View style={styles.countBoxSection}>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.holdLight }]}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.holdLight},
+                    ]}>
                     <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
                   </View>
                   <Text style={styles.countBoxDay}>50</Text>
                   <Text style={styles.countBoxTitle}>Total call</Text>
                 </View>
                 <View style={styles.countBox}>
-                  <View style={[styles.countBoxIcon, { backgroundColor: Colors.lightSuccess }]}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.lightSuccess},
+                    ]}>
                     <MapPinCheck strokeWidth={1.4} color={Colors.success} />
                   </View>
                   <Text style={styles.countBoxDay}>12</Text>
@@ -158,7 +163,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
               <Tab.Item
                 title="Market Visit"
@@ -175,7 +180,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
             </Tab>
           </View>
@@ -188,25 +193,32 @@ const ActivityScreen = ({ navigation, route }: Props) => {
         </Animated.ScrollView>
       )}
 
-      <View
-        style={{
-          position: 'absolute',
-          bottom: 3,
-          width: '100%',
-          paddingHorizontal: 20,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        <TouchableOpacity
-          style={styles.checkinButton}
-          onPress={() => index === 0 ? navigation.navigate('AddPjpScreen') : navigation.navigate('AddMarketVisitScreen')}>
-          <FileCheck strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>
-            {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {index === 0 && (
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 3,
+            width: '100%',
+            paddingHorizontal: 20,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <TouchableOpacity
+            style={styles.checkinButton}
+            onPress={() =>
+              index === 0
+                ? navigation.navigate('AddPjpScreen')
+                : // navigation.navigate('AddMarketVisitScreen')
+                  null
+            }>
+            <FileCheck strokeWidth={1.4} color={Colors.white} />
+            <Text style={styles.checkinButtonText}>
+              {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -233,7 +245,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     paddingBottom: 20,
@@ -265,7 +277,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -301,10 +313,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -483,8 +495,8 @@ const styles = StyleSheet.create({
     padding: 15,
     minHeight: 107,
     shadowColor: '#9F9D9D',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.10,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 15,
   },

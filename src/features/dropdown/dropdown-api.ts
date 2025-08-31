@@ -9,6 +9,7 @@ import {
   RDailyStore,
   RDistributor,
   REmployee,
+  RItems,
   RResponse,
   RState,
   RStore,
@@ -40,10 +41,13 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getEmployee: builder.query<REmployee, void>({
-      query: () => ({
+    getEmployee: builder.query<REmployee, {name?: string}>({
+      query: ({name}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_employee',
         method: 'GET',
+        params: {
+          search: name,
+        },
       }),
     }),
     getDesignation: builder.query<RResponse, void>({
@@ -80,6 +84,15 @@ export const dropdownApi = createApi({
       query: () => ({
         url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
         method: 'GET',
+      }),
+    }),
+    getItems: builder.query<RItems, {search?: string}>({
+      query: ({search}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_items_with_prices_advanced',
+        method: 'GET',
+        params: {
+          search: search,
+        },
       }),
     }),
 
@@ -137,6 +150,7 @@ export const {
   useGetDailyStoreQuery,
   useLazyGetDailyStoreQuery,
   useGetActivityForPjpQuery,
+  useGetItemsQuery,
 
   //Sales Order
   useGetAllDropdownForSalesOrderQuery,

@@ -62,3 +62,9 @@ export interface PaginationInfo {
   page_size: number;
   total_pages: number;
 }
+// Filters
+export interface Filters {
+  search: string | null;
+  item_group: string | null;
+  price_range: string | null;
+}

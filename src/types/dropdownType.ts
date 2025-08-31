@@ -1,4 +1,4 @@
-import {ApiResponse, PaginationInfo} from './Navigation';
+import {ApiResponse, Filters, PaginationInfo} from './Navigation';
 
 export type RResponse = {
   message: {
@@ -79,6 +79,7 @@ export type DailyStoreType = {
     store: string;
     store_name: string;
     store_category: string;
+    warehouse_id: string;
   }[];
   pjp_daily_store_doc: string;
 };
@@ -145,3 +146,27 @@ export type RAllMasterForSO = {
     };
   };
 };
+
+//Items
+export interface Item {
+  item_code: string;
+  item_name: string;
+  item_group: string;
+  stock_uom: string;
+  description: string;
+  image: string | null;
+  disabled: number;
+  selling_rate: number;
+  buying_rate: number;
+  available_qty: number;
+}
+
+export interface RItems {
+  message: {
+    status: 'success' | 'error'; // can adjust if more statuses exist
+    data: Item[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
+  };
+}

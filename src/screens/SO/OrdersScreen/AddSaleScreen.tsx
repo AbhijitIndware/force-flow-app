@@ -24,8 +24,14 @@ import {
   useGetSalesOrderByIdQuery,
   useUpdateSaleOrderMutation,
 } from '../../../features/base/base-api';
-import {useGetAllDropdownForSalesOrderQuery} from '../../../features/dropdown/dropdown-api';
+import {
+  useGetAllDropdownForSalesOrderQuery,
+  useGetItemsQuery,
+  useLazyGetDailyStoreQuery,
+} from '../../../features/dropdown/dropdown-api';
 import {SoItem, SoStore} from '../../../types/dropdownType';
+import {useAppSelector} from '../../../store/hook';
+import {Search} from 'lucide-react-native';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -80,13 +86,18 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const {orderId} = route.params;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
 
   const [addSalesOrder] = useAddSaleOrderMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
-  const {data} = useGetAllDropdownForSalesOrderQuery();
+  const [triggerStoreFetch, {data: storeData, error}] =
+    useLazyGetDailyStoreQuery();
   const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
+  const {data: itemData} = useGetItemsQuery({search: ''});
 
   useEffect(() => {
     if (salesDetails?.message?.data) {
@@ -154,16 +165,17 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       }
     },
   });
+
   // ✅ Transform Items for dropdown
-  const itemList = data?.message?.data?.items?.map((item: SoItem) => ({
+  const itemList = itemData?.message?.data?.map(item => ({
     value: item.item_code, // what will be stored in form
     label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
   }));
 
   // ✅ Transform Stores/Warehouses for dropdown
-  const warehouseList = data?.message?.data?.stores?.map((store: SoStore) => ({
+  const warehouseList = storeData?.message?.stores?.map(store => ({
     value: store.warehouse_id, // what will be stored
-    label: `${store.store_name} | ${store.warehouse_name} | ${store.distributor_name}`,
+    label: `${store.store_name} | ${store.store_category}`,
   }));
 
   if (orderId && isFetching) {
@@ -177,6 +189,22 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       </SafeAreaView>
     );
   }
+
+  useEffect(() => {
+    if (salesDetails?.message?.data) {
+      let _initial_value = mapSalesDetailToForm(salesDetails.message.data);
+      setInitialValues(_initial_value);
+    }
+  }, [salesDetails, orderId]);
+
+  useEffect(() => {
+    if (user?.email && values?.transaction_date) {
+      triggerStoreFetch({
+        user: user.email,
+        date: values?.transaction_date,
+      });
+    }
+  }, [user?.email, values?.transaction_date]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
@@ -217,7 +245,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         setFieldValue={setFieldValue}
         scrollY={scrollY}
         itemList={itemList || []}
-        originalItemList={data?.message?.data?.items || []}
+        originalItemList={itemData?.message?.data || []}
         warehouseList={warehouseList || []}
         onDateSelect={field => {
           setActiveField(field);

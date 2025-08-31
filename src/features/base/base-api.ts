@@ -23,6 +23,7 @@ import {
   RPjpInitialize,
   RPoDetails,
   RPoList,
+  RPOSOCount,
   RSoDetails,
   RSoList,
 } from '../../types/baseType';
@@ -211,6 +212,15 @@ export const baseApi = createApi({
       invalidatesTags: ['PO'],
     }),
 
+    //Counts
+    getSalesPurchaseCount: builder.query<RPOSOCount, void>({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.order_apis.order_count.get_orders_count`,
+        method: 'GET',
+      }),
+      providesTags: ['PO', 'SO'],
+    }),
+
     //PJP
     getDailyPjpList: builder.query<
       RPjpDailyStores,
@@ -279,6 +289,7 @@ export const {
   useSubmitPurchaseOrderMutation,
   useGetPurchaseOrderByIdQuery,
   useGetPurchaseOrderListQuery,
+  useGetSalesPurchaseCountQuery,
   //PJP
   useGetDailyPjpListQuery,
   useGetDailyPjpByIdQuery,

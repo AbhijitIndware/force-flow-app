@@ -27,6 +27,7 @@ import {Animated} from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import PurchaseOrder from '../../../components/SO/Order/Purchase/PurchaseOrder';
 import SalesOrder from '../../../components/SO/Order/Sale/SalesOrder';
+import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
 
@@ -44,6 +45,8 @@ const OrdersScreen = ({navigation, route}: Props) => {
   const {index: initialIndex} = route.params || {};
   const scrollY = useRef(new Animated.Value(0)).current;
   const [index, setIndex] = React.useState(0);
+
+  const {data: countData} = useGetSalesPurchaseCountQuery();
 
   useEffect(() => {
     if (initialIndex !== undefined) {
@@ -78,43 +81,95 @@ const OrdersScreen = ({navigation, route}: Props) => {
         nestedScrollEnabled={true}
         contentContainerStyle={{position: 'relative'}}>
         <View style={styles.headerSec}>
-          <View style={styles.salesHeaderData}>
-            <View style={styles.countBoxSection}>
-              <View style={styles.countBox}>
-                <View
-                  style={[
-                    styles.countBoxIcon,
-                    {backgroundColor: Colors.lightBlue},
-                  ]}>
-                  <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
+          {index === 0 ? (
+            <View style={styles.salesHeaderData}>
+              <View style={styles.countBoxSection}>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.lightBlue},
+                    ]}>
+                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.total}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Total Order</Text>
                 </View>
-                <Text style={styles.countBoxDay}>05</Text>
-                <Text style={styles.countBoxTitle}>Total Order</Text>
-              </View>
-              <View style={styles.countBox}>
-                <View
-                  style={[
-                    styles.countBoxIcon,
-                    {backgroundColor: Colors.lightSuccess},
-                  ]}>
-                  <PackageOpen strokeWidth={1.4} color={Colors.success} />
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.lightSuccess},
+                    ]}>
+                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.submitted}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
                 </View>
-                <Text style={styles.countBoxDay}>03</Text>
-                <Text style={styles.countBoxTitle}>Delivered Order</Text>
-              </View>
-              <View style={styles.countBox}>
-                <View
-                  style={[
-                    styles.countBoxIcon,
-                    {backgroundColor: Colors.holdLight},
-                  ]}>
-                  <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.holdLight},
+                    ]}>
+                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.draft}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Pending Order</Text>
                 </View>
-                <Text style={styles.countBoxDay}>02</Text>
-                <Text style={styles.countBoxTitle}>Pending Order</Text>
               </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.salesHeaderData}>
+              <View style={styles.countBoxSection}>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.lightBlue},
+                    ]}>
+                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.sales_orders?.total}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Total Order</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.lightSuccess},
+                    ]}>
+                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.sales_orders?.submitted}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      {backgroundColor: Colors.holdLight},
+                    ]}>
+                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.sales_orders?.draft}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Pending Order</Text>
+                </View>
+              </View>
+            </View>
+          )}
         </View>
         <View
           style={{

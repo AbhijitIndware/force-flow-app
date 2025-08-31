@@ -428,6 +428,42 @@ export type RPoDetails = {
   };
 };
 
+export interface RPOSOCount {
+  message: {
+    success: boolean;
+    data: {
+      overall: {
+        total_orders: number;
+        total_sales_orders: number;
+        total_purchase_orders: number;
+        total_draft: number;
+        total_submitted: number;
+        total_cancelled: number;
+      };
+      sales_orders: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: Record<string, number>; // e.g., "Draft": 2, "Cancelled": 1
+      };
+      purchase_orders: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: Record<string, number>; // e.g., "Draft": 7
+      };
+      filters_applied: {
+        from_date: string | null;
+        to_date: string | null;
+        date_filtered: boolean;
+      };
+      timestamp: string; // ISO datetime string
+    };
+  };
+}
+
 //PJP
 export interface RPjpDailyStores {
   message: {

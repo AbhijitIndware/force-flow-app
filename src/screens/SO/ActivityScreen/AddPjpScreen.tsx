@@ -62,15 +62,15 @@ const mapPjpDetailToForm = (detail: PjpDailyStoreDetail): any => {
 };
 
 const AddPjpScreen = ({navigation, route}: Props) => {
-  const {id} = route.params;
+  const {id} = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
-  const {data: employeeData} = useGetEmployeeQuery();
   const {data: storeData} = useGetStoreQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  const {data: employeeData} = useGetEmployeeQuery({name: employee?.id});
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,
@@ -160,7 +160,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   }, [employee]);
 
   useEffect(() => {
-    if (pjpDetails?.message) {
+    if (pjpDetails?.message && id) {
       let _initial_value = mapPjpDetailToForm(pjpDetails.message);
       setInitialValues(_initial_value);
     }
