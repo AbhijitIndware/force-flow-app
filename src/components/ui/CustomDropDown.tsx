@@ -61,13 +61,19 @@ const DropdownComponent = ({
         placeholder={!isFocus ? `Select ${selectText}` : '...'}
         value={selectedId}
         onFocus={() => setIsFocus(true)}
-        onBlur={() => setIsFocus(false)}
+        onBlur={() => {
+          if (!isFocus) {
+            setIsFocus(false);
+          }
+        }}
         onChange={(item: {value: any}) => {
           setSelectedId(item?.value);
           setIsFocus(false);
         }}
         search
         searchPlaceholder="Search..."
+        keyboardAvoiding
+        // autoFocus={false}
         inputSearchStyle={styles.inputSearchStyle}
       />
     </View>
