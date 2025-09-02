@@ -24,6 +24,7 @@ import {
   RPoDetails,
   RPoList,
   RPOSOCount,
+  RProdCount,
   RSoDetails,
   RSoList,
 } from '../../types/baseType';
@@ -38,7 +39,7 @@ export const baseApi = createApi({
     baseUrl: apiBaseUrl,
     credentials: 'include',
   }),
-  tagTypes: ['Customer', 'SO', 'PO', 'PJP'],
+  tagTypes: ['Distributor', 'SO', 'PO', 'PJP', 'Store', ''],
   endpoints: builder => ({
     addDistributor: builder.mutation<any, IAddDistributorPayload>({
       query: body => ({
@@ -46,6 +47,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['Distributor'],
     }),
     addStore: builder.mutation<any, IAddStorePayload>({
       query: body => ({
@@ -53,6 +55,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['Store'],
     }),
 
     //Daily PJP Activity Check-in ---
@@ -61,6 +64,7 @@ export const baseApi = createApi({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_initialize',
         method: 'POST',
       }),
+      invalidatesTags: ['PJP'],
     }),
     locationVerification: builder.mutation<RLocationVerify, ILocationVerify>({
       query: body => ({
@@ -68,6 +72,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['PJP'],
     }),
     addCheckIn: builder.mutation<any, IAddCheckIn>({
       query: body => ({
@@ -75,6 +80,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['PJP'],
     }),
     markActivity: builder.mutation<any, IMarkActivity>({
       query: body => ({
@@ -82,6 +88,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['PJP'],
     }),
     checkOut: builder.mutation<any, {store: string}>({
       query: body => ({
@@ -89,6 +96,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['PJP'],
     }),
 
     //Sales Order
@@ -220,6 +228,16 @@ export const baseApi = createApi({
       }),
       providesTags: ['PO', 'SO'],
     }),
+    getProdCount: builder.query<RProdCount, {date: string}>({
+      query: ({date}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.pjp_apis.productive_call.get_prod_counts`,
+        method: 'GET',
+        params: {
+          date: date,
+        },
+      }),
+      providesTags: ['PJP'],
+    }),
 
     //PJP
     getDailyPjpList: builder.query<
@@ -295,6 +313,7 @@ export const {
   useGetDailyPjpByIdQuery,
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
+  useGetProdCountQuery,
 } = baseApi;
 
 interface PjpState {

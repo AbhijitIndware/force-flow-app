@@ -536,3 +536,29 @@ export type IUpdatePjpPayload = {
     document_name: string;
   };
 };
+
+export interface RProdCount {
+  message: {
+    status: string;
+    message: string;
+    date: string; // ISO date string: "2025-08-25"
+    pjp_status: string;
+    stores: Store[];
+    pjp_daily_store_doc: string;
+    counts: Counts;
+  };
+}
+export interface Counts {
+  total_stores: number;
+  status_counts: {
+    Pending: number;
+    Visited: number;
+    Missed: number;
+  };
+  checkin_counts: number;
+  checkout_counts: number;
+  activity_marked_counts: number;
+  completed_stores: number;
+  pending_stores: number;
+  missed_stores: number;
+}

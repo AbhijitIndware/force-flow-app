@@ -24,7 +24,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
+import {
+  useGetProdCountQuery,
+  useGetSalesPurchaseCountQuery,
+} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
 
@@ -38,15 +41,22 @@ type Props = {
   route: any;
 };
 
+const today = new Date().toISOString().split('T')[0];
+
 const ActivityScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
+  const {data: prodData, refetch} = useGetProdCountQuery(
+    {date: today},
+    {refetchOnMountOrArgChange: true},
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
 
@@ -85,7 +95,9 @@ const ActivityScreen = ({navigation, route}: Props) => {
                     ]}>
                     <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
                   </View>
-                  <Text style={styles.countBoxDay}>50</Text>
+                  <Text style={styles.countBoxDay}>
+                    {prodData?.message?.counts?.total_stores}
+                  </Text>
                   <Text style={styles.countBoxTitle}>Total call</Text>
                 </View>
                 <View style={styles.countBox}>
@@ -96,7 +108,9 @@ const ActivityScreen = ({navigation, route}: Props) => {
                     ]}>
                     <MapPinCheck strokeWidth={1.4} color={Colors.success} />
                   </View>
-                  <Text style={styles.countBoxDay}>12</Text>
+                  <Text style={styles.countBoxDay}>
+                    {prodData?.message?.counts?.status_counts?.Visited}
+                  </Text>
                   <Text style={styles.countBoxTitle}>Productive Call</Text>
                 </View>
               </View>
