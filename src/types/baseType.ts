@@ -140,7 +140,7 @@ export type IAddCheckIn = {
     data: string;
   };
   current_location: string;
-  bypass_store_category: boolean;
+  bypass_store_category: string;
 };
 export type RAddCheckIn = {
   message: {

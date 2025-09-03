@@ -48,7 +48,7 @@ const initial = {
     data: '',
   },
   current_location: '',
-  bypass_store_category: true,
+  bypass_store_category: 'True',
 };
 
 const CheckInForm = ({navigation}: Props) => {
