@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -11,6 +12,8 @@ import {useGetSalesOrderByIdQuery} from '../../../features/base/base-api';
 import {RSoDetailData} from '../../../types/baseType';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {TouchableOpacity} from 'react-native';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -64,11 +67,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 12,
+    marginTop: 12,
     paddingHorizontal: 20,
+    backgroundColor:'transperent',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xsmd,
+    color: Colors.darkButton,
   },
 });

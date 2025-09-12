@@ -71,7 +71,7 @@ const SalesOrder = ({navigation}: any) => {
         <View style={styles.timeSection}>
           <Text style={styles.time}>SO ID: {item.order_id}</Text>
         </View>
-        <View style={[flexRow, {gap: 10, position: 'relative'}]}>
+        <View style={[flexRow, {gap: 0, position: 'relative',width:'50%',maxWidth:190, justifyContent:'flex-end'}]}>
           <Text
             style={[
               styles.present,
@@ -368,12 +368,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap:10,
   },
   timeSection: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
+    width:'50%',
+    maxWidth:175,
   },
   time: {
     color: Colors.darkButton,
@@ -389,11 +392,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightSuccess,
     color: Colors.sucess,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 18,
     padding: 8,
     borderRadius: 50,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
   },
 
   lateEntry: {

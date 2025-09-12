@@ -7,6 +7,7 @@ import {Fonts} from '../../constants';
 import {Colors} from '../../utils/colors';
 import {DropDownList} from '../../types/Navigation';
 import {color} from '@rneui/base';
+import { Size } from '../../utils/fontSize';
 
 type Props = {
   selectText: string;
@@ -23,7 +24,7 @@ const DropdownComponent = ({
   data,
   setSelectedId,
   selectedId,
-  height = 40,
+  height = 50,
   styleType = 'fullBorder',
 }: Props) => {
   const [isFocus, setIsFocus] = useState(false);
@@ -93,7 +94,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ecececff',
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
   bottomLine: {
     // borderBottomWidth: 1,
@@ -101,9 +104,10 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 10,
   },
   placeholderStyle: {
-    fontSize: 15,
     color: Colors.inputBorder,
     // paddingHorizontal: 15,
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
   item: {
     paddingVertical: 5,
@@ -111,6 +115,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     backgroundColor: Colors.white,
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
 
   selectedItem: {
@@ -124,9 +130,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
   },
   itemTextStyle: {
-    fontSize: 15,
     color: Colors.inputBorder,
     margin: 0,
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
   selectedItemText: {
     paddingHorizontal: 5,
@@ -141,11 +148,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   inputSearchStyle: {
-    height: 40,
-    fontSize: 15,
+    height: 50,
     color: Colors.black,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
     paddingHorizontal: 10,
+    borderRadius:8,
   },
 });

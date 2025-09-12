@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // AddDistributorForm.tsx
 import React from 'react';
 import { Animated } from 'react-native';
@@ -58,7 +59,7 @@ const AddDistributorForm: React.FC<Props> = ({
         { useNativeDriver: false }
       )}
       scrollEventThrottle={16}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: 16, paddingHorizontal:21 }}
     >
       <ReusableInput label="Distributor Name" value={values.distributor_name} onChangeText={handleChange('distributor_name')} onBlur={()=>handleBlur('distributor_name')} error={touched.distributor_name && errors.distributor_name} />
       <ReusableInput label="SAP Code" value={values.distributor_sap_code} onChangeText={handleChange('distributor_sap_code')} onBlur={()=>handleBlur('distributor_sap_code')} error={touched.distributor_sap_code && errors.distributor_sap_code} />

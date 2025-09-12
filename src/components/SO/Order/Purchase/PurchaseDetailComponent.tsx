@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
   Text,
@@ -22,6 +23,8 @@ import {
 } from '../../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import {Colors} from '../../../../utils/colors';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
 
 type Props = {
   detail: POOrderData;
@@ -175,63 +178,152 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
       }>
       {/* Order Details */}
       <View style={styles.card}>
-        <Text style={styles.title}>Order Details</Text>
-        <Text>Order ID: {order_details.order_id}</Text>
-        <Text>Supplier: {order_details.supplier_name}</Text>
-        <Text>Transaction Date: {order_details.transaction_date}</Text>
-        <Text>Schedule Date: {order_details.schedule_date}</Text>
-        <View
-          style={{
-            backgroundColor:
-              `${soStatusColors[order_details.status]}40` || '#E5E7EB40',
-            padding: 8,
-            borderRadius: 6,
-            width: 'auto',
-          }}>
-          <Text
-            style={{
-              color: soStatusColors[order_details.status] || '#E5E7EB',
-              fontWeight: '700',
-              fontSize: 16,
-            }}>
-            {order_details.status}
-          </Text>
+        <View style={styles.cardInnerHeader}>
+          <Text style={styles.title}>Order Details</Text>
         </View>
-        <Text>Grand Total: {order_details.grand_total}</Text>
-        <Text>Total Qty: {order_details.total_qty}</Text>
+        <View style={{ paddingHorizontal:16}}>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Order ID:</Text>
+            <Text style={styles.contenttext}>{order_details.order_id}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Supplier:</Text>
+            <Text style={styles.contenttext}>{order_details.supplier_name}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Transaction Date:</Text>
+            <Text style={styles.contenttext}>{order_details.transaction_date}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Schedule Date:</Text>
+            <Text style={styles.contenttext}>{order_details.schedule_date}</Text>
+          </View>
+          <View
+            style={{
+              backgroundColor:
+                `${soStatusColors[order_details.status]}40` || '#E5E7EB40',
+              padding: 8,
+              borderRadius: 6,
+              width: 'auto',
+              justifyContent:'center',
+              alignItems:'center',
+              marginVertical:8,
+            }}>
+            <Text
+              style={{
+                color: soStatusColors[order_details.status] || '#E5E7EB',
+                fontSize: 16,
+                justifyContent:'center',
+                fontFamily:Fonts.semiBold,
+              }}>
+              {order_details.status}
+            </Text>
+          </View>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Grand Total:</Text>
+            <Text style={styles.contenttext}>{order_details.grand_total}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%', 
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+            <Text style={styles.contentHeading}>Total Qty:</Text>
+            <Text style={styles.contenttext}>{order_details.total_qty}</Text>
+          </View>
+        </View>
       </View>
 
       {/* Items List */}
       <View style={styles.card}>
-        <Text style={styles.title}>Items</Text>
+        <View style={styles.cardInnerHeader}>
+          <Text style={styles.title}>Items</Text>
+        </View>
         <FlatList
           data={items}
           scrollEnabled={false}
           keyExtractor={(item, index) => `${item.item_code}-${index}`}
           renderItem={({item}) => (
+            <>
             <View style={styles.itemRow}>
-              <Text style={styles.itemName}>Item Name: {item.item_name}</Text>
-              <Text>Description: {item.description}</Text>
-              <Text>Sales Order: {item.sales_order}</Text>
-              <Text>Qty: {item.qty}</Text>
-              <Text>Rate: {item.rate}</Text>
-              <Text>Amount: {item.amount}</Text>
-              <Text>Warehouse: {item.warehouse}</Text>
-              <Text>Schedule Date: {item.schedule_date}</Text>
+                <View style={{ paddingHorizontal:16}}>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Item Name:</Text>
+                    <Text style={styles.contenttext}>{item.item_name}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Description:</Text>
+                    <Text style={styles.contenttext}>{item.description}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Sales Order:</Text>
+                    <Text style={styles.contenttext}>{item.sales_order}</Text>
+                  </View>
+
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Qty:</Text>
+                    <Text style={styles.contenttext}>{item.qty}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Rate:</Text>
+                    <Text style={styles.contenttext}>{item.rate}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Amount:</Text>
+                    <Text style={styles.contenttext}>{item.amount}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Warehouse:</Text>
+                    <Text style={styles.contenttext}>{item.warehouse}</Text>
+                  </View>
+                  <View style={{display:'flex', width:'100%',
+                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                    <Text style={styles.contentHeading}>Schedule Date:</Text>
+                    <Text style={styles.contenttext}>{item.schedule_date}</Text>
+                  </View>
+                </View>
             </View>
+            </>
           )}
         />
       </View>
-
       {/* Totals */}
       <View style={styles.card}>
-        <Text style={styles.title}>Totals</Text>
-        <Text>Total: {totals.total}</Text>
-        <Text>Taxes: {totals.total_taxes_and_charges}</Text>
-        <Text>Grand Total: {totals.grand_total}</Text>
-        <Text>Rounded: {totals.rounded_total}</Text>
+        <View style={styles.cardInnerHeader}>
+          <Text style={styles.title}>Totals</Text>
+        </View>
+        <View style={{ paddingHorizontal:16}}>
+          <View style={{display:'flex', width:'100%',
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+            <Text style={styles.contentHeading}>Total:</Text>
+            <Text style={styles.contenttext}>{totals.total}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%',
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+            <Text style={styles.contentHeading}>Taxes:</Text>
+            <Text style={styles.contenttext}>{totals.total_taxes_and_charges}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%',
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+            <Text style={styles.contentHeading}>Grand Total:</Text>
+            <Text style={styles.contenttext}>{totals.grand_total}</Text>
+          </View>
+          <View style={{display:'flex', width:'100%',
+            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+            <Text style={styles.contentHeading}>Rounded:</Text>
+            <Text style={styles.contenttext}>{totals.rounded_total}</Text>
+          </View>
+        </View>
       </View>
-
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -332,75 +424,112 @@ export default PurchaseDetailComponent;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: '#f8f8f8',
+      flex: 1,
+      padding: 12,
+    },
+    card: {
+      backgroundColor:Colors.white,
+      paddingVertical:20,
+      marginBottom: 12,
+      borderRadius: 16,
+    },
+    itemRow: {
+      paddingVertical: 6,
+    },
+    itemName: {
+      fontWeight: '600',
+    },
+    buttonContainer: {
+      flexDirection:'row',
+      justifyContent:'center',
+      alignItems:'center',
+      paddingHorizontal:12,
+      marginBottom:20,
+      columnGap:20,
+    },
+    submitBtn: {
+      display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        backgroundColor: Colors.green,
+        borderRadius: 15,
+        paddingHorizontal: 15,
+        paddingVertical: 18,
+        gap: 5,
+        zIndex: 1,
+        width:'50%',
+    },
+    submitText: {
+      fontFamily: Fonts.semiBold,
+      fontSize: Size.sm,
+      color: Colors.white,
+    },
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContainer: {
+      width: '90%',
+      backgroundColor: '#fff',
+      padding: 20,
+      borderRadius: 10,
+    },
+    modalTitle: {
+      fontFamily: Fonts.semiBold,
+      fontSize: Size.xsmd,
+      color: Colors.darkButton,
+    },
+    input: {
+      backgroundColor: Colors.white,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: '#ecececff',
+      height:50,
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent:'center',
+      gap:10,
+      marginTop:20,
+    },
+    submitBtn2:{
+       display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        backgroundColor: Colors.green,
+        borderRadius: 15,
+        paddingHorizontal: 15,
+        paddingVertical: 18,
+        gap: 5,
+        zIndex: 1,
+        width:'49%',
+    },
+  cardInnerHeader:{
+    borderBottomWidth:1,
+    borderBottomColor:Colors.borderLight,
+    paddingHorizontal:15,
+    paddingBottom:8,
+    marginBottom:8,
   },
-  card: {
-    backgroundColor: '#fff',
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 8,
-    elevation: 2,
+    title: {
+     fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+    },
+  contentHeading:{
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
   },
-  title: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginBottom: 6,
-  },
-  itemRow: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingVertical: 6,
-  },
-  itemName: {
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    marginTop: 20,
-    gap: 10,
-  },
-  submitBtn: {
-    backgroundColor: Colors.green,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 6,
-    marginHorizontal: 16,
-  },
-  submitText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 20,
-    textAlignVertical: 'top',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  contenttext:{
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
   },
 });

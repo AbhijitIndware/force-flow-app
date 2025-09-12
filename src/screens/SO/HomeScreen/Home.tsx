@@ -136,7 +136,8 @@ function MyTabBar({state, descriptors, navigation}: any) {
 
 const CustomHeader = (props: BottomTabHeaderProps) => {
   return (
-    <View style={styles.headerTitleContainer}>
+    <View
+    style={styles.headerTitleContainer}>
       <View>
         <Image
           source={require('../../../assets/images/softsence-logo-dashboard.png')}
@@ -354,4 +355,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
 });

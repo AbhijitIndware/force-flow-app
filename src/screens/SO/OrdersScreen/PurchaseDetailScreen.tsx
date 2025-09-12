@@ -9,6 +9,8 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {useGetPurchaseOrderByIdQuery} from '../../../features/base/base-api';
 import {POOrderData} from '../../../types/baseType';
 import PurchaseDetailComponent from '../../../components/SO/Order/Purchase/PurchaseDetailComponent';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -61,15 +63,17 @@ const PurchaseDetailScreen = ({navigation, route}: Props) => {
 export default PurchaseDetailScreen;
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 12,
-    paddingHorizontal: 20,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+ header: {
+     flexDirection: 'row',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+     marginTop: 12,
+     paddingHorizontal: 20,
+     backgroundColor:'transperent',
+   },
+   headerTitle: {
+     fontFamily: Fonts.semiBold,
+     fontSize: Size.xsmd,
+     color: Colors.darkButton,
+   },
 });

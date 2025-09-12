@@ -8,9 +8,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import {Colors} from '../../utils/colors';
 import {MapPin} from 'lucide-react-native';
 import {getCurrentLocation} from '../../utils/utils';
+
+import { Colors } from '../../utils/colors';
+import {Fonts} from '../../constants';
+import { Size } from '../../utils/fontSize';
 
 interface DistributorInputProps {
   label: string;
@@ -82,26 +85,24 @@ const MapReusableInput: React.FC<DistributorInputProps> = ({
 
 const styles = StyleSheet.create({
   inputWrapper: {marginBottom: 16},
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    color: Colors.black,
-  },
+  label: { fontSize:Size.xs,  marginBottom: 4, color: Colors.black, fontFamily:Fonts.regular },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    borderRadius: 8,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ecececff',
     paddingHorizontal: 8,
+    height:50,
   },
   input: {
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 4,
     color: Colors.black,
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
   iconWrapper: {
     padding: 8,
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.primary,
     marginTop: 4,
-    textAlign: 'right',
+    textAlign: 'left',
   },
 });
 

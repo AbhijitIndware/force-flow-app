@@ -7,6 +7,8 @@ import {useCreatePurchaseOrderMutation} from '../../../../features/base/base-api
 import Toast from 'react-native-toast-message';
 import moment from 'moment';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 
 type Props = {
   detail: RSoDetailData;
@@ -56,10 +58,12 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
     }
   };
   return (
-    <View>
-      <View style={styles.card}>
-        <Text style={styles.title}>Purchase Order</Text>
 
+    <View style={styles.card}>
+      <View style={styles.cardInnerHeader}>
+        <Text style={styles.title}>Purchase Order</Text>
+      </View>
+      <View style={{ paddingHorizontal:16}}>
         {order_details.custom_purchase_order ? (
           <TouchableOpacity
             onPress={() =>
@@ -68,8 +72,8 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
               })
             }
             style={styles.itemRow}>
-            <Text>PO No: {order_details.custom_purchase_order}</Text>
-            <Text style={{color: Colors.black, fontWeight: '600'}}>
+            <Text style={styles.contentHeading}>PO No: {order_details.custom_purchase_order}</Text>
+            <Text style={styles.contentHeading}>
               ✅ Purchase Order already created
             </Text>
           </TouchableOpacity>
@@ -86,9 +90,7 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
             </TouchableOpacity>
           </View>
         )}
-      </View>
-
-      {/* Cancel Modal */}
+        {/* Cancel Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -132,6 +134,7 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
           </View>
         </View>
       </Modal>
+      </View>
     </View>
   );
 };
@@ -140,11 +143,10 @@ export default CreatePoFromSo;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    padding: 12,
+    backgroundColor:Colors.white,
+    paddingVertical:20,
     marginBottom: 12,
-    borderRadius: 8,
-    elevation: 2,
+    borderRadius: 16,
   },
   title: {
     fontWeight: 'bold',
@@ -152,8 +154,6 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   itemRow: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
     paddingVertical: 6,
   },
   timeInput: {
@@ -211,4 +211,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+  cardInnerHeader:{
+  borderBottomWidth:1,
+  borderBottomColor:Colors.borderLight,
+  paddingHorizontal:15,
+  paddingBottom:8,
+  marginBottom:8,
+},
+contentHeading:{
+  fontFamily: Fonts.semiBold,
+  fontSize: Size.xs,
+  color: Colors.darkButton,
+},
 });

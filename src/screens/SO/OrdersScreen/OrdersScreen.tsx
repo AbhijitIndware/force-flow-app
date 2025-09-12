@@ -296,6 +296,7 @@ const styles = StyleSheet.create({
 
     // Android Shadow
     elevation: 2,
+    marginBottom:15,
   },
   arrobox: {
     width: 20,

@@ -205,7 +205,7 @@ export default LoginScreen;
 const styles = StyleSheet.create({
   header: {
     backgroundColor: Colors.white,
-    minHeight: 300,
+    minHeight: 270,
     width: '100%',
     paddingHorizontal: 20,
     borderBottomRightRadius: 40,
@@ -225,15 +225,16 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     width: width * 0.6,
-    height: 120,
+    height:60,
   },
   footer: {
-    minHeight: 100,
+    minHeight: 150,
     width: '100%',
     paddingHorizontal: 20,
     zIndex: 1,
     justifyContent: 'flex-end',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    paddingBottom:10,
   },
   footerLogoImage: {
     width: width * 0.3,

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   SafeAreaView,
   StyleSheet,
@@ -5,6 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
+  View,
+  Dimensions,
 } from 'react-native';
 import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
@@ -32,7 +35,9 @@ import {
 import {SoItem, SoStore} from '../../../types/dropdownType';
 import {useAppSelector} from '../../../store/hook';
 import {Search} from 'lucide-react-native';
-
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'AddSaleScreen'
@@ -252,17 +257,27 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           setTimePickerVisible(true);
         }}
       />
-
-      <TouchableOpacity
-        style={[styles.submitBtn, loading && {opacity: 0.7}]}
-        onPress={() => handleSubmit()}
-        disabled={loading}>
-        {loading ? (
-          <ActivityIndicator size="small" color={Colors.white} />
-        ) : (
-          <Text style={styles.submitText}>Submit</Text>
-        )}
-      </TouchableOpacity>
+        <View
+        style={{
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor:Colors.bgColor,
+          width:'100%',
+          height:80,
+        }}>
+          <TouchableOpacity
+            style={[styles.submitBtn, loading && {opacity: 0.7}]}
+            onPress={() => handleSubmit()}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Text style={styles.submitText}>Submit</Text>
+            )}
+          </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -271,16 +286,24 @@ export default AddSaleScreen;
 
 const styles = StyleSheet.create({
   submitBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 6,
-    marginHorizontal: 16,
-  },
-  submitText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+      display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        backgroundColor: Colors.darkButton,
+        borderRadius: 15,
+        paddingHorizontal: 15,
+        paddingVertical: 18,
+        position: 'absolute',
+        bottom: 15,
+        gap: 5,
+        zIndex: 1,
+        width: width * 0.9,
+    },
+    submitText: {
+      fontFamily: Fonts.medium,
+        fontSize: Size.sm,
+        color: Colors.white,
+        lineHeight: 22,
+    },
 });

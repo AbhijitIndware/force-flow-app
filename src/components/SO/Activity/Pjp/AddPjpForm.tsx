@@ -1,9 +1,13 @@
+/* eslint-disable react-native/no-inline-styles */
 // AddDistributorForm.tsx
 import React from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
+import { Colors } from '../../../../utils/colors';
 
 interface FormValues {
   employee: string;
@@ -58,7 +62,7 @@ const AddPjpForm: React.FC<Props> = ({
         { useNativeDriver: false }
       )}
       scrollEventThrottle={16}
-      contentContainerStyle={{ padding: 16 }}
+      contentContainerStyle={{ padding: 16, paddingHorizontal:21 }}
     >
       <ReusableDatePicker
         label="Date"
@@ -101,9 +105,13 @@ const AddPjpForm: React.FC<Props> = ({
       {/* ➕ Add Store Button */}
       <TouchableOpacity
         onPress={() => setFieldValue("stores", [...values.stores, { store: "" }])}
-        style={{ marginBottom: 16, alignSelf: 'flex-start' }}
+        style={{ marginBottom: 16, alignSelf: 'flex-start', backgroundColor:Colors.Orangelight, 
+          paddingHorizontal:16, paddingVertical:8, borderRadius:8 }}
       >
-        <Text style={{ color: 'blue' }}>+ Add Store</Text>
+        <Text style={{ fontFamily: Fonts.medium,
+                fontSize: Size.sm,
+                color: Colors.white,
+                lineHeight: 22, }}>+ Add Store</Text>
       </TouchableOpacity>
     </Animated.ScrollView>
 

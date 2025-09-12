@@ -8,6 +8,8 @@ import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
 import {View} from 'react-native';
 import MapReusableInput from '../../../ui-lib/map-input';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
 
 interface Props {
   values: Record<string, string>;
@@ -72,7 +74,8 @@ const AddStoreForm: React.FC<Props> = ({
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16}}>
+      // eslint-disable-next-line react-native/no-inline-styles
+      contentContainerStyle={{padding: 16, paddingHorizontal:21}}>
       <ReusableInput
         label="Store Name"
         value={values.store_name}
@@ -214,22 +217,19 @@ const styles = StyleSheet.create({
   inputWrapper: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    color: Colors.black,
-  },
+  label: { fontSize:Size.xs,  marginBottom: 4, color: Colors.black, fontFamily:Fonts.regular },
   timeInput: {
     backgroundColor: Colors.white,
-    borderRadius: 8,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#ecececff',
+    height:50,
   },
   timeText: {
     color: Colors.black,
-    fontSize: 14,
+    fontFamily:Fonts.regular,
+    fontSize:Size.sm,
   },
 });
