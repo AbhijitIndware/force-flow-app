@@ -26,7 +26,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {flexCol} from '../../../utils/styles';
 import {dailyPjpSchema, markActivitySchema} from '../../../types/schema';
 import {useAppSelector} from '../../../store/hook';
-import {getCurrentLocation} from '../../../utils/utils';
+import {getCurrentLocation, windowWidth} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -139,12 +139,20 @@ export default MarkActivityScreen;
 
 const styles = StyleSheet.create({
   submitBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
+    display: 'flex',
     alignItems: 'center',
-    marginVertical: 6,
-    marginHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    position: 'absolute',
+    bottom: 15,
+    left: 20,
+    gap: 5,
+    zIndex: 1,
+    width: windowWidth * 0.9,
   },
   submitText: {
     color: Colors.white,

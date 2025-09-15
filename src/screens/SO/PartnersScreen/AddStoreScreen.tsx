@@ -217,9 +217,9 @@ const AddStoreScreen = ({
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor:Colors.bgColor,
-          width:'100%',
-          height:80,
+          backgroundColor: Colors.bgColor,
+          width: '100%',
+          height: 80,
         }}>
         <TouchableOpacity
           style={[styles.submitBtn, loading && {opacity: 0.7}]}
@@ -241,24 +241,23 @@ export default AddStoreScreen;
 const styles = StyleSheet.create({
   submitBtn: {
     display: 'flex',
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      backgroundColor: Colors.darkButton,
-      borderRadius: 15,
-      paddingHorizontal: 15,
-      paddingVertical: 18,
-      position: 'absolute',
-      bottom: 15,
-      gap: 5,
-      zIndex: 1,
-      width: width * 0.9,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    position: 'absolute',
+    bottom: 15,
+    gap: 5,
+    zIndex: 1,
+    width: width * 0.9,
   },
   submitText: {
     fontFamily: Fonts.medium,
-      fontSize: Size.sm,
-      color: Colors.white,
-      lineHeight: 22,
+    fontSize: Size.sm,
+    color: Colors.white,
+    lineHeight: 22,
   },
-
 });

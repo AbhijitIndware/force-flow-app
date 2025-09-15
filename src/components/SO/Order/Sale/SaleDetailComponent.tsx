@@ -23,8 +23,8 @@ import {
 import Toast from 'react-native-toast-message';
 import {Colors} from '../../../../utils/colors';
 import CreatePoFromSo from './CreatePoFromSo';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
 
 type Props = {
   detail: RSoDetailData;
@@ -177,56 +177,99 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Order Details</Text>
         </View>
-        <View style={{ paddingHorizontal:16}}>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+        <View style={{paddingHorizontal: 16}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Order ID:</Text>
             <Text style={styles.contenttext}>{order_details.order_id}</Text>
           </View>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Customer: </Text>
-            <Text style={styles.contenttext}>{order_details.customer_name}</Text>
+            <Text style={styles.contenttext}>
+              {order_details.customer_name}
+            </Text>
           </View>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Transaction Date: </Text>
-            <Text style={styles.contenttext}>{order_details.transaction_date}</Text>
+            <Text style={styles.contenttext}>
+              {order_details.transaction_date}
+            </Text>
           </View>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Delivery Date: </Text>
-            <Text style={styles.contenttext}>{order_details.delivery_date}</Text>
+            <Text style={styles.contenttext}>
+              {order_details.delivery_date}
+            </Text>
           </View>
 
           <View
             style={{
               backgroundColor:
-                `${soStatusColors[detail.order_details.status]}40` || '#E5E7EB40',
+                `${soStatusColors[detail.order_details.status]}40` ||
+                '#E5E7EB40',
               padding: 8,
               borderRadius: 6,
               width: 'auto',
-              justifyContent:'center',
-              alignItems:'center',
-              marginVertical:8,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginVertical: 8,
             }}>
             <Text
               style={{
                 color: soStatusColors[detail.order_details.status] || '#E5E7EB',
                 fontSize: 16,
-                justifyContent:'center',
-                fontFamily:Fonts.semiBold,
+                justifyContent: 'center',
+                fontFamily: Fonts.semiBold,
               }}>
               {detail.order_details.status}
             </Text>
           </View>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Grand Total: </Text>
             <Text style={styles.contenttext}>{order_details.grand_total}</Text>
           </View>
-          <View style={{display:'flex', width:'100%', 
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center'}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Total Qty: </Text>
             <Text style={styles.contenttext}>{order_details.total_qty}</Text>
           </View>
@@ -238,19 +281,39 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Store Details</Text>
         </View>
-        <View style={{ paddingHorizontal:16}}>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+        <View style={{paddingHorizontal: 16}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Warehouse:</Text>
-            <Text style={styles.contenttext}>{store_details.warehouse_name}</Text>
+            <Text style={styles.contenttext}>
+              {store_details.warehouse_name}
+            </Text>
           </View>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Store:</Text>
             <Text style={styles.contenttext}>{store_details.store}</Text>
           </View>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Distributor:</Text>
             <Text style={styles.contenttext}>{store_details.distributor}</Text>
           </View>
@@ -268,26 +331,50 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
           keyExtractor={(item, index) => `${item.item_code}-${index}`}
           renderItem={({item}) => (
             <>
-            <View style={styles.itemRow}>
-                <Text style={[styles.contentHeading, {fontSize: Size.xsmd, paddingHorizontal:16,}]}>{item.item_name}</Text>
-                <View style={{ paddingHorizontal:16}}>
-                  <View style={{display:'flex', width:'100%',
-                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+              <View style={styles.itemRow}>
+                <Text
+                  style={[
+                    styles.contentHeading,
+                    {fontSize: Size.xsmd, paddingHorizontal: 16},
+                  ]}>
+                  {item.item_name}
+                </Text>
+                <View style={{paddingHorizontal: 16}}>
+                  <View
+                    style={{
+                      display: 'flex',
+                      width: '100%',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
                     <Text style={styles.contentHeading}>Qty:</Text>
                     <Text style={styles.contenttext}>{item.qty}</Text>
                   </View>
-                  <View style={{display:'flex', width:'100%',
-                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                  <View
+                    style={{
+                      display: 'flex',
+                      width: '100%',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
                     <Text style={styles.contentHeading}>Rate:</Text>
                     <Text style={styles.contenttext}>{item.rate}</Text>
                   </View>
-                  <View style={{display:'flex', width:'100%',
-                    flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+                  <View
+                    style={{
+                      display: 'flex',
+                      width: '100%',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}>
                     <Text style={styles.contentHeading}>Amount:</Text>
                     <Text style={styles.contenttext}>{item.amount}</Text>
                   </View>
                 </View>
-            </View>
+              </View>
             </>
           )}
         />
@@ -298,24 +385,50 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Totals</Text>
         </View>
-        <View style={{ paddingHorizontal:16}}>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+        <View style={{paddingHorizontal: 16}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Total:</Text>
             <Text style={styles.contenttext}>{totals.total}</Text>
           </View>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Taxes:</Text>
-            <Text style={styles.contenttext}>{totals.total_taxes_and_charges}</Text>
+            <Text style={styles.contenttext}>
+              {totals.total_taxes_and_charges}
+            </Text>
           </View>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Grand Total:</Text>
             <Text style={styles.contenttext}>{totals.grand_total}</Text>
           </View>
-          <View style={{display:'flex', width:'100%',
-            flexDirection:'row', justifyContent:'space-between', alignItems:'center',}}>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
             <Text style={styles.contentHeading}>Rounded:</Text>
             <Text style={styles.contenttext}>{totals.rounded_total}</Text>
           </View>
@@ -366,7 +479,9 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
             <Text style={styles.submitText}>Cancel</Text>
           )}
         </TouchableOpacity>
-
+      </View>
+      {/* Action Buttons */}
+      <View style={styles.buttonContainer}>
         {order_details.docstatus === 2 && (
           <TouchableOpacity
             style={[
@@ -434,8 +549,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   card: {
-    backgroundColor:Colors.white,
-    paddingVertical:20,
+    backgroundColor: Colors.white,
+    paddingVertical: 20,
     marginBottom: 12,
     borderRadius: 16,
   },
@@ -447,25 +562,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   buttonContainer: {
-    flexDirection:'row',
-    justifyContent:'center',
-    alignItems:'center',
-    paddingHorizontal:12,
-    marginBottom:20,
-    columnGap:20,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    columnGap: 20,
   },
   submitBtn: {
     display: 'flex',
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      backgroundColor: Colors.green,
-      borderRadius: 15,
-      paddingHorizontal: 15,
-      paddingVertical: 18,
-      gap: 5,
-      zIndex: 1,
-      width:'50%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.green,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    gap: 5,
+    zIndex: 1,
+    width: '48%',
   },
   submitText: {
     fontFamily: Fonts.semiBold,
@@ -496,48 +611,48 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#ecececff',
-    height:50,
+    height: 50,
   },
   modalActions: {
     flexDirection: 'row',
-    justifyContent:'center',
-    gap:10,
-    marginTop:20,
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 20,
   },
-  submitBtn2:{
-     display: 'flex',
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      backgroundColor: Colors.green,
-      borderRadius: 15,
-      paddingHorizontal: 15,
-      paddingVertical: 18,
-      gap: 5,
-      zIndex: 1,
-      width:'49%',
+  submitBtn2: {
+    display: 'flex',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.green,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    gap: 5,
+    zIndex: 1,
+    width: '49%',
   },
 
-cardInnerHeader:{
-  borderBottomWidth:1,
-  borderBottomColor:Colors.borderLight,
-  paddingHorizontal:15,
-  paddingBottom:8,
-  marginBottom:8,
-},
-  title: {
-   fontFamily: Fonts.semiBold,
-  fontSize: Size.sm,
-  color: Colors.darkButton,
+  cardInnerHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    paddingHorizontal: 15,
+    paddingBottom: 8,
+    marginBottom: 8,
   },
-contentHeading:{
-  fontFamily: Fonts.semiBold,
-  fontSize: Size.xs,
-  color: Colors.darkButton,
-},
-contenttext:{
-  fontFamily: Fonts.regular,
-  fontSize: Size.xs,
-  color: Colors.darkButton,
-},
+  title: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+  },
+  contentHeading: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
+  contenttext: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
 });

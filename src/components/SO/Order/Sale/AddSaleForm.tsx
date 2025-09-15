@@ -8,8 +8,8 @@ import {Colors} from '../../../../utils/colors';
 import {IAddSalesOrder} from '../../../../types/baseType';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {SoItem} from '../../../../types/dropdownType';
-import { Size } from '../../../../utils/fontSize';
-import { Fonts } from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Fonts} from '../../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 interface Props {
   values: IAddSalesOrder;
@@ -79,7 +79,7 @@ const AddSaleForm: React.FC<Props> = ({
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16,paddingHorizontal:21}}>
+      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
       {/* Transaction Date */}
       <View style={styles.inputWrapper}>
         <Text style={styles.label}>Transaction Date</Text>
@@ -132,11 +132,7 @@ const AddSaleForm: React.FC<Props> = ({
               onPress={() => removeItem(index)}
               style={styles.removeButton}>
               {/* <Text style={styles.removeButtonText}>Remove</Text> */}
-              <Ionicons
-                name="trash-bin-outline"
-                size={20}
-                color={'#FF0000'}
-              />
+              <Ionicons name="trash-bin-outline" size={20} color={'#FF0000'} />
             </TouchableOpacity>
           )}
           <DateTimePickerModal
@@ -227,7 +223,6 @@ const AddSaleForm: React.FC<Props> = ({
                 </Text>
               )}
           </View>
-
         </View>
       ))}
       {/* ➕ Add More Button */}
@@ -244,7 +239,12 @@ const styles = StyleSheet.create({
   inputWrapper: {
     marginBottom: 16,
   },
-  label: { fontSize:Size.xs,  marginBottom: 4, color: Colors.black, fontFamily:Fonts.regular },
+  label: {
+    fontSize: Size.xs,
+    marginBottom: 4,
+    color: Colors.black,
+    fontFamily: Fonts.regular,
+  },
   timeInput: {
     backgroundColor: Colors.white,
     borderRadius: 10,
@@ -252,12 +252,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#ecececff',
-    height:50,
+    height: 50,
   },
   timeText: {
     color: Colors.black,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
   itemBlock: {
     padding: 12,
@@ -269,29 +269,29 @@ const styles = StyleSheet.create({
   addMoreBtn: {
     backgroundColor: Colors.Orangelight,
     paddingHorizontal: 12,
-    paddingVertical:8,
+    paddingVertical: 8,
     borderRadius: 10,
     alignItems: 'center',
     marginVertical: 12,
-    width:'auto',
-    justifyContent:'flex-start',
-    alignSelf:'flex-start',
+    width: 'auto',
+    justifyContent: 'flex-start',
+    alignSelf: 'flex-start',
   },
   addMoreText: {
     color: Colors.white,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
   removeButton: {
     marginTop: 0,
     padding: 8,
-    borderRadius:8,
+    borderRadius: 8,
     alignItems: 'center',
-    backgroundColor:Colors.lightRed2,
-    width:40,
-    height:40,
-    justifyContent:'center',
-    alignSelf:'flex-end',
+    backgroundColor: Colors.lightRed2,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
   },
   removeButtonText: {
     color: 'white',

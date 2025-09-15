@@ -1,6 +1,9 @@
 import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 
 interface FormValues {
   store: string;
@@ -70,8 +73,11 @@ const MarkActivityForm: React.FC<Props> = ({
                 updated.splice(index, 1);
                 setFieldValue('activity_type', updated);
               }}
-              style={{position: 'absolute', right: 0, top: 65}}>
-              <Text style={{color: 'red'}}>Remove</Text>
+              style={[
+                styles.removeButton,
+                {position: 'absolute', right: 0, top: 78},
+              ]}>
+              <Text style={styles.removeButtonText}>Remove</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -84,12 +90,19 @@ const MarkActivityForm: React.FC<Props> = ({
             {activity_type: ''},
           ])
         }
-        style={{
-          marginBottom: 16,
-          alignSelf: 'flex-start',
-          opacity: isSingleActivity ? 0.5 : 1, // visually show disabled
-        }}>
-        <Text style={{color: isSingleActivity ? 'gray' : 'blue'}}>
+        style={[
+          styles.addMoreBtn,
+          {
+            marginBottom: 16,
+            alignSelf: 'flex-start',
+            opacity: isSingleActivity ? 0.8 : 1, // visually show disabled
+          },
+        ]}>
+        <Text
+          style={[
+            styles.addMoreText,
+            {color: isSingleActivity ? 'gray' : Colors.white},
+          ]}>
           + Add Activity
         </Text>
       </TouchableOpacity>
@@ -99,4 +112,36 @@ const MarkActivityForm: React.FC<Props> = ({
 
 export default MarkActivityForm;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  addMoreBtn: {
+    backgroundColor: Colors.Orangelight,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 12,
+    width: 'auto',
+    justifyContent: 'flex-start',
+    alignSelf: 'flex-start',
+  },
+  addMoreText: {
+    color: Colors.white,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+  },
+  removeButton: {
+    marginTop: 0,
+    padding: 5,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: Colors.denger,
+    width: 100,
+    // height: 40,
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});
