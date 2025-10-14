@@ -26,6 +26,7 @@ import {REmployee, StoreType} from '../../../types/dropdownType';
 import {
   useAddDailyPjpMutation,
   useGetDailyPjpByIdQuery,
+  useGetStoreListQuery,
   useUpdateDailyPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
@@ -35,9 +36,10 @@ import {
   IAddPjpPayload,
   PjpDailyStore,
   PjpDailyStoreDetail,
+  Store,
 } from '../../../types/baseType';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -70,7 +72,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const {id} = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
-  const {data: storeData} = useGetStoreQuery();
+  const {data: storeData, error} = useGetStoreListQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -146,7 +148,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     },
   });
 
-  const transformToDropdownList = (arr: StoreType[] = []) =>
+  const transformToDropdownList = (arr: Store[] = []) =>
     arr.map(item => ({label: item.store_name, value: item.name}));
 
   const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
@@ -156,7 +158,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     }));
 
   const employeeList = transformEmployeeList(employeeData?.message?.data);
-  const storeList = transformToDropdownList(storeData?.message?.data);
+  const storeList = transformToDropdownList(storeData?.message?.data?.stores);
 
   useEffect(() => {
     if (employee?.id) {
@@ -180,16 +182,16 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         employeeList={employeeList}
         storeList={storeList}
       />
-        <View
-          style={{
-            paddingHorizontal: 20,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor:Colors.bgColor,
-            width:'100%',
-            height:80,
-          }}>
+      <View
+        style={{
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: Colors.bgColor,
+          width: '100%',
+          height: 80,
+        }}>
         <TouchableOpacity
           style={[styles.submitBtn, loading && {opacity: 0.7}]}
           onPress={() => handleSubmit()}
@@ -209,24 +211,24 @@ export default AddPjpScreen;
 
 const styles = StyleSheet.create({
   submitBtn: {
-      display: 'flex',
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        backgroundColor: Colors.darkButton,
-        borderRadius: 15,
-        paddingHorizontal: 15,
-        paddingVertical: 18,
-        position: 'absolute',
-        bottom: 15,
-        gap: 5,
-        zIndex: 1,
-        width: width * 0.9,
-    },
-    submitText: {
-      fontFamily: Fonts.medium,
-        fontSize: Size.sm,
-        color: Colors.white,
-        lineHeight: 22,
-    },
+    display: 'flex',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    position: 'absolute',
+    bottom: 15,
+    gap: 5,
+    zIndex: 1,
+    width: width * 0.9,
+  },
+  submitText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.white,
+    lineHeight: 22,
+  },
 });

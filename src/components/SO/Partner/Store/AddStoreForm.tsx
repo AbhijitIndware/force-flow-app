@@ -8,8 +8,8 @@ import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
 import {View} from 'react-native';
 import MapReusableInput from '../../../ui-lib/map-input';
-import { Size } from '../../../../utils/fontSize';
-import { Fonts } from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Fonts} from '../../../../constants';
 
 interface Props {
   values: Record<string, string>;
@@ -75,7 +75,7 @@ const AddStoreForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       // eslint-disable-next-line react-native/no-inline-styles
-      contentContainerStyle={{padding: 16, paddingHorizontal:21}}>
+      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
       <ReusableInput
         label="Store Name"
         value={values.store_name}
@@ -131,14 +131,14 @@ const AddStoreForm: React.FC<Props> = ({
         error={touched.beat && errors.beat}
         onChange={(val: string) => onSelect('beat', val)}
       />
-      <ReusableDropdown
+      {/* <ReusableDropdown
         label="Weekly Off"
         field="weekly_off"
         value={values.weekly_off}
         data={weekOffList}
         error={touched.weekly_off && errors.weekly_off}
         onChange={(val: string) => onSelect('weekly_off', val)}
-      />
+      /> */}
       <ReusableDropdown
         label="Distributor"
         field="distributor"
@@ -217,7 +217,12 @@ const styles = StyleSheet.create({
   inputWrapper: {
     marginBottom: 16,
   },
-  label: { fontSize:Size.xs,  marginBottom: 4, color: Colors.black, fontFamily:Fonts.regular },
+  label: {
+    fontSize: Size.xs,
+    marginBottom: 4,
+    color: Colors.black,
+    fontFamily: Fonts.regular,
+  },
   timeInput: {
     backgroundColor: Colors.white,
     borderRadius: 10,
@@ -225,11 +230,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#ecececff',
-    height:50,
+    height: 50,
   },
   timeText: {
     color: Colors.black,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
 });

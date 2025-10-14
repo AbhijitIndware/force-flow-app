@@ -17,6 +17,7 @@ import {
   IUpdateSalesOrder,
   IUpdateSOAction,
   RAddSalesOrder,
+  RDistributorList,
   RLocationVerify,
   RPjpDailyById,
   RPjpDailyStores,
@@ -27,6 +28,7 @@ import {
   RProdCount,
   RSoDetails,
   RSoList,
+  RStoreList,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -41,23 +43,6 @@ export const baseApi = createApi({
   }),
   tagTypes: ['Distributor', 'SO', 'PO', 'PJP', 'Store', ''],
   endpoints: builder => ({
-    addDistributor: builder.mutation<any, IAddDistributorPayload>({
-      query: body => ({
-        url: '/method/salesforce_management.mobile_app_apis.dms_apis.distributor.create_distributor',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['Distributor'],
-    }),
-    addStore: builder.mutation<any, IAddStorePayload>({
-      query: body => ({
-        url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['Store'],
-    }),
-
     //Daily PJP Activity Check-in ---
     pjpInitialize: builder.mutation<RPjpInitialize, void>({
       query: () => ({
@@ -281,11 +266,51 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
+
+    //Partner
+    addDistributor: builder.mutation<any, IAddDistributorPayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.distributor.create_distributor',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Distributor'],
+    }),
+    addStore: builder.mutation<any, IAddStorePayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Store'],
+    }),
+    getStoreList: builder.query<RStoreList, void>({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_by_owner`,
+        method: 'GET',
+        // params: {
+        //   page: page,
+        //   limit: page_size,
+        //   // status: status,
+        // },
+      }),
+      providesTags: ['Store'],
+    }),
+    getDistributorList: builder.query<RDistributorList, void>({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_by_owner`,
+        method: 'GET',
+        // params: {
+        //   page: page,
+        //   limit: page_size,
+        //   // status: status,
+        // },
+      }),
+      providesTags: ['Distributor'],
+    }),
   }),
 });
 export const {
-  useAddDistributorMutation,
-  useAddStoreMutation,
   //Daily PJP Activity Check-in ---
   usePjpInitializeMutation,
   useLocationVerificationMutation,
@@ -314,6 +339,11 @@ export const {
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
   useGetProdCountQuery,
+  //Partner
+  useGetStoreListQuery,
+  useGetDistributorListQuery,
+  useAddDistributorMutation,
+  useAddStoreMutation,
 } = baseApi;
 
 interface PjpState {

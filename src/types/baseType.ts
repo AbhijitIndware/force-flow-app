@@ -562,3 +562,163 @@ export interface Counts {
   pending_stores: number;
   missed_stores: number;
 }
+
+//Partner
+export interface Store {
+  id: string;
+  name: string;
+  store_type: string;
+  address: string | null;
+  map_location: {
+    lat: number | null;
+    lng: number | null;
+  } | null;
+  creation: string; // ISO datetime string
+  modified: string; // ISO datetime string
+  modified_by: string;
+  owner: string;
+  docstatus: number;
+  idx: number;
+  status: string;
+  start_time: string; // "HH:mm:ss" format
+  end_time: string; // "HH:mm:ss" format
+  pan_no: string;
+  gst_no: string;
+  zone: string;
+  pin_code: string;
+  distributor: string;
+  weekly_off: string;
+  np_scheme_number: number;
+  np_po_value_start: number;
+  np_po_value_end: number;
+  np_po_monthly_target: number;
+  np_units_start: number;
+  np_units_end: number;
+  np_units_monthly_target: number;
+  op_scheme_number: number;
+  op_po_value_start: number;
+  op_po_value_end: number;
+  op_po_monthly_target: number;
+  op_units_start: number;
+  op_units_end: number;
+  op_units_monthly_target: number;
+  item_group: string | null;
+  payout: number;
+  created_by_employee: string;
+  created_by_employee_name: string;
+  created_by_employee_designation: string;
+  reports_to_name: string;
+  reports_to_designation: string;
+  amended_from: string | null;
+  _user_tags: any;
+  _comments: any;
+  _assign: any;
+  _liked_by: any;
+  beat: string;
+  custom_promoter: number;
+  coordinates: any;
+  store_street_address: string | null;
+  store_full_address: string | null;
+  map: any;
+}
+
+export interface RStoreList {
+  message: {
+    success: boolean;
+    data: {
+      stores: Store[];
+      pagination: {
+        total_count: number;
+        page: number;
+        page_size: number;
+        total_pages: number;
+        has_next: boolean;
+        has_prev: boolean;
+      };
+    };
+  };
+}
+
+export interface Distributor {
+  name: string;
+  creation: string; // e.g. "2025-07-11 17:28:41.465522"
+  modified: string;
+  modified_by: string;
+  owner: string;
+  docstatus: number;
+  idx: number;
+  distributor_name: string;
+  distributor_sap_code: string;
+  distributor_group: string;
+  distributor_code: string;
+  mobile: string;
+  email: string;
+  employee: string;
+  zone: string;
+  state: string;
+  city: string;
+  reports_to: string | null;
+  designation: string;
+  _user_tags: string | null;
+  _comments: string | null;
+  _assign: string | null;
+  _liked_by: string | null;
+}
+
+export interface Pagination {
+  total_count: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface DistributorData {
+  distributors: Distributor[];
+  pagination: Pagination;
+}
+
+export interface RDistributorList {
+  message: {
+    success: boolean;
+    data: DistributorData;
+  };
+}
+
+export interface LocationResponse {
+  message: {
+    success: boolean;
+    lat: number;
+    lng: number;
+    address: string;
+    raw: {
+      place_id: number;
+      licence: string;
+      osm_type: string;
+      osm_id: number;
+      lat: string;
+      lon: string;
+      class: string;
+      type: string;
+      place_rank: number;
+      importance: number;
+      addresstype: string;
+      name: string;
+      display_name: string;
+      address: {
+        amenity: string;
+        road: string;
+        suburb: string;
+        city: string;
+        state_district: string;
+        state: string;
+        'ISO3166-2-lvl4': string;
+        postcode: string;
+        country: string;
+        country_code: string;
+      };
+      boundingbox: [string, string, string, string];
+    };
+  };
+}

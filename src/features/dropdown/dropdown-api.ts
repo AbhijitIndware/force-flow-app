@@ -14,6 +14,7 @@ import {
   RState,
   RStore,
 } from '../../types/dropdownType';
+import {LocationResponse} from '../../types/baseType';
 
 //Dropdown api calling ---
 export const dropdownApi = createApi({
@@ -23,10 +24,13 @@ export const dropdownApi = createApi({
   }),
   tagTypes: [''],
   endpoints: builder => ({
-    getState: builder.query<RState, void>({
-      query: () => ({
+    getState: builder.query<RState, {zone?: string}>({
+      query: ({zone}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_state',
         method: 'GET',
+        params: {
+          search: zone,
+        },
       }),
     }),
     getZone: builder.query<RResponse, void>({
@@ -102,10 +106,13 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getStore: builder.query<RStore, void>({
-      query: () => ({
-        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_stores',
+    getStore: builder.query<RStore, {search: string}>({
+      query: ({search}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_stores_safe',
         method: 'GET',
+        params: {
+          search: search,
+        },
       }),
     }),
     getDailyStore: builder.query<RDailyStore, IDailyStore>({
@@ -132,6 +139,21 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
+
+    //Location by lat long
+    getLocationByLatLong: builder.query<
+      LocationResponse,
+      {latitude: string; longitude: string}
+    >({
+      query: ({latitude, longitude}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.location.location.set_current_location',
+        method: 'GET',
+        params: {
+          latitude: latitude,
+          longitude: longitude,
+        },
+      }),
+    }),
   }),
 });
 export const {
@@ -154,4 +176,5 @@ export const {
 
   //Sales Order
   useGetAllDropdownForSalesOrderQuery,
+  useGetLocationByLatLongQuery,
 } = dropdownApi;

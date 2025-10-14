@@ -24,10 +24,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import {
-  useGetProdCountQuery,
-  useGetSalesPurchaseCountQuery,
-} from '../../../features/base/base-api';
+import {useGetProdCountQuery} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
 

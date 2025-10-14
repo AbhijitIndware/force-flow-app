@@ -8,7 +8,7 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -21,6 +21,7 @@ import {
   useGetBeatQuery,
   useGetCityQuery,
   useGetDistributorQuery,
+  useGetLocationByLatLongQuery,
   useGetStateQuery,
   useGetStoreCategoryQuery,
   useGetStoreTypeQuery,
@@ -86,15 +87,6 @@ const AddStoreScreen = ({
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const [addStore] = useAddStoreMutation();
-  const {data: cityData} = useGetCityQuery();
-  const {data: stateData} = useGetStateQuery();
-  const {data: zoneData} = useGetZoneQuery();
-  const {data: distributorData} = useGetDistributorQuery();
-  const {data: typeData} = useGetStoreTypeQuery();
-  const {data: categoryData} = useGetStoreCategoryQuery();
-  const {data: beatData} = useGetBeatQuery();
-
   const {
     values,
     errors,
@@ -150,6 +142,23 @@ const AddStoreScreen = ({
       }
     },
   });
+
+  const [addStore] = useAddStoreMutation();
+  const {data: cityData} = useGetCityQuery();
+  const {data: stateData} = useGetStateQuery({zone: values.zone});
+  const {data: zoneData} = useGetZoneQuery();
+  const {data: distributorData} = useGetDistributorQuery();
+  const {data: typeData} = useGetStoreTypeQuery();
+  const {data: categoryData} = useGetStoreCategoryQuery();
+  const {data: beatData} = useGetBeatQuery();
+  // Assuming values.map_location is a string like "22.5643,88.3693"
+  const [latitude, longitude] = values?.map_location?.split(',');
+
+  const {data: locationData} = useGetLocationByLatLongQuery({
+    latitude,
+    longitude,
+  });
+
   const transformList = (arr: {name: string}[] = []) =>
     arr.map(i => ({label: i.name, value: i.name}));
   const disTransformList = (
@@ -174,6 +183,16 @@ const AddStoreScreen = ({
   const storeTypeList = transformList(typeData?.message?.data);
   const storeCategoryList = transformList(categoryData?.message?.data);
   const beatList = transformList(beatData?.message?.data);
+
+  useEffect(() => {
+    if (locationData?.message?.raw) {
+      setFieldValue('address', locationData?.message?.raw?.display_name || '');
+      setFieldValue(
+        'pin_code',
+        locationData?.message?.raw?.address?.postcode || '',
+      );
+    }
+  }, [locationData]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

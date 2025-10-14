@@ -11,13 +11,21 @@ import {Fonts} from '../../constants';
 import {boxShadow} from '../../utils/styles';
 import Feather from 'react-native-vector-icons/Feather';
 import {Size} from '../../utils/fontSize';
+import {useNavigation} from '@react-navigation/native';
 const {width} = Dimensions.get('window');
 type Props = {
   title: string;
   navigation: () => void;
+  type?: string;
 };
 
-const PageHeader = ({title, navigation}: Props) => {
+const PageHeader = ({title, navigation, type = 'so'}: Props) => {
+  const navigations = useNavigation<any>();
+  const handleClick = () => {
+    if (type === 'so') {
+      navigations.navigate('ProfileScreen');
+    }
+  };
   return (
     <View style={[styles.headerTitleContainer, boxShadow]}>
       <View style={styles.backButtonSection}>
@@ -33,7 +41,7 @@ const PageHeader = ({title, navigation}: Props) => {
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.userInfo}>
+        <TouchableOpacity style={styles.userInfo} onPress={() => handleClick()}>
           <Image
             source={require('../../assets/images/user.jpg')}
             resizeMode="cover"

@@ -9,24 +9,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import {
-  CirclePlus,
-  UserRoundPlus,
-} from 'lucide-react-native';
-import { Tab } from '@rneui/themed';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {CirclePlus, UserRoundPlus} from 'lucide-react-native';
+import {Tab} from '@rneui/themed';
 import DistributorTabcontent from '../../../components/SO/Partner/Distributor/DistributorTabcontent';
 import StoreTabContent from '../../../components/SO/Partner/Store/StoreTabContent';
 import PageHeader from '../../../components/ui/PageHeader';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,10 +35,11 @@ type Props = {
   route: any;
 };
 
-const OrdersScreen = ({ navigation }: Props) => {
+const OrdersScreen = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -60,30 +58,54 @@ const OrdersScreen = ({ navigation }: Props) => {
           position: 'relative',
         },
       ]}>
-        <PageHeader title="Partners" navigation={() => navigation.goBack()} />
+      <PageHeader title="Partners" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
+          contentContainerStyle={{position: 'relative'}}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{
-              width: 40, height: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.lightOrange,
-              borderRadius: 15,
-            }}>
-              <UserRoundPlus size={20} color={Colors.orange} strokeWidth={1.7} />
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: Colors.lightOrange,
+                borderRadius: 15,
+              }}>
+              <UserRoundPlus
+                size={20}
+                color={Colors.orange}
+                strokeWidth={1.7}
+              />
             </View>
-            <Text style={{ fontFamily: Fonts.regular, fontSize: Size.sm, color: Colors.darkButton, marginTop: 5 }}>Total Customers</Text>
-            <Text style={{ fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.darkButton }}>400</Text>
+            <Text
+              style={{
+                fontFamily: Fonts.regular,
+                fontSize: Size.sm,
+                color: Colors.darkButton,
+                marginTop: 5,
+              }}>
+              Total {index === 0 ? 'Distributors' : 'Stores'}
+            </Text>
+            <Text
+              style={{
+                fontFamily: Fonts.semiBold,
+                fontSize: Size.md,
+                color: Colors.darkButton,
+              }}>
+              {totalCount}
+            </Text>
           </View>
           <View
             style={{
@@ -121,7 +143,7 @@ const OrdersScreen = ({ navigation }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
               <Tab.Item
                 title="Store"
@@ -138,15 +160,21 @@ const OrdersScreen = ({ navigation }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
             </Tab>
           </View>
           {/* Conditionally rendered tab content */}
           {index === 0 ? (
-            <DistributorTabcontent navigation={navigation} />
+            <DistributorTabcontent
+              navigation={navigation}
+              setTotalCount={setTotalCount}
+            />
           ) : (
-            <StoreTabContent navigation={navigation} />
+            <StoreTabContent
+              navigation={navigation}
+              setTotalCount={setTotalCount}
+            />
           )}
         </Animated.ScrollView>
       )}
@@ -163,7 +191,11 @@ const OrdersScreen = ({ navigation }: Props) => {
         }}>
         <TouchableOpacity
           style={styles.checkinButton}
-          onPress={() => index === 0 ? navigation.navigate('AddDistributorScreen') : navigation.navigate('AddStoreScreen')}>
+          onPress={() =>
+            index === 0
+              ? navigation.navigate('AddDistributorScreen')
+              : navigation.navigate('AddStoreScreen')
+          }>
           <CirclePlus strokeWidth={1.4} color={Colors.white} />
           <Text style={styles.checkinButtonText}>
             {`Add ${index === 0 ? 'Distributor' : 'Store'}`}
@@ -189,7 +221,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     paddingBottom: 10,
