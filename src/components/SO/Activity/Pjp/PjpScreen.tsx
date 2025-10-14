@@ -75,7 +75,7 @@ const PJPScreen = ({navigation}: any) => {
           {/* <Clock2 size={16} color="#4A4A4A" strokeWidth={2} /> */}
           <Text style={styles.time}></Text>
         </View>
-        <View style={[flexRow, {gap: 10, position: 'relative'}]}>
+        <View style={[flexRow, {gap: 0, position: 'relative'}]}>
           <Text style={[styles.leave, {marginLeft: 'auto'}]}>
             {moment(item?.date).format('MMMM')}
           </Text>
@@ -145,16 +145,21 @@ const PJPScreen = ({navigation}: any) => {
           </Text>
         </View>
         <View>
-          <Text
+          {/* <Text
             style={{
               fontFamily: Fonts.semiBold,
-              fontSize: Size.xsmd,
+              fontSize: Size.sm,
               color: Colors.darkButton,
             }}>
             PJP of {moment(item?.date).format('MMMM')}
-          </Text>
+          </Text> */}
           <Text style={styles.contentText}>
-            Emp name: {item?.employee_name}
+            Emp name
+          </Text>
+          <Text style={[styles.contentText,{fontFamily: Fonts.semiBold,
+              fontSize: Size.sm,
+              color: Colors.darkButton}]}>
+            {item?.employee_name}
           </Text>
           {/* <Text style={styles.contentText}>Accestisa new mart</Text> */}
         </View>
@@ -326,7 +331,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightBlue,
     color: Colors.blue,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 18,
     padding: 8,
     borderRadius: 50,
@@ -336,7 +341,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 10,
     paddingTop: 0,
   },

@@ -153,7 +153,7 @@ const SalesOrder = ({navigation}: any) => {
           <Text
             style={{
               fontFamily: Fonts.semiBold,
-              fontSize: Size.xsmd,
+              fontSize: Size.sm,
               color: Colors.darkButton,
             }}>
             PO Amount: ₹{item.grand_total}
@@ -392,11 +392,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightSuccess,
     color: Colors.sucess,
     fontFamily: Fonts.regular,
-    fontSize: Size.xs,
+    fontSize: Size.xxs,
     lineHeight: 18,
     padding: 8,
     borderRadius: 50,
     paddingHorizontal: 10,
+    maxWidth:130,
+    textAlign:'center',
   },
 
   lateEntry: {
@@ -468,7 +470,7 @@ const styles = StyleSheet.create({
   contentText: {
     fontFamily: Fonts.regular,
     color: Colors.darkButton,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 20,
   },
 

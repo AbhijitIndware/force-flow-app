@@ -24,7 +24,7 @@ const PurchaseComponent = ({
     <View style={styles.atteddanceCard}>
       <View style={styles.cardHeader}>
         <View style={styles.timeSection}>
-          <Text style={styles.time}> PO ID: {item.order_id}</Text>
+          <Text style={styles.time}>PO ID: {item.order_id}</Text>
         </View>
         <View style={[flexRow, {gap: 0, position: 'relative',width:'50%',maxWidth:190, justifyContent:'flex-end'}]}>
           <Text
@@ -105,7 +105,7 @@ const PurchaseComponent = ({
           <Text
             style={{
               fontFamily: Fonts.semiBold,
-              fontSize: Size.xsmd,
+              fontSize: Size.sm,
               color: Colors.darkButton,
             }}>
             PO Amount: ₹{item.grand_total.toLocaleString()}
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width:'50%',
     maxWidth:175,
+    flexWrap:'wrap',
   },
   time: {
     color: Colors.darkButton,
@@ -278,11 +279,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightSuccess,
     color: Colors.sucess,
     fontFamily: Fonts.regular,
-    fontSize: Size.xs,
+    fontSize: Size.xxs,
     lineHeight: 18,
     padding: 8,
     borderRadius: 50,
     paddingHorizontal: 10,
+    maxWidth:130,
+    textAlign:'center',
   },
 
   lateEntry: {
@@ -354,7 +357,7 @@ const styles = StyleSheet.create({
   contentText: {
     fontFamily: Fonts.regular,
     color: Colors.darkButton,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 20,
   },
 

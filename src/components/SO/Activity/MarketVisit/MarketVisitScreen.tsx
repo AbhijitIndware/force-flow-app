@@ -66,8 +66,9 @@ const MarketVisitScreen = ({ navigation }: any) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: Colors.darkButton,
+                    maxWidth:250,
                   }}>
                   Remark : Display updated
                 </Text>
@@ -98,8 +99,9 @@ const MarketVisitScreen = ({ navigation }: any) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: Colors.darkButton,
+                    maxWidth:250,
                   }}>
                   Remark : Display updated
                 </Text>
@@ -130,8 +132,9 @@ const MarketVisitScreen = ({ navigation }: any) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: Colors.darkButton,
+                    maxWidth:250,
                   }}>
                   Remark : Display updated
                 </Text>
@@ -211,7 +214,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lightBlue,
     color: Colors.blue,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 18,
     padding: 8,
     borderRadius: 50,
@@ -254,7 +257,7 @@ const styles = StyleSheet.create({
   contentText: {
     fontFamily: Fonts.regular,
     color: Colors.darkButton,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     lineHeight: 20,
   },
 });

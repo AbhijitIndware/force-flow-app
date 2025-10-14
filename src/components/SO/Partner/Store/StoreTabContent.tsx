@@ -104,12 +104,14 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
               style={{
                 justifyContent: 'space-between',
                 flexDirection: 'row',
+                flexWrap:'wrap',
+                marginBottom:5,
               }}>
               <Text style={styles.contentText}>ID: {item?.name}</Text>
               <Text style={styles.contentText}>Zone: {item?.zone}</Text>
             </View>
             <Text style={styles.contentText}>Store name</Text>
-            <Text style={[styles.contentText, {fontFamily: Fonts.medium}]}>
+            <Text style={[styles.contentText, {fontFamily: Fonts.medium, marginBottom:5}]}>
               {item?.store_name}
             </Text>
             <Text style={styles.contentText}>City: {item?.city}</Text>
