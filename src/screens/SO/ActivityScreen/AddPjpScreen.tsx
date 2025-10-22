@@ -77,7 +77,17 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const {data: employeeData} = useGetEmployeeQuery({name: employee?.id});
+  const [page, setPage] = useState<number>(1);
+  const [employeeListData, setEmployeeListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const {data: employeeData, isFetching} = useGetEmployeeQuery({
+    name: employee?.id,
+    page_size: '20',
+    page: String(page),
+  });
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,
@@ -157,7 +167,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
       value: item.name,
     }));
 
-  const employeeList = transformEmployeeList(employeeData?.message?.data);
+  // const employeeList = transformEmployeeList(employeeData?.message?.data);
   const storeList = transformToDropdownList(storeData?.message?.data?.stores);
 
   useEffect(() => {
@@ -173,14 +183,31 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     }
   }, [pjpDetails, id]);
 
+  useEffect(() => {
+    if (employeeData?.message?.data) {
+      const newData = transformEmployeeList(employeeData?.message?.data);
+      setEmployeeListData(prev => [...prev, ...newData]); // append
+    }
+  }, [employeeData]);
+
+  const handleLoadMoreStores = () => {
+    if (!isFetching) {
+      setLoadingMore(true);
+      setPage(prev => prev + 1);
+      setLoadingMore(false);
+    }
+  };
+
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader title="Add Pjp" navigation={() => navigation.goBack()} />
       <AddPjpForm
         {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
-        employeeList={employeeList}
+        employeeList={employeeListData}
         storeList={storeList}
+        onLoadMoreStores={handleLoadMoreStores} // 👈 added
+        loadingMoreStores={loadingMore}
       />
       <View
         style={{

@@ -24,19 +24,28 @@ export const dropdownApi = createApi({
   }),
   tagTypes: [''],
   endpoints: builder => ({
-    getState: builder.query<RState, {zone?: string}>({
-      query: ({zone}) => ({
+    getState: builder.query<
+      RState,
+      {zone?: string; page_size?: string; page?: string}
+    >({
+      query: ({zone, page_size, page}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_state',
         method: 'GET',
         params: {
           search: zone,
+          page_size: page_size,
+          page: page,
         },
       }),
     }),
-    getZone: builder.query<RResponse, void>({
-      query: () => ({
+    getZone: builder.query<RResponse, {page_size?: string; page?: string}>({
+      query: ({page_size, page}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_zone',
         method: 'GET',
+        params: {
+          page_size: page_size,
+          page: page,
+        },
       }),
     }),
     getCity: builder.query<RCity, void>({
@@ -45,12 +54,17 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getEmployee: builder.query<REmployee, {name?: string}>({
-      query: ({name}) => ({
+    getEmployee: builder.query<
+      REmployee,
+      {name?: string; page_size?: string; page?: string}
+    >({
+      query: ({name, page_size, page}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_employee',
         method: 'GET',
         params: {
           search: name,
+          page_size: page_size,
+          page: page,
         },
       }),
     }),

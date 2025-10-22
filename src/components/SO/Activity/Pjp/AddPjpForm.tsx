@@ -1,18 +1,18 @@
 /* eslint-disable react-native/no-inline-styles */
 // AddDistributorForm.tsx
 import React from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import {Animated, Text, TouchableOpacity, View} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import { Colors } from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Colors} from '../../../../utils/colors';
 
 interface FormValues {
   employee: string;
   date: string;
-  stores: { store: string }[];
+  stores: {store: string}[];
 }
 
 interface Props {
@@ -25,12 +25,19 @@ interface Props {
   };
   handleChange: {
     (e: React.ChangeEvent<any>): void;
-    <T_1 = string | React.ChangeEvent<any>>(field: T_1): T_1 extends React.ChangeEvent<any> ? void : (e: string | React.ChangeEvent<any>) => void;
+    <T_1 = string | React.ChangeEvent<any>>(
+      field: T_1,
+    ): T_1 extends React.ChangeEvent<any>
+      ? void
+      : (e: string | React.ChangeEvent<any>) => void;
   };
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  employeeList: { label: string; value: string }[];
-  storeList: { label: string; value: string }[];
+  employeeList: {label: string; value: string}[];
+  storeList: {label: string; value: string}[];
+
+  onLoadMoreStores?: () => void; // 👈 add this
+  loadingMoreStores?: boolean; // 👈 add this
 }
 
 const AddPjpForm: React.FC<Props> = ({
@@ -43,6 +50,8 @@ const AddPjpForm: React.FC<Props> = ({
   scrollY,
   employeeList,
   storeList,
+  onLoadMoreStores,
+  loadingMoreStores,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -55,36 +64,50 @@ const AddPjpForm: React.FC<Props> = ({
   };
 
   return (
-
     <Animated.ScrollView
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: false }
-      )}
+      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+        useNativeDriver: false,
+      })}
       scrollEventThrottle={16}
-      contentContainerStyle={{ padding: 16, paddingHorizontal:21 }}
-    >
+      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
       <ReusableDatePicker
         label="Date"
         value={values.date}
         onChange={(val: string) => setFieldValue('date', val)}
         error={touched.date && errors.date}
       />
-      <ReusableDropdown label="Employee Name" field="employee" value={values.employee} data={employeeList} error={touched.employee && errors.employee} onChange={(val: string) => onSelect('employee', val)} />
+      <ReusableDropdown
+        label="Employee Name"
+        field="employee"
+        value={values.employee}
+        data={employeeList}
+        error={touched.employee && errors.employee}
+        onChange={(val: string) => onSelect('employee', val)}
+        onLoadMore={onLoadMoreStores} // 👈 pass here
+        loadingMore={loadingMoreStores}
+      />
 
-      <ReusableInput label="Employee" value={values.employee} onChangeText={() => { }} onBlur={() => handleBlur('pan_no')} disabled={true} />
+      <ReusableInput
+        label="Employee"
+        value={values.employee}
+        onChangeText={() => {}}
+        onBlur={() => handleBlur('pan_no')}
+        disabled={true}
+      />
       {values.stores.map((storeItem, index) => (
-        <View key={index} style={{ marginBottom: 12, position: 'relative' }}>
+        <View key={index} style={{marginBottom: 12, position: 'relative'}}>
           <ReusableDropdown
             label={`Store ${index + 1}`}
             field={`stores[${index}].store`}
             value={storeItem.store}
             data={storeList}
-            error={touched.stores?.[index]?.store && errors.stores?.[index]?.store}
+            error={
+              touched.stores?.[index]?.store && errors.stores?.[index]?.store
+            }
             onChange={(val: string) => {
               const updatedStores = [...values.stores];
               updatedStores[index].store = val;
-              setFieldValue("stores", updatedStores);
+              setFieldValue('stores', updatedStores);
             }}
           />
 
@@ -93,29 +116,36 @@ const AddPjpForm: React.FC<Props> = ({
               onPress={() => {
                 const updated = [...values.stores];
                 updated.splice(index, 1);
-                setFieldValue("stores", updated);
+                setFieldValue('stores', updated);
               }}
-              style={{ position: 'absolute', right: 0, top: 65 }}
-            >
-              <Text style={{ color: 'red' }}>Remove</Text>
+              style={{position: 'absolute', right: 10, top: 80}}>
+              <Text style={{color: 'red'}}>Remove</Text>
             </TouchableOpacity>
           )}
         </View>
       ))}
       {/* ➕ Add Store Button */}
       <TouchableOpacity
-        onPress={() => setFieldValue("stores", [...values.stores, { store: "" }])}
-        style={{ marginBottom: 16, alignSelf: 'flex-start', backgroundColor:Colors.Orangelight, 
-          paddingHorizontal:16, paddingVertical:8, borderRadius:8 }}
-      >
-        <Text style={{ fontFamily: Fonts.medium,
-                fontSize: Size.sm,
-                color: Colors.white,
-                lineHeight: 22, }}>+ Add Store</Text>
+        onPress={() => setFieldValue('stores', [...values.stores, {store: ''}])}
+        style={{
+          marginBottom: 16,
+          alignSelf: 'flex-start',
+          backgroundColor: Colors.Orangelight,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderRadius: 8,
+        }}>
+        <Text
+          style={{
+            fontFamily: Fonts.medium,
+            fontSize: Size.sm,
+            color: Colors.white,
+            lineHeight: 22,
+          }}>
+          + Add Store
+        </Text>
       </TouchableOpacity>
     </Animated.ScrollView>
-
-
   );
 };
 

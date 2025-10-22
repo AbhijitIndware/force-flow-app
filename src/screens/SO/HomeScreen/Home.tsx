@@ -20,7 +20,6 @@ import HomeScreen from './HomeScreen';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {
@@ -34,9 +33,6 @@ import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
-import {Modal} from 'react-native';
-import {useEffect, useState} from 'react';
-import {logout} from '../../../features/auth/auth';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
@@ -136,8 +132,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
 
 const CustomHeader = (props: BottomTabHeaderProps) => {
   return (
-    <View
-    style={styles.headerTitleContainer}>
+    <View style={styles.headerTitleContainer}>
       <View>
         <Image
           source={require('../../../assets/images/softsence-logo-dashboard.png')}
@@ -355,5 +350,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
 });

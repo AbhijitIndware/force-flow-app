@@ -1,10 +1,9 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import DropdownComponent from '../ui/CustomDropDown';
-import { Colors } from '../../utils/colors';
+import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
-import { Size } from '../../utils/fontSize';
-
+import {Size} from '../../utils/fontSize';
 
 interface DropdownOption {
   label: string;
@@ -18,6 +17,8 @@ interface ReusableDropdownProps {
   data: DropdownOption[];
   error?: string | false;
   onChange: (value: string) => void;
+  onLoadMore?: () => void; // 👈 New prop
+  loadingMore?: boolean; // 👈 New prop
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -27,6 +28,8 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   data,
   error,
   onChange,
+  onLoadMore,
+  loadingMore,
 }) => {
   return (
     <View style={styles.inputWrapper}>
@@ -37,6 +40,8 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         selectedId={value ? String(value) : null}
         setSelectedId={onChange}
         name={field}
+        onLoadMore={onLoadMore} // 👈 Pass pagination handler
+        loadingMore={loadingMore}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -46,12 +51,12 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
 const styles = StyleSheet.create({
   inputWrapper: {marginBottom: 16},
   label: {
-    fontSize:Size.xs,
+    fontSize: Size.xs,
     marginBottom: 4,
     color: Colors.black,
-    fontFamily:Fonts.regular,
+    fontFamily: Fonts.regular,
   },
-  error: {fontSize:Size.xs, color: 'red', marginTop: 4},
+  error: {fontSize: Size.xs, color: 'red', marginTop: 4},
 });
 
 export default ReusableDropdown;

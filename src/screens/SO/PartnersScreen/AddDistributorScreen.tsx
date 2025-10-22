@@ -9,7 +9,7 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -60,13 +60,25 @@ let initial = {
 
 const AddDistributorScreen = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
-  const {data: cityData} = useGetCityQuery();
-  const {data: stateData} = useGetStateQuery();
-  const {data: zoneData} = useGetZoneQuery();
-  const {data: employeeData} = useGetEmployeeQuery({name: ''});
-  const {data: designationData} = useGetDesignationQuery();
-  const {data: distributorGroupData, error} = useGetDistributorGroupQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const [statePage, setStatePage] = useState(1);
+  const [employeePage, setEmployeePage] = useState(1);
+  const [zonePage, setZonePage] = useState(1);
+
+  const [stateListData, setStateListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [employeeListData, setEmployeeListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [zoneListData, setZoneListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+
+  const [loadingMoreState, setLoadingMoreState] = useState(false);
+  const [loadingMoreEmployee, setLoadingMoreEmployee] = useState(false);
+  const [loadingMoreZone, setLoadingMoreZone] = useState(false);
 
   const [addDistributor] = useAddDistributorMutation();
 
@@ -127,19 +139,41 @@ const AddDistributorScreen = ({navigation}: Props) => {
       value: item.name,
     }));
 
+  const {data: cityData} = useGetCityQuery();
+  const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
+    zone: values.zone,
+    page_size: '20',
+    page: String(statePage),
+  });
+
+  const {data: employeeData, isFetching: employeeFetching} =
+    useGetEmployeeQuery({
+      name: '',
+      page_size: '20',
+      page: String(employeePage),
+    });
+
+  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
+    page_size: '20',
+    page: String(zonePage),
+  });
+
+  const {data: designationData} = useGetDesignationQuery();
+  const {data: distributorGroupData, error} = useGetDistributorGroupQuery();
+
   const distributorGroupList = transformToDropdownList(
     distributorGroupData?.message?.data,
   );
-  const employeeList = transformEmployeeList(employeeData?.message?.data);
-  const zoneList = useMemo(
-    () => transformToDropdownList(zoneData?.message?.data),
-    [zoneData],
-  );
-  const stateList = useMemo(() => {
-    return transformToDropdownList(
-      stateData?.message?.data?.filter(state => state.zone === values.zone),
-    );
-  }, [stateData, values.zone]);
+  // const employeeList = transformEmployeeList(employeeData?.message?.data);
+  // const zoneList = useMemo(
+  //   () => transformToDropdownList(zoneData?.message?.data),
+  //   [zoneData],
+  // );
+  // const stateList = useMemo(() => {
+  //   return transformToDropdownList(
+  //     stateData?.message?.data?.filter(state => state.zone === values.zone),
+  //   );
+  // }, [stateData, values.zone]);
   const cityList = useMemo(() => {
     return transformToDropdownList(
       cityData?.message?.data?.filter(city => city.state === values.state),
@@ -148,6 +182,53 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const designationList = transformToDropdownList(
     designationData?.message?.data,
   );
+
+  useEffect(() => {
+    if (stateData?.message?.data) {
+      const newData = transformToDropdownList(
+        stateData.message.data.filter(state => state.zone === values.zone),
+      );
+      setStateListData(prev => [...prev, ...newData]);
+    }
+  }, [stateData, values.zone]);
+
+  useEffect(() => {
+    if (employeeData?.message?.data) {
+      const newData = transformEmployeeList(employeeData.message.data);
+      setEmployeeListData(prev => [...prev, ...newData]);
+    }
+  }, [employeeData]);
+
+  useEffect(() => {
+    if (zoneData?.message?.data) {
+      const newData = transformToDropdownList(zoneData.message.data);
+      setZoneListData(prev => [...prev, ...newData]);
+    }
+  }, [zoneData]);
+
+  const handleLoadMoreStates = () => {
+    if (!stateFetching) {
+      setLoadingMoreState(true);
+      setStatePage(prev => prev + 1);
+      setLoadingMoreState(false);
+    }
+  };
+
+  const handleLoadMoreEmployees = () => {
+    if (!employeeFetching) {
+      setLoadingMoreEmployee(true);
+      setEmployeePage(prev => prev + 1);
+      setLoadingMoreEmployee(false);
+    }
+  };
+
+  const handleLoadMoreZones = () => {
+    if (!zoneFetching) {
+      setLoadingMoreZone(true);
+      setZonePage(prev => prev + 1);
+      setLoadingMoreZone(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
@@ -159,11 +240,18 @@ const AddDistributorScreen = ({navigation}: Props) => {
         {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
         distributorGroupList={distributorGroupList}
-        employeeList={employeeList}
-        zoneList={zoneList}
-        stateList={stateList}
+        employeeList={employeeListData}
+        zoneList={zoneListData}
+        stateList={stateListData}
         cityList={cityList}
         designationList={designationList}
+        // pagination props
+        onLoadMoreState={handleLoadMoreStates}
+        loadingMoreState={loadingMoreState}
+        onLoadMoreEmployee={handleLoadMoreEmployees}
+        loadingMoreEmployee={loadingMoreEmployee}
+        onLoadMoreZone={handleLoadMoreZones}
+        loadingMoreZone={loadingMoreZone}
       />
       <View
         style={{
@@ -171,9 +259,9 @@ const AddDistributorScreen = ({navigation}: Props) => {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor:Colors.bgColor,
-          width:'100%',
-          height:80,
+          backgroundColor: Colors.bgColor,
+          width: '100%',
+          height: 80,
         }}>
         <TouchableOpacity
           style={[styles.submitBtn, loading && {opacity: 0.7}]}
@@ -195,23 +283,23 @@ export default AddDistributorScreen;
 const styles = StyleSheet.create({
   submitBtn: {
     display: 'flex',
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      backgroundColor: Colors.darkButton,
-      borderRadius: 15,
-      paddingHorizontal: 15,
-      paddingVertical: 18,
-      position: 'absolute',
-      bottom: 15,
-      gap: 5,
-      zIndex: 1,
-      width: width * 0.9,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 18,
+    position: 'absolute',
+    bottom: 15,
+    gap: 5,
+    zIndex: 1,
+    width: width * 0.9,
   },
   submitText: {
     fontFamily: Fonts.medium,
-      fontSize: Size.sm,
-      color: Colors.white,
-      lineHeight: 22,
+    fontSize: Size.sm,
+    color: Colors.white,
+    lineHeight: 22,
   },
 });

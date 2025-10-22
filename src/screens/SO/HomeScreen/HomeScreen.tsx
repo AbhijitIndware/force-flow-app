@@ -43,6 +43,7 @@ import {
 import Toast from 'react-native-toast-message';
 import {StoreData} from '../../../types/baseType';
 import moment from 'moment';
+import {useIsFocused} from '@react-navigation/native';
 
 const {width} = Dimensions.get('window');
 
@@ -80,8 +81,8 @@ const HomeScreen = ({navigation}: Props) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedStoreValue, setSelectedStoreValue] =
     useState<StoreData | null>(null);
-  console.log('🚀 ~ HomeScreen ~ selectedStoreValue:', selectedStoreValue);
   const dispatch = useAppDispatch();
+  const isFocused = useIsFocused();
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -136,8 +137,10 @@ const HomeScreen = ({navigation}: Props) => {
   };
 
   useEffect(() => {
-    pjpInitialize();
-  }, [pjpInitialize]);
+    if (isFocused) {
+      pjpInitialize(); // 👈 Call when screen is visible
+    }
+  }, [isFocused]);
 
   useEffect(() => {
     if (selectedStore) {
@@ -156,6 +159,8 @@ const HomeScreen = ({navigation}: Props) => {
     if (data?._server_messages) {
       let _data = extractServerMessage(data);
       setErrorMessage(_data || '');
+    } else {
+      setErrorMessage('');
     }
     if (data?.message?.success === false) {
       dispatch(setSelectedStore(''));

@@ -1,22 +1,22 @@
 /* eslint-disable react-native/no-inline-styles */
 import {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-
+import {StyleSheet, Text, View, ActivityIndicator} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import {Fonts} from '../../constants';
 import {Colors} from '../../utils/colors';
 import {DropDownList} from '../../types/Navigation';
-import {color} from '@rneui/base';
-import { Size } from '../../utils/fontSize';
+import {Size} from '../../utils/fontSize';
 
 type Props = {
   selectText: string;
   data: DropDownList[];
   selectedId: string | null;
-  setSelectedId: any;
+  setSelectedId: (val: string) => void;
   height?: number;
   name: string;
   styleType?: string;
+  onLoadMore?: () => void; // 👈 pagination handler
+  loadingMore?: boolean; // 👈 loading indicator
 };
 
 const DropdownComponent = ({
@@ -26,6 +26,8 @@ const DropdownComponent = ({
   selectedId,
   height = 50,
   styleType = 'fullBorder',
+  onLoadMore,
+  loadingMore = false,
 }: Props) => {
   const [isFocus, setIsFocus] = useState(false);
 
@@ -40,11 +42,7 @@ const DropdownComponent = ({
           styleType === 'fullBorder' ? styles.dropdown : styles.dropdown,
         ]}
         renderItem={(item, selected) => (
-          <View
-            style={[
-              styles.item,
-              selected && styles.selectedItem, // Highlight selected item
-            ]}>
+          <View style={[styles.item, selected && styles.selectedItem]}>
             <Text
               style={[styles.itemText, selected && styles.selectedItemText]}>
               {item.label}
@@ -62,11 +60,7 @@ const DropdownComponent = ({
         placeholder={!isFocus ? `Select ${selectText}` : '...'}
         value={selectedId}
         onFocus={() => setIsFocus(true)}
-        onBlur={() => {
-          if (!isFocus) {
-            setIsFocus(false);
-          }
-        }}
+        onBlur={() => setIsFocus(false)}
         onChange={(item: {value: any}) => {
           setSelectedId(item?.value);
           setIsFocus(false);
@@ -74,8 +68,18 @@ const DropdownComponent = ({
         search
         searchPlaceholder="Search..."
         keyboardAvoiding
-        // autoFocus={false}
         inputSearchStyle={styles.inputSearchStyle}
+        flatListProps={{
+          onEndReached: onLoadMore, // 👈 detects scroll end
+          onEndReachedThreshold: 0.5,
+          ListFooterComponent: loadingMore ? (
+            <ActivityIndicator
+              size="small"
+              color={Colors.primary || 'gray'}
+              style={{marginVertical: 10}}
+            />
+          ) : null,
+        }}
       />
     </View>
   );
@@ -95,19 +99,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#ecececff',
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
-  },
-  bottomLine: {
-    // borderBottomWidth: 1,
-    // borderBottomColor: Colors.primary,
-    // paddingHorizontal: 10,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
   placeholderStyle: {
     color: Colors.inputBorder,
-    // paddingHorizontal: 15,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
   item: {
     paddingVertical: 5,
@@ -115,15 +113,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     backgroundColor: Colors.white,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
   },
-
   selectedItem: {
     backgroundColor: Colors.orange,
-    color: Colors.white,
   },
-
   itemText: {
     fontSize: 15,
     color: Colors.inputBorder,
@@ -132,8 +125,8 @@ const styles = StyleSheet.create({
   itemTextStyle: {
     color: Colors.inputBorder,
     margin: 0,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
   },
   selectedItemText: {
     paddingHorizontal: 5,
@@ -150,9 +143,9 @@ const styles = StyleSheet.create({
   inputSearchStyle: {
     height: 50,
     color: Colors.black,
-    fontFamily:Fonts.regular,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
     paddingHorizontal: 10,
-    borderRadius:8,
+    borderRadius: 8,
   },
 });

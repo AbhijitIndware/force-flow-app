@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import {useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -50,13 +50,12 @@ const AddPurchaseScreen = ({
   >;
 }) => {
   const [loading, setLoading] = useState(false);
-  const {data: cityData} = useGetCityQuery();
-  const {data: stateData} = useGetStateQuery();
-  const {data: zoneData} = useGetZoneQuery();
-  const {data: employeeData} = useGetEmployeeQuery({name: ''});
-  const {data: designationData} = useGetDesignationQuery();
-  const {data: distributorGroupData, error} = useGetDistributorGroupQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [page, setPage] = useState<number>(1);
+  const [stateListData, setStateListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const [addDistributor] = useAddDistributorMutation();
 
@@ -117,6 +116,17 @@ const AddPurchaseScreen = ({
       value: item.name,
     }));
 
+  const {data: cityData} = useGetCityQuery();
+  const {data: stateData, isFetching} = useGetStateQuery({
+    zone: values.zone,
+    page_size: '20',
+    page: String(page),
+  });
+  const {data: zoneData} = useGetZoneQuery({});
+  const {data: employeeData} = useGetEmployeeQuery({name: ''});
+  const {data: designationData} = useGetDesignationQuery();
+  const {data: distributorGroupData, error} = useGetDistributorGroupQuery();
+
   const distributorGroupList = transformToDropdownList(
     distributorGroupData?.message?.data,
   );
@@ -125,11 +135,11 @@ const AddPurchaseScreen = ({
     () => transformToDropdownList(zoneData?.message?.data),
     [zoneData],
   );
-  const stateList = useMemo(() => {
-    return transformToDropdownList(
-      stateData?.message?.data?.filter(state => state.zone === values.zone),
-    );
-  }, [stateData, values.zone]);
+  // const stateList = useMemo(() => {
+  //   return transformToDropdownList(
+  //     stateData?.message?.data?.filter(state => state.zone === values.zone),
+  //   );
+  // }, [stateData, values.zone]);
   const cityList = useMemo(() => {
     return transformToDropdownList(
       cityData?.message?.data?.filter(city => city.state === values.state),
@@ -138,6 +148,23 @@ const AddPurchaseScreen = ({
   const designationList = transformToDropdownList(
     designationData?.message?.data,
   );
+
+  useEffect(() => {
+    if (employeeData?.message?.data) {
+      const newData = transformToDropdownList(
+        stateData?.message?.data?.filter(state => state.zone === values.zone),
+      );
+      setStateListData(prev => [...prev, ...newData]); // append
+    }
+  }, [stateData, values.zone]);
+
+  const handleLoadMoreStores = () => {
+    if (!isFetching) {
+      setLoadingMore(true);
+      setPage(prev => prev + 1);
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
@@ -152,9 +179,11 @@ const AddPurchaseScreen = ({
         distributorGroupList={distributorGroupList}
         employeeList={employeeList}
         zoneList={zoneList}
-        stateList={stateList}
+        stateList={stateListData}
         cityList={cityList}
         designationList={designationList}
+        onLoadMoreStores={handleLoadMoreStores} // 👈 added
+        loadingMoreStores={loadingMore}
       />
       <TouchableOpacity
         style={[styles.submitBtn, loading && {opacity: 0.7}]}
