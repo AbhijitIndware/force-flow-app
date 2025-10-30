@@ -123,14 +123,14 @@ const AddStoreForm: React.FC<Props> = ({
         error={touched.city && errors.city}
         onChange={(val: string) => onSelect('city', val)}
       />
-      <ReusableDropdown
+      {/* <ReusableDropdown
         label="Beat"
         field="beat"
         value={values.beat}
         data={beatList}
         error={touched.beat && errors.beat}
         onChange={(val: string) => onSelect('beat', val)}
-      />
+      /> */}
       {/* <ReusableDropdown
         label="Weekly Off"
         field="weekly_off"
