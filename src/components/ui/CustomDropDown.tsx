@@ -1,6 +1,12 @@
 /* eslint-disable react-native/no-inline-styles */
 import {useState} from 'react';
-import {StyleSheet, Text, View, ActivityIndicator} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 import {Fonts} from '../../constants';
 import {Colors} from '../../utils/colors';
@@ -17,6 +23,9 @@ type Props = {
   styleType?: string;
   onLoadMore?: () => void; // 👈 pagination handler
   loadingMore?: boolean; // 👈 loading indicator
+
+  searchText?: string; // 👈 add this
+  setSearchText?: (val: string) => void; // 👈 add this
 };
 
 const DropdownComponent = ({
@@ -28,6 +37,8 @@ const DropdownComponent = ({
   styleType = 'fullBorder',
   onLoadMore,
   loadingMore = false,
+  searchText,
+  setSearchText,
 }: Props) => {
   const [isFocus, setIsFocus] = useState(false);
 
@@ -69,6 +80,25 @@ const DropdownComponent = ({
         searchPlaceholder="Search..."
         keyboardAvoiding
         inputSearchStyle={styles.inputSearchStyle}
+        renderInputSearch={onSearchTextChange => (
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={[styles.inputSearchStyle, isFocus && styles.inputFocused]}
+              placeholder="Search..."
+              placeholderTextColor={Colors.inputBorder}
+              value={searchText}
+              onChangeText={text => {
+                onSearchTextChange(text); // internal filtering
+                setSearchText?.(text); // external search handler
+              }}
+            />
+          </View>
+        )}
+        // searchField={searchText} // 👈 control search text
+        // onChangeText={text => {
+        //   console.log('🚀 ~ DropdownComponent ~ text:', text);
+        //   return setSearchText?.(text);
+        // }} // 👈 update from parent
         flatListProps={{
           onEndReached: onLoadMore, // 👈 detects scroll end
           onEndReachedThreshold: 0.5,
@@ -147,5 +177,16 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     paddingHorizontal: 10,
     borderRadius: 8,
+  },
+  searchContainer: {
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingVertical: 2,
+    paddingHorizontal: 10,
+  },
+  inputFocused: {
+    borderColor: Colors.primary,
+    backgroundColor: '#fff',
   },
 });

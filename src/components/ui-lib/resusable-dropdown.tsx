@@ -19,6 +19,9 @@ interface ReusableDropdownProps {
   onChange: (value: string) => void;
   onLoadMore?: () => void; // 👈 New prop
   loadingMore?: boolean; // 👈 New prop
+
+  searchText?: string; // 👈 new
+  setSearchText?: (val: string) => void; // 👈 new
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -30,6 +33,8 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   onChange,
   onLoadMore,
   loadingMore,
+  searchText,
+  setSearchText,
 }) => {
   return (
     <View style={styles.inputWrapper}>
@@ -42,6 +47,8 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         name={field}
         onLoadMore={onLoadMore} // 👈 Pass pagination handler
         loadingMore={loadingMore}
+        searchText={searchText} // 👈 pass down
+        setSearchText={setSearchText} // 👈 pass down
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

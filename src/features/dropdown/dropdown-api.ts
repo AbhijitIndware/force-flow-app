@@ -104,12 +104,17 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getItems: builder.query<RItems, {search?: string}>({
-      query: ({search}) => ({
+    getItems: builder.query<
+      RItems,
+      {search?: string; page_size?: string; page?: string}
+    >({
+      query: ({search, page_size, page}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_items_with_prices_advanced',
         method: 'GET',
         params: {
           search: search,
+          page_size: page_size,
+          page: page,
         },
       }),
     }),

@@ -1,5 +1,5 @@
 // AddSaleForm.tsx
-import React, {useState} from 'react';
+import React, {Dispatch, useState} from 'react';
 import {Animated, StyleSheet, TouchableOpacity, View, Text} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
@@ -33,6 +33,11 @@ interface Props {
   itemList: {label: string; value: string}[];
   originalItemList: SoItem[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
+
+  setSearchItem: Dispatch<React.SetStateAction<string>>;
+  searchItem: string;
+  onLoadMoreItems?: () => void;
+  loadingMoreItems?: boolean;
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -47,6 +52,11 @@ const AddSaleForm: React.FC<Props> = ({
   itemList,
   originalItemList,
   onDateSelect,
+
+  setSearchItem,
+  searchItem,
+  loadingMoreItems,
+  onLoadMoreItems,
 }) => {
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const addNewItem = () => {
@@ -163,6 +173,10 @@ const AddSaleForm: React.FC<Props> = ({
               setFieldValue(`items[${index}].item_code`, val);
               handleSelectedItemValues(val, index);
             }}
+            searchText={searchItem}
+            setSearchText={setSearchItem}
+            onLoadMore={onLoadMoreItems}
+            loadingMore={loadingMoreItems}
           />
           <ReusableInput
             label="Quantity"

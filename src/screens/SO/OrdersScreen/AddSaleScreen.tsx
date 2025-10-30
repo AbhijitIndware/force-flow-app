@@ -91,6 +91,13 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const {orderId} = route.params;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
+  const [searchItem, setSearchItem] = useState('');
+  const [itemListData, setItemListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [itemPage, setItemPage] = useState(1);
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
@@ -102,7 +109,11 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
-  const {data: itemData} = useGetItemsQuery({search: ''});
+  const {data: itemData, isFetching: itemFetching} = useGetItemsQuery({
+    search: searchItem,
+    page: String(itemPage),
+    page_size: '20',
+  });
 
   useEffect(() => {
     if (salesDetails?.message?.data) {
@@ -171,11 +182,13 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     },
   });
 
-  // ✅ Transform Items for dropdown
-  const itemList = itemData?.message?.data?.map(item => ({
-    value: item.item_code, // what will be stored in form
-    label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
-  }));
+  const handleLoadMoreItems = () => {
+    if (!itemFetching) {
+      setLoadingMoreItems(true);
+      setItemPage(prev => prev + 1);
+      setLoadingMoreItems(false);
+    }
+  };
 
   // ✅ Transform Stores/Warehouses for dropdown
   const warehouseList = storeData?.message?.stores?.map(store => ({
@@ -194,6 +207,27 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       </SafeAreaView>
     );
   }
+
+  useEffect(() => {
+    if (itemData?.message?.data) {
+      const newData = itemData.message.data.map(item => ({
+        value: item.item_code,
+        label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
+      }));
+
+      // If search text exists → replace the list (fresh search)
+      // Else → append (pagination)
+      if (searchItem.trim() !== '' || itemPage === 1) {
+        setItemListData(newData);
+      } else {
+        setItemListData(prev => [...prev, ...newData]);
+      }
+    }
+  }, [itemData]);
+
+  useEffect(() => {
+    setItemPage(1);
+  }, [searchItem]);
 
   useEffect(() => {
     if (salesDetails?.message?.data) {
@@ -249,13 +283,18 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         handleBlur={handleBlur}
         setFieldValue={setFieldValue}
         scrollY={scrollY}
-        itemList={itemList || []}
+        itemList={itemListData || []}
         originalItemList={itemData?.message?.data || []}
         warehouseList={warehouseList || []}
         onDateSelect={field => {
           setActiveField(field);
           setTimePickerVisible(true);
         }}
+        setSearchItem={setSearchItem}
+        searchItem={searchItem}
+        // ✅ Pagination props
+        onLoadMoreItems={handleLoadMoreItems}
+        loadingMoreItems={loadingMoreItems}
       />
       <View
         style={{
