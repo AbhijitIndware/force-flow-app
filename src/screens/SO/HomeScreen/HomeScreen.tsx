@@ -38,6 +38,7 @@ import {
   resetLocation,
   setSelectedStore,
   useCheckOutMutation,
+  useGetProdCountQuery,
   usePjpInitializeMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
@@ -75,6 +76,7 @@ function extractServerMessage(resp: any): string | null {
     return null;
   }
 }
+const today = new Date().toISOString().split('T')[0];
 
 const HomeScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -89,6 +91,10 @@ const HomeScreen = ({navigation}: Props) => {
   );
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
+  );
+  const {data: prodData} = useGetProdCountQuery(
+    {date: today},
+    {refetchOnMountOrArgChange: true},
   );
 
   const [pjpInitialize, {data}] = usePjpInitializeMutation();
@@ -307,7 +313,9 @@ const HomeScreen = ({navigation}: Props) => {
                 ]}>
                 <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
               </View>
-              <Text style={styles.countBoxDay}>50</Text>
+              <Text style={styles.countBoxDay}>
+                {prodData?.message?.counts?.total_stores}
+              </Text>
               <Text style={styles.countBoxTitle}>Total call</Text>
             </View>
             <View style={styles.countBox}>
@@ -318,7 +326,9 @@ const HomeScreen = ({navigation}: Props) => {
                 ]}>
                 <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
-              <Text style={styles.countBoxDay}>12</Text>
+              <Text style={styles.countBoxDay}>
+                {prodData?.message?.counts?.status_counts?.Visited}
+              </Text>
               <Text style={styles.countBoxTitle}>Productive Call</Text>
             </View>
           </View>
@@ -330,32 +340,32 @@ const HomeScreen = ({navigation}: Props) => {
             <View style={styles.dataBoxSection}>
               <View style={styles.dataBox}>
                 <View>
-                  <Text style={styles.quantityCount}>25 / 11</Text>
+                  <Text style={styles.quantityCount}>0 / 0</Text>
                   <Text style={styles.quantitytime}>Daily quantity</Text>
                 </View>
                 <View style={styles.positionValue}>
-                  <MoveUp strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.incressValu}>+3%</Text>
+                  {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
+                  <Text style={styles.incressValu}>0%</Text>
                 </View>
               </View>
               <View style={styles.dataBox}>
                 <View>
-                  <Text style={styles.quantityCount}>375 / 221</Text>
+                  <Text style={styles.quantityCount}>0 / 0</Text>
                   <Text style={styles.quantitytime}>Monthly quantity</Text>
                 </View>
                 <View style={styles.positionValue}>
-                  <MoveDown strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.decriseValu}>-2%</Text>
+                  {/* <MoveDown strokeWidth={2} color={Colors.darkButton} /> */}
+                  <Text style={styles.incressValu}>0%</Text>
                 </View>
               </View>
               <View style={styles.dataBox}>
                 <View>
-                  <Text style={styles.quantityCount}>2230 / 1224</Text>
+                  <Text style={styles.quantityCount}>0 / 0</Text>
                   <Text style={styles.quantitytime}>Quartely quantity</Text>
                 </View>
                 <View style={styles.positionValue}>
-                  <MoveDown strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.decriseValu}>-2%</Text>
+                  {/* <MoveDown strokeWidth={2} color={Colors.darkButton} /> */}
+                  <Text style={styles.incressValu}>0%</Text>
                 </View>
               </View>
             </View>
@@ -376,7 +386,7 @@ const HomeScreen = ({navigation}: Props) => {
                   <UsersRound strokeWidth={2} color={Colors.white} size={30} />
                 </View>
                 <View>
-                  <Text style={styles.quantityCount}>₹2115</Text>
+                  <Text style={styles.quantityCount}>₹0</Text>
                   <Text style={styles.quantitytime}>Sales this month</Text>
                 </View>
               </View>
