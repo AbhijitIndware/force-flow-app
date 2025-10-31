@@ -142,7 +142,7 @@ const AddMarketVisitScreen = ({
     arr.map(i => ({label: i.name, value: i.name}));
 
   const [addStore] = useAddStoreMutation();
-  const {data: cityData} = useGetCityQuery();
+  const {data: cityData} = useGetCityQuery({});
   const {data: stateData} = useGetStateQuery({zone: values.zone});
   const {data: zoneData} = useGetZoneQuery({});
   const {data: distributorData} = useGetDistributorQuery();

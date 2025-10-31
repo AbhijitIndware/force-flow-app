@@ -87,6 +87,24 @@ const AddStoreScreen = ({
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
+  const [statePage, setStatePage] = useState(1);
+  const [cityPage, setCityPage] = useState(1);
+  const [zonePage, setZonePage] = useState(1);
+
+  const [stateListData, setStateListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [cityListData, setCityListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [zoneListData, setZoneListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+
+  const [loadingMoreState, setLoadingMoreState] = useState(false);
+  const [loadingMoreCity, setLoadingMoreCity] = useState(false);
+  const [loadingMoreZone, setLoadingMoreZone] = useState(false);
+
   const {
     values,
     errors,
@@ -144,13 +162,25 @@ const AddStoreScreen = ({
   });
 
   const [addStore] = useAddStoreMutation();
-  const {data: cityData} = useGetCityQuery();
-  const {data: stateData} = useGetStateQuery({zone: values.zone});
-  const {data: zoneData} = useGetZoneQuery({});
+  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
+    state: values.state,
+    page_size: '20',
+    page: String(cityPage),
+  });
+  const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
+    zone: values.zone,
+    page_size: '20',
+    page: String(statePage),
+  });
+  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
+    page_size: '20',
+    page: String(zonePage),
+  });
   const {data: distributorData} = useGetDistributorQuery();
   const {data: typeData} = useGetStoreTypeQuery();
   const {data: categoryData} = useGetStoreCategoryQuery();
   const {data: beatData} = useGetBeatQuery();
+
   // Assuming values.map_location is a string like "22.5643,88.3693"
   const [latitude, longitude] = values?.map_location?.split(',');
 
@@ -165,20 +195,6 @@ const AddStoreScreen = ({
     arr: {name: string; distributor_name: string}[] = [],
   ) => arr.map(i => ({label: i.distributor_name, value: i.name}));
 
-  const zoneList = useMemo(
-    () => transformList(zoneData?.message?.data),
-    [zoneData],
-  );
-  const stateList = useMemo(() => {
-    return transformList(
-      stateData?.message?.data?.filter(state => state.zone === values.zone),
-    );
-  }, [stateData, values.zone]);
-  const cityList = useMemo(() => {
-    return transformList(
-      cityData?.message?.data?.filter(city => city.state === values.state),
-    );
-  }, [cityData, values.state]);
   const distributorList = disTransformList(distributorData?.message?.data);
   const storeTypeList = transformList(typeData?.message?.data);
   const storeCategoryList = transformList(categoryData?.message?.data);
@@ -193,6 +209,66 @@ const AddStoreScreen = ({
       );
     }
   }, [locationData]);
+
+  useEffect(() => {
+    if (stateData?.message?.data) {
+      const newData = transformList(stateData?.message?.data);
+      setStateListData(prev => [...prev, ...newData]);
+    }
+  }, [stateData]);
+
+  useEffect(() => {
+    if (cityData?.message?.data) {
+      const newData = transformList(cityData?.message?.data);
+      setCityListData(prev => [...prev, ...newData]);
+    }
+  }, [cityData]);
+
+  useEffect(() => {
+    if (zoneData?.message?.data) {
+      const newData = transformList(zoneData?.message?.data);
+      setZoneListData(prev => [...prev, ...newData]);
+    }
+  }, [zoneData]);
+
+  // 🔄 Clear dependent lists when parent field changes
+  useEffect(() => {
+    if (values.zone !== '') {
+      setStateListData([]);
+      setStatePage(1);
+    }
+  }, [values.zone]);
+
+  useEffect(() => {
+    if (values.state !== '') {
+      setCityListData([]);
+      setCityPage(1);
+    }
+  }, [values.state]);
+
+  const handleLoadMoreStates = () => {
+    if (!stateFetching) {
+      setLoadingMoreState(true);
+      setStatePage(prev => prev + 1);
+      setLoadingMoreState(false);
+    }
+  };
+
+  const handleLoadMoreCity = () => {
+    if (!cityFetching) {
+      setLoadingMoreCity(true);
+      setCityPage(prev => prev + 1);
+      setLoadingMoreCity(false);
+    }
+  };
+
+  const handleLoadMoreZones = () => {
+    if (!zoneFetching) {
+      setLoadingMoreZone(true);
+      setZonePage(prev => prev + 1);
+      setLoadingMoreZone(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
@@ -219,9 +295,9 @@ const AddStoreScreen = ({
         scrollY={scrollY}
         storeTypeList={storeTypeList}
         storeCategoryList={storeCategoryList}
-        zoneList={zoneList}
-        stateList={stateList}
-        cityList={cityList}
+        zoneList={zoneListData}
+        stateList={stateListData}
+        cityList={cityListData}
         distributorList={distributorList}
         beatList={beatList}
         weekOffList={weekOffList}
@@ -229,6 +305,13 @@ const AddStoreScreen = ({
           setActiveField(field);
           setTimePickerVisible(true);
         }}
+        // pagination props
+        onLoadMoreState={handleLoadMoreStates}
+        loadingMoreState={loadingMoreState}
+        onLoadMoreCity={handleLoadMoreCity}
+        loadingMoreCity={loadingMoreCity}
+        onLoadMoreZone={handleLoadMoreZones}
+        loadingMoreZone={loadingMoreZone}
       />
       <View
         style={{

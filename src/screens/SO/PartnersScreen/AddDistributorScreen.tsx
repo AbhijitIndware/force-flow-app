@@ -65,6 +65,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const [statePage, setStatePage] = useState(1);
   const [employeePage, setEmployeePage] = useState(1);
   const [zonePage, setZonePage] = useState(1);
+  const [cityPage, setCityPage] = useState(1);
 
   const [stateListData, setStateListData] = useState<
     {label: string; value: string}[]
@@ -75,10 +76,14 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const [zoneListData, setZoneListData] = useState<
     {label: string; value: string}[]
   >([]);
+  const [cityListData, setCityListData] = useState<
+    {label: string; value: string}[]
+  >([]);
 
   const [loadingMoreState, setLoadingMoreState] = useState(false);
   const [loadingMoreEmployee, setLoadingMoreEmployee] = useState(false);
   const [loadingMoreZone, setLoadingMoreZone] = useState(false);
+  const [loadingMoreCity, setLoadingMoreCity] = useState(false);
 
   const [addDistributor] = useAddDistributorMutation();
 
@@ -139,7 +144,11 @@ const AddDistributorScreen = ({navigation}: Props) => {
       value: item.name,
     }));
 
-  const {data: cityData} = useGetCityQuery();
+  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
+    state: values.state,
+    page_size: '20',
+    page: String(cityPage),
+  });
   const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
     zone: values.zone,
     page_size: '20',
@@ -174,11 +183,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
   //     stateData?.message?.data?.filter(state => state.zone === values.zone),
   //   );
   // }, [stateData, values.zone]);
-  const cityList = useMemo(() => {
-    return transformToDropdownList(
-      cityData?.message?.data?.filter(city => city.state === values.state),
-    );
-  }, [cityData, values.state]);
+
   const designationList = transformToDropdownList(
     designationData?.message?.data,
   );
@@ -205,6 +210,21 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setZoneListData(prev => [...prev, ...newData]);
     }
   }, [zoneData]);
+
+  useEffect(() => {
+    if (cityData?.message?.data) {
+      const newData = transformToDropdownList(cityData?.message?.data);
+      setCityListData(prev => [...prev, ...newData]);
+    }
+  }, [cityData]);
+
+  const handleLoadMoreCity = () => {
+    if (!cityFetching) {
+      setLoadingMoreCity(true);
+      setCityPage(prev => prev + 1);
+      setLoadingMoreCity(false);
+    }
+  };
 
   const handleLoadMoreStates = () => {
     if (!stateFetching) {
@@ -243,7 +263,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
         employeeList={employeeListData}
         zoneList={zoneListData}
         stateList={stateListData}
-        cityList={cityList}
+        cityList={cityListData}
         designationList={designationList}
         // pagination props
         onLoadMoreState={handleLoadMoreStates}
@@ -252,6 +272,8 @@ const AddDistributorScreen = ({navigation}: Props) => {
         loadingMoreEmployee={loadingMoreEmployee}
         onLoadMoreZone={handleLoadMoreZones}
         loadingMoreZone={loadingMoreZone}
+        onLoadMoreCity={handleLoadMoreCity}
+        loadingMoreCity={loadingMoreCity}
       />
       <View
         style={{

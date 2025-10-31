@@ -48,10 +48,18 @@ export const dropdownApi = createApi({
         },
       }),
     }),
-    getCity: builder.query<RCity, void>({
-      query: () => ({
+    getCity: builder.query<
+      RCity,
+      {state?: string; page_size?: string; page?: string}
+    >({
+      query: ({state, page_size, page}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_city',
         method: 'GET',
+        params: {
+          search: state,
+          page_size: page_size,
+          page: page,
+        },
       }),
     }),
     getEmployee: builder.query<

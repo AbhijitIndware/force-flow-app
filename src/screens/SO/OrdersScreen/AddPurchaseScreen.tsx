@@ -116,7 +116,7 @@ const AddPurchaseScreen = ({
       value: item.name,
     }));
 
-  const {data: cityData} = useGetCityQuery();
+  const {data: cityData} = useGetCityQuery({});
   const {data: stateData, isFetching} = useGetStateQuery({
     zone: values.zone,
     page_size: '20',

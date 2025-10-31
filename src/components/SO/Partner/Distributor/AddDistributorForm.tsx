@@ -36,6 +36,8 @@ interface Props {
   loadingMoreEmployee?: boolean;
   onLoadMoreZone?: () => void;
   loadingMoreZone?: boolean;
+  onLoadMoreCity?: () => void;
+  loadingMoreCity?: boolean;
 }
 
 const AddDistributorForm: React.FC<Props> = ({
@@ -58,6 +60,8 @@ const AddDistributorForm: React.FC<Props> = ({
   loadingMoreEmployee,
   onLoadMoreZone,
   loadingMoreZone,
+  onLoadMoreCity,
+  loadingMoreCity,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -135,6 +139,8 @@ const AddDistributorForm: React.FC<Props> = ({
         data={cityList}
         error={touched.city && errors.city}
         onChange={(val: string) => onSelect('city', val)}
+        onLoadMore={onLoadMoreCity}
+        loadingMore={loadingMoreCity}
       />
       <ReusableDropdown
         label="Reports To"

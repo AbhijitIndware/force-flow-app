@@ -38,6 +38,13 @@ interface Props {
   distributorList: {label: string; value: string}[];
   weekOffList: {label: string; value: string}[];
   onTimeSelect: (field: 'start_time' | 'end_time') => void;
+
+  onLoadMoreState?: () => void;
+  loadingMoreState?: boolean;
+  onLoadMoreCity?: () => void;
+  loadingMoreCity?: boolean;
+  onLoadMoreZone?: () => void;
+  loadingMoreZone?: boolean;
 }
 
 const AddStoreForm: React.FC<Props> = ({
@@ -57,6 +64,13 @@ const AddStoreForm: React.FC<Props> = ({
   distributorList,
   weekOffList,
   onTimeSelect,
+
+  onLoadMoreState,
+  loadingMoreState,
+  onLoadMoreCity,
+  loadingMoreCity,
+  onLoadMoreZone,
+  loadingMoreZone,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -106,6 +120,8 @@ const AddStoreForm: React.FC<Props> = ({
         data={zoneList}
         error={touched.zone && errors.zone}
         onChange={(val: string) => onSelect('zone', val)}
+        onLoadMore={onLoadMoreZone}
+        loadingMore={loadingMoreZone}
       />
       <ReusableDropdown
         label="State"
@@ -114,6 +130,8 @@ const AddStoreForm: React.FC<Props> = ({
         data={stateList}
         error={touched.state && errors.state}
         onChange={(val: string) => onSelect('state', val)}
+        onLoadMore={onLoadMoreState}
+        loadingMore={loadingMoreState}
       />
       <ReusableDropdown
         label="City"
@@ -122,6 +140,8 @@ const AddStoreForm: React.FC<Props> = ({
         data={cityList}
         error={touched.city && errors.city}
         onChange={(val: string) => onSelect('city', val)}
+        onLoadMore={onLoadMoreCity}
+        loadingMore={loadingMoreCity}
       />
       {/* <ReusableDropdown
         label="Beat"
