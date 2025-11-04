@@ -38,6 +38,15 @@ interface Props {
   loadingMoreZone?: boolean;
   onLoadMoreCity?: () => void;
   loadingMoreCity?: boolean;
+  // 🔍 Search support
+  zoneSearchText?: string;
+  setZoneSearchText?: (text: string) => void;
+  stateSearchText?: string;
+  setStateSearchText?: (text: string) => void;
+  citySearchText?: string;
+  setCitySearchText?: (text: string) => void;
+  employeeSearchText?: string;
+  setEmployeeSearchText?: (text: string) => void;
 }
 
 const AddDistributorForm: React.FC<Props> = ({
@@ -62,6 +71,15 @@ const AddDistributorForm: React.FC<Props> = ({
   loadingMoreZone,
   onLoadMoreCity,
   loadingMoreCity,
+
+  zoneSearchText,
+  setZoneSearchText,
+  stateSearchText,
+  setStateSearchText,
+  citySearchText,
+  setCitySearchText,
+  employeeSearchText,
+  setEmployeeSearchText,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -111,6 +129,8 @@ const AddDistributorForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('employee', val)}
         onLoadMore={onLoadMoreEmployee}
         loadingMore={loadingMoreEmployee}
+        searchText={employeeSearchText}
+        setSearchText={setEmployeeSearchText}
       />
       <ReusableDropdown
         label="Zone"
@@ -121,6 +141,8 @@ const AddDistributorForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('zone', val)}
         onLoadMore={onLoadMoreZone}
         loadingMore={loadingMoreZone}
+        searchText={zoneSearchText}
+        setSearchText={setZoneSearchText}
       />
       <ReusableDropdown
         label="State"
@@ -131,6 +153,8 @@ const AddDistributorForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('state', val)}
         onLoadMore={onLoadMoreState}
         loadingMore={loadingMoreState}
+        searchText={stateSearchText}
+        setSearchText={setStateSearchText}
       />
       <ReusableDropdown
         label="City"
@@ -141,6 +165,8 @@ const AddDistributorForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('city', val)}
         onLoadMore={onLoadMoreCity}
         loadingMore={loadingMoreCity}
+        searchText={citySearchText}
+        setSearchText={setCitySearchText}
       />
       <ReusableDropdown
         label="Reports To"

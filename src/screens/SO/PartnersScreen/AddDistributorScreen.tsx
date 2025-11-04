@@ -62,10 +62,12 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [statePage, setStatePage] = useState(1);
-  const [employeePage, setEmployeePage] = useState(1);
-  const [zonePage, setZonePage] = useState(1);
-  const [cityPage, setCityPage] = useState(1);
+  const [listConfig, setListConfig] = useState({
+    zone: {page: 1, search: ''},
+    state: {page: 1, search: ''},
+    city: {page: 1, search: ''},
+    employee: {page: 1, search: ''},
+  });
 
   const [stateListData, setStateListData] = useState<
     {label: string; value: string}[]
@@ -147,24 +149,28 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
     state: values.state,
     page_size: '20',
-    page: String(cityPage),
+    page: String(listConfig.city.page),
+    search: listConfig.city.search,
   });
   const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
     zone: values.zone,
     page_size: '20',
-    page: String(statePage),
+    page: String(listConfig.state.page),
+    search: listConfig.state.search,
   });
 
   const {data: employeeData, isFetching: employeeFetching} =
     useGetEmployeeQuery({
-      name: '',
+      name: listConfig.employee.search,
       page_size: '20',
-      page: String(employeePage),
+      page: String(listConfig.employee.page),
     });
+  console.log('🚀 ~ AddDistributorScreen ~ employeeData:', employeeData);
 
   const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
     page_size: '20',
-    page: String(zonePage),
+    page: String(listConfig.zone.page),
+    search: listConfig.zone.search as string,
   });
 
   const {data: designationData} = useGetDesignationQuery();
@@ -190,38 +196,81 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   useEffect(() => {
     if (stateData?.message?.data) {
-      const newData = transformToDropdownList(
-        stateData.message.data.filter(state => state.zone === values.zone),
-      );
-      setStateListData(prev => [...prev, ...newData]);
+      const newData = transformToDropdownList(stateData.message.data);
+      // 🧠 If search is active, replace the list (new search results)
+      if (listConfig.state.search !== '') {
+        setStateListData(newData);
+      } else {
+        // 📄 Else append data (pagination)
+        setStateListData(prev => [...prev, ...newData]);
+      }
     }
-  }, [stateData, values.zone]);
+  }, [stateData]);
 
   useEffect(() => {
     if (employeeData?.message?.data) {
       const newData = transformEmployeeList(employeeData.message.data);
-      setEmployeeListData(prev => [...prev, ...newData]);
+
+      if (listConfig.employee.search !== '') {
+        setEmployeeListData(newData);
+      } else {
+        setEmployeeListData(prev => [...prev, ...newData]);
+      }
     }
   }, [employeeData]);
 
   useEffect(() => {
     if (zoneData?.message?.data) {
       const newData = transformToDropdownList(zoneData.message.data);
-      setZoneListData(prev => [...prev, ...newData]);
+      if (listConfig.zone.search !== '') {
+        setZoneListData(newData);
+      } else {
+        setZoneListData(prev => [...prev, ...newData]);
+      }
     }
   }, [zoneData]);
 
   useEffect(() => {
     if (cityData?.message?.data) {
       const newData = transformToDropdownList(cityData?.message?.data);
-      setCityListData(prev => [...prev, ...newData]);
+
+      if (listConfig.city.search !== '') {
+        setCityListData(newData);
+      } else {
+        setCityListData(prev => [...prev, ...newData]);
+      }
     }
   }, [cityData]);
+
+  // 🔄 Clear dependent lists when parent field changes
+  useEffect(() => {
+    if (values.zone !== '') {
+      setStateListData([]);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: 1, search: ''}, // reset state pagination & search
+        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
+      }));
+    }
+  }, [values.zone]);
+
+  useEffect(() => {
+    if (values.state !== '') {
+      setCityListData([]);
+      setListConfig(prev => ({
+        ...prev,
+        city: {page: 1, search: ''}, // reset city pagination & search
+      }));
+    }
+  }, [values.state]);
 
   const handleLoadMoreCity = () => {
     if (!cityFetching) {
       setLoadingMoreCity(true);
-      setCityPage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        city: {page: prev.city.page + 1, search: prev.city.search},
+      }));
       setLoadingMoreCity(false);
     }
   };
@@ -229,7 +278,10 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const handleLoadMoreStates = () => {
     if (!stateFetching) {
       setLoadingMoreState(true);
-      setStatePage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: prev.state.page + 1, search: prev.state.search},
+      }));
       setLoadingMoreState(false);
     }
   };
@@ -237,7 +289,10 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const handleLoadMoreEmployees = () => {
     if (!employeeFetching) {
       setLoadingMoreEmployee(true);
-      setEmployeePage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: prev.employee.page + 1, search: prev.employee.search},
+      }));
       setLoadingMoreEmployee(false);
     }
   };
@@ -245,9 +300,23 @@ const AddDistributorScreen = ({navigation}: Props) => {
   const handleLoadMoreZones = () => {
     if (!zoneFetching) {
       setLoadingMoreZone(true);
-      setZonePage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        zone: {page: prev.zone.page + 1, search: prev.zone.search},
+      }));
       setLoadingMoreZone(false);
     }
+  };
+
+  const handleSearchChange = (
+    type: 'zone' | 'state' | 'city' | 'employee',
+    text: string,
+  ) => {
+    // Reset pagination & trigger new search query
+    setListConfig(prev => ({
+      ...prev,
+      [type]: {page: 1, search: text},
+    }));
   };
 
   return (
@@ -274,6 +343,17 @@ const AddDistributorScreen = ({navigation}: Props) => {
         loadingMoreZone={loadingMoreZone}
         onLoadMoreCity={handleLoadMoreCity}
         loadingMoreCity={loadingMoreCity}
+        // search props 👇
+        zoneSearchText={listConfig.zone.search}
+        setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
+        stateSearchText={listConfig.state.search}
+        setStateSearchText={(text: string) => handleSearchChange('state', text)}
+        citySearchText={listConfig.city.search}
+        setCitySearchText={(text: string) => handleSearchChange('city', text)}
+        employeeSearchText={listConfig.employee.search}
+        setEmployeeSearchText={(text: string) =>
+          handleSearchChange('employee', text)
+        }
       />
       <View
         style={{

@@ -43,6 +43,7 @@ const LoginScreen = () => {
             pwd: value.pwd,
           };
           let res = await login({data: payload}).unwrap();
+          console.log('🚀 ~ LoginScreen ~ res:', res);
           if (res?.message?.success) {
             Toast.show({
               type: 'success',
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     width: width * 0.6,
-    height:60,
+    height: 60,
   },
   footer: {
     minHeight: 150,
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom:10,
+    paddingBottom: 10,
   },
   footerLogoImage: {
     width: width * 0.3,

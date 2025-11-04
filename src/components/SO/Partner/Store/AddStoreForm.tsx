@@ -45,6 +45,14 @@ interface Props {
   loadingMoreCity?: boolean;
   onLoadMoreZone?: () => void;
   loadingMoreZone?: boolean;
+
+  // 🔍 Search support
+  zoneSearchText?: string;
+  setZoneSearchText?: (text: string) => void;
+  stateSearchText?: string;
+  setStateSearchText?: (text: string) => void;
+  citySearchText?: string;
+  setCitySearchText?: (text: string) => void;
 }
 
 const AddStoreForm: React.FC<Props> = ({
@@ -71,6 +79,13 @@ const AddStoreForm: React.FC<Props> = ({
   loadingMoreCity,
   onLoadMoreZone,
   loadingMoreZone,
+
+  zoneSearchText,
+  setZoneSearchText,
+  stateSearchText,
+  setStateSearchText,
+  citySearchText,
+  setCitySearchText,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -122,6 +137,8 @@ const AddStoreForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('zone', val)}
         onLoadMore={onLoadMoreZone}
         loadingMore={loadingMoreZone}
+        searchText={zoneSearchText}
+        setSearchText={setZoneSearchText}
       />
       <ReusableDropdown
         label="State"
@@ -132,6 +149,8 @@ const AddStoreForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('state', val)}
         onLoadMore={onLoadMoreState}
         loadingMore={loadingMoreState}
+        searchText={stateSearchText}
+        setSearchText={setStateSearchText}
       />
       <ReusableDropdown
         label="City"
@@ -142,6 +161,8 @@ const AddStoreForm: React.FC<Props> = ({
         onChange={(val: string) => onSelect('city', val)}
         onLoadMore={onLoadMoreCity}
         loadingMore={loadingMoreCity}
+        searchText={citySearchText}
+        setSearchText={setCitySearchText}
       />
       {/* <ReusableDropdown
         label="Beat"

@@ -149,6 +149,7 @@ export type RAllMasterForSO = {
 
 //Items
 export interface Item {
+  name: string;
   item_code: string;
   item_name: string;
   item_group: string;

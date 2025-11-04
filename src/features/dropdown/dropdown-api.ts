@@ -26,41 +26,55 @@ export const dropdownApi = createApi({
   endpoints: builder => ({
     getState: builder.query<
       RState,
-      {zone?: string; page_size?: string; page?: string}
+      {zone?: string; page_size?: string; page?: string; search?: string}
     >({
-      query: ({zone, page_size, page}) => ({
-        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_state',
-        method: 'GET',
-        params: {
-          search: zone,
-          page_size: page_size,
-          page: page,
-        },
-      }),
+      query: ({zone, page_size, page, search}) => {
+        const params = {
+          search,
+          page_size,
+          page,
+          filters: JSON.stringify({zone}),
+        };
+
+        return {
+          url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_state',
+          method: 'GET',
+          params,
+        };
+      },
     }),
-    getZone: builder.query<RResponse, {page_size?: string; page?: string}>({
-      query: ({page_size, page}) => ({
+    getZone: builder.query<
+      RResponse,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_zone',
         method: 'GET',
         params: {
-          page_size: page_size,
-          page: page,
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
         },
       }),
     }),
+
     getCity: builder.query<
       RCity,
-      {state?: string; page_size?: string; page?: string}
+      {state?: string; page_size?: string; page?: string; search?: string}
     >({
-      query: ({state, page_size, page}) => ({
-        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_city',
-        method: 'GET',
-        params: {
-          search: state,
-          page_size: page_size,
-          page: page,
-        },
-      }),
+      query: ({state, page_size, page, search}) => {
+        const params = {
+          search, // ✅ Text search for city name
+          page_size,
+          page,
+          filters: JSON.stringify(state ? {state} : {}), // ✅ Filter cities by selected state
+        };
+        return {
+          url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_city',
+          method: 'GET',
+          params,
+        };
+      },
     }),
     getEmployee: builder.query<
       REmployee,
@@ -117,7 +131,7 @@ export const dropdownApi = createApi({
       {search?: string; page_size?: string; page?: string}
     >({
       query: ({search, page_size, page}) => ({
-        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_items_with_prices_advanced',
+        url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_items',
         method: 'GET',
         params: {
           search: search,

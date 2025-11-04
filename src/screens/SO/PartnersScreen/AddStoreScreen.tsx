@@ -87,17 +87,19 @@ const AddStoreScreen = ({
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const [statePage, setStatePage] = useState(1);
-  const [cityPage, setCityPage] = useState(1);
-  const [zonePage, setZonePage] = useState(1);
+  const [listConfig, setListConfig] = useState({
+    zone: {page: 1, search: ''},
+    state: {page: 1, search: ''},
+    city: {page: 1, search: ''},
+  });
 
+  const [zoneListData, setZoneListData] = useState<
+    {label: string; value: string}[]
+  >([]);
   const [stateListData, setStateListData] = useState<
     {label: string; value: string}[]
   >([]);
   const [cityListData, setCityListData] = useState<
-    {label: string; value: string}[]
-  >([]);
-  const [zoneListData, setZoneListData] = useState<
     {label: string; value: string}[]
   >([]);
 
@@ -162,20 +164,26 @@ const AddStoreScreen = ({
   });
 
   const [addStore] = useAddStoreMutation();
-  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
-    state: values.state,
+  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
     page_size: '20',
-    page: String(cityPage),
+    page: String(listConfig.zone.page),
+    search: listConfig.zone.search as string,
   });
+
   const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
     zone: values.zone,
     page_size: '20',
-    page: String(statePage),
+    page: String(listConfig.state.page),
+    search: listConfig.state.search,
   });
-  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
+
+  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
+    state: values.state,
     page_size: '20',
-    page: String(zonePage),
+    page: String(listConfig.city.page),
+    search: listConfig.city.search,
   });
+
   const {data: distributorData} = useGetDistributorQuery();
   const {data: typeData} = useGetStoreTypeQuery();
   const {data: categoryData} = useGetStoreCategoryQuery();
@@ -212,22 +220,39 @@ const AddStoreScreen = ({
 
   useEffect(() => {
     if (stateData?.message?.data) {
-      const newData = transformList(stateData?.message?.data);
-      setStateListData(prev => [...prev, ...newData]);
+      const newData = transformList(stateData.message.data);
+
+      // 🧠 If search is active, replace the list (new search results)
+      if (listConfig.state.search !== '') {
+        setStateListData(newData);
+      } else {
+        // 📄 Else append data (pagination)
+        setStateListData(prev => [...prev, ...newData]);
+      }
     }
   }, [stateData]);
 
   useEffect(() => {
     if (cityData?.message?.data) {
-      const newData = transformList(cityData?.message?.data);
-      setCityListData(prev => [...prev, ...newData]);
+      const newData = transformList(cityData.message.data);
+
+      if (listConfig.city.search !== '') {
+        setCityListData(newData);
+      } else {
+        setCityListData(prev => [...prev, ...newData]);
+      }
     }
   }, [cityData]);
 
   useEffect(() => {
     if (zoneData?.message?.data) {
-      const newData = transformList(zoneData?.message?.data);
-      setZoneListData(prev => [...prev, ...newData]);
+      const newData = transformList(zoneData.message.data);
+
+      if (listConfig.zone.search !== '') {
+        setZoneListData(newData);
+      } else {
+        setZoneListData(prev => [...prev, ...newData]);
+      }
     }
   }, [zoneData]);
 
@@ -235,21 +260,42 @@ const AddStoreScreen = ({
   useEffect(() => {
     if (values.zone !== '') {
       setStateListData([]);
-      setStatePage(1);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: 1, search: ''}, // reset state pagination & search
+        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
+      }));
     }
   }, [values.zone]);
 
   useEffect(() => {
     if (values.state !== '') {
       setCityListData([]);
-      setCityPage(1);
+      setListConfig(prev => ({
+        ...prev,
+        city: {page: 1, search: ''}, // reset city pagination & search
+      }));
     }
   }, [values.state]);
+
+  const handleLoadMoreZones = () => {
+    if (!zoneFetching) {
+      setLoadingMoreZone(true);
+      setListConfig(prev => ({
+        ...prev,
+        zone: {page: prev.zone.page + 1, search: prev.zone.search},
+      }));
+      setLoadingMoreZone(false);
+    }
+  };
 
   const handleLoadMoreStates = () => {
     if (!stateFetching) {
       setLoadingMoreState(true);
-      setStatePage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: prev.state.page + 1, search: prev.state.search},
+      }));
       setLoadingMoreState(false);
     }
   };
@@ -257,17 +303,23 @@ const AddStoreScreen = ({
   const handleLoadMoreCity = () => {
     if (!cityFetching) {
       setLoadingMoreCity(true);
-      setCityPage(prev => prev + 1);
+      setListConfig(prev => ({
+        ...prev,
+        city: {page: prev.city.page + 1, search: prev.city.search},
+      }));
       setLoadingMoreCity(false);
     }
   };
 
-  const handleLoadMoreZones = () => {
-    if (!zoneFetching) {
-      setLoadingMoreZone(true);
-      setZonePage(prev => prev + 1);
-      setLoadingMoreZone(false);
-    }
+  const handleSearchChange = (
+    type: 'zone' | 'state' | 'city',
+    text: string,
+  ) => {
+    // Reset pagination & trigger new search query
+    setListConfig(prev => ({
+      ...prev,
+      [type]: {page: 1, search: text},
+    }));
   };
 
   return (
@@ -312,6 +364,13 @@ const AddStoreScreen = ({
         loadingMoreCity={loadingMoreCity}
         onLoadMoreZone={handleLoadMoreZones}
         loadingMoreZone={loadingMoreZone}
+        // search props 👇
+        zoneSearchText={listConfig.zone.search}
+        setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
+        stateSearchText={listConfig.state.search}
+        setStateSearchText={(text: string) => handleSearchChange('state', text)}
+        citySearchText={listConfig.city.search}
+        setCitySearchText={(text: string) => handleSearchChange('city', text)}
       />
       <View
         style={{

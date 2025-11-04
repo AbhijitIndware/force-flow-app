@@ -77,6 +77,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  console.log('🚀 ~ AddPjpScreen ~ employee:', employee);
   const [page, setPage] = useState<number>(1);
   const [employeeListData, setEmployeeListData] = useState<
     {label: string; value: string}[]
@@ -84,10 +85,11 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const [loadingMore, setLoadingMore] = useState(false);
 
   const {data: employeeData, isFetching} = useGetEmployeeQuery({
-    name: employee?.id,
+    // name: employee?.id,
     page_size: '20',
     page: String(page),
   });
+  console.log('🚀 ~ AddPjpScreen ~ employeeData:', employeeData);
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,

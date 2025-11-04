@@ -98,6 +98,7 @@ const HomeScreen = ({navigation}: Props) => {
   );
 
   const [pjpInitialize, {data}] = usePjpInitializeMutation();
+  console.log('🚀 ~ HomeScreen ~ data:', data);
   const [checkOut, {isLoading}] = useCheckOutMutation();
 
   const onRefresh = useCallback(() => {

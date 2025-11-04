@@ -308,6 +308,32 @@ export const baseApi = createApi({
       }),
       providesTags: ['Distributor'],
     }),
+
+    getReport: builder.query<
+      RDistributorList,
+      {
+        report_name: string;
+        filters?: string;
+        ignore_prepared_report?: string;
+        are_default_filters?: string;
+      }
+    >({
+      query: ({
+        report_name,
+        filters,
+        ignore_prepared_report,
+        are_default_filters,
+      }) => ({
+        url: `/method/frappe.desk.query_report.run`,
+        method: 'GET',
+        params: {
+          report_name: report_name,
+          filters: filters,
+          ignore_prepared_report: ignore_prepared_report,
+          are_default_filters: are_default_filters,
+        },
+      }),
+    }),
   }),
 });
 export const {
@@ -344,6 +370,8 @@ export const {
   useGetDistributorListQuery,
   useAddDistributorMutation,
   useAddStoreMutation,
+  //Report
+  useGetReportQuery,
 } = baseApi;
 
 interface PjpState {
