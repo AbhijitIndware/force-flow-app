@@ -117,7 +117,12 @@ const ActivityScreen = ({navigation, route}: Props) => {
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                }}>
+                }}
+                onPress={() =>
+                  navigation.navigate('StockReport', {
+                    reportName: 'Stock Balance',
+                  })
+                }>
                 <Text
                   style={{
                     fontFamily: Fonts.medium,

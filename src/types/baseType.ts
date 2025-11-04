@@ -722,3 +722,66 @@ export interface LocationResponse {
     };
   };
 }
+
+export interface ReportResponse {
+  message: ReportMessage;
+}
+
+export interface ReportMessage {
+  result: (ReportResult | (string | number | null)[])[];
+  columns: ReportColumn[];
+  message: string | null;
+  chart: ReportChart;
+  report_summary: any; // can be refined if you know structure
+  skip_total_row: number;
+  status: string | null;
+  execution_time: number;
+  add_total_row: boolean;
+}
+
+export interface ReportResult {
+  item_code: string;
+  item_name: string;
+  item_group: string;
+  description: string;
+  quantity: number;
+  uom: string;
+  rate: number;
+  amount: number;
+  sales_order: string;
+  transaction_date: string;
+  customer: string;
+  customer_name: string;
+  customer_group: string;
+  territory: string;
+  project: string | null;
+  delivered_quantity: number;
+  billed_amount: number;
+  company: string;
+  currency: string;
+}
+
+export interface ReportColumn {
+  label: string;
+  fieldtype: string;
+  fieldname: string;
+  options?: string;
+  width?: number;
+  hidden?: number;
+}
+
+export interface ReportChart {
+  data: ChartData;
+  type: string;
+  fieldtype: string;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: ChartDataset[];
+}
+
+export interface ChartDataset {
+  name: string;
+  values: number[];
+}

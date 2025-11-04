@@ -19,6 +19,7 @@ import AddSaleScreen from '../OrdersScreen/AddSaleScreen';
 import SaleDetailScreen from '../OrdersScreen/SaleDetailScreen';
 import PurchaseDetailScreen from '../OrdersScreen/PurchaseDetailScreen';
 import PjpDetailScreen from '../ActivityScreen/PjpDetailScreen';
+import StockReport from '../ActivityScreen/StockReport';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -113,6 +114,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="PurchaseDetailScreen"
         component={PurchaseDetailScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StockReport"
+        component={StockReport}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

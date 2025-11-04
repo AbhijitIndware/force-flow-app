@@ -18,6 +18,7 @@ import {
   IUpdateSOAction,
   RAddSalesOrder,
   RDistributorList,
+  ReportResponse,
   RLocationVerify,
   RPjpDailyById,
   RPjpDailyStores,
@@ -310,7 +311,7 @@ export const baseApi = createApi({
     }),
 
     getReport: builder.query<
-      RDistributorList,
+      ReportResponse,
       {
         report_name: string;
         filters?: string;

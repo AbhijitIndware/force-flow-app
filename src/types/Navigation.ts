@@ -40,6 +40,7 @@ export type SoAppStackParamList = {
   SaleDetailScreen: {id: string};
   PurchaseDetailScreen: {id: string};
   PjpDetailScreen: {details: PjpDailyStore};
+  StockReport: {reportName: string};
 };
 
 export type menuType = {
