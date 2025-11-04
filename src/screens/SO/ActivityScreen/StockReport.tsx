@@ -60,7 +60,7 @@ const StockReport = ({navigation, route}: Props) => {
     useGetReportQuery({
       report_name: reportName,
       filters,
-      ignore_prepared_report: 'false',
+      ignore_prepared_report: 'true',
       are_default_filters: 'true',
     });
 
