@@ -20,7 +20,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {Tab, TabView} from '@rneui/themed';
 import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
-// import { Fonts } from '../../constants';
+
 import {
   AlarmClockMinus,
   CalendarCheck,
@@ -33,11 +33,8 @@ import {
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react-native';
-// import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-// import { Size } from '../../utils/fontSize';
 
 const {width} = Dimensions.get('window');
-//const { height } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -120,9 +117,6 @@ const AttendanceCard = ({
         <Text style={styles.time}> {time}</Text>
       </View>
       <Text style={styles.present}>{status}</Text>
-      {/* <Text style={styles.lateEntry}>Present</Text>
-      <Text style={styles.leave}>Present</Text>
-      <Text style={styles.absent}>Present</Text> */}
     </View>
     <View style={styles.cardbody}>
       <View style={styles.dateBox}>
@@ -184,7 +178,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                   fontSize: Size.xxs,
                   fontFamily: Fonts.medium,
                   lineHeight: 9,
-                  paddingHorizontal:0
+                  paddingHorizontal: 0,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -241,7 +235,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>21</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}>Present</Text>
                     </View>
                   </View>
@@ -256,7 +250,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>02</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}>Absent</Text>
                     </View>
                   </View>
@@ -271,7 +265,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>03</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}> Late entry</Text>
                     </View>
                   </View>
@@ -436,9 +430,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                     {paddingTop: 15, paddingBottom: 100},
                   ]}>
                   <View style={styles.bodyHeader}>
-                    <Text style={styles.bodyHeaderTitle}>
-                      Recent Shifts
-                    </Text>
+                    <Text style={styles.bodyHeaderTitle}>Recent Shifts</Text>
                     <View style={styles.bodyHeaderIcon}>
                       <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
                       <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
@@ -459,7 +451,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                     )}
                     keyExtractor={item => item.id}
                   />
-                   <TouchableOpacity
+                  <TouchableOpacity
                     style={styles.checkinButton}
                     onPress={() => navigation.navigate('AttendanceScreen')}>
                     <CalendarCheck strokeWidth={1.4} color={Colors.white} />
@@ -474,7 +466,11 @@ const AttendanceScreen = ({navigation}: Props) => {
                 <View style={styles.counterSection}>
                   <View style={styles.countCard}>
                     <View>
-                      <View style={[styles.boxIcon,{backgroundColor:Colors.lightBlue}]}>
+                      <View
+                        style={[
+                          styles.boxIcon,
+                          {backgroundColor: Colors.lightBlue},
+                        ]}>
                         <FilePen size={22} color={Colors.blue} />
                       </View>
                     </View>
@@ -486,10 +482,10 @@ const AttendanceScreen = ({navigation}: Props) => {
                   <View style={styles.countCard}>
                     <View>
                       <View>
-                      <View style={styles.boxIcon}>
-                        <FileCheck  size={22} color={Colors.sucess} />
+                        <View style={styles.boxIcon}>
+                          <FileCheck size={22} color={Colors.sucess} />
+                        </View>
                       </View>
-                    </View>
                     </View>
                     <View style={styles.countBox}>
                       <Text style={styles.countNumber}>03</Text>
@@ -503,7 +499,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                           styles.boxIcon,
                           {backgroundColor: Colors.lightDenger},
                         ]}>
-                        <FileX  size={22} color={Colors.denger} />
+                        <FileX size={22} color={Colors.denger} />
                       </View>
                     </View>
                     <View style={styles.countBox}>
@@ -512,11 +508,9 @@ const AttendanceScreen = ({navigation}: Props) => {
                     </View>
                   </View>
                 </View>
-                <View style={[styles.bodyContent,{paddingBottom:100}]}>
+                <View style={[styles.bodyContent, {paddingBottom: 100}]}>
                   <View style={styles.bodyHeader}>
-                    <Text style={styles.bodyHeaderTitle}>
-                     Recent Leave
-                    </Text>
+                    <Text style={styles.bodyHeaderTitle}>Recent Leave</Text>
                     <View style={styles.bodyHeaderIcon}>
                       <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
                       <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
@@ -658,7 +652,9 @@ const AttendanceScreen = ({navigation}: Props) => {
                     style={styles.checkinButton}
                     onPress={() => navigation.navigate('AttendanceScreen')}>
                     <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>Apply for Leave</Text>
+                    <Text style={styles.checkinButtonText}>
+                      Apply for Leave
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -748,7 +744,7 @@ const styles = StyleSheet.create({
   },
 
   //bodyContent section css
-  bodyContent: {flex: 1, paddingBottom:20},
+  bodyContent: {flex: 1, paddingBottom: 20},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',

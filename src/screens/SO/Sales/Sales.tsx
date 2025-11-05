@@ -3,40 +3,29 @@ import {
   Dimensions,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { PromoterAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import {
-  Banknote,
-  Clock2,
-  EllipsisVertical,
-  Funnel,
-  Search,
-} from 'lucide-react-native';
-import FilterModal from '../../../components/ui/filterModal';
-import { Tab, TabView } from '@rneui/themed';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { Animated } from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {Banknote} from 'lucide-react-native';
+import {Tab} from '@rneui/themed';
+import {Animated} from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-//import { fonts } from '@rneui/base';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
-  PromoterAppStackParamList,
+  SoAppStackParamList,
   'SalesScreen'
 >;
 
@@ -45,7 +34,8 @@ type Props = {
   route: any;
 };
 
-const SalesScreen = ({ navigation }: Props) => {
+const SalesScreen = ({navigation, route}: Props) => {
+  const {index: initialIndex} = route.params || {};
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -57,6 +47,12 @@ const SalesScreen = ({ navigation }: Props) => {
     }, 2000);
   }, []);
 
+  useEffect(() => {
+    if (initialIndex !== undefined) {
+      setIndex(initialIndex);
+    }
+  }, [initialIndex]);
+
   return (
     <SafeAreaView
       style={[
@@ -66,18 +62,18 @@ const SalesScreen = ({ navigation }: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-        <PageHeader title="Sales" navigation={() => navigation.goBack()} />
+      <PageHeader title="Sales" navigation={() => navigation.goBack()} />
       {refreshing ? (
         <LoadingScreen />
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
+          contentContainerStyle={{position: 'relative'}}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
@@ -97,7 +93,7 @@ const SalesScreen = ({ navigation }: Props) => {
                   fontSize: Size.md,
                   color: Colors.darkButton,
                 }}>
-                ₹325000
+                ₹0
               </Text>
               <Text
                 style={{
@@ -107,7 +103,7 @@ const SalesScreen = ({ navigation }: Props) => {
                   lineHeight: 16,
                   marginTop: 5,
                 }}>
-                +3.5 % MTD{' '}
+                +0 % MTD{' '}
               </Text>
               <Text
                 style={{
@@ -115,18 +111,18 @@ const SalesScreen = ({ navigation }: Props) => {
                   fontSize: Size.xs,
                   color: Colors.darkButton,
                 }}>
-                81.33% achieved{' '}
+                0% achieved{' '}
               </Text>
             </View>
             <View style={styles.welcomBox}>
               <Text style={styles.welcomeText}>
-                Target <Text style={styles.name}>₹325000</Text>
+                Target <Text style={styles.name}>₹0</Text>
               </Text>
               <View style={styles.linkBox}>
                 <View style={styles.linkContent}>
                   <Banknote size={30} color={Colors.white} />
                   <Text style={styles.welcomeText}>
-                    Incentive earned <Text style={styles.name}>₹2347</Text>
+                    Incentive earned <Text style={styles.name}>₹0</Text>
                   </Text>
                 </View>
               </View>
@@ -140,7 +136,7 @@ const SalesScreen = ({ navigation }: Props) => {
                 height: 0,
               }}
               variant="primary"
-              style={{ backgroundColor: Colors.transparent, padding: 0 }}>
+              style={{backgroundColor: Colors.transparent, padding: 0}}>
               <Tab.Item
                 title="Individual"
                 titleStyle={{
@@ -207,7 +203,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     position: 'relative',
@@ -230,7 +226,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -267,10 +263,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -443,11 +439,21 @@ const styles = StyleSheet.create({
     // paddingTop: 10,
   },
   upparrow: {
-    width: 30, height: 30, backgroundColor: Colors.lightSuccess, display: 'flex', justifyContent: 'center',
-    alignItems: 'center', borderRadius: 8,
+    width: 30,
+    height: 30,
+    backgroundColor: Colors.lightSuccess,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
   },
   downarrow: {
-    width: 30, height: 30, backgroundColor: Colors.lightDenger, display: 'flex', justifyContent: 'center',
-    alignItems: 'center', borderRadius: 8,
+    width: 30,
+    height: 30,
+    backgroundColor: Colors.lightDenger,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
   },
 });

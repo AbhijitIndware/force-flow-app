@@ -1,7 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
   Dimensions,
-  RefreshControl,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -10,10 +9,7 @@ import {
 } from 'react-native';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import React, {useEffect, useRef} from 'react';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {
@@ -30,11 +26,6 @@ import SalesOrder from '../../../components/SO/Order/Sale/SalesOrder';
 import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
-
-type NavigationProp = NativeStackNavigationProp<
-  SoAppStackParamList,
-  'OrdersScreen'
->;
 
 type Props = {
   navigation: any;
@@ -296,7 +287,7 @@ const styles = StyleSheet.create({
 
     // Android Shadow
     elevation: 2,
-    marginBottom:15,
+    marginBottom: 15,
   },
   arrobox: {
     width: 20,

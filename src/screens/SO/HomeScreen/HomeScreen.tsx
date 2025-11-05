@@ -391,7 +391,9 @@ const HomeScreen = ({navigation}: Props) => {
                   <Text style={styles.quantitytime}>Sales this month</Text>
                 </View>
               </View>
-              <View
+
+              <TouchableOpacity
+                onPress={() => navigation.navigate('SalesScreen', {index: 1})}
                 style={[
                   styles.positionValue,
                   {
@@ -416,7 +418,7 @@ const HomeScreen = ({navigation}: Props) => {
                   size={24}
                   color={Colors.sucess}
                 />
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
 
