@@ -151,7 +151,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  1223 Days
+                  {/* 1223 Days */}N/A
                 </Text>
               </View>
               <Divider
@@ -167,7 +167,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     color: '#514E4E',
                     lineHeight: 20,
                   }}>
-                  Date of joining
+                  Designation
                 </Text>
                 <Text
                   style={{
@@ -177,7 +177,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  09/11/2025
+                  {employee?.designation || 'N/A'}
                 </Text>
               </View>
               <Divider
@@ -203,7 +203,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  East
+                  {/* East */}N/A
                 </Text>
               </View>
               <Divider
@@ -229,7 +229,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  9748133185
+                  {/* 9748133185 */}N/A
                 </Text>
               </View>
               <Divider
@@ -255,7 +255,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  09/11/2025
+                  {/* 09/11/2025 */}N/A
                 </Text>
               </View>
               <Divider
@@ -281,7 +281,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  10/12/1985
+                  {/* 10/12/1985 */}N/A
                 </Text>
               </View>
             </View>

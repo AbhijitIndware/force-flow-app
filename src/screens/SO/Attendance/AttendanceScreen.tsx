@@ -33,6 +33,7 @@ import {
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react-native';
+import {windowHeight} from '../../../utils/utils';
 
 const {width} = Dimensions.get('window');
 
@@ -46,53 +47,7 @@ type Props = {
   route: any;
 };
 
-const DATA = [
-  {
-    id: '1',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '2',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '3',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '4',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'Present',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '5',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-];
+const DATA: any = [];
 type ItemProps = {
   title: string;
   storeName: string;
@@ -290,16 +245,24 @@ const AttendanceScreen = ({navigation}: Props) => {
                         onRefresh={onRefresh}
                       />
                     }>
-                    <View style={styles.atteddanceCard}>
+                    <View
+                      style={{
+                        height: windowHeight * 0.5,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <Text style={{fontSize: 16, color: 'gray'}}>
+                        No Recent Attendance Found
+                      </Text>
+                    </View>
+                    {/* <View style={styles.atteddanceCard}>
                       <View style={styles.cardHeader}>
                         <View style={styles.timeSection}>
                           <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
                           <Text style={styles.time}> In Time: 11:03:45 AM</Text>
                         </View>
                         <Text style={styles.present}>Present</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
                       </View>
                       <View style={styles.cardbody}>
                         <View style={styles.dateBox}>
@@ -313,103 +276,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                           </Text>
                         </View>
                       </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.lateEntry}>Late entry</Text>
-                        {/* <Text style={styles.present}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.leave}>Leave</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.absent}>Absent</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.present}>Present</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
+                    </View> */}
                   </ScrollView>
 
                   {/* <TouchableOpacity
@@ -437,20 +304,34 @@ const AttendanceScreen = ({navigation}: Props) => {
                     </View>
                   </View>
                   {/* card section start here */}
-                  <FlatList
-                    data={DATA}
-                    renderItem={({item}) => (
-                      <AttendanceCard
-                        time={item.time}
-                        status={item.status}
-                        title={item.title}
-                        storeName={item.storename}
-                        date={item.date}
-                        month={item.month}
-                      />
-                    )}
-                    keyExtractor={item => item.id}
-                  />
+                  {DATA?.length === 0 ? (
+                    <View
+                      style={{
+                        height: windowHeight * 0.5,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <Text style={{fontSize: 16, color: 'gray'}}>
+                        No Recent Shifts Found
+                      </Text>
+                    </View>
+                  ) : (
+                    <FlatList
+                      data={DATA}
+                      renderItem={({item}) => (
+                        <AttendanceCard
+                          time={item.time}
+                          status={item.status}
+                          title={item.title}
+                          storeName={item.storename}
+                          date={item.date}
+                          month={item.month}
+                        />
+                      )}
+                      keyExtractor={item => item.id}
+                    />
+                  )}
                   <TouchableOpacity
                     style={styles.checkinButton}
                     onPress={() => navigation.navigate('AttendanceScreen')}>
@@ -475,7 +356,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>05</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}>Applied</Text>
                     </View>
                   </View>
@@ -488,7 +369,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>03</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}>Approved</Text>
                     </View>
                   </View>
@@ -503,7 +384,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       </View>
                     </View>
                     <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>02</Text>
+                      <Text style={styles.countNumber}>0</Text>
                       <Text style={styles.counttext}>Rejected</Text>
                     </View>
                   </View>
@@ -526,16 +407,13 @@ const AttendanceScreen = ({navigation}: Props) => {
                         onRefresh={onRefresh}
                       />
                     }>
-                    <View style={styles.atteddanceCard}>
+                    {/* <View style={styles.atteddanceCard}>
                       <View style={styles.cardHeader}>
                         <View style={styles.timeSection}>
                           <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
                           <Text style={styles.time}> In Time: 11:03:45 AM</Text>
                         </View>
                         <Text style={styles.present}>Approved</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
                       </View>
                       <View style={styles.cardbody}>
                         <View style={styles.dateBox}>
@@ -549,102 +427,17 @@ const AttendanceScreen = ({navigation}: Props) => {
                           </Text>
                         </View>
                       </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.present}>Approved</Text>
-                        {/* <Text style={styles.present}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.leave}>Applied</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.absent}>Reject</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.leave}>Applied</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
+                    </View> */}{' '}
+                    <View
+                      style={{
+                        height: windowHeight * 0.5,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}>
+                      <Text style={{fontSize: 16, color: 'gray'}}>
+                        No Recent Leave Found
+                      </Text>
                     </View>
                   </ScrollView>
 

@@ -1,23 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
-import {
-  Dimensions,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { Colors } from '../../../../utils/colors';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import {
-  Clock2,
-  EllipsisVertical,
-  Funnel,
-  Search,
-} from 'lucide-react-native';
+import {Dimensions, StyleSheet, Text, View} from 'react-native';
+import {Colors} from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Clock2, EllipsisVertical, Funnel, Search} from 'lucide-react-native';
+import {windowHeight} from '../../../../utils/utils';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const MarketVisitScreen = ({ navigation }: any) => {
+const MarketVisitScreen = ({navigation}: any) => {
   return (
     <View
       style={{
@@ -29,20 +20,29 @@ const MarketVisitScreen = ({ navigation }: any) => {
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
+          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
         ]}>
         <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>
-            Recent Market Visit
-          </Text>
+          <Text style={styles.bodyHeaderTitle}>Recent Market Visit</Text>
           <View style={styles.bodyHeaderIcon}>
             <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
             <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
           </View>
         </View>
         <View>
+          <View
+            style={{
+              height: windowHeight * 0.5,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 16, color: 'gray'}}>
+              No Market Visit Found
+            </Text>
+          </View>
           {/* card section start here */}
-          <View style={styles.atteddanceCard}>
+          {/* <View style={styles.atteddanceCard}>
             <View style={styles.cardHeader}>
               <View style={styles.timeSection}>
                 <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
@@ -74,85 +74,18 @@ const MarketVisitScreen = ({ navigation }: any) => {
                 </Text>
               </View>
             </View>
-          </View>
-          <View style={styles.atteddanceCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.timeSection}>
-                <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                <Text style={styles.time}> 11:03:45 AM</Text>
-              </View>
-              <Text style={[styles.leave, { marginLeft: 'auto' }]}>
-                Order Collection
-              </Text>
-              <EllipsisVertical size={20} color={Colors.darkButton} />
-            </View>
-            <View style={styles.cardbody}>
-              <View style={styles.dateBox}>
-                <Text style={styles.dateText}>25</Text>
-                <Text style={styles.monthText}>Mar</Text>
-              </View>
-              <View>
-                <Text style={styles.contentText}>Store name</Text>
-                <Text style={styles.contentText}>
-                  Accestisa new mart
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.semiBold,
-                    fontSize: Size.sm,
-                    color: Colors.darkButton,
-                    maxWidth:250,
-                  }}>
-                  Remark : Display updated
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.atteddanceCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.timeSection}>
-                <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                <Text style={styles.time}> 11:03:45 AM</Text>
-              </View>
-              <Text style={[styles.leave, { marginLeft: 'auto' }]}>
-                Merchandising
-              </Text>
-              <EllipsisVertical size={20} color={Colors.darkButton} />
-            </View>
-            <View style={styles.cardbody}>
-              <View style={styles.dateBox}>
-                <Text style={styles.dateText}>26</Text>
-                <Text style={styles.monthText}>Apr</Text>
-              </View>
-              <View>
-                <Text style={styles.contentText}>Store name</Text>
-                <Text style={styles.contentText}>
-                  Accestisa new mart
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.semiBold,
-                    fontSize: Size.sm,
-                    color: Colors.darkButton,
-                    maxWidth:250,
-                  }}>
-                  Remark : Display updated
-                </Text>
-              </View>
-            </View>
-          </View>
+          </View> */}
         </View>
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default MarketVisitScreen
-
+export default MarketVisitScreen;
 
 const styles = StyleSheet.create({
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',

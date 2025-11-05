@@ -37,7 +37,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
       <View style={styles.alignment}>
         <TouchableOpacity style={styles.notification}>
           <View style={styles.notificationBatch}>
-            <Text style={styles.notificationCount}>5</Text>
+            <Text style={styles.notificationCount}>0</Text>
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
