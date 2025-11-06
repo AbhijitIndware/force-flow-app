@@ -77,11 +77,11 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  console.log('🚀 ~ AddPjpScreen ~ employee:', employee);
   const [page, setPage] = useState<number>(1);
   const [employeeListData, setEmployeeListData] = useState<
     {label: string; value: string}[]
   >([]);
+  const [employeeOgData, setEmployeeOgData] = useState<any[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
 
   const {data: employeeData, isFetching} = useGetEmployeeQuery({
@@ -89,7 +89,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     page_size: '20',
     page: String(page),
   });
-  console.log('🚀 ~ AddPjpScreen ~ employeeData:', employeeData);
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,
@@ -146,7 +145,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           });
         }
       } catch (error: any) {
-        console.error('PJP API Error:', error);
+        // console.error('PJP API Error:', error);
         Toast.show({
           type: 'error',
           text1:
@@ -188,6 +187,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   useEffect(() => {
     if (employeeData?.message?.data) {
       const newData = transformEmployeeList(employeeData?.message?.data);
+      setEmployeeOgData(prev => [...prev, ...employeeData?.message?.data]);
       setEmployeeListData(prev => [...prev, ...newData]); // append
     }
   }, [employeeData]);
@@ -207,6 +207,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
         employeeList={employeeListData}
+        employeeOgData={employeeOgData}
         storeList={storeList}
         onLoadMoreStores={handleLoadMoreStores} // 👈 added
         loadingMoreStores={loadingMore}

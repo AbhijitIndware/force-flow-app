@@ -27,8 +27,6 @@ import {
   FilePlus2,
   Hotel,
   MapPinCheck,
-  MoveDown,
-  MoveUp,
   Package,
   ShoppingCart,
   UsersRound,
@@ -72,7 +70,6 @@ function extractServerMessage(resp: any): string | null {
 
     return messageObj.message || null;
   } catch (err) {
-    console.error('Failed to parse server message:', err);
     return null;
   }
 }
@@ -98,7 +95,6 @@ const HomeScreen = ({navigation}: Props) => {
   );
 
   const [pjpInitialize, {data}] = usePjpInitializeMutation();
-  console.log('🚀 ~ HomeScreen ~ data:', data);
   const [checkOut, {isLoading}] = useCheckOutMutation();
 
   const onRefresh = useCallback(() => {
@@ -112,9 +108,7 @@ const HomeScreen = ({navigation}: Props) => {
   const handleCheckOut = async () => {
     try {
       let payload = {store: selectedStore as string};
-      console.log('Checkout payload:', payload);
       const res = await checkOut(payload).unwrap();
-      console.log('🚀 ~ handleCheckOut ~ res:', res);
 
       if (res?.message?.success) {
         Toast.show({
@@ -133,7 +127,7 @@ const HomeScreen = ({navigation}: Props) => {
         });
       }
     } catch (error: any) {
-      console.error('Checkout error:', error);
+      // console.error('Checkout error:', error);
       Toast.show({
         type: 'error',
         text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`,
@@ -221,21 +215,21 @@ const HomeScreen = ({navigation}: Props) => {
                 {selectedStoreValue?.actions?.can_check_out ||
                 selectedStoreValue?.actions?.can_mark_activity ? (
                   <View>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                       style={styles.checkinButton}
                       onPress={() => navigation.navigate('MarkActivityScreen')}
                       disabled={
                         !selectedStoreValue?.actions?.can_mark_activity
                       }>
                       <Text style={styles.checkinButtonText}>
-                        {/* Check Out from New mart */} Mark Activity
+                        Mark Activity
                       </Text>
                       <Ionicons
                         name="chevron-forward-circle-sharp"
                         size={24}
                         color={Colors.white}
                       />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                     <TouchableOpacity
                       style={styles.checkinButton}
                       onPress={handleCheckOut}

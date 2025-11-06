@@ -129,9 +129,7 @@ const AddStoreScreen = ({
         };
 
         const payload = {data: value};
-        console.log('🚀 ~ onSubmit: ~ payload:', payload);
         const res = await addStore(payload).unwrap();
-        console.log('Store API Response:', res);
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -140,7 +138,7 @@ const AddStoreScreen = ({
             position: 'top',
           });
           actions.resetForm();
-          navigation.navigate('PartnersScreen');
+          navigation.goBack();
         } else {
           Toast.show({
             type: 'error',
@@ -150,7 +148,6 @@ const AddStoreScreen = ({
         }
         setLoading(false);
       } catch (error: any) {
-        console.error('Store API Error:', error);
         Toast.show({
           type: 'error',
           text1:

@@ -291,7 +291,18 @@ const StockReport = ({navigation, route}: Props) => {
             <ScrollView horizontal showsHorizontalScrollIndicator={true}>
               <Card containerStyle={styles.cardContainer}>
                 {(() => {
-                  const visibleColumns = columns.filter(col => !col.hidden);
+                  // const visibleColumns = columns.filter(col => !col.hidden);
+                  const requiredFields = [
+                    'item_code',
+                    // 'item_name',
+                    'warehouse',
+                    'bal_qty',
+                    'bal_val',
+                  ];
+
+                  const visibleColumns = columns.filter(col =>
+                    requiredFields.includes(col.fieldname),
+                  );
 
                   // Helper function to format values
                   const formatValue = (col: any, value: any) => {
@@ -361,14 +372,11 @@ const StockReport = ({navigation, route}: Props) => {
                             <View
                               key={col.fieldname}
                               style={{
-                                width: col.width ?? 100,
+                                width: col.width ?? 120,
                                 paddingHorizontal: 6,
                                 justifyContent: 'center',
-                                overflow: 'hidden',
                               }}>
                               <Text
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
                                 style={{
                                   textAlign: 'center',
                                   fontSize: 12,
@@ -384,28 +392,37 @@ const StockReport = ({navigation, route}: Props) => {
                       {/* Total Row */}
                       {totalRow && (
                         <View style={[styles.tableTotal, {borderTopWidth: 1}]}>
-                          {visibleColumns.map((col, i) => (
-                            <View
-                              key={col.fieldname || i}
-                              style={{
-                                width: col.width ?? 100,
-                                paddingHorizontal: 6,
-                                justifyContent: 'center',
-                                overflow: 'hidden',
-                              }}>
-                              <Text
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
+                          {visibleColumns.map(col => {
+                            // find the original index of this column in the unfiltered list
+                            const originalIndex = columns.findIndex(
+                              c => c.fieldname === col.fieldname,
+                            );
+
+                            const value = totalRow[originalIndex];
+
+                            return (
+                              <View
+                                key={col.fieldname}
                                 style={{
-                                  fontWeight: 'bold',
-                                  textAlign: 'center',
-                                  fontSize: 12,
-                                  color: '#000',
+                                  width: col.width ?? 100,
+                                  paddingHorizontal: 6,
+                                  justifyContent: 'center',
+                                  overflow: 'hidden',
                                 }}>
-                                {formatTotalValue(col, totalRow[i])}
-                              </Text>
-                            </View>
-                          ))}
+                                <Text
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                  style={{
+                                    fontWeight: 'bold',
+                                    textAlign: 'center',
+                                    fontSize: 12,
+                                    color: '#000',
+                                  }}>
+                                  {formatTotalValue(col, value)}
+                                </Text>
+                              </View>
+                            );
+                          })}
                         </View>
                       )}
                     </>

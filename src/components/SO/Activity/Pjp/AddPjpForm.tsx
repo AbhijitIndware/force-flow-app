@@ -8,12 +8,20 @@ import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
 import {Colors} from '../../../../utils/colors';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {SoAppStackParamList} from '../../../../types/Navigation';
 
 interface FormValues {
   employee: string;
   date: string;
   stores: {store: string}[];
 }
+
+type NavigationProp = NativeStackNavigationProp<
+  SoAppStackParamList,
+  'AddPjpScreen'
+>;
 
 interface Props {
   values: FormValues;
@@ -35,6 +43,7 @@ interface Props {
   scrollY: Animated.Value;
   employeeList: {label: string; value: string}[];
   storeList: {label: string; value: string}[];
+  employeeOgData: any[];
 
   onLoadMoreStores?: () => void; // 👈 add this
   loadingMoreStores?: boolean; // 👈 add this
@@ -52,7 +61,9 @@ const AddPjpForm: React.FC<Props> = ({
   storeList,
   onLoadMoreStores,
   loadingMoreStores,
+  employeeOgData,
 }) => {
+  const navigation = useNavigation<NavigationProp>();
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
     if (field === 'zone') {
@@ -89,7 +100,10 @@ const AddPjpForm: React.FC<Props> = ({
 
       <ReusableInput
         label="Employee"
-        value={values.employee}
+        value={
+          employeeOgData.find(emp => emp.name === values.employee)
+            ?.employee_number || ''
+        }
         onChangeText={() => {}}
         onBlur={() => handleBlur('pan_no')}
         disabled={true}
@@ -109,6 +123,9 @@ const AddPjpForm: React.FC<Props> = ({
               updatedStores[index].store = val;
               setFieldValue('stores', updatedStores);
             }}
+            showAddButton={true}
+            addButtonText={'Add New Store'}
+            onAddPress={() => navigation.navigate('AddStoreScreen')}
           />
 
           {values.stores.length > 1 && index !== 0 && (

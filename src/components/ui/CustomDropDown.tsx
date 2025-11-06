@@ -26,6 +26,9 @@ type Props = {
 
   searchText?: string; // 👈 add this
   setSearchText?: (val: string) => void; // 👈 add this
+  showAddButton?: boolean;
+  addButtonText?: string;
+  onAddPress?: () => void;
 };
 
 const DropdownComponent = ({
@@ -39,6 +42,9 @@ const DropdownComponent = ({
   loadingMore = false,
   searchText,
   setSearchText,
+  showAddButton,
+  addButtonText,
+  onAddPress,
 }: Props) => {
   const [isFocus, setIsFocus] = useState(false);
 
@@ -81,17 +87,37 @@ const DropdownComponent = ({
         keyboardAvoiding
         inputSearchStyle={styles.inputSearchStyle}
         renderInputSearch={onSearchTextChange => (
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={[styles.inputSearchStyle, isFocus && styles.inputFocused]}
-              placeholder="Search..."
-              placeholderTextColor={Colors.inputBorder}
-              value={searchText}
-              onChangeText={text => {
-                onSearchTextChange(text); // internal filtering
-                setSearchText?.(text); // external search handler
-              }}
-            />
+          <View>
+            {/* Add Button Section */}
+            {showAddButton && (
+              <Text
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  color: Colors.primary,
+                  fontFamily: Fonts.medium,
+                  fontSize: Size.sm,
+                }}
+                onPress={onAddPress}>
+                + {addButtonText || 'Add New'}
+              </Text>
+            )}
+
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={[
+                  styles.inputSearchStyle,
+                  isFocus && styles.inputFocused,
+                ]}
+                placeholder="Search..."
+                placeholderTextColor={Colors.inputBorder}
+                value={searchText}
+                onChangeText={text => {
+                  onSearchTextChange(text); // internal filtering
+                  setSearchText?.(text); // external search handler
+                }}
+              />
+            </View>
           </View>
         )}
         // searchField={searchText} // 👈 control search text

@@ -43,6 +43,7 @@ export type REmployee = {
     data: {
       name: string;
       employee_name: string;
+      employee_number: string;
       designation: string;
     }[];
   };

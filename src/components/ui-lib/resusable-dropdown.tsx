@@ -22,6 +22,10 @@ interface ReusableDropdownProps {
 
   searchText?: string; // 👈 new
   setSearchText?: (val: string) => void; // 👈 new
+
+  showAddButton?: boolean;
+  addButtonText?: string;
+  onAddPress?: () => void;
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -35,6 +39,10 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   loadingMore,
   searchText,
   setSearchText,
+  // 👇 NEW
+  showAddButton,
+  addButtonText,
+  onAddPress,
 }) => {
   return (
     <View style={styles.inputWrapper}>
@@ -49,6 +57,9 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         loadingMore={loadingMore}
         searchText={searchText} // 👈 pass down
         setSearchText={setSearchText} // 👈 pass down
+        showAddButton={showAddButton}
+        addButtonText={addButtonText}
+        onAddPress={onAddPress}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
