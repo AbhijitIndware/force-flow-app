@@ -58,7 +58,7 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
         action: 'Approve',
       };
       const res = await submitPurchaseOrder(payload).unwrap();
-      console.log('🚀 ~ handleSubmit ~ res:', res);
+      // console.log('🚀 ~ handleSubmit ~ res:', res);
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
@@ -74,7 +74,7 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
         });
       }
     } catch (error: any) {
-      console.error('Sales Order API Error:', error);
+      // console.error('Sales Order API Error:', error);
       Toast.show({
         type: 'error',
         text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',

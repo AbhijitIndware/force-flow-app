@@ -43,7 +43,7 @@ const LoginScreen = () => {
             pwd: value.pwd,
           };
           let res = await login({data: payload}).unwrap();
-          console.log('🚀 ~ LoginScreen ~ res:', res);
+          // console.log('🚀 ~ LoginScreen ~ res:', res);
           if (res?.message?.success) {
             Toast.show({
               type: 'success',

@@ -7,8 +7,8 @@ import {useCreatePurchaseOrderMutation} from '../../../../features/base/base-api
 import Toast from 'react-native-toast-message';
 import moment from 'moment';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
 
 type Props = {
   detail: RSoDetailData;
@@ -58,13 +58,26 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
     }
   };
   return (
-
     <View style={styles.card}>
       <View style={styles.cardInnerHeader}>
         <Text style={styles.title}>Purchase Order</Text>
       </View>
-      <View style={{ paddingHorizontal:16}}>
-        {order_details.custom_purchase_order ? (
+      <View style={{paddingHorizontal: 16}}>
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('PurchaseDetailScreen', {
+              id: order_details.custom_purchase_order,
+            })
+          }
+          style={styles.itemRow}>
+          <Text style={styles.contentHeading}>
+            PO No: {order_details.custom_purchase_order}
+          </Text>
+          <Text style={styles.contentHeading}>
+            ✅ Purchase Order already created
+          </Text>
+        </TouchableOpacity>
+        {/* {order_details.custom_purchase_order ? (
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('PurchaseDetailScreen', {
@@ -89,51 +102,51 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
               <Text style={styles.submitText}>Create PO</Text>
             </TouchableOpacity>
           </View>
-        )}
+        )} */}
         {/* Cancel Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={cancelModalVisible}
-        onRequestClose={() => setCancelModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Schedule Date</Text>
-            <DateTimePickerModal
-              isVisible={isTimePickerVisible}
-              mode="date"
-              onConfirm={(date: Date) => {
-                const formatted = moment(date).format('YYYY-MM-DD');
-                setScheduleDate(formatted);
-                setTimePickerVisible(false);
-              }}
-              onCancel={() => setTimePickerVisible(false)}
-            />
-            <TouchableOpacity
-              style={styles.timeInput}
-              onPress={() => setTimePickerVisible(true)}>
-              <Text style={styles.timeText}>
-                {scheduleDate
-                  ? moment(scheduleDate).format('YYYY-MM-DD')
-                  : 'Select Date'}
-              </Text>
-            </TouchableOpacity>
-            <View style={styles.modalActions}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={cancelModalVisible}
+          onRequestClose={() => setCancelModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Schedule Date</Text>
+              <DateTimePickerModal
+                isVisible={isTimePickerVisible}
+                mode="date"
+                onConfirm={(date: Date) => {
+                  const formatted = moment(date).format('YYYY-MM-DD');
+                  setScheduleDate(formatted);
+                  setTimePickerVisible(false);
+                }}
+                onCancel={() => setTimePickerVisible(false)}
+              />
               <TouchableOpacity
-                style={[styles.submitBtn, {backgroundColor: Colors.gray}]}
-                onPress={() => setCancelModalVisible(false)}>
-                <Text style={styles.submitText}>Close</Text>
+                style={styles.timeInput}
+                onPress={() => setTimePickerVisible(true)}>
+                <Text style={styles.timeText}>
+                  {scheduleDate
+                    ? moment(scheduleDate).format('YYYY-MM-DD')
+                    : 'Select Date'}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.submitBtn, !scheduleDate && {opacity: 0.7}]}
-                disabled={!scheduleDate}
-                onPress={handleCreatePO}>
-                <Text style={styles.submitText}>Confirm</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.submitBtn, {backgroundColor: Colors.gray}]}
+                  onPress={() => setCancelModalVisible(false)}>
+                  <Text style={styles.submitText}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.submitBtn, !scheduleDate && {opacity: 0.7}]}
+                  disabled={!scheduleDate}
+                  onPress={handleCreatePO}>
+                  <Text style={styles.submitText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
       </View>
     </View>
   );
@@ -143,8 +156,8 @@ export default CreatePoFromSo;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor:Colors.white,
-    paddingVertical:20,
+    backgroundColor: Colors.white,
+    paddingVertical: 20,
     marginBottom: 12,
     borderRadius: 16,
   },
@@ -211,16 +224,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  cardInnerHeader:{
-  borderBottomWidth:1,
-  borderBottomColor:Colors.borderLight,
-  paddingHorizontal:15,
-  paddingBottom:8,
-  marginBottom:8,
-},
-contentHeading:{
-  fontFamily: Fonts.semiBold,
-  fontSize: Size.xs,
-  color: Colors.darkButton,
-},
+  cardInnerHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    paddingHorizontal: 15,
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  contentHeading: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
 });

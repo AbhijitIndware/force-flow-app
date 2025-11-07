@@ -39,7 +39,6 @@ const DownloadScreen = ({navigation}: Props) => {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

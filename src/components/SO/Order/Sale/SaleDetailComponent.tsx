@@ -436,10 +436,12 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
       </View>
 
       {/* Purchase Order Section */}
-      {/* <CreatePoFromSo
-        detail={detail as RSoDetailData}
-        navigation={navigation}
-      /> */}
+      {order_details.custom_purchase_order && (
+        <CreatePoFromSo
+          detail={detail as RSoDetailData}
+          navigation={navigation}
+        />
+      )}
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
