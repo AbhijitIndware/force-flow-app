@@ -2,6 +2,7 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {baseQueryWithAuthGuard} from '../utility';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
+  AttendanceResponse,
   IAddCheckIn,
   IAddDistributorPayload,
   IAddPjpPayload,
@@ -310,6 +311,7 @@ export const baseApi = createApi({
       providesTags: ['Distributor'],
     }),
 
+    //GET REPORT
     getReport: builder.query<
       ReportResponse,
       {
@@ -332,6 +334,21 @@ export const baseApi = createApi({
           filters: filters,
           ignore_prepared_report: ignore_prepared_report,
           are_default_filters: are_default_filters,
+        },
+      }),
+    }),
+
+    //GET ATTENDANCE REPORT
+    getAttendance: builder.query<
+      AttendanceResponse,
+      Pick<PaginationInfo, 'page' | 'page_size'>
+    >({
+      query: ({page_size, page}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.attendence.get_attendence.get_attendance_records`,
+        method: 'GET',
+        params: {
+          page: page,
+          page_size: page_size,
         },
       }),
     }),
@@ -373,6 +390,8 @@ export const {
   useAddStoreMutation,
   //Report
   useGetReportQuery,
+  //Attendance
+  useGetAttendanceQuery,
 } = baseApi;
 
 interface PjpState {

@@ -5,33 +5,34 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {Colors} from '../../../utils/colors';
 import React, {useCallback, useEffect, useState} from 'react';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {
-  AlarmClockMinus,
-  Clock2,
-  Funnel,
-  Search,
-  UserRoundCheck,
-  UserRoundX,
-} from 'lucide-react-native';
+import {CalendarCheck, Clock2, Funnel, Search} from 'lucide-react-native';
 import {FlatList} from 'react-native';
 import {windowHeight} from '../../../utils/utils';
 import {useGetAttendanceQuery} from '../../../features/base/base-api';
-import {AttendanceRecord} from '../../../types/baseType';
-import moment from 'moment';
-//import { fonts } from '@rneui/base';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const RecentAttendanceScreen = ({navigation}: any) => {
+const DATA: any = [];
+type ItemProps = {
+  title: string;
+  storeName: string;
+  time: string;
+  date: string;
+  month: string;
+  status: string;
+};
+
+const RecentShiftsScreen = ({navigation}: any) => {
   const [page, setPage] = useState<number>(1);
-  const [attendance, setAttendance] = useState<any[]>([]);
+  const [shifts, setShifts] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data, isUninitialized, refetch, isFetching} = useGetAttendanceQuery(
@@ -47,7 +48,7 @@ const RecentAttendanceScreen = ({navigation}: any) => {
   // append new data when page changes
   useEffect(() => {
     if (data?.message?.records) {
-      setAttendance(prev => {
+      setShifts(prev => {
         const map = new Map();
         [...prev, ...data.message.records].forEach(item => {
           map.set(item.name, item);
@@ -75,143 +76,66 @@ const RecentAttendanceScreen = ({navigation}: any) => {
     }
   };
 
-  const renderItem = ({item}: {item: AttendanceRecord}) => (
-    <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-          <Text style={styles.time}>
-            {' '}
-            In Time: {moment(item?.in_time).format('hh:mm:ss A')}
-          </Text>
-        </View>
-        <Text
-          style={[item?.status === 'Present' ? styles.present : styles.absent]}>
-          {item?.status}
-        </Text>
-      </View>
-      <View style={styles.cardbody}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>
-            {new Date(item.attendance_date).getDate()}
-          </Text>
-          <Text style={styles.monthText}>
-            {new Date(item.attendance_date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
-        </View>
-        <View>
-          <Text style={styles.contentText}>Employee name</Text>
-          <Text style={styles.contentText}>{item.employee_name}</Text>
-        </View>
-      </View>
-    </View>
-  );
-
   return (
-    <View style={[styles.container]}>
-      <View style={styles.counterSection}>
-        <View style={styles.countCard}>
-          <View>
-            <View style={styles.boxIcon}>
-              <UserRoundCheck size={22} color={Colors.sucess} />
-            </View>
-          </View>
-          <View style={styles.countBox}>
-            <Text style={styles.countNumber}>
-              {data?.message?.summary?.Present}
-            </Text>
-            <Text style={styles.counttext}>Present</Text>
-          </View>
-        </View>
-        <View style={styles.countCard}>
-          <View>
-            <View
-              style={[styles.boxIcon, {backgroundColor: Colors.lightDenger}]}>
-              <UserRoundX size={22} color={Colors.denger} />
-            </View>
-          </View>
-          <View style={styles.countBox}>
-            <Text style={styles.countNumber}>
-              {data?.message?.summary?.Absent}
-            </Text>
-            <Text style={styles.counttext}>Absent</Text>
-          </View>
-        </View>
-        <View style={styles.countCard}>
-          <View>
-            <View style={[styles.boxIcon, {backgroundColor: Colors.holdLight}]}>
-              <AlarmClockMinus size={22} color={Colors.orange} />
-            </View>
-          </View>
-          <View style={styles.countBox}>
-            <Text style={styles.countNumber}>0</Text>
-            <Text style={styles.counttext}> Late entry</Text>
-          </View>
-        </View>
-      </View>
-      <View style={styles.bodyContent}>
+    <View style={styles.container}>
+      <View style={[styles.bodyContent, {paddingTop: 15, paddingBottom: 100}]}>
         <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>Recent Attendance</Text>
+          <Text style={styles.bodyHeaderTitle}>Recent Shifts</Text>
           <View style={styles.bodyHeaderIcon}>
             <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
             <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
           </View>
         </View>
         {/* card section start here */}
-
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: Colors.lightBg,
-          }}>
-          {isFetching && page === 1 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <ActivityIndicator size="large" />
-            </View>
-          ) : attendance.length === 0 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Text style={{fontSize: 16, color: 'gray'}}>
-                No Recent Attendance Found
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={attendance}
-              nestedScrollEnabled={true}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              renderItem={renderItem}
-              keyExtractor={(item, index) => `${item?.name}-${index}`}
-              showsVerticalScrollIndicator={false}
-              onEndReached={loadMore}
-              onEndReachedThreshold={0.5}
-              ListFooterComponent={
-                isFetching ? <ActivityIndicator size="small" /> : null
-              }
-            />
-          )}
-        </View>
+        {DATA?.length === 0 ? (
+          <View
+            style={{
+              height: windowHeight * 0.5,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 16, color: 'gray'}}>
+              No Recent Shifts Found
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={DATA}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            renderItem={({item}) => (
+              <AttendanceCard
+                time={item.time}
+                status={item.status}
+                title={item.title}
+                storeName={item.storename}
+                date={item.date}
+                month={item.month}
+              />
+            )}
+            keyExtractor={item => item.id}
+            showsVerticalScrollIndicator={false}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetching ? <ActivityIndicator size="small" /> : null
+            }
+          />
+        )}
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() => navigation.navigate('AttendanceScreen')}>
+          <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>Add Shift</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-export default RecentAttendanceScreen;
+export default RecentShiftsScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -452,3 +376,36 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
+
+const AttendanceCard = ({
+  time,
+  title,
+  status,
+  date,
+  month,
+  storeName,
+}: ItemProps) => (
+  <View style={styles.atteddanceCard}>
+    <View style={styles.cardHeader}>
+      <View style={styles.timeSection}>
+        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+        <Text style={styles.time}> {time}</Text>
+      </View>
+      <Text style={styles.present}>{status}</Text>
+    </View>
+    <View style={styles.cardbody}>
+      <View style={styles.dateBox}>
+        <Text style={styles.dateText}>{date}</Text>
+        <Text style={styles.monthText}>{month}</Text>
+      </View>
+      <View>
+        <Text style={styles.contentText}>{storeName}</Text>
+        <Text style={styles.contentText}>{title}</Text>
+        <View style={styles.timeSection}>
+          <Clock2 size={14} color="#4A4A4A" strokeWidth={2} />
+          <Text style={styles.time}>Shift Time: 11:03:45 AM</Text>
+        </View>
+      </View>
+    </View>
+  </View>
+);

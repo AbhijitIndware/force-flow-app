@@ -785,3 +785,31 @@ export interface ChartDataset {
   name: string;
   values: number[];
 }
+
+export interface AttendanceResponse {
+  message: {
+    success: boolean;
+    employee: string;
+    pagination: {
+      page: number;
+      page_size: number;
+      total_records: number;
+      total_pages: number;
+    };
+    records: AttendanceRecord[];
+    summary: {
+      Absent: number;
+      Present: number;
+    };
+  };
+}
+
+export interface AttendanceRecord {
+  name: string;
+  employee_name: string;
+  attendance_date: string; // can convert to Date if needed
+  status: 'Present' | 'Absent' | string; // or tighten further
+  in_time: string | null;
+  out_time: string | null;
+  working_hours: number;
+}
