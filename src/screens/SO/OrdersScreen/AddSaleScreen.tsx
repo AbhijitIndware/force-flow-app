@@ -32,7 +32,7 @@ import {
   useGetItemsQuery,
   useLazyGetDailyStoreQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {SoItem, SoStore} from '../../../types/dropdownType';
+import {Item, SoItem, SoStore} from '../../../types/dropdownType';
 import {useAppSelector} from '../../../store/hook';
 import {Search} from 'lucide-react-native';
 import {Fonts} from '../../../constants';
@@ -95,6 +95,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const [itemListData, setItemListData] = useState<
     {label: string; value: string}[]
   >([]);
+  const [itemOgListData, setItemOgListData] = useState<Item[]>([]);
   const [itemPage, setItemPage] = useState(1);
   const [loadingMoreItems, setLoadingMoreItems] = useState(false);
 
@@ -219,8 +220,10 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       // Else → append (pagination)
       if (searchItem.trim() !== '' || itemPage === 1) {
         setItemListData(newData);
+        setItemOgListData(itemData.message.data);
       } else {
         setItemListData(prev => [...prev, ...newData]);
+        setItemOgListData(prev => [...prev, ...itemData.message.data]);
       }
     }
   }, [itemData]);
@@ -284,7 +287,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         setFieldValue={setFieldValue}
         scrollY={scrollY}
         itemList={itemListData || []}
-        originalItemList={itemData?.message?.data || []}
+        originalItemList={itemOgListData || []}
         warehouseList={warehouseList || []}
         onDateSelect={field => {
           setActiveField(field);

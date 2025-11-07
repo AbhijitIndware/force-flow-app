@@ -75,9 +75,15 @@ const AddSaleForm: React.FC<Props> = ({
   };
 
   const handleSelectedItemValues = (itemCode: string, index: number) => {
+    console.log('🚀 ~ handleSelectedItemValues ~ itemCode:', itemCode);
     const selectedItem = originalItemList.find(
       item => item.item_code === itemCode,
     );
+    console.log(
+      '🚀 ~ handleSelectedItemValues ~ originalItemList:',
+      originalItemList,
+    );
+    console.log('🚀 ~ handleSelectedItemValues ~ selectedItem:', selectedItem);
     if (selectedItem) {
       setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
     }

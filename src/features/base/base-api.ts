@@ -223,7 +223,7 @@ export const baseApi = createApi({
           date: date,
         },
       }),
-      providesTags: ['PJP'],
+      providesTags: ['PJP', 'Store'],
     }),
 
     //PJP

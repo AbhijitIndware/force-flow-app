@@ -89,7 +89,7 @@ const HomeScreen = ({navigation}: Props) => {
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
-  const {data: prodData} = useGetProdCountQuery(
+  const {data: prodData, refetch} = useGetProdCountQuery(
     {date: today},
     {refetchOnMountOrArgChange: true},
   );
@@ -102,6 +102,7 @@ const HomeScreen = ({navigation}: Props) => {
     setTimeout(() => {
       setRefreshing(false);
       pjpInitialize();
+      refetch();
     }, 2000);
   }, []);
 
