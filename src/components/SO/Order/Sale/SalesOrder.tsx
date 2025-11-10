@@ -36,15 +36,23 @@ const SalesOrder = ({navigation}: any) => {
   // append new data when page changes
   useEffect(() => {
     if (data?.message?.data?.sales_orders) {
+      const newList = data.message.data.sales_orders;
+
       setOrders(prev => {
+        // When page = 1 → replace completely
+        if (page === 1) {
+          const map = new Map();
+          newList.forEach(item => map.set(item.order_id, item));
+          return Array.from(map.values());
+        }
+
+        // When page > 1 → append & deduplicate
         const map = new Map();
-        [...prev, ...data.message.data.sales_orders].forEach(item => {
-          map.set(item.order_id, item);
-        });
+        [...prev, ...newList].forEach(item => map.set(item.order_id, item));
         return Array.from(map.values());
       });
     }
-  }, [data]);
+  }, [page, data]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -71,7 +79,17 @@ const SalesOrder = ({navigation}: any) => {
         <View style={styles.timeSection}>
           <Text style={styles.time}>SO ID: {item.order_id}</Text>
         </View>
-        <View style={[flexRow, {gap: 0, position: 'relative',width:'50%',maxWidth:190, justifyContent:'flex-end'}]}>
+        <View
+          style={[
+            flexRow,
+            {
+              gap: 0,
+              position: 'relative',
+              width: '50%',
+              maxWidth: 190,
+              justifyContent: 'flex-end',
+            },
+          ]}>
           <Text
             style={[
               styles.present,
@@ -368,15 +386,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap:10,
+    gap: 10,
   },
   timeSection: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    width:'50%',
-    maxWidth:175,
+    width: '50%',
+    maxWidth: 175,
   },
   time: {
     color: Colors.darkButton,
@@ -397,8 +415,8 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 50,
     paddingHorizontal: 10,
-    maxWidth:130,
-    textAlign:'center',
+    maxWidth: 130,
+    textAlign: 'center',
   },
 
   lateEntry: {
