@@ -39,14 +39,14 @@ const PurchaseComponent = ({
             {item.status}
           </Text>
           {/* Three dot menu */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() =>
               setSelectedOrderId(
                 selectedOrderId === item.order_id ? null : item.order_id,
               )
             }>
             <Text style={styles.threeDot}>⋮</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           {/* Modal for dropdown */}
           {selectedOrderId === item.order_id && (
             <>

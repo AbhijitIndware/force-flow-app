@@ -138,7 +138,7 @@ const StockReport = ({navigation, route}: Props) => {
       <View style={[styles.dateRow, {alignItems: 'center'}]}>
         {/* From Date */}
         <View style={styles.dateColumn}>
-          <Text style={styles.dateLabel}>From Date</Text>
+          <Text style={styles.dateLabel}>Date:</Text>
           <TouchableOpacity
             onPress={() => setShowFromPicker(true)}
             style={styles.outlinedButton}>
@@ -150,7 +150,7 @@ const StockReport = ({navigation, route}: Props) => {
 
         {/* To Date */}
         <View style={styles.dateColumn}>
-          <Text style={styles.dateLabel}>To Date</Text>
+          <Text style={styles.dateLabel}>To</Text>
           <TouchableOpacity
             onPress={() => setShowToPicker(true)}
             style={styles.outlinedButton}>
@@ -165,7 +165,7 @@ const StockReport = ({navigation, route}: Props) => {
             borderWidth: 1,
             borderColor: '#ccc',
             borderRadius: 50,
-            padding: 8,
+            padding: 6,
             marginLeft: 12,
             backgroundColor: '#fff',
             shadowColor: '#000',
@@ -174,7 +174,7 @@ const StockReport = ({navigation, route}: Props) => {
             elevation: 3,
           }}>
           <Animated.View style={{transform: [{rotate}]}}>
-            <RotateCw color="#333" size={20} />
+            <RotateCw color="#333" size={18} />
           </Animated.View>
         </TouchableOpacity>
 
@@ -466,15 +466,17 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 14,
     color: '#555',
-    marginBottom: 6,
+    marginBottom: 1,
     fontWeight: '500',
+    textAlign: 'center',
+    marginLeft: 2,
   },
   outlinedButton: {
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
-    height: 40,
+    height: 35,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#fff',

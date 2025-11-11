@@ -126,9 +126,9 @@ const ActivityScreen = ({navigation, route}: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.medium,
-                    fontSize: Size.sm,
+                    fontSize: Size.xsmd,
                     color: Colors.orange,
-                    lineHeight: 16,
+                    lineHeight: 22,
                     marginRight: 8,
                   }}>
                   View Stock Report
@@ -136,8 +136,8 @@ const ActivityScreen = ({navigation, route}: Props) => {
                 <View style={styles.arrobox}>
                   <Ionicons
                     name="chevron-forward-outline"
-                    size={12}
-                    color={Colors.darkButton}
+                    size={14}
+                    color={Colors.lightSuccess}
                   />
                 </View>
               </Button>
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   arrobox: {
     width: 20,
     height: 20,
-    backgroundColor: '#F0F2F6',
+    backgroundColor: '#FF7B00',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',

@@ -201,7 +201,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
               buttonStyle={{paddingHorizontal: 0}}
             />
             <Tab.Item
-              title="Sales Orders"
+              title="Primary Sales"
               titleStyle={{
                 fontSize: Size.xs,
                 fontFamily: Fonts.medium,

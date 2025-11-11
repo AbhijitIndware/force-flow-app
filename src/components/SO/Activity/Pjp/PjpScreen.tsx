@@ -70,16 +70,16 @@ const PJPScreen = ({navigation}: any) => {
 
   const renderItem = ({item}: {item: PjpDailyStore}) => (
     <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
+      {/* <View style={styles.cardHeader}>
         <View style={styles.timeSection}>
-          {/* <Clock2 size={16} color="#4A4A4A" strokeWidth={2} /> */}
+          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
           <Text style={styles.time}></Text>
         </View>
-        <View style={[flexRow, {gap: 0, position: 'relative'}]}>
-          <Text style={[styles.leave, {marginLeft: 'auto'}]}>
+        <View style={[flexRow, {gap: 0, position: 'relative', justifyContent: 'space-between', width: '100%' }]}>
+          <Text style={[styles.leave, {marginLeft: 0}]}>
             {moment(item?.date).format('MMMM')}
           </Text>
-          {/* Three dot menu */}
+          
           <TouchableOpacity
             onPress={() =>
               setSelectedOrderId(
@@ -90,10 +90,10 @@ const PJPScreen = ({navigation}: any) => {
             }>
             <Text style={styles.threeDot}>⋮</Text>
           </TouchableOpacity>
-          {/* Modal for dropdown */}
+          
           {selectedOrderId === item.pjp_daily_store_id && (
             <>
-              {/* Backdrop to detect outside press */}
+              
               <TouchableOpacity
                 style={StyleSheet.absoluteFillObject}
                 activeOpacity={1}
@@ -127,7 +127,7 @@ const PJPScreen = ({navigation}: any) => {
             </>
           )}
         </View>
-      </View>
+      </View> */}
       <TouchableOpacity
         onPress={() => {
           // setModalVisible(false);

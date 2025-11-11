@@ -102,14 +102,14 @@ const SalesOrder = ({navigation}: any) => {
             {item.status}
           </Text>
           {/* Three dot menu */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={() =>
               setSelectedOrderId(
                 selectedOrderId === item.order_id ? null : item.order_id,
               )
             }>
             <Text style={styles.threeDot}>⋮</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           {/* Modal for dropdown */}
           {selectedOrderId === item.order_id && (
             <>
@@ -196,7 +196,7 @@ const SalesOrder = ({navigation}: any) => {
           {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
         ]}>
         <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>Recent Sales Order</Text>
+          <Text style={styles.bodyHeaderTitle}>Recent Primary Sales</Text>
           <View style={styles.bodyHeaderIcon}>
             <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
             <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />

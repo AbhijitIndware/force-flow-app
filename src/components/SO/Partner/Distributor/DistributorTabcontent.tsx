@@ -95,21 +95,15 @@ const DistributorTabcontent = ({navigation, setTotalCount}: any) => {
                 justifyContent: 'space-between',
                 flexDirection: 'row',
                 flexWrap: 'wrap',
-                marginBottom: 5,
+                marginBottom: 0,
               }}>
               <Text style={styles.contentText}>
-                Employee ID: {item?.employee}
+                ID: {item?.employee}
               </Text>
+              <Text style={styles.contentText}>Distributor Name: {item?.distributor_name}</Text>
               <Text style={styles.contentText}>Zone: {item?.zone}</Text>
             </View>
-            <Text style={styles.contentText}>Distributor name</Text>
-            <Text
-              style={[
-                styles.contentText,
-                {fontFamily: Fonts.medium, marginBottom: 5},
-              ]}>
-              {item?.distributor_name}
-            </Text>
+            {/* <Text style={styles.contentText}>Distributor name</Text> */}
             <Text style={styles.contentText}>City: {item?.city}</Text>
           </View>
         </View>
