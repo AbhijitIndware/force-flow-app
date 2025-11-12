@@ -8,6 +8,7 @@ import MainNavigation from './src/screens/MainNavigation/MainNavigation';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from './src/components/ui-lib/custom-toast';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {PaperProvider} from 'react-native-paper';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -15,16 +16,18 @@ function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <SafeAreaProvider>
-          <NavigationContainer>
-            <StatusBar
-              barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-            />
+        <PaperProvider>
+          <SafeAreaProvider>
+            <NavigationContainer>
+              <StatusBar
+                barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+              />
 
-            <MainNavigation />
-            <Toast config={toastConfig} />
-          </NavigationContainer>
-        </SafeAreaProvider>
+              <MainNavigation />
+              <Toast config={toastConfig} />
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </PaperProvider>
       </PersistGate>
     </Provider>
   );
