@@ -1,5 +1,5 @@
 // AddDistributorForm.tsx
-import React from 'react';
+import React, {useRef} from 'react';
 import {Animated, StyleSheet, TouchableOpacity} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
@@ -46,6 +46,15 @@ interface Props {
   onLoadMoreZone?: () => void;
   loadingMoreZone?: boolean;
 
+  onLoadMoreType?: () => void;
+  loadingMoreType?: boolean;
+  onLoadMoreCategory?: () => void;
+  loadingMoreCategory?: boolean;
+  onLoadMoreDistributor?: () => void;
+  loadingMoreDistributor?: boolean;
+  onLoadMoreBeat?: () => void;
+  loadingMoreBeat?: boolean;
+
   // 🔍 Search support
   zoneSearchText?: string;
   setZoneSearchText?: (text: string) => void;
@@ -53,6 +62,15 @@ interface Props {
   setStateSearchText?: (text: string) => void;
   citySearchText?: string;
   setCitySearchText?: (text: string) => void;
+
+  distributorSearchText?: string;
+  setDistributorSearchText?: (text: string) => void;
+  typeSearchText?: string;
+  setTypeSearchText?: (text: string) => void;
+  categorySearchText?: string;
+  setCategorySearchText?: (text: string) => void;
+  beatSearchText?: string;
+  setBeatSearchText?: (text: string) => void;
 }
 
 const AddStoreForm: React.FC<Props> = ({
@@ -86,7 +104,28 @@ const AddStoreForm: React.FC<Props> = ({
   setStateSearchText,
   citySearchText,
   setCitySearchText,
+
+  distributorSearchText,
+  setDistributorSearchText,
+  typeSearchText,
+  setTypeSearchText,
+  categorySearchText,
+  setCategorySearchText,
+  beatSearchText,
+  setBeatSearchText,
+
+  // newly added
+  onLoadMoreType,
+  loadingMoreType,
+  onLoadMoreCategory,
+  loadingMoreCategory,
+  onLoadMoreDistributor,
+  loadingMoreDistributor,
+  onLoadMoreBeat,
+  loadingMoreBeat,
 }) => {
+  const scrollViewRef = useRef<any>(null);
+
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
     if (field === 'zone') {
@@ -97,13 +136,23 @@ const AddStoreForm: React.FC<Props> = ({
     }
   };
 
+  const scrollUpOnFocus = (yOffset: number = 250) => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.getNode?.()?.scrollTo?.({
+        y: yOffset,
+        animated: true,
+      });
+    });
+  };
+
   return (
     <Animated.ScrollView
+      ref={scrollViewRef}
+      keyboardShouldPersistTaps="handled"
       onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      // eslint-disable-next-line react-native/no-inline-styles
       contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
       <ReusableInput
         label="Store Name"
@@ -119,6 +168,10 @@ const AddStoreForm: React.FC<Props> = ({
         data={storeTypeList}
         error={touched.store_type && errors.store_type}
         onChange={(val: string) => onSelect('store_type', val)}
+        onLoadMore={onLoadMoreType}
+        loadingMore={loadingMoreType}
+        searchText={typeSearchText}
+        setSearchText={setTypeSearchText}
       />
       <ReusableDropdown
         label="Store Category"
@@ -127,6 +180,10 @@ const AddStoreForm: React.FC<Props> = ({
         data={storeCategoryList}
         error={touched.store_category && errors.store_category}
         onChange={(val: string) => onSelect('store_category', val)}
+        onLoadMore={onLoadMoreCategory}
+        loadingMore={loadingMoreCategory}
+        searchText={categorySearchText}
+        setSearchText={setCategorySearchText}
       />
       <ReusableDropdown
         label="Zone"
@@ -163,6 +220,7 @@ const AddStoreForm: React.FC<Props> = ({
         loadingMore={loadingMoreCity}
         searchText={citySearchText}
         setSearchText={setCitySearchText}
+        onOpen={() => scrollUpOnFocus(400)}
       />
       {/* <ReusableDropdown
         label="Beat"
@@ -187,6 +245,11 @@ const AddStoreForm: React.FC<Props> = ({
         data={distributorList}
         error={touched.distributor && errors.distributor}
         onChange={(val: string) => onSelect('distributor', val)}
+        onLoadMore={onLoadMoreDistributor}
+        loadingMore={loadingMoreDistributor}
+        searchText={distributorSearchText}
+        setSearchText={setDistributorSearchText}
+        onOpen={() => scrollUpOnFocus(400)}
       />
       <MapReusableInput
         label="Map Location"

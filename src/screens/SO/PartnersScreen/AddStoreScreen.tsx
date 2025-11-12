@@ -91,6 +91,10 @@ const AddStoreScreen = ({
     zone: {page: 1, search: ''},
     state: {page: 1, search: ''},
     city: {page: 1, search: ''},
+    distributor: {page: 1, search: ''},
+    type: {page: 1, search: ''},
+    category: {page: 1, search: ''},
+    beat: {page: 1, search: ''},
   });
 
   const [zoneListData, setZoneListData] = useState<
@@ -102,10 +106,28 @@ const AddStoreScreen = ({
   const [cityListData, setCityListData] = useState<
     {label: string; value: string}[]
   >([]);
+  const [distributorListData, setDistributorListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [storeTypeListData, setStoreTypeListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [storeCategoryListData, setStoreCategoryListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [beatListData, setBeatListData] = useState<
+    {label: string; value: string}[]
+  >([]);
 
   const [loadingMoreState, setLoadingMoreState] = useState(false);
   const [loadingMoreCity, setLoadingMoreCity] = useState(false);
   const [loadingMoreZone, setLoadingMoreZone] = useState(false);
+
+  // 🆕 Add these missing states
+  const [loadingMoreType, setLoadingMoreType] = useState(false);
+  const [loadingMoreCategory, setLoadingMoreCategory] = useState(false);
+  const [loadingMoreDistributor, setLoadingMoreDistributor] = useState(false);
+  const [loadingMoreBeat, setLoadingMoreBeat] = useState(false);
 
   const {
     values,
@@ -181,10 +203,31 @@ const AddStoreScreen = ({
     search: listConfig.city.search,
   });
 
-  const {data: distributorData} = useGetDistributorQuery();
-  const {data: typeData} = useGetStoreTypeQuery();
-  const {data: categoryData} = useGetStoreCategoryQuery();
-  const {data: beatData} = useGetBeatQuery();
+  const {data: distributorData, isFetching: distributorFetching} =
+    useGetDistributorQuery({
+      page_size: '20',
+      page: String(listConfig.distributor.page),
+      search: listConfig.distributor.search,
+    });
+
+  const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery({
+    page_size: '20',
+    page: String(listConfig.type.page),
+    search: listConfig.type.search,
+  });
+
+  const {data: categoryData, isFetching: categoryFetching} =
+    useGetStoreCategoryQuery({
+      page_size: '20',
+      page: String(listConfig.category.page),
+      search: listConfig.category.search,
+    });
+
+  const {data: beatData, isFetching: beatFetching} = useGetBeatQuery({
+    page_size: '20',
+    page: String(listConfig.beat.page),
+    search: listConfig.beat.search,
+  });
 
   // Assuming values.map_location is a string like "22.5643,88.3693"
   const [latitude, longitude] = values?.map_location?.split(',');
@@ -200,10 +243,10 @@ const AddStoreScreen = ({
     arr: {name: string; distributor_name: string}[] = [],
   ) => arr.map(i => ({label: i.distributor_name, value: i.name}));
 
-  const distributorList = disTransformList(distributorData?.message?.data);
-  const storeTypeList = transformList(typeData?.message?.data);
-  const storeCategoryList = transformList(categoryData?.message?.data);
-  const beatList = transformList(beatData?.message?.data);
+  // const distributorList = disTransformList(distributorData?.message?.data);
+  // const storeTypeList = transformList(typeData?.message?.data);
+  // const storeCategoryList = transformList(categoryData?.message?.data);
+  // const beatList = transformList(beatData?.message?.data);
 
   useEffect(() => {
     if (locationData?.message?.raw) {
@@ -275,6 +318,50 @@ const AddStoreScreen = ({
     }
   }, [values.state]);
 
+  useEffect(() => {
+    if (distributorData?.message?.data) {
+      const newData = disTransformList(distributorData.message.data);
+      if (listConfig.distributor.search !== '') {
+        setDistributorListData(newData);
+      } else {
+        setDistributorListData(prev => [...prev, ...newData]);
+      }
+    }
+  }, [distributorData]);
+
+  useEffect(() => {
+    if (typeData?.message?.data) {
+      const newData = transformList(typeData.message.data);
+      if (listConfig.type.search !== '') {
+        setStoreTypeListData(newData);
+      } else {
+        setStoreTypeListData(prev => [...prev, ...newData]);
+      }
+    }
+  }, [typeData]);
+
+  useEffect(() => {
+    if (categoryData?.message?.data) {
+      const newData = transformList(categoryData.message.data);
+      if (listConfig.category.search !== '') {
+        setStoreCategoryListData(newData);
+      } else {
+        setStoreCategoryListData(prev => [...prev, ...newData]);
+      }
+    }
+  }, [categoryData]);
+
+  useEffect(() => {
+    if (beatData?.message?.data) {
+      const newData = transformList(beatData.message.data);
+      if (listConfig.beat.search !== '') {
+        setBeatListData(newData);
+      } else {
+        setBeatListData(prev => [...prev, ...newData]);
+      }
+    }
+  }, [beatData]);
+
   const handleLoadMoreZones = () => {
     if (!zoneFetching) {
       setLoadingMoreZone(true);
@@ -308,8 +395,56 @@ const AddStoreScreen = ({
     }
   };
 
+  const handleLoadMoreDistributor = () => {
+    if (!distributorFetching) {
+      setLoadingMoreDistributor(true);
+      setListConfig(prev => ({
+        ...prev,
+        distributor: {
+          ...prev.distributor,
+          page: prev.distributor.page + 1,
+        },
+      }));
+      setLoadingMoreDistributor(false);
+    }
+  };
+
+  const handleLoadMoreType = () => {
+    if (!typeFetching) {
+      setLoadingMoreType(true);
+      setListConfig(prev => ({
+        ...prev,
+        type: {...prev.type, page: prev.type.page + 1},
+      }));
+      setLoadingMoreType(false);
+    }
+  };
+
+  const handleLoadMoreCategory = () => {
+    if (!categoryFetching) {
+      setLoadingMoreCategory(true);
+      setListConfig(prev => ({
+        ...prev,
+        category: {...prev.category, page: prev.category.page + 1},
+      }));
+      setLoadingMoreCategory(false);
+    }
+  };
+
+  const handleLoadMoreBeat = () => {
+    if (!beatFetching) {
+      setLoadingMoreBeat(true);
+      setListConfig(prev => ({
+        ...prev,
+        beat: {...prev.beat, page: prev.beat.page + 1},
+      }));
+      setLoadingMoreBeat(false);
+    }
+  };
+
   const handleSearchChange = (
-    type: 'zone' | 'state' | 'city',
+    // type: 'zone' | 'state' | 'city',
+    type: keyof typeof listConfig,
     text: string,
   ) => {
     // Reset pagination & trigger new search query
@@ -342,13 +477,13 @@ const AddStoreScreen = ({
         handleBlur={handleBlur}
         setFieldValue={setFieldValue}
         scrollY={scrollY}
-        storeTypeList={storeTypeList}
-        storeCategoryList={storeCategoryList}
+        storeTypeList={storeTypeListData}
+        storeCategoryList={storeCategoryListData}
         zoneList={zoneListData}
         stateList={stateListData}
         cityList={cityListData}
-        distributorList={distributorList}
-        beatList={beatList}
+        distributorList={distributorListData}
+        beatList={beatListData}
         weekOffList={weekOffList}
         onTimeSelect={field => {
           setActiveField(field);
@@ -361,6 +496,15 @@ const AddStoreScreen = ({
         loadingMoreCity={loadingMoreCity}
         onLoadMoreZone={handleLoadMoreZones}
         loadingMoreZone={loadingMoreZone}
+        // 🆕 add these
+        onLoadMoreType={handleLoadMoreType}
+        loadingMoreType={loadingMoreType}
+        onLoadMoreCategory={handleLoadMoreCategory}
+        loadingMoreCategory={loadingMoreCategory}
+        onLoadMoreDistributor={handleLoadMoreDistributor}
+        loadingMoreDistributor={loadingMoreDistributor}
+        onLoadMoreBeat={handleLoadMoreBeat}
+        loadingMoreBeat={loadingMoreBeat}
         // search props 👇
         zoneSearchText={listConfig.zone.search}
         setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
@@ -368,6 +512,19 @@ const AddStoreScreen = ({
         setStateSearchText={(text: string) => handleSearchChange('state', text)}
         citySearchText={listConfig.city.search}
         setCitySearchText={(text: string) => handleSearchChange('city', text)}
+        // search props
+        distributorSearchText={listConfig.distributor.search}
+        setDistributorSearchText={(text: string) =>
+          handleSearchChange('distributor', text)
+        }
+        typeSearchText={listConfig.type.search}
+        setTypeSearchText={(text: string) => handleSearchChange('type', text)}
+        categorySearchText={listConfig.category.search}
+        setCategorySearchText={(text: string) =>
+          handleSearchChange('category', text)
+        }
+        beatSearchText={listConfig.beat.search}
+        setBeatSearchText={(text: string) => handleSearchChange('beat', text)}
       />
       <View
         style={{

@@ -52,7 +52,7 @@ type Props = {
 };
 
 const initial = {
-  date: '',
+  date: new Date().toISOString().split('T')[0],
   employee: '',
   stores: [{store: ''}],
 };
@@ -179,8 +179,11 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   useEffect(() => {
     if (pjpDetails?.message && id) {
-      let _initial_value = mapPjpDetailToForm(pjpDetails.message);
-      setInitialValues(_initial_value);
+      const _initial_value = mapPjpDetailToForm(pjpDetails.message);
+      setInitialValues({
+        ..._initial_value,
+        date: _initial_value.date ? new Date(_initial_value.date) : new Date(),
+      });
     }
   }, [pjpDetails, id]);
 

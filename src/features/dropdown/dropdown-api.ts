@@ -102,22 +102,46 @@ export const dropdownApi = createApi({
         method: 'GET',
       }),
     }),
-    getDistributor: builder.query<RDistributor, void>({
-      query: () => ({
+    getDistributor: builder.query<
+      RDistributor,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
-    getStoreType: builder.query<RResponse, void>({
-      query: () => ({
+    getStoreType: builder.query<
+      RResponse,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_type',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
-    getStoreCategory: builder.query<RResponse, void>({
-      query: () => ({
+    getStoreCategory: builder.query<
+      RResponse,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_category',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
     getItemGroup: builder.query<RResponse, void>({
@@ -141,18 +165,31 @@ export const dropdownApi = createApi({
       }),
     }),
 
-    getBeat: builder.query<RBeat, void>({
-      query: () => ({
+    getBeat: builder.query<
+      RBeat,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_beat',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
-    getStore: builder.query<RStore, {search: string}>({
-      query: ({search}) => ({
+    getStore: builder.query<
+      RStore,
+      {page_size?: string; page?: string; search: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_stores_safe',
         method: 'GET',
         params: {
-          search: search,
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
         },
       }),
     }),

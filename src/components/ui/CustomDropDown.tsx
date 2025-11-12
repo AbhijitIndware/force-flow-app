@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -29,6 +29,7 @@ type Props = {
   showAddButton?: boolean;
   addButtonText?: string;
   onAddPress?: () => void;
+  onOpen?: () => void;
 };
 
 const DropdownComponent = ({
@@ -45,8 +46,49 @@ const DropdownComponent = ({
   showAddButton,
   addButtonText,
   onAddPress,
+  onOpen,
 }: Props) => {
   const [isFocus, setIsFocus] = useState(false);
+
+  const renderInputSearch = useCallback(
+    (onSearchTextChange: (text: string) => void) => (
+      <View>
+        {showAddButton && (
+          <Text
+            style={{
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              color: Colors.primary,
+              fontFamily: Fonts.medium,
+              fontSize: Size.sm,
+            }}
+            onPress={onAddPress}>
+            + {addButtonText || 'Add New'}
+          </Text>
+        )}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={[styles.inputSearchStyle, isFocus && styles.inputFocused]}
+            placeholder="Search..."
+            placeholderTextColor={Colors.inputBorder}
+            value={searchText}
+            onChangeText={text => {
+              onSearchTextChange(text); // internal filtering
+              setSearchText?.(text); // external search handler
+            }}
+          />
+        </View>
+      </View>
+    ),
+    [
+      showAddButton,
+      addButtonText,
+      onAddPress,
+      isFocus,
+      searchText,
+      setSearchText,
+    ],
+  );
 
   return (
     <View style={styles.container}>
@@ -76,7 +118,13 @@ const DropdownComponent = ({
         valueField="value"
         placeholder={!isFocus ? `Select ${selectText}` : '...'}
         value={selectedId}
-        onFocus={() => setIsFocus(true)}
+        onFocus={() => {
+          setIsFocus(true);
+          // trigger parent scroll-up callback
+          requestAnimationFrame(() => {
+            onOpen?.();
+          });
+        }}
         onBlur={() => setIsFocus(false)}
         onChange={(item: {value: any}) => {
           setSelectedId(item?.value);
@@ -84,50 +132,22 @@ const DropdownComponent = ({
         }}
         search
         searchPlaceholder="Search..."
-        keyboardAvoiding
+        keyboardAvoiding={false}
         inputSearchStyle={styles.inputSearchStyle}
-        renderInputSearch={onSearchTextChange => (
-          <View>
-            {/* Add Button Section */}
-            {showAddButton && (
-              <Text
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  color: Colors.primary,
-                  fontFamily: Fonts.medium,
-                  fontSize: Size.sm,
-                }}
-                onPress={onAddPress}>
-                + {addButtonText || 'Add New'}
-              </Text>
-            )}
-
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={[
-                  styles.inputSearchStyle,
-                  isFocus && styles.inputFocused,
-                ]}
-                placeholder="Search..."
-                placeholderTextColor={Colors.inputBorder}
-                value={searchText}
-                onChangeText={text => {
-                  onSearchTextChange(text); // internal filtering
-                  setSearchText?.(text); // external search handler
-                }}
-              />
-            </View>
-          </View>
-        )}
+        renderInputSearch={renderInputSearch}
         // searchField={searchText} // 👈 control search text
-        // onChangeText={text => {
+        // searchQuery={text => {
         //   console.log('🚀 ~ DropdownComponent ~ text:', text);
         //   return setSearchText?.(text);
         // }} // 👈 update from parent
+        // keyboardShouldPersistTaps="always" // 👈 important
+        autoScroll={false}
         flatListProps={{
-          onEndReached: onLoadMore, // 👈 detects scroll end
+          onEndReached: onLoadMore,
           onEndReachedThreshold: 0.5,
+          keyExtractor: item => item.value,
+          keyboardShouldPersistTaps: 'always',
+          keyboardDismissMode: 'none', // 👈 prevent keyboard dismissal
           ListFooterComponent: loadingMore ? (
             <ActivityIndicator
               size="small"
