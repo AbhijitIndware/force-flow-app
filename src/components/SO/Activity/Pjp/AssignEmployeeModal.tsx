@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import {Modal, Portal, Button} from 'react-native-paper';
+import {Modal, Portal, Button, Checkbox} from 'react-native-paper';
 import {Colors} from '../../../../utils/colors';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
@@ -129,17 +129,21 @@ const AssignEmployeeModal: React.FC<Props> = ({
             }}
             renderItem={({item}) => {
               const isSelected = selectedEmployees.includes(item.employee_id);
+
               return (
                 <TouchableOpacity
                   onPress={() => toggleSelect(item.employee_id)}
-                  style={[styles.listItem, isSelected && styles.selectedItem]}>
-                  <Text
-                    style={[
-                      styles.listText,
-                      isSelected && {color: Colors.white},
-                    ]}>
-                    {item.employee_name} ({item.employee_number})
-                  </Text>
+                  style={[styles.listItem]}>
+                  <View style={styles.itemRow}>
+                    <Checkbox
+                      status={isSelected ? 'checked' : 'unchecked'}
+                      onPress={() => toggleSelect(item.employee_id)}
+                      color={Colors.primary}
+                    />
+                    <Text style={[styles.listText]}>
+                      {item.employee_name} ({item.employee_number})
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               );
             }}
@@ -235,5 +239,9 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     marginTop: 4,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
