@@ -1,13 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import {
-  Modal,
   View,
   Text,
-  TouchableOpacity,
   FlatList,
+  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import {Modal, Portal, Button} from 'react-native-paper';
 import {Colors} from '../../../../utils/colors';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
@@ -42,7 +42,6 @@ const AssignEmployeeModal: React.FC<Props> = ({
     );
   };
 
-  /** ─── Handle API Submission ─────────────────────────────────── */
   const handleSubmit = async () => {
     if (selectedEmployees.length === 0) {
       Toast.show({
@@ -67,7 +66,7 @@ const AssignEmployeeModal: React.FC<Props> = ({
       if (res.status === 'success') {
         Toast.show({
           type: 'success',
-          text1: `✅ Copied PJP successfully`,
+          text1: '✅ Copied PJP successfully',
           text2: res.message,
           position: 'top',
         });
@@ -98,72 +97,69 @@ const AssignEmployeeModal: React.FC<Props> = ({
   }, [data]);
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Select Employees</Text>
+    <Portal>
+      <Modal
+        visible={visible}
+        onDismiss={onClose}
+        contentContainerStyle={styles.modalContainer}>
+        <Text style={styles.title}>Select Employees</Text>
 
-          {isFetching ? (
-            <ActivityIndicator size="large" color={Colors.primary} />
-          ) : (
-            <FlatList
-              data={employeeList}
-              keyExtractor={item => item.id}
-              renderItem={({item}) => {
-                const isSelected = selectedEmployees.includes(item.id);
-                return (
-                  <TouchableOpacity
-                    onPress={() => toggleSelect(item.id)}
+        {isFetching ? (
+          <ActivityIndicator size="large" color={Colors.primary} />
+        ) : (
+          <FlatList
+            data={employeeList}
+            keyExtractor={item => item.id}
+            renderItem={({item}) => {
+              const isSelected = selectedEmployees.includes(item.id);
+              return (
+                <TouchableOpacity
+                  onPress={() => toggleSelect(item.id)}
+                  style={[styles.listItem, isSelected && styles.selectedItem]}>
+                  <Text
                     style={[
-                      styles.listItem,
-                      isSelected && styles.selectedItem,
+                      styles.listText,
+                      isSelected && {color: Colors.white},
                     ]}>
-                    <Text
-                      style={[
-                        styles.listText,
-                        isSelected && {color: Colors.white},
-                      ]}>
-                      {item.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        )}
 
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              disabled={isLoading || isFetching}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
+        <View style={styles.footer}>
+          <Button
+            mode="outlined"
+            onPress={onClose}
+            disabled={isLoading || isFetching}
+            style={styles.cancelButton}
+            labelStyle={styles.cancelText}>
+            Cancel
+          </Button>
 
-            <TouchableOpacity
-              style={styles.submitButton}
-              disabled={isLoading || isFetching}
-              onPress={handleSubmit}>
-              <Text style={styles.submitText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            loading={isLoading}
+            disabled={isLoading || isFetching}
+            style={styles.submitButton}
+            labelStyle={styles.submitText}>
+            Submit
+          </Button>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </Portal>
   );
 };
 
 export default AssignEmployeeModal;
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   modalContainer: {
-    width: '90%',
     backgroundColor: Colors.white,
+    marginHorizontal: 20,
     borderRadius: 12,
     padding: 16,
     maxHeight: '80%',
@@ -171,8 +167,8 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.md,
-    marginBottom: 12,
     textAlign: 'center',
+    marginBottom: 12,
   },
   listItem: {
     paddingVertical: 10,
@@ -192,20 +188,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   cancelButton: {
-    backgroundColor: Colors.gray,
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    borderColor: Colors.gray,
   },
   cancelText: {
-    color: Colors.white,
+    color: Colors.gray,
     fontFamily: Fonts.medium,
   },
   submitButton: {
     backgroundColor: Colors.success,
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
   },
   submitText: {
     color: Colors.white,
