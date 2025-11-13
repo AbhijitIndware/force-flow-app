@@ -16,6 +16,9 @@ import {
   useGetEmployeesToAssignQuery,
 } from '../../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
+import {windowHeight} from '../../../../utils/utils';
+import {Icon, UserCircle2Icon} from 'lucide-react-native';
+import {Employee} from '../../../../types/baseType';
 
 interface Props {
   visible: boolean;
@@ -30,7 +33,7 @@ const AssignEmployeeModal: React.FC<Props> = ({
   date,
   sourcePjp,
 }) => {
-  const [employeeList, setEmployeeList] = useState<any[]>([]);
+  const [employeeList, setEmployeeList] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
   const {data, isFetching} = useGetEmployeesToAssignQuery();
@@ -106,22 +109,36 @@ const AssignEmployeeModal: React.FC<Props> = ({
 
         {isFetching ? (
           <ActivityIndicator size="large" color={Colors.primary} />
+        ) : employeeList.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <UserCircle2Icon size={40} color={Colors.gray} />
+            <Text style={styles.emptyText}>No employees available for now</Text>
+            <Text style={styles.emptySubText}>
+              Please check again later or contact admin.
+            </Text>
+          </View>
         ) : (
           <FlatList
             data={employeeList}
-            keyExtractor={item => item.id}
+            keyExtractor={item =>
+              `${item?.employee_id}-${item?.employee_number}`
+            }
+            contentContainerStyle={{
+              maxHeight: windowHeight * 0.5,
+              minHeight: windowHeight * 0.5,
+            }}
             renderItem={({item}) => {
-              const isSelected = selectedEmployees.includes(item.id);
+              const isSelected = selectedEmployees.includes(item.employee_id);
               return (
                 <TouchableOpacity
-                  onPress={() => toggleSelect(item.id)}
+                  onPress={() => toggleSelect(item.employee_id)}
                   style={[styles.listItem, isSelected && styles.selectedItem]}>
                   <Text
                     style={[
                       styles.listText,
                       isSelected && {color: Colors.white},
                     ]}>
-                    {item.name}
+                    {item.employee_name} ({item.employee_number})
                   </Text>
                 </TouchableOpacity>
               );
@@ -200,5 +217,23 @@ const styles = StyleSheet.create({
   submitText: {
     color: Colors.white,
     fontFamily: Fonts.medium,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.md,
+    color: Colors.gray,
+    marginTop: 8,
+  },
+  emptySubText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
