@@ -16,18 +16,18 @@ function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <PaperProvider>
-          <SafeAreaProvider>
+        <SafeAreaProvider>
+          <PaperProvider>
             <NavigationContainer>
               <StatusBar
                 barStyle={isDarkMode ? 'light-content' : 'dark-content'}
               />
 
               <MainNavigation />
-              <Toast config={toastConfig} />
             </NavigationContainer>
-          </SafeAreaProvider>
-        </PaperProvider>
+          </PaperProvider>
+          <Toast config={toastConfig} />
+        </SafeAreaProvider>
       </PersistGate>
     </Provider>
   );
