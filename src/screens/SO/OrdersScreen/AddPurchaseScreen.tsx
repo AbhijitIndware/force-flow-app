@@ -124,8 +124,8 @@ const AddPurchaseScreen = ({
   });
   const {data: zoneData} = useGetZoneQuery({});
   const {data: employeeData} = useGetEmployeeQuery({name: ''});
-  const {data: designationData} = useGetDesignationQuery();
-  const {data: distributorGroupData, error} = useGetDistributorGroupQuery();
+  const {data: designationData} = useGetDesignationQuery({});
+  const {data: distributorGroupData, error} = useGetDistributorGroupQuery({});
 
   const distributorGroupList = transformToDropdownList(
     distributorGroupData?.message?.data,

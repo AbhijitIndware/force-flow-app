@@ -145,9 +145,9 @@ const AddMarketVisitScreen = ({
   const {data: cityData} = useGetCityQuery({});
   const {data: stateData} = useGetStateQuery({zone: values.zone});
   const {data: zoneData} = useGetZoneQuery({});
-  const {data: distributorData} = useGetDistributorQuery();
-  const {data: typeData} = useGetStoreTypeQuery();
-  const {data: categoryData} = useGetStoreCategoryQuery();
+  const {data: distributorData} = useGetDistributorQuery({});
+  const {data: typeData} = useGetStoreTypeQuery({});
+  const {data: categoryData} = useGetStoreCategoryQuery({});
 
   const zoneList = useMemo(
     () => transformList(zoneData?.message?.data),

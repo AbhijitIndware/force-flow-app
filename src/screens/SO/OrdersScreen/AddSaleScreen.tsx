@@ -37,6 +37,7 @@ import {useAppSelector} from '../../../store/hook';
 import {Search} from 'lucide-react-native';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import {uniqueByValue} from '../../../utils/utils';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -80,6 +81,15 @@ const initial: IAddSalesOrder = {
   ],
   terms: null,
   submit_order: false,
+};
+// For original item data (API objects)
+const uniqueByItemCode = <T extends {item_code: string}>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(item => {
+    if (seen.has(item.item_code)) return false;
+    seen.add(item.item_code);
+    return true;
+  });
 };
 
 const AddSaleScreen = ({navigation, route}: Props) => {
@@ -219,11 +229,13 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       // If search text exists → replace the list (fresh search)
       // Else → append (pagination)
       if (searchItem.trim() !== '' || itemPage === 1) {
-        setItemListData(newData);
-        setItemOgListData(itemData.message.data);
+        setItemListData(uniqueByValue(newData));
+        setItemOgListData(uniqueByItemCode(itemData.message.data));
       } else {
-        setItemListData(prev => [...prev, ...newData]);
-        setItemOgListData(prev => [...prev, ...itemData.message.data]);
+        setItemListData(prev => uniqueByValue([...prev, ...newData]));
+        setItemOgListData(prev =>
+          uniqueByItemCode([...prev, ...itemData.message.data]),
+        );
       }
     }
   }, [itemData]);

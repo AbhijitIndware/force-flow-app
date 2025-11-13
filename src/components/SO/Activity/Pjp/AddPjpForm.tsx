@@ -41,12 +41,20 @@ interface Props {
   };
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  employeeList: {label: string; value: string}[];
-  storeList: {label: string; value: string}[];
-  employeeOgData: any[];
 
-  onLoadMoreStores?: () => void; // 👈 add this
-  loadingMoreStores?: boolean; // 👈 add this
+  employeeList: {label: string; value: string}[];
+  employeeOgData: any[];
+  employeeSearch: string;
+  setEmployeeSearch: (val: string) => void;
+  onLoadMoreEmployees: () => void;
+  loadingMoreEmployees: boolean;
+
+  storeList: {label: string; value: string}[];
+  storeOgData: any[];
+  storeSearch: string;
+  setStoreSearch: (val: string) => void;
+  onLoadMoreStores: () => void;
+  loadingMoreStores: boolean;
 }
 
 const AddPjpForm: React.FC<Props> = ({
@@ -58,10 +66,16 @@ const AddPjpForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   employeeList,
+  employeeOgData,
   storeList,
   onLoadMoreStores,
   loadingMoreStores,
-  employeeOgData,
+  onLoadMoreEmployees,
+  loadingMoreEmployees,
+  employeeSearch,
+  setEmployeeSearch,
+  storeSearch,
+  setStoreSearch,
 }) => {
   const navigation = useNavigation<NavigationProp>();
   const onSelect = (field: string, val: string) => {
@@ -94,8 +108,10 @@ const AddPjpForm: React.FC<Props> = ({
         data={employeeList}
         error={touched.employee && errors.employee}
         onChange={(val: string) => onSelect('employee', val)}
-        onLoadMore={onLoadMoreStores} // 👈 pass here
-        loadingMore={loadingMoreStores}
+        onLoadMore={onLoadMoreEmployees}
+        loadingMore={loadingMoreEmployees}
+        searchText={employeeSearch}
+        setSearchText={setEmployeeSearch}
       />
 
       <ReusableInput
@@ -123,8 +139,12 @@ const AddPjpForm: React.FC<Props> = ({
               updatedStores[index].store = val;
               setFieldValue('stores', updatedStores);
             }}
+            onLoadMore={onLoadMoreStores}
+            loadingMore={loadingMoreStores}
+            searchText={storeSearch}
+            setSearchText={setStoreSearch}
             showAddButton={true}
-            addButtonText={'Add New Store'}
+            addButtonText="Add New Store"
             onAddPress={() => navigation.navigate('AddStoreScreen')}
           />
 

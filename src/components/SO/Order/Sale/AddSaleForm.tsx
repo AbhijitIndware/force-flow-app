@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: '#ecececff',
     backgroundColor: '#ffffffff',
+    width: '100%',
   },
   addMoreBtn: {
     backgroundColor: Colors.Orangelight,

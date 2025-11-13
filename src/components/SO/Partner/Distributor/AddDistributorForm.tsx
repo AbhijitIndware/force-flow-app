@@ -47,6 +47,15 @@ interface Props {
   setCitySearchText?: (text: string) => void;
   employeeSearchText?: string;
   setEmployeeSearchText?: (text: string) => void;
+
+  designationSearchText?: string;
+  setDesignationSearchText?: (text: string) => void;
+  distributorGroupSearchText?: string;
+  setDistributorGroupSearchText?: (text: string) => void;
+  onLoadMoreDesignation?: () => void;
+  loadingMoreDesignation?: boolean;
+  onLoadMoreDistributorGroup?: () => void;
+  loadingMoreDistributorGroup?: boolean;
 }
 
 const AddDistributorForm: React.FC<Props> = ({
@@ -80,6 +89,15 @@ const AddDistributorForm: React.FC<Props> = ({
   setCitySearchText,
   employeeSearchText,
   setEmployeeSearchText,
+
+  designationSearchText,
+  setDesignationSearchText,
+  distributorGroupSearchText,
+  setDistributorGroupSearchText,
+  onLoadMoreDesignation,
+  loadingMoreDesignation,
+  onLoadMoreDistributorGroup,
+  loadingMoreDistributorGroup,
 }) => {
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
@@ -119,6 +137,10 @@ const AddDistributorForm: React.FC<Props> = ({
         data={distributorGroupList}
         error={touched.distributor_group && errors.distributor_group}
         onChange={(val: string) => onSelect('distributor_group', val)}
+        onLoadMore={onLoadMoreDistributorGroup}
+        loadingMore={loadingMoreDistributorGroup}
+        searchText={distributorGroupSearchText}
+        setSearchText={setDistributorGroupSearchText}
       />
       <ReusableDropdown
         label="Employee"
@@ -183,6 +205,10 @@ const AddDistributorForm: React.FC<Props> = ({
         data={designationList}
         error={touched.designation && errors.designation}
         onChange={(val: string) => onSelect('designation', val)}
+        onLoadMore={onLoadMoreDesignation}
+        loadingMore={loadingMoreDesignation}
+        searchText={designationSearchText}
+        setSearchText={setDesignationSearchText}
       />
       <ReusableInput
         label="Distributor Code"

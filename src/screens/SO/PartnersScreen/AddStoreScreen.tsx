@@ -36,6 +36,7 @@ import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import {uniqueByValue} from '../../../utils/utils';
 const {width} = Dimensions.get('window');
 const initial = {
   store_name: '',
@@ -237,11 +238,17 @@ const AddStoreScreen = ({
     longitude,
   });
 
-  const transformList = (arr: {name: string}[] = []) =>
-    arr.map(i => ({label: i.name, value: i.name}));
+  const transformList = (arr: {name: string}[] = []) => {
+    const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
+    return unique.map(i => ({label: i.name, value: i.name}));
+  };
+
   const disTransformList = (
     arr: {name: string; distributor_name: string}[] = [],
-  ) => arr.map(i => ({label: i.distributor_name, value: i.name}));
+  ) => {
+    const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
+    return unique.map(i => ({label: i.distributor_name, value: i.name}));
+  };
 
   // const distributorList = disTransformList(distributorData?.message?.data);
   // const storeTypeList = transformList(typeData?.message?.data);
@@ -262,37 +269,45 @@ const AddStoreScreen = ({
     if (stateData?.message?.data) {
       const newData = transformList(stateData.message.data);
 
-      // 🧠 If search is active, replace the list (new search results)
-      if (listConfig.state.search !== '') {
-        setStateListData(newData);
-      } else {
-        // 📄 Else append data (pagination)
-        setStateListData(prev => [...prev, ...newData]);
-      }
+      setStateListData(prev => {
+        let merged = [];
+        if (listConfig.state.search !== '' && listConfig.state.page === 1) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [stateData]);
 
   useEffect(() => {
     if (cityData?.message?.data) {
       const newData = transformList(cityData.message.data);
-
-      if (listConfig.city.search !== '') {
-        setCityListData(newData);
-      } else {
-        setCityListData(prev => [...prev, ...newData]);
-      }
+      setCityListData(prev => {
+        let merged = [];
+        if (listConfig.city.search !== '' && listConfig.city.page === 1) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [cityData]);
 
   useEffect(() => {
     if (zoneData?.message?.data) {
       const newData = transformList(zoneData.message.data);
-
-      if (listConfig.zone.search !== '') {
-        setZoneListData(newData);
-      } else {
-        setZoneListData(prev => [...prev, ...newData]);
-      }
+      setZoneListData(prev => {
+        let merged = [];
+        if (listConfig.zone.search !== '' && listConfig.zone.page === 1) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [zoneData]);
 
@@ -321,44 +336,67 @@ const AddStoreScreen = ({
   useEffect(() => {
     if (distributorData?.message?.data) {
       const newData = disTransformList(distributorData.message.data);
-      if (listConfig.distributor.search !== '') {
-        setDistributorListData(newData);
-      } else {
-        setDistributorListData(prev => [...prev, ...newData]);
-      }
+      setDistributorListData(prev => {
+        let merged = [];
+        if (
+          listConfig.distributor.search !== '' &&
+          listConfig.distributor.page === 1
+        ) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [distributorData]);
 
   useEffect(() => {
     if (typeData?.message?.data) {
       const newData = transformList(typeData.message.data);
-      if (listConfig.type.search !== '') {
-        setStoreTypeListData(newData);
-      } else {
-        setStoreTypeListData(prev => [...prev, ...newData]);
-      }
+      setStoreTypeListData(prev => {
+        let merged = [];
+        if (listConfig.type.search !== '' && listConfig.type.page === 1) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [typeData]);
 
   useEffect(() => {
     if (categoryData?.message?.data) {
       const newData = transformList(categoryData.message.data);
-      if (listConfig.category.search !== '') {
-        setStoreCategoryListData(newData);
-      } else {
-        setStoreCategoryListData(prev => [...prev, ...newData]);
-      }
+
+      setStoreCategoryListData(prev => {
+        let merged = [];
+        if (
+          listConfig.category.search !== '' &&
+          listConfig.category.page === 1
+        ) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [categoryData]);
 
   useEffect(() => {
     if (beatData?.message?.data) {
       const newData = transformList(beatData.message.data);
-      if (listConfig.beat.search !== '') {
-        setBeatListData(newData);
-      } else {
-        setBeatListData(prev => [...prev, ...newData]);
-      }
+      setBeatListData(prev => {
+        let merged = [];
+        if (listConfig.beat.search !== '' && listConfig.beat.page === 1) {
+          merged = newData;
+        } else {
+          merged = [...prev, ...newData];
+        }
+        return uniqueByValue(merged);
+      });
     }
   }, [beatData]);
 

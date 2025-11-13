@@ -51,14 +51,7 @@ const DropdownComponent = ({
   name,
 }: Props) => {
   const [visible, setVisible] = useState(false);
-  const [search, setSearch] = useState(searchText || '');
-
-  const filteredData = useMemo(() => {
-    if (!search) return data;
-    return data.filter(item =>
-      item.label.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [search, data]);
+  const [anchorWidth, setAnchorWidth] = useState(0);
 
   const handleSelect = (value: string) => {
     setSelectedId(value);
@@ -79,6 +72,7 @@ const DropdownComponent = ({
           onDismiss={() => setVisible(false)}
           anchor={
             <TouchableOpacity
+              onLayout={e => setAnchorWidth(e.nativeEvent.layout.width)}
               onPress={() => {
                 setVisible(true);
                 onOpen?.();
@@ -90,9 +84,12 @@ const DropdownComponent = ({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  width: '100%',
                 },
               ]}>
               <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
                   selectedId && styles.selectedTextActive, // 👈 add this line
@@ -103,7 +100,11 @@ const DropdownComponent = ({
             </TouchableOpacity>
           }
           // anchorPosition="bottom"
-          contentStyle={{backgroundColor: Colors.white, width: '100%'}}>
+          contentStyle={{
+            backgroundColor: Colors.white,
+            width: anchorWidth || '90%',
+            alignSelf: 'center',
+          }}>
           {/* Add Button */}
           {showAddButton && (
             <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
@@ -116,9 +117,8 @@ const DropdownComponent = ({
           {/* Search Input */}
           <View style={styles.searchContainer}>
             <TextInput
-              value={search}
+              value={searchText}
               onChangeText={text => {
-                setSearch(text);
                 setSearchText?.(text);
               }}
               placeholder={`Search ${selectText}...`}
@@ -129,8 +129,8 @@ const DropdownComponent = ({
 
           {/* List */}
           <FlatList
-            data={filteredData}
-            keyExtractor={item => item.value}
+            data={data}
+            keyExtractor={item => `${item.value}-${item?.label}`}
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
@@ -145,7 +145,10 @@ const DropdownComponent = ({
             }
             renderItem={({item}) => (
               <TouchableOpacity
-                onPress={() => handleSelect(item.value)}
+                onPress={() => {
+                  handleSelect(item.value);
+                  setSearchText?.('');
+                }}
                 style={[
                   styles.item,
                   item.value === selectedId && styles.selectedItem,
@@ -186,7 +189,12 @@ const styles = StyleSheet.create({
     color: Colors.inputBorder,
     fontFamily: Fonts.regular,
     fontSize: Size.sm,
+    width: '95%',
   },
+  selectedTextActive: {
+    color: Colors.black, // make text black when selected
+  },
+
   addButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -200,17 +208,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     paddingHorizontal: 10,
-    paddingVertical: 2,
+    // paddingVertical: 2,
   },
-  selectedTextActive: {
-    color: Colors.black, // make text black when selected
-  },
-
   inputSearchStyle: {
-    height: 40,
+    // height: 35,
     color: Colors.black,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
   },
   item: {
     paddingVertical: 8,

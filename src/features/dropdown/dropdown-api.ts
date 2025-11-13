@@ -90,16 +90,32 @@ export const dropdownApi = createApi({
         },
       }),
     }),
-    getDesignation: builder.query<RResponse, void>({
-      query: () => ({
+    getDesignation: builder.query<
+      RResponse,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_designation',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
-    getDistributorGroup: builder.query<RResponse, void>({
-      query: () => ({
+    getDistributorGroup: builder.query<
+      RResponse,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_group',
         method: 'GET',
+        params: {
+          search, // ✅ Text search for zone name
+          page_size,
+          page,
+        },
       }),
     }),
     getDistributor: builder.query<

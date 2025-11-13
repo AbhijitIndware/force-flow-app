@@ -286,15 +286,18 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['Store'],
     }),
-    getStoreList: builder.query<RStoreList, void>({
-      query: () => ({
+    getStoreList: builder.query<
+      RStoreList,
+      {page_size?: string; page?: string; search?: string}
+    >({
+      query: ({page_size, page, search}) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_by_owner`,
         method: 'GET',
-        // params: {
-        //   page: page,
-        //   limit: page_size,
-        //   // status: status,
-        // },
+        params: {
+          page: page,
+          page_size: page_size,
+          search,
+        },
       }),
       providesTags: ['Store'],
     }),

@@ -64,3 +64,12 @@ export const getCurrentLocation = async (): Promise<string> => {
     );
   });
 };
+
+export const uniqueByValue = <T extends {value: string}>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(i => {
+    if (seen.has(i.value)) return false;
+    seen.add(i.value);
+    return true;
+  });
+};

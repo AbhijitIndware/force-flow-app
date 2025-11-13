@@ -40,6 +40,7 @@ import {
 } from '../../../types/baseType';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import {uniqueByValue} from '../../../utils/utils';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -68,26 +69,64 @@ const mapPjpDetailToForm = (detail: PjpDailyStoreDetail): any => {
   };
 };
 
+// 👨‍💼 Unique by Employee ID (or name)
+export const uniqueByEmployeeName = <T extends {name: string}>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(emp => {
+    if (seen.has(emp.name)) return false;
+    seen.add(emp.name);
+    return true;
+  });
+};
+
+// 🏬 Unique by Store Name (or code)
+export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(store => {
+    if (seen.has(store.name)) return false;
+    seen.add(store.name);
+    return true;
+  });
+};
+
 const AddPjpScreen = ({navigation, route}: Props) => {
   const {id} = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
-  const {data: storeData, error} = useGetStoreListQuery();
   const scrollY = useRef(new Animated.Value(0)).current;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const [page, setPage] = useState<number>(1);
+
+  /** ─── Employee State ─────────────────────────────── */
+  const [empPage, setEmpPage] = useState(1);
   const [employeeListData, setEmployeeListData] = useState<
     {label: string; value: string}[]
   >([]);
   const [employeeOgData, setEmployeeOgData] = useState<any[]>([]);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [loadingEmpMore, setLoadingEmpMore] = useState(false);
 
-  const {data: employeeData, isFetching} = useGetEmployeeQuery({
-    // name: employee?.id,
+  /** ─── Store State ─────────────────────────────────── */
+  const [storePage, setStorePage] = useState(1);
+  const [storeListData, setStoreListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [storeOgData, setStoreOgData] = useState<any[]>([]);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [loadingStoreMore, setLoadingStoreMore] = useState(false);
+
+  /** ─── Queries ─────────────────────────────────────── */
+  const {data: employeeData, isFetching: fetchingEmp} = useGetEmployeeQuery({
+    page: String(empPage),
     page_size: '20',
-    page: String(page),
+    name: employeeSearch,
+  });
+
+  const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
+    page: String(storePage),
+    page_size: '20',
+    search: storeSearch,
   });
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
@@ -96,6 +135,16 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   const [addDailyPjp] = useAddDailyPjpMutation();
   const [updateDailyPjp] = useUpdateDailyPjpMutation();
+
+  /** ─── Transform helpers ───────────────────────────── */
+  const transformToDropdownList = (arr: any[] = []) =>
+    arr.map(item => ({label: item.store_name, value: item.name}));
+
+  const transformEmployeeList = (arr: any[] = []) =>
+    arr.map(item => ({
+      label: `${item.employee_name}`,
+      value: item.name,
+    }));
 
   const {
     values,
@@ -159,15 +208,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     },
   });
 
-  const transformToDropdownList = (arr: Store[] = []) =>
-    arr.map(item => ({label: item.store_name, value: item.name}));
-
-  const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
-    arr.map(item => ({
-      label: `${item.employee_name}`,
-      value: item.name,
-    }));
-
   // const employeeList = transformEmployeeList(employeeData?.message?.data);
   const storeList = transformToDropdownList(storeData?.message?.data?.stores);
 
@@ -187,19 +227,61 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     }
   }, [pjpDetails, id]);
 
+  /** ─── Employee Data Merge ─────────────────────────── */
   useEffect(() => {
     if (employeeData?.message?.data) {
-      const newData = transformEmployeeList(employeeData?.message?.data);
-      setEmployeeOgData(prev => [...prev, ...employeeData?.message?.data]);
-      setEmployeeListData(prev => [...prev, ...newData]); // append
+      const newData = transformEmployeeList(employeeData.message.data);
+      if (employeeSearch.trim() !== '' || empPage === 1) {
+        setEmployeeListData(uniqueByValue(newData));
+        setEmployeeOgData(uniqueByEmployeeName(employeeData.message.data));
+      } else {
+        setEmployeeListData(prev => uniqueByValue([...prev, ...newData]));
+        setEmployeeOgData(prev =>
+          uniqueByEmployeeName([...prev, ...employeeData.message.data]),
+        );
+      }
     }
   }, [employeeData]);
 
+  /** ─── Store Data Merge ────────────────────────────── */
+  useEffect(() => {
+    if (storeData?.message?.data?.stores) {
+      const newData = transformToDropdownList(storeData.message.data.stores);
+      if (storeSearch.trim() !== '' || storePage === 1) {
+        setStoreListData(uniqueByValue(newData));
+        setStoreOgData(uniqueByStoreName(storeData.message.data.stores));
+      } else {
+        setStoreListData(prev => uniqueByValue([...prev, ...newData]));
+        setStoreOgData(prev =>
+          uniqueByStoreName([...prev, ...storeData.message.data.stores]),
+        );
+      }
+    }
+  }, [storeData]);
+
+  /** ─── Reset pages when search changes ─────────────── */
+  useEffect(() => {
+    setEmpPage(1);
+  }, [employeeSearch]);
+
+  useEffect(() => {
+    setStorePage(1);
+  }, [storeSearch]);
+
+  /** ─── Pagination Handlers ─────────────────────────── */
+  const handleLoadMoreEmployees = () => {
+    if (!fetchingEmp) {
+      setLoadingEmpMore(true);
+      setEmpPage(prev => prev + 1);
+      setLoadingEmpMore(false);
+    }
+  };
+
   const handleLoadMoreStores = () => {
-    if (!isFetching) {
-      setLoadingMore(true);
-      setPage(prev => prev + 1);
-      setLoadingMore(false);
+    if (!fetchingStore) {
+      setLoadingStoreMore(true);
+      setStorePage(prev => prev + 1);
+      setLoadingStoreMore(false);
     }
   };
 
@@ -209,11 +291,20 @@ const AddPjpScreen = ({navigation, route}: Props) => {
       <AddPjpForm
         {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
+        /** 👇 Employee-related props */
         employeeList={employeeListData}
         employeeOgData={employeeOgData}
-        storeList={storeList}
-        onLoadMoreStores={handleLoadMoreStores} // 👈 added
-        loadingMoreStores={loadingMore}
+        employeeSearch={employeeSearch}
+        setEmployeeSearch={setEmployeeSearch}
+        onLoadMoreEmployees={handleLoadMoreEmployees}
+        loadingMoreEmployees={loadingEmpMore}
+        /** 👇 Store-related props */
+        storeList={storeListData}
+        storeOgData={storeOgData}
+        storeSearch={storeSearch}
+        setStoreSearch={setStoreSearch}
+        onLoadMoreStores={handleLoadMoreStores}
+        loadingMoreStores={loadingStoreMore}
       />
       <View
         style={{
