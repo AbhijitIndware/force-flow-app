@@ -19,6 +19,7 @@ import {RefreshControl} from 'react-native';
 import {ActivityIndicator} from 'react-native';
 import {windowHeight} from '../../../../utils/utils';
 import moment from 'moment';
+import AssignEmployeeModal from './AssignEmployeeModal';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -28,6 +29,7 @@ const PJPScreen = ({navigation}: any) => {
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<PjpDailyStore[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
 
   const {data, isLoading, isFetching, refetch, isUninitialized} =
     useGetDailyPjpListQuery({
@@ -144,7 +146,7 @@ const PJPScreen = ({navigation}: any) => {
             })}
           </Text>
         </View>
-        <View>
+        <View style={{flex: 1.5, paddingLeft: 10}}>
           {/* <Text
             style={{
               fontFamily: Fonts.semiBold,
@@ -153,16 +155,34 @@ const PJPScreen = ({navigation}: any) => {
             }}>
             PJP of {moment(item?.date).format('MMMM')}
           </Text> */}
-          <Text style={styles.contentText}>
-            Emp name
-          </Text>
-          <Text style={[styles.contentText,{fontFamily: Fonts.semiBold,
-              fontSize: Size.sm,
-              color: Colors.darkButton}]}>
+          <Text style={styles.contentText}>Emp name</Text>
+          <Text
+            style={[
+              styles.contentText,
+              {
+                fontFamily: Fonts.semiBold,
+                fontSize: Size.sm,
+                color: Colors.darkButton,
+              },
+            ]}>
             {item?.employee_name}
           </Text>
           {/* <Text style={styles.contentText}>Accestisa new mart</Text> */}
         </View>
+        {/* Assign Button */}
+        <TouchableOpacity
+          style={styles.assignButton}
+          onPress={() => setAssignModalVisible(true)}>
+          <Text style={styles.assignButtonText}>Assign</Text>
+        </TouchableOpacity>
+
+        {/* Assign Modal */}
+        <AssignEmployeeModal
+          visible={assignModalVisible}
+          onClose={() => setAssignModalVisible(false)}
+          sourcePjp={item?.pjp_daily_store_id}
+          date={item?.date}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -402,5 +422,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingHorizontal: 10,
     color: '#374151',
+  },
+  assignButton: {
+    backgroundColor: Colors.lightGreen, // You can also use Colors.success or similar
+    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+
+  assignButtonText: {
+    color: Colors.black,
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
   },
 });

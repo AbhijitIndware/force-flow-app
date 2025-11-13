@@ -813,3 +813,40 @@ export interface AttendanceRecord {
   out_time: string | null;
   working_hours: number;
 }
+
+export interface RAssignEmployee {
+  status: string; // e.g., "success" or "error"
+  message: string;
+  current_employee: string; // e.g., "EMP-001"
+  current_reports_to: string; // e.g., "EMP-MGR-001"
+  employees: Employee[];
+  total_count: number;
+}
+
+export interface Employee {
+  employee_id: string; // "EMP-002"
+  employee_name: string; // "John Doe"
+  designation: string; // "Sales Officer"
+  reports_to: string; // "EMP-001"
+  department: string; // "Sales"
+  relationship: string; // "Subordinate" | "Peer" | etc.
+  employee_number: string; // "121212"
+}
+
+export interface ICopyPjpRequest {
+  data: {
+    source_pjp?: string; // Optional: PJP document name (e.g., "PJP-DS-2024-00001")
+    target_employee: string[]; // Required: Employee ID (e.g., "EMP-00123")
+    date?: string; // Optional: e.g., "2024-11-13"
+  };
+}
+
+export interface RCopyPjpSuccess {
+  status: 'success';
+  message: string; // e.g., "PJP copied successfully to employee EMP-00123."
+  source_pjp: string; // e.g., "PJP-DS-2024-00001"
+  new_pjp: string; // e.g., "PJP-DS-2024-00045"
+  target_employee: string; // e.g., "EMP-00123"
+  date: string; // e.g., "2024-11-13"
+  stores_count: number; // e.g., 15
+}

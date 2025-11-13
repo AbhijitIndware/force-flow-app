@@ -3,6 +3,7 @@ import {baseQueryWithAuthGuard} from '../utility';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
   AttendanceResponse,
+  ICopyPjpRequest,
   IAddCheckIn,
   IAddDistributorPayload,
   IAddPjpPayload,
@@ -18,6 +19,8 @@ import {
   IUpdateSalesOrder,
   IUpdateSOAction,
   RAddSalesOrder,
+  RAssignEmployee,
+  RCopyPjpSuccess,
   RDistributorList,
   ReportResponse,
   RLocationVerify,
@@ -355,6 +358,26 @@ export const baseApi = createApi({
         },
       }),
     }),
+
+    //Copy Pjp
+    copyPjpToOtherEmp: builder.mutation<RCopyPjpSuccess, ICopyPjpRequest>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.copy_pjp_to_employee',
+        method: 'POST',
+        body,
+      }),
+    }),
+    getEmployeesToAssign: builder.query<RAssignEmployee, void>({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.get_eligible_employees_for_pjp_copy`,
+        method: 'GET',
+        // params: {
+        //   page: page,
+        //   page_size: page_size,
+        //   search,
+        // },
+      }),
+    }),
   }),
 });
 export const {
@@ -395,6 +418,9 @@ export const {
   useGetReportQuery,
   //Attendance
   useGetAttendanceQuery,
+  //Copy PJP
+  useCopyPjpToOtherEmpMutation,
+  useGetEmployeesToAssignQuery,
 } = baseApi;
 
 interface PjpState {
