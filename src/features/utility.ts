@@ -11,8 +11,8 @@ import {logout} from './auth/auth';
 export const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
   prepareHeaders: (headers, {getState}) => {
-    const sId = (getState() as RootState).persistedReducer.authSlice
-      .sId;
+    const sId = (getState() as RootState).persistedReducer.authSlice.sId;
+    // console.log('🚀 ~ sId:', sId);
 
     if (sId) {
       headers.set('sId', `${sId}`);

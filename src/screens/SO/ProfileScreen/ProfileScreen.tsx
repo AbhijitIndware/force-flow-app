@@ -23,6 +23,9 @@ import {Divider} from '@rneui/themed';
 import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {logout} from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
+import {persistor} from '../../../store/store';
+import {baseApi} from '../../../features/base/base-api';
+import {dropdownApi} from '../../../features/dropdown/dropdown-api';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -46,9 +49,11 @@ const ProfileScreen = ({navigation}: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+  console.log('🚀 ~ ProfileScreen ~ user:', user);
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  console.log('🚀 ~ ProfileScreen ~ employee:', employee);
   const dispatch = useAppDispatch();
 
   const handleLogout = () => {
@@ -58,6 +63,9 @@ const ProfileScreen = ({navigation}: Props) => {
       position: 'top',
     });
     dispatch(logout());
+    dispatch(baseApi.util.resetApiState()); // clear RTK Query cache
+    dispatch(dropdownApi.util.resetApiState()); // clear RTK Query cache
+    persistor.purge();
   };
 
   return (
