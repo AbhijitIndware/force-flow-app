@@ -815,12 +815,14 @@ export interface AttendanceRecord {
 }
 
 export interface RAssignEmployee {
-  status: string; // e.g., "success" or "error"
-  message: string;
-  current_employee: string; // e.g., "EMP-001"
-  current_reports_to: string; // e.g., "EMP-MGR-001"
-  employees: Employee[];
-  total_count: number;
+  message: {
+    status: string; // e.g., "success" or "error"
+    message: string;
+    current_employee: string; // e.g., "EMP-001"
+    current_reports_to: string; // e.g., "EMP-MGR-001"
+    employees: Employee[];
+    total_count: number;
+  };
 }
 
 export interface Employee {
@@ -842,11 +844,13 @@ export interface ICopyPjpRequest {
 }
 
 export interface RCopyPjpSuccess {
-  status: 'success';
+  status: 'completed';
   message: string; // e.g., "PJP copied successfully to employee EMP-00123."
   source_pjp: string; // e.g., "PJP-DS-2024-00001"
   new_pjp: string; // e.g., "PJP-DS-2024-00045"
   target_employee: string; // e.g., "EMP-00123"
   date: string; // e.g., "2024-11-13"
   stores_count: number; // e.g., 15
+  success?: any[];
+  errors?: any[];
 }
