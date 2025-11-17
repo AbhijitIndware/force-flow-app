@@ -19,21 +19,24 @@ import {RefreshControl} from 'react-native';
 import moment from 'moment';
 
 const {width} = Dimensions.get('window');
-const PAGE_SIZE = 10;
 
 const StoreTabContent = ({navigation, setTotalCount}: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<Store[]>([]);
+  console.log('🚀 ~ StoreTabContent ~ orders:', orders);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data, isLoading, isFetching, refetch, isUninitialized, error} =
-    useGetStoreListQuery();
-  //     {
-  //     page,
-  //     page_size: PAGE_SIZE,
-  //     status: '',
-  //   }
+    useGetStoreListQuery({
+      page: String(page),
+      page_size: '20',
+
+      // search: storeSearch,
+      include_subordinates: '1',
+      include_direct_subordinates: '1',
+    });
+  console.log('🚀 ~ StoreTabContent ~ data:', data);
 
   // append new data when page changes
   useEffect(() => {
@@ -96,8 +99,10 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
         </View>
         <View style={styles.cardbody}>
           <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{day}</Text>
-            <Text style={styles.monthText}>{month}</Text>
+            <Text style={styles.dateText}>{item.creation ? day : 'N/A'}</Text>
+            <Text style={styles.monthText}>
+              {item.creation ? month : 'N/A'}
+            </Text>
           </View>
           <View style={{width: '80%'}}>
             <View
@@ -105,8 +110,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
                 marginBottom: 0,
               }}>
               <Text style={styles.contentText}>ID: {item?.name}</Text>
-              <Text style={styles.contentText}>Name: {item?.store_name}
-            </Text>
+              <Text style={styles.contentText}>Name: {item?.store_name}</Text>
               <Text style={styles.contentText}>Zone: {item?.zone}</Text>
             </View>
             {/* <Text style={styles.contentText}>Store name</Text> */}

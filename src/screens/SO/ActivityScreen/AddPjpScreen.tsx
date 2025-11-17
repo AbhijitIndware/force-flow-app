@@ -17,12 +17,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {dailyPjpSchema} from '../../../types/schema';
-import {
-  useGetDailyStoreQuery,
-  useGetEmployeeQuery,
-  useGetStoreQuery,
-} from '../../../features/dropdown/dropdown-api';
-import {REmployee, StoreType} from '../../../types/dropdownType';
+import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
   useGetDailyPjpByIdQuery,
@@ -32,12 +27,7 @@ import {
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 import {useAppSelector} from '../../../store/hook';
-import {
-  IAddPjpPayload,
-  PjpDailyStore,
-  PjpDailyStoreDetail,
-  Store,
-} from '../../../types/baseType';
+import {PjpDailyStoreDetail} from '../../../types/baseType';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
@@ -127,6 +117,8 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     page: String(storePage),
     page_size: '20',
     search: storeSearch,
+    include_subordinates: '1',
+    include_direct_subordinates: '1',
   });
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
