@@ -24,7 +24,6 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<Store[]>([]);
-  console.log('🚀 ~ StoreTabContent ~ orders:', orders);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data, isLoading, isFetching, refetch, isUninitialized, error} =
@@ -36,7 +35,6 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
       include_subordinates: '1',
       include_direct_subordinates: '1',
     });
-  console.log('🚀 ~ StoreTabContent ~ data:', data);
 
   // append new data when page changes
   useEffect(() => {
