@@ -67,22 +67,26 @@ const AssignEmployeeModal: React.FC<Props> = ({
       const res = await copyPjpToOtherEmp(payload).unwrap();
 
       if (
-        res.status === 'completed' &&
-        res?.success?.length &&
-        res?.success?.length > 0
+        res?.message?.status === 'completed' &&
+        Array.isArray(res?.message?.errors) &&
+        res?.message?.errors.length === 0 &&
+        Array.isArray(res?.message?.success) &&
+        res?.message?.success.length > 0
       ) {
+        // SUCCESS
         Toast.show({
           type: 'success',
           text1: '✅ Copied PJP successfully',
-          text2: res.message,
+          text2: res?.message?.message,
           position: 'top',
         });
       } else {
+        // ERROR CASE (either errors present OR no success)
         Toast.show({
           type: 'error',
-          text1: `❌ ${
-            (res as any)?.message?.errors[0]?.error || 'Failed to copy PJP'
-          }`,
+          text1: `❌ Failed to copy PJP`,
+          text2:
+            (res as any)?.message?.errors?.[0]?.error || 'Failed to copy PJP',
           position: 'top',
         });
       }

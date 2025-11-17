@@ -40,15 +40,25 @@ const PJPScreen = ({navigation}: any) => {
 
   // append new data when page changes
   useEffect(() => {
-    if (data?.message?.data?.pjp_daily_stores) {
-      setOrders(prev => {
-        const map = new Map();
-        [...prev, ...data.message.data.pjp_daily_stores].forEach(item => {
-          map.set(item.pjp_daily_store_id, item);
-        });
-        return Array.from(map.values());
+    const newData = data?.message?.data?.pjp_daily_stores;
+    const pagination = data?.message?.data?.pagination;
+
+    if (!newData) return;
+
+    setOrders(prev => {
+      // ✔ If first page, REPLACE — ensures backend sorting is respected
+      if (pagination?.page === 1) {
+        return newData;
+      }
+
+      // ✔ Append & Deduplicate for loadMore
+      const map = new Map();
+      [...prev, ...newData].forEach(item => {
+        map.set(item.pjp_daily_store_id, item);
       });
-    }
+
+      return Array.from(map.values());
+    });
   }, [data]);
 
   const onRefresh = useCallback(() => {

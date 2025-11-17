@@ -220,9 +220,10 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   useEffect(() => {
     if (pjpDetails?.message && id) {
       const _initial_value = mapPjpDetailToForm(pjpDetails.message);
+      // console.log('_initial_value', _initial_value);
       setInitialValues({
         ..._initial_value,
-        date: _initial_value.date ? new Date(_initial_value.date) : new Date(),
+        date: _initial_value.date,
       });
     }
   }, [pjpDetails, id]);
