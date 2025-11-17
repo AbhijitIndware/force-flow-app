@@ -34,6 +34,7 @@ import {
   RSoDetails,
   RSoList,
   RStoreList,
+  RSalesReport,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -378,6 +379,17 @@ export const baseApi = createApi({
         // },
       }),
     }),
+
+    //Sales
+    getSalesRepots: builder.query<RSalesReport, {view_type: string}>({
+      query: ({view_type}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.report_apis.report_apis.get_daily_secondary_report`,
+        method: 'GET',
+        params: {
+          view_type: view_type,
+        },
+      }),
+    }),
   }),
 });
 export const {
@@ -421,6 +433,9 @@ export const {
   //Copy PJP
   useCopyPjpToOtherEmpMutation,
   useGetEmployeesToAssignQuery,
+
+  //Sales
+  useGetSalesRepotsQuery,
 } = baseApi;
 
 interface PjpState {

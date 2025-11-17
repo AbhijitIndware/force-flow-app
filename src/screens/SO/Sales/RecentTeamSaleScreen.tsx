@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import {Colors} from '../../../utils/colors';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {Clock2, EllipsisVertical, Funnel, Search} from 'lucide-react-native';
@@ -17,11 +17,24 @@ import FilterModal from '../../../components/ui/filterModal';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FlatList} from 'react-native';
 import {windowHeight} from '../../../utils/utils';
+import {EmployeeData} from '../../../types/baseType';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const RecentTeamSaleScreen = ({navigation}: any) => {
+type props = {
+  navigation: any;
+  data: EmployeeData[];
+  refetch: any;
+  isFetching: boolean;
+};
+
+const RecentTeamSaleScreen = ({
+  navigation,
+  data,
+  refetch,
+  isFetching,
+}: props) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
 
@@ -46,7 +59,7 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      // if (!isUninitialized) refetch();
+      refetch();
     }, 2000);
   }, []);
 
@@ -61,9 +74,15 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
   //   }
   // };
 
-  const renderItem = ({item}: any) => (
+  useEffect(() => {
+    if (data) {
+      setSales(data);
+    }
+  }, [data]);
+
+  const renderItem = ({item}: {item: EmployeeData}) => (
     <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
+      {/* <View style={styles.cardHeader}>
         <View style={styles.timeSection}>
           <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
           <Text style={styles.time}>11:03:45 AM</Text>
@@ -76,13 +95,23 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
           />
         </View>
         <EllipsisVertical size={20} color={Colors.darkButton} />
-      </View>
+      </View> */}
       <View style={styles.cardbody}>
-        <View style={styles.dateBox}>
+        {/* <View style={styles.dateBox}>
           <Text style={styles.dateText}>19</Text>
           <Text style={styles.monthText}>APR</Text>
-        </View>
+        </View> */}
         <View>
+          <Text
+            style={{
+              fontFamily: Fonts.semiBold,
+              fontSize: Size.xsmd,
+              color: Colors.darkButton,
+            }}>
+            Designation : {item?.designation}
+          </Text>
+          <Text style={styles.contentText}>Employee name</Text>
+          <Text style={styles.contentText}>{item?.employee_name}</Text>
           <Text
             style={{
               fontFamily: Fonts.semiBold,
@@ -90,22 +119,21 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
               color: Colors.darkButton,
               lineHeight: 18,
             }}>
-            Name: Rahul Sharma
+            Quantity: {item?.total_qty}
           </Text>
-          <Text style={styles.contentText}>Store name</Text>
-          <Text style={styles.contentText}>Accestisa new mart</Text>
           <Text
             style={{
               fontFamily: Fonts.semiBold,
               fontSize: Size.xsmd,
               color: Colors.darkButton,
             }}>
-            Amount: ₹ 1240
+            Amount: ₹ {item?.total_value}
           </Text>
         </View>
       </View>
     </View>
   );
+
   return (
     <View
       style={{
@@ -152,7 +180,7 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
             flex: 1,
             backgroundColor: Colors.lightBg,
           }}>
-          {false && page === 1 ? (
+          {isFetching && page === 1 ? (
             <View
               style={{
                 height: windowHeight * 0.5,
@@ -182,7 +210,9 @@ const RecentTeamSaleScreen = ({navigation}: any) => {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               renderItem={renderItem}
-              keyExtractor={(item, index) => item.order_id + index}
+              keyExtractor={(item, index) =>
+                `${item.employee_id}-${index}-${item?.designation}`
+              }
               showsVerticalScrollIndicator={false}
               // onEndReached={loadMore}
               onEndReachedThreshold={0.5}

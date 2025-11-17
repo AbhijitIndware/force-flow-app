@@ -854,3 +854,53 @@ export interface RCopyPjpSuccess {
   success?: any[];
   errors?: any[];
 }
+
+//Sales
+
+export interface RSalesReport {
+  message: {
+    status: string;
+    message: string;
+    view_type: string;
+    current_employee: string;
+    date_range: {
+      from: string;
+      to: string;
+    };
+    summary: {
+      total_orders: number;
+      total_qty: number;
+      total_value: number;
+      employee_count: number;
+    };
+    ftd_summary: {
+      label: string;
+      total_orders: number;
+      total_qty: number;
+      total_value: number;
+    };
+    mtd_summary: {
+      label: string;
+      date_range: {
+        from: string;
+        to: string;
+      };
+      total_orders: number;
+      total_qty: number;
+      total_value: number;
+    };
+    data: EmployeeData[];
+  };
+}
+
+export interface EmployeeData {
+  employee_id: string;
+  employee_name: string;
+  employee_number: string;
+  designation: string;
+  department: string | null;
+  relationship: string;
+  total_orders: number;
+  total_qty: number;
+  total_value: number;
+}

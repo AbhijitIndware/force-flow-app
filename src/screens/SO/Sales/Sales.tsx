@@ -21,6 +21,7 @@ import {Animated} from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
+import {useGetSalesRepotsQuery} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
 
@@ -39,6 +40,10 @@ const SalesScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const {data, refetch, isFetching} = useGetSalesRepotsQuery({
+    view_type: index === 0 ? 'self' : 'team_include_self',
+  });
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -93,7 +98,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                   fontSize: Size.md,
                   color: Colors.darkButton,
                 }}>
-                ₹0
+                ₹ {data?.message?.summary?.total_value || 0}
               </Text>
               <Text
                 style={{
@@ -103,16 +108,16 @@ const SalesScreen = ({navigation, route}: Props) => {
                   lineHeight: 16,
                   marginTop: 5,
                 }}>
-                +0 % MTD{' '}
+                ₹ {data?.message?.mtd_summary?.total_value || 0} MTD{' '}
               </Text>
-              <Text
+              {/* <Text
                 style={{
                   fontFamily: Fonts.medium,
                   fontSize: Size.xs,
                   color: Colors.darkButton,
                 }}>
                 0% achieved{' '}
-              </Text>
+              </Text> */}
             </View>
             <View style={styles.welcomBox}>
               <Text style={styles.welcomeText}>
@@ -173,9 +178,19 @@ const SalesScreen = ({navigation, route}: Props) => {
           </View>
           {/* Conditionally rendered tab content */}
           {index === 0 ? (
-            <RecentSaleScreen navigation={navigation} />
+            <RecentSaleScreen
+              navigation={navigation}
+              data={data?.message?.data || []}
+              refetch={refetch}
+              isFetching={isFetching}
+            />
           ) : (
-            <RecentTeamSaleScreen navigation={navigation} />
+            <RecentTeamSaleScreen
+              navigation={navigation}
+              data={data?.message?.data || []}
+              refetch={refetch}
+              isFetching={isFetching}
+            />
           )}
         </Animated.ScrollView>
       )}
