@@ -402,6 +402,11 @@ const AddStoreScreen = ({
 
   const handleLoadMoreZones = () => {
     if (!zoneFetching) {
+      const currentPage = zoneData?.message?.pagination?.page ?? 1;
+      const totalPages = zoneData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
+
       setLoadingMoreZone(true);
       setListConfig(prev => ({
         ...prev,
@@ -413,6 +418,11 @@ const AddStoreScreen = ({
 
   const handleLoadMoreStates = () => {
     if (!stateFetching) {
+      const currentPage = stateData?.message?.pagination?.page ?? 1;
+      const totalPages = stateData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
+
       setLoadingMoreState(true);
       setListConfig(prev => ({
         ...prev,
@@ -424,6 +434,11 @@ const AddStoreScreen = ({
 
   const handleLoadMoreCity = () => {
     if (!cityFetching) {
+      const currentPage = cityData?.message?.pagination?.page ?? 1;
+      const totalPages = cityData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
+
       setLoadingMoreCity(true);
       setListConfig(prev => ({
         ...prev,
@@ -435,6 +450,10 @@ const AddStoreScreen = ({
 
   const handleLoadMoreDistributor = () => {
     if (!distributorFetching) {
+      const currentPage = distributorData?.message?.pagination?.page ?? 1;
+      const totalPages = distributorData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
       setLoadingMoreDistributor(true);
       setListConfig(prev => ({
         ...prev,
@@ -449,6 +468,10 @@ const AddStoreScreen = ({
 
   const handleLoadMoreType = () => {
     if (!typeFetching) {
+      const currentPage = typeData?.message?.pagination?.page ?? 1;
+      const totalPages = typeData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
       setLoadingMoreType(true);
       setListConfig(prev => ({
         ...prev,
@@ -460,6 +483,10 @@ const AddStoreScreen = ({
 
   const handleLoadMoreCategory = () => {
     if (!categoryFetching) {
+      const currentPage = categoryData?.message?.pagination?.page ?? 1;
+      const totalPages = categoryData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
       setLoadingMoreCategory(true);
       setListConfig(prev => ({
         ...prev,
@@ -471,6 +498,10 @@ const AddStoreScreen = ({
 
   const handleLoadMoreBeat = () => {
     if (!beatFetching) {
+      const currentPage = beatData?.message?.pagination?.page ?? 1;
+      const totalPages = beatData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return;
       setLoadingMoreBeat(true);
       setListConfig(prev => ({
         ...prev,

@@ -337,6 +337,11 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   const handleLoadMoreStates = () => {
     if (!stateFetching) {
+      const currentPage = stateData?.message?.pagination?.page ?? 1;
+      const totalPages = stateData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return; // 🚫 No more pages
+
       setLoadingMoreState(true);
       setListConfig(prev => ({
         ...prev,
@@ -348,6 +353,11 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   const handleLoadMoreEmployees = () => {
     if (!employeeFetching) {
+      const currentPage = employeeData?.message?.pagination?.page ?? 1;
+      const totalPages = employeeData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return; // 🚫 No more pages
+
       setLoadingMoreEmployee(true);
       setListConfig(prev => ({
         ...prev,
@@ -359,6 +369,11 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   const handleLoadMoreZones = () => {
     if (!zoneFetching) {
+      const currentPage = zoneData?.message?.pagination?.page ?? 1;
+      const totalPages = zoneData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return; // 🚫 No more pages
+
       setLoadingMoreZone(true);
       setListConfig(prev => ({
         ...prev,
@@ -370,6 +385,11 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   const handleLoadMoreDesignation = () => {
     if (!designationFetching) {
+      const currentPage = designationData?.message?.pagination?.page ?? 1;
+      const totalPages = designationData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return; // 🚫 No more pages
+
       setLoadingMoreDesignation(true);
       setListConfig(prev => ({
         ...prev,
@@ -384,6 +404,12 @@ const AddDistributorScreen = ({navigation}: Props) => {
 
   const handleLoadMoreDistributorGroup = () => {
     if (!distributorGroupFetching) {
+      const currentPage = distributorGroupData?.message?.pagination?.page ?? 1;
+      const totalPages =
+        distributorGroupData?.message?.pagination?.total_pages ?? 1;
+
+      if (currentPage >= totalPages) return; // 🚫 No more pages
+
       setLoadingMoreDistributorGroup(true);
       setListConfig(prev => ({
         ...prev,

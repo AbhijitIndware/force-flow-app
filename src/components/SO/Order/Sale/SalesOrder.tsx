@@ -226,7 +226,7 @@ const SalesOrder = ({navigation}: any) => {
                 alignItems: 'center',
               }}>
               <Text style={{fontSize: 16, color: 'gray'}}>
-                No Sale Order Found
+                No Primary Sale Order Found
               </Text>
             </View>
           ) : (

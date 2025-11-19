@@ -1,4 +1,4 @@
-import {ApiResponse, PaginationInfo} from './Navigation';
+import {ApiResponse, Filters, PaginationInfo} from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -636,6 +636,10 @@ export interface RStoreList {
         has_prev: boolean;
       };
     };
+
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 }
 

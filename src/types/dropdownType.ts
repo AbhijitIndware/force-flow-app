@@ -6,6 +6,9 @@ export type RResponse = {
     data: {
       name: string;
     }[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 export type RDistributor = {
@@ -15,6 +18,9 @@ export type RDistributor = {
       name: string;
       distributor_name: string;
     }[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 export type RState = {
@@ -24,6 +30,9 @@ export type RState = {
       name: string;
       zone: string;
     }[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 
@@ -34,6 +43,9 @@ export type RCity = {
       name: string;
       state: string;
     }[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 
@@ -46,6 +58,10 @@ export type REmployee = {
       employee_number: string;
       designation: string;
     }[];
+
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 
@@ -58,6 +74,10 @@ export type RBeat = {
       state: string;
       zone: string;
     }[];
+
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 
@@ -71,6 +91,9 @@ export type RStore = {
   message: {
     status: string;
     data: StoreType[];
+    pagination: PaginationInfo;
+    filters: Filters;
+    search: string | null;
   };
 };
 export type DailyStoreType = {

@@ -112,7 +112,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     page_size: '20',
     name: employeeSearch,
   });
-
   const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
     page: String(storePage),
     page_size: '20',
@@ -200,9 +199,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     },
   });
 
-  // const employeeList = transformEmployeeList(employeeData?.message?.data);
-  const storeList = transformToDropdownList(storeData?.message?.data?.stores);
-
   useEffect(() => {
     if (employee?.id) {
       setFieldValue('employee', employee?.id);
@@ -223,6 +219,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   /** ─── Employee Data Merge ─────────────────────────── */
   useEffect(() => {
     if (employeeData?.message?.data) {
+      setLoadingEmpMore(false);
       const newData = transformEmployeeList(employeeData.message.data);
       if (employeeSearch.trim() !== '' || empPage === 1) {
         setEmployeeListData(uniqueByValue(newData));
@@ -239,6 +236,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   /** ─── Store Data Merge ────────────────────────────── */
   useEffect(() => {
     if (storeData?.message?.data?.stores) {
+      setLoadingStoreMore(false);
       const newData = transformToDropdownList(storeData.message.data.stores);
       if (storeSearch.trim() !== '' || storePage === 1) {
         setStoreListData(uniqueByValue(newData));
@@ -263,19 +261,26 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   /** ─── Pagination Handlers ─────────────────────────── */
   const handleLoadMoreEmployees = () => {
-    if (!fetchingEmp) {
-      setLoadingEmpMore(true);
-      setEmpPage(prev => prev + 1);
-      setLoadingEmpMore(false);
-    }
+    if (fetchingEmp) return;
+
+    const current = employeeData?.message?.pagination?.page ?? 1;
+    const total = employeeData?.message?.pagination?.total_pages ?? 1;
+
+    if (current >= total) return;
+    setLoadingEmpMore(true);
+    setEmpPage(prev => prev + 1);
   };
 
   const handleLoadMoreStores = () => {
-    if (!fetchingStore) {
-      setLoadingStoreMore(true);
-      setStorePage(prev => prev + 1);
-      setLoadingStoreMore(false);
-    }
+    if (fetchingStore || loadingStoreMore) return;
+
+    const current = storeData?.message?.pagination?.page ?? 1;
+    const total = storeData?.message?.pagination?.total_pages ?? 1;
+
+    if (current >= total) return; // 🚫 Stop loading
+
+    setLoadingStoreMore(true);
+    setStorePage(prev => prev + 1);
   };
 
   return (

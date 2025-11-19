@@ -156,7 +156,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
             </View>
           ) : (
             <>
-              {(data?.message?.data?.stores || 0) === 0 ? (
+              {(data?.message?.data?.stores?.length || 0) === 0 ? (
                 <View
                   style={{
                     height: windowHeight * 0.5,

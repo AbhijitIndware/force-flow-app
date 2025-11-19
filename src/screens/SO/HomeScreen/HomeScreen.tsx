@@ -37,6 +37,7 @@ import {
   setSelectedStore,
   useCheckOutMutation,
   useGetProdCountQuery,
+  useGetSalesRepotsQuery,
   usePjpInitializeMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
@@ -82,6 +83,10 @@ const HomeScreen = ({navigation}: Props) => {
     useState<StoreData | null>(null);
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
+  const {data: teamReportData, isFetching} = useGetSalesRepotsQuery({
+    view_type: 'team_include_self',
+  });
+  console.log('🚀 ~ HomeScreen ~ teamReportData:', teamReportData);
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -382,7 +387,9 @@ const HomeScreen = ({navigation}: Props) => {
                   <UsersRound strokeWidth={2} color={Colors.white} size={30} />
                 </View>
                 <View>
-                  <Text style={styles.quantityCount}>₹0</Text>
+                  <Text style={styles.quantityCount}>
+                    ₹ {teamReportData?.message?.mtd_summary?.total_value || 0}
+                  </Text>
                   <Text style={styles.quantitytime}>Sales this month</Text>
                 </View>
               </View>

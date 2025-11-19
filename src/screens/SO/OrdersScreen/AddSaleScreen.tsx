@@ -194,11 +194,15 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   });
 
   const handleLoadMoreItems = () => {
-    if (!itemFetching) {
-      setLoadingMoreItems(true);
-      setItemPage(prev => prev + 1);
-      setLoadingMoreItems(false);
-    }
+    if (itemFetching || loadingMoreItems) return;
+
+    const currentPage = itemData?.message?.pagination?.page ?? 1;
+    const totalPages = itemData?.message?.pagination?.total_pages ?? 1;
+
+    if (currentPage >= totalPages) return; // 🚫 No more pages
+
+    setLoadingMoreItems(true);
+    setItemPage(prev => prev + 1);
   };
 
   // ✅ Transform Stores/Warehouses for dropdown
@@ -221,6 +225,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
 
   useEffect(() => {
     if (itemData?.message?.data) {
+      setLoadingMoreItems(false);
       const newData = itemData.message.data.map(item => ({
         value: item.item_code,
         label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
@@ -241,7 +246,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   }, [itemData]);
 
   useEffect(() => {
-    setItemPage(1);
+    setItemPage(() => 1); // ensures page resets immediately & cleanly
   }, [searchItem]);
 
   useEffect(() => {

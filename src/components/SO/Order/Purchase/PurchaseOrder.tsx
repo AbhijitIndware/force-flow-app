@@ -115,7 +115,7 @@ const PurchaseOrderScreen = ({navigation}: any) => {
                 alignItems: 'center',
               }}>
               <Text style={{fontSize: 16, color: 'gray'}}>
-                No Sale Order Found
+                No Purchase Order Found
               </Text>
             </View>
           ) : (

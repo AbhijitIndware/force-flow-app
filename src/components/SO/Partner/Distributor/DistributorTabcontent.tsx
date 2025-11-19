@@ -97,10 +97,10 @@ const DistributorTabcontent = ({navigation, setTotalCount}: any) => {
                 flexWrap: 'wrap',
                 marginBottom: 0,
               }}>
+              <Text style={styles.contentText}>ID: {item?.employee}</Text>
               <Text style={styles.contentText}>
-                ID: {item?.employee}
+                Distributor Name: {item?.distributor_name}
               </Text>
-              <Text style={styles.contentText}>Distributor Name: {item?.distributor_name}</Text>
               <Text style={styles.contentText}>Zone: {item?.zone}</Text>
             </View>
             {/* <Text style={styles.contentText}>Distributor name</Text> */}
@@ -149,7 +149,7 @@ const DistributorTabcontent = ({navigation, setTotalCount}: any) => {
             </View>
           ) : (
             <>
-              {(data?.message?.data?.distributors || 0) === 0 ? (
+              {(data?.message?.data?.distributors?.length || 0) === 0 ? (
                 <View
                   style={{
                     height: windowHeight * 0.5,
