@@ -5,28 +5,21 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import MarkActivityForm from '../../../components/SO/Home/mark-activity-form';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {Colors} from '../../../utils/colors';
-import {
-  useGetActivityForPjpQuery,
-  useGetEmployeeQuery,
-} from '../../../features/dropdown/dropdown-api';
-import {
-  useLocationVerificationMutation,
-  useMarkActivityMutation,
-} from '../../../features/base/base-api';
+import {useGetActivityForPjpQuery} from '../../../features/dropdown/dropdown-api';
+import {useMarkActivityMutation} from '../../../features/base/base-api';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import PageHeader from '../../../components/ui/PageHeader';
 import {flexCol} from '../../../utils/styles';
-import {dailyPjpSchema, markActivitySchema} from '../../../types/schema';
+import {markActivitySchema} from '../../../types/schema';
 import {useAppSelector} from '../../../store/hook';
-import {getCurrentLocation, windowWidth} from '../../../utils/utils';
+import {windowWidth} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -75,7 +68,7 @@ const MarkActivityScreen = ({navigation}: Props) => {
             position: 'top',
           });
           actions.resetForm();
-          navigation.navigate('Home');
+          navigation.goBack();
         } else {
           Toast.show({
             type: 'error',

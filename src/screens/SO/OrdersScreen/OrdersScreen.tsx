@@ -70,6 +70,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
         stickyHeaderIndices={[1]} // Index of the Tab header
         scrollEventThrottle={16}
         nestedScrollEnabled={true}
+        removeClippedSubviews={false}
         contentContainerStyle={{position: 'relative'}}>
         <View style={styles.headerSec}>
           {index === 0 ? (
@@ -163,12 +164,16 @@ const OrdersScreen = ({navigation, route}: Props) => {
           )}
         </View>
         <View
+          collapsable={false}
+          pointerEvents="box-none"
           style={{
             backgroundColor: Colors.orange,
             paddingVertical: 5,
             paddingHorizontal: 20,
             position: 'relative',
             marginTop: 0,
+            zIndex: 20,
+            elevation: 20,
           }}>
           <Tab
             value={index}

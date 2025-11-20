@@ -209,32 +209,29 @@ const ActivityScreen = ({navigation, route}: Props) => {
         </Animated.ScrollView>
       )}
 
-      {index === 0 && (
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 3,
-            width: '100%',
-            paddingHorizontal: 20,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <TouchableOpacity
-            style={styles.checkinButton}
-            onPress={() =>
-              index === 0
-                ? navigation.navigate('AddPjpScreen')
-                : // navigation.navigate('AddMarketVisitScreen')
-                  null
-            }>
-            <FileCheck strokeWidth={1.4} color={Colors.white} />
-            <Text style={styles.checkinButtonText}>
-              {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 3,
+          width: '100%',
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() =>
+            index === 0
+              ? navigation.navigate('AddPjpScreen')
+              : navigation.navigate('MarkActivityScreen')
+          }>
+          <FileCheck strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>
+            {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -248,7 +245,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingHorizontal: 20,
   },
-
   //header-box-section css start
   headerSec: {
     backgroundColor: Colors.white,

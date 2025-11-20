@@ -148,15 +148,21 @@ export const dropdownApi = createApi({
     }),
     getStoreCategory: builder.query<
       RResponse,
-      {page_size?: string; page?: string; search?: string}
+      {
+        page_size?: string;
+        page?: string;
+        search?: string;
+        filters?: {store_type: string};
+      }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({page_size, page, search, filters}) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_category',
         method: 'GET',
         params: {
           search, // ✅ Text search for zone name
           page_size,
           page,
+          filters,
         },
       }),
     }),

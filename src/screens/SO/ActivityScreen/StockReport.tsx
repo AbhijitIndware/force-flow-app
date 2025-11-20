@@ -1,11 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
-  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
   View,
-  ActivityIndicator,
   SafeAreaView,
   TouchableOpacity,
   Animated,
@@ -18,13 +16,12 @@ import moment from 'moment';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {useGetReportQuery} from '../../../features/base/base-api';
-import {ReportMessage, ReportResult} from '../../../types/baseType';
+import {ReportMessage} from '../../../types/baseType';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import {windowWidth} from '../../../utils/utils';
-import {Icon, RotateCw} from 'lucide-react-native';
+import {RotateCw} from 'lucide-react-native';
 import DateTimePicker, {useDefaultStyles} from 'react-native-ui-datepicker';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -39,8 +36,6 @@ type Props = {
 
 const StockReport = ({navigation, route}: Props) => {
   const {reportName} = route.params;
-  const defaultStyles = useDefaultStyles();
-
   // 🗓️ State for date filters
   const [startDate, setStartDate] = useState(moment().subtract(7, 'days'));
   const [endDate, setEndDate] = useState(moment());
@@ -69,7 +64,6 @@ const StockReport = ({navigation, route}: Props) => {
     result = [],
     columns = [],
     chart = {data: {labels: [], datasets: [{values: []}]}},
-    execution_time,
   } = reportData as ReportMessage;
 
   // Remove total row (last array)
