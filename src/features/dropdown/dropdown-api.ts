@@ -152,7 +152,7 @@ export const dropdownApi = createApi({
         page_size?: string;
         page?: string;
         search?: string;
-        filters?: {store_type: string};
+        filters?: string;
       }
     >({
       query: ({page_size, page, search, filters}) => ({

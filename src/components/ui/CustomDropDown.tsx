@@ -107,7 +107,12 @@ const DropdownComponent = ({
           }}>
           {/* Add Button */}
           {showAddButton && (
-            <TouchableOpacity onPress={onAddPress} style={styles.addButton}>
+            <TouchableOpacity
+              onPress={() => {
+                onAddPress?.();
+                setVisible(false);
+              }}
+              style={styles.addButton}>
               <Text style={styles.addButtonText}>
                 + {addButtonText || 'Add New'}
               </Text>

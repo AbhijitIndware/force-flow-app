@@ -222,9 +222,8 @@ const AddStoreScreen = ({
       page_size: '20',
       page: String(listConfig.category.page),
       search: listConfig.category.search,
-      filters: {store_type: values.store_type},
+      filters: JSON.stringify({store_type: values.store_type}),
     });
-  console.log('🚀 ~ AddStoreScreen ~ categoryData:', categoryData);
 
   const {data: beatData, isFetching: beatFetching} = useGetBeatQuery({
     page_size: '20',
@@ -260,6 +259,7 @@ const AddStoreScreen = ({
   useEffect(() => {
     if (values.store_type === '') return;
     setFieldValue('store_category', '');
+    setStoreCategoryListData([]);
   }, [values.store_type]);
 
   useEffect(() => {
