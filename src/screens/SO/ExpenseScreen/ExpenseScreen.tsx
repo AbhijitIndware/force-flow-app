@@ -33,7 +33,7 @@ const ExpenseScreen = ({navigation}: Props) => {
           navigation.goBack();
         }}
       />
-      <ExpenseComponent />
+      <ExpenseComponent navigation={navigation} />
     </SafeAreaView>
   );
 };

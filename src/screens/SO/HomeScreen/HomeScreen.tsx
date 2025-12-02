@@ -424,6 +424,60 @@ const HomeScreen = ({navigation}: Props) => {
             </View>
           </View>
 
+
+
+
+<View style={[styles.container, {paddingTop: 20}]}>
+            <Text style={styles.SectionHeading}>Team Performance</Text>
+            <View
+              style={[
+                styles.dataBox,
+                {
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  marginTop: 10,
+                },
+              ]}>
+                <TouchableOpacity
+                onPress={() => navigation.navigate('ExpenseScreen')}
+                style={[
+                  styles.positionValue,
+                  {
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: 20,
+                    height: 40,
+                    borderStyle: 'dashed',
+                    borderWidth: 1,
+                    borderColor: Colors.sucess,
+                    backgroundColor: '#C8F8D1',
+                    borderRadius: 8,
+                    width: '100%',
+                  },
+                ]}>
+              <View style={styles.incentiveContent}>
+                <View style={styles.iconbox}>
+                  <UsersRound strokeWidth={2} color={Colors.white} size={30} />
+                </View>
+                <View>
+                  <Text style={styles.quantityCount}>
+                    ₹ {teamReportData?.message?.mtd_summary?.total_value || 0}
+                  </Text>
+                  <Text style={styles.quantitytime}>Sales this month</Text>
+                </View>
+              </View>
+
+              
+                
+              </TouchableOpacity>
+            </View>
+          </View>
+
+
+
+
+
           <View
             style={[styles.LinkSection, {paddingVertical: 15, marginTop: 20}]}>
             <Text
