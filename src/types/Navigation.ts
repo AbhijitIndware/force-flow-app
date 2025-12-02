@@ -41,6 +41,10 @@ export type SoAppStackParamList = {
   PurchaseDetailScreen: {id: string};
   PjpDetailScreen: {details: PjpDailyStore};
   StockReport: {reportName: string};
+
+  ExpenseScreen: undefined;
+  AddExpenseScreen: undefined;
+  AddExpenseItemScreen: undefined;
 };
 
 export type menuType = {
