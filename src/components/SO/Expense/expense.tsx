@@ -1,66 +1,69 @@
-import { Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Dimensions,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import {TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { BanknoteArrowDown, BriefcaseConveyorBelt, Calculator, ChevronRight, CircleCheck, CircleCheckBig, CircleX, FileText, RotateCw, Wallet } from 'lucide-react-native';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {
+  BanknoteArrowDown,
+  BriefcaseConveyorBelt,
+  Calculator,
+  ChevronRight,
+  CircleCheck,
+  CircleCheckBig,
+  CircleX,
+  FileText,
+  RotateCw,
+  Wallet,
+} from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const ExpenseComponent = ({ navigation }: any) => {
+const ExpenseComponent = ({navigation}: any) => {
   return (
-
-    <View>
-
+    <ScrollView>
       <View style={styles.countBoxSection}>
         <View style={styles.countBox}>
           <View
-            style={[
-              styles.countBoxIcon,
-              { backgroundColor: Colors.holdLight },
-            ]}>
+            style={[styles.countBoxIcon, {backgroundColor: Colors.holdLight}]}>
             <RotateCw strokeWidth={1.4} color={Colors.orange} />
           </View>
-          <Text style={styles.countBoxDay}>
-            8976
-          </Text>
+          <Text style={styles.countBoxDay}>8976</Text>
           <Text style={styles.countBoxTitle}>Pending</Text>
         </View>
         <View style={styles.countBox}>
           <View
             style={[
               styles.countBoxIcon,
-              { backgroundColor: Colors.lightSuccess },
+              {backgroundColor: Colors.lightSuccess},
             ]}>
             <CircleCheckBig strokeWidth={1.4} color={Colors.success} />
           </View>
-          <Text style={styles.countBoxDay}>
-            34691
-          </Text>
+          <Text style={styles.countBoxDay}>34691</Text>
           <Text style={styles.countBoxTitle}>Approve</Text>
         </View>
         <View style={styles.countBox}>
           <View
-            style={[
-              styles.countBoxIcon,
-              { backgroundColor: Colors.lightRed },
-            ]}>
+            style={[styles.countBoxIcon, {backgroundColor: Colors.lightRed}]}>
             <CircleX strokeWidth={1.4} color={Colors.error} />
           </View>
-          <Text style={styles.countBoxDay}>
-            76543
-          </Text>
+          <Text style={styles.countBoxDay}>76543</Text>
           <Text style={styles.countBoxTitle}>Reject</Text>
         </View>
       </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate('AddExpenseScreen')}
+      <TouchableOpacity
+        onPress={() => navigation.navigate('AddExpenseScreen')}
         style={styles.checkinButton}>
-        <Text style={styles.checkinButtonText}>
-          Claim an Expense
-        </Text>
+        <Text style={styles.checkinButtonText}>Claim an Expense</Text>
         <Ionicons
           name="chevron-forward-circle-sharp"
           size={24}
@@ -68,24 +71,18 @@ const ExpenseComponent = ({ navigation }: any) => {
         />
       </TouchableOpacity>
 
-      <View style={[styles.quick, { paddingTop: 0 }]}>
+      <View style={[styles.quick, {paddingTop: 0}]}>
         <View style={styles.HeadingHead}>
           <Text style={styles.SectionHeading}>Quick Create</Text>
-          <TouchableOpacity style={styles.viewallButton} onPress={() => navigation.navigate('AddExpenseScreen')}>
-            <Text style={styles.viewaText}>
-              View All
-            </Text>
-            <ChevronRight
-              size={24}
-              color={Colors.black}
-            />
+          <TouchableOpacity
+            style={styles.viewallButton}
+            onPress={() => navigation.navigate('AddExpenseScreen')}>
+            <Text style={styles.viewaText}>View All</Text>
+            <ChevronRight size={24} color={Colors.black} />
           </TouchableOpacity>
         </View>
 
-        <View
-          style={[
-            styles.dataBox, { marginTop: 2 },
-          ]}>
+        <View style={[styles.dataBox, {marginTop: 2}]}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ExpenseScreen')}
             style={[styles.positionValue]}>
@@ -115,7 +112,11 @@ const ExpenseComponent = ({ navigation }: any) => {
             style={[styles.positionValue]}>
             <View style={styles.incentiveContent}>
               <View style={styles.iconbox}>
-                <BriefcaseConveyorBelt strokeWidth={2} color={Colors.white} size={30} />
+                <BriefcaseConveyorBelt
+                  strokeWidth={2}
+                  color={Colors.white}
+                  size={30}
+                />
               </View>
               <View>
                 <Text style={styles.quantitytime}>Trip</Text>
@@ -137,48 +138,44 @@ const ExpenseComponent = ({ navigation }: any) => {
         </View>
       </View>
 
-      <View style={[styles.quick, { paddingTop: 0 }]}>
+      <View style={[styles.quick, {paddingTop: 0}]}>
         <Text style={styles.SectionHeading}>Pending Approval</Text>
-        <View
-          style={[styles.paBox]}>
-          <TouchableOpacity onPress={() => navigation.navigate('ExpenseScreen')}>
+        <View style={[styles.paBox]}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ExpenseScreen')}>
             <View style={styles.pendappContent}>
               <View>
                 <FileText strokeWidth={2} color={Colors.black} size={30} />
               </View>
               <View>
-                <Text style={styles.quantityCount}>
-                  Reports
-                </Text>
+                <Text style={styles.quantityCount}>Reports</Text>
               </View>
-              <View><CircleCheck strokeWidth={2} color={Colors.black} size={30} /></View>
+              <View>
+                <CircleCheck strokeWidth={2} color={Colors.black} size={30} />
+              </View>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('ExpenseScreen')}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ExpenseScreen')}>
             <View style={styles.pendappContent}>
               <View>
-                <BriefcaseConveyorBelt strokeWidth={2} color={Colors.black} size={30} />
+                <BriefcaseConveyorBelt
+                  strokeWidth={2}
+                  color={Colors.black}
+                  size={30}
+                />
               </View>
               <View>
-                <Text style={styles.quantityCount}>
-                  Trips
-                </Text>
+                <Text style={styles.quantityCount}>Trips</Text>
               </View>
-              <View><CircleCheck strokeWidth={2} color={Colors.black} size={30} /></View>
+              <View>
+                <CircleCheck strokeWidth={2} color={Colors.black} size={30} />
+              </View>
             </View>
           </TouchableOpacity>
-
-
-
-
-
         </View>
       </View>
-
-    </View>
-
-
-
+    </ScrollView>
   );
 };
 
@@ -216,7 +213,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -228,7 +225,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
+  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -295,7 +292,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -387,7 +384,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: { paddingTop: 15 },
+  dataBoxSection: {paddingTop: 15},
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -412,7 +409,7 @@ const styles = StyleSheet.create({
     //alignItems: 'center',
     gap: 12,
   },
-  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
+  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -508,7 +505,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: { backgroundColor: Colors.white },
+  LinkSection: {backgroundColor: Colors.white},
 
   IconlinkBox: {
     display: 'flex',

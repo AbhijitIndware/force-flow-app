@@ -28,9 +28,9 @@ const ExpenseScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader
-        title="Expense"
+        title="Expense Dashboard"
         navigation={() => {
-          navigation.goBack();
+          navigation.navigate('Home');
         }}
       />
       <ExpenseComponent navigation={navigation} />

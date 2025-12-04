@@ -94,3 +94,11 @@ export const addSalesOrderSchema = Yup.object().shape({
   terms: Yup.string().nullable(),
   submit_order: Yup.boolean().required(),
 });
+
+export const expenseItemSchema = Yup.object().shape({
+  date: Yup.string().required('Date is required'),
+  claim_type: Yup.string().required('Claim type is required'),
+  amount: Yup.number()
+    .typeError('Amount must be a number')
+    .required('Amount is required'),
+});
