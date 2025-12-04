@@ -21,10 +21,10 @@ const AddExpenseScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title="Add Expense"
+        title="New Expense Claim"
         navigation={() => navigation.navigate('Home')}
       />
-      <AddExpenseComponent />
+      <AddExpenseComponent navigation={navigation} />
     </SafeAreaView>
   );
 };
