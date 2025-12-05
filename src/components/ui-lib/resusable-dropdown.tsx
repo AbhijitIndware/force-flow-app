@@ -28,6 +28,7 @@ interface ReusableDropdownProps {
   onAddPress?: () => void;
 
   onOpen?: () => void;
+  disabled?: boolean;
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -47,6 +48,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   onAddPress,
 
   onOpen,
+  disabled,
 }) => {
   return (
     <View style={styles.inputWrapper}>
@@ -65,6 +67,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         addButtonText={addButtonText}
         onAddPress={onAddPress}
         onOpen={onOpen}
+        disabled={disabled}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

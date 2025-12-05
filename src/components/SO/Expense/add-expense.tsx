@@ -1,93 +1,142 @@
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import React from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Colors } from '../../../utils/colors';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
-import ReusableInput from '../../ui-lib/reuseable-input';
-import { CirclePlus, MoveUp } from 'lucide-react-native';
+import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Colors} from '../../../utils/colors';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {CirclePlus} from 'lucide-react-native';
+import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
+import {uniqueByValue} from '../../../utils/utils';
+import {useAppSelector} from '../../../store/hook';
 
-const { width } = Dimensions.get('window');
+const AddExpenseComponent = ({navigation}: any) => {
+  const [empPage, setEmpPage] = useState(1);
+  const [employeeListData, setEmployeeListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [loadingEmpMore, setLoadingEmpMore] = useState(false);
+  const [selectedEmpId, setSelectedEmpId] = useState<any>('');
 
-const AddExpenseComponent = ({ navigation }: any) => {
+  const {
+    data: employeeData,
+    error,
+    isFetching: fetchingEmp,
+  } = useGetEmployeeQuery({
+    page: String(empPage),
+    page_size: '20',
+    name: employeeSearch,
+  });
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
+  const transformEmployeeList = (arr: any[] = []) =>
+    arr.map(item => ({
+      label: `${item.employee_name}`,
+      value: item.name,
+    }));
+
+  /** ─── Employee Data Merge ─────────────────────────── */
+  useEffect(() => {
+    if (employeeData?.message?.data) {
+      setLoadingEmpMore(false);
+      const newData = transformEmployeeList(employeeData.message.data);
+      if (employeeSearch.trim() !== '' || empPage === 1) {
+        setEmployeeListData(uniqueByValue(newData));
+      } else {
+        setEmployeeListData(prev => uniqueByValue([...prev, ...newData]));
+      }
+    }
+  }, [employeeData]);
+
+  /** ─── Pagination Handlers ─────────────────────────── */
+  const handleLoadMoreEmployees = () => {
+    if (fetchingEmp) return;
+
+    const current = employeeData?.message?.pagination?.page ?? 1;
+    const total = employeeData?.message?.pagination?.total_pages ?? 1;
+
+    if (current >= total) return;
+    setLoadingEmpMore(true);
+    setEmpPage(prev => prev + 1);
+  };
+
+  useEffect(() => {
+    if (employee?.id) {
+      setSelectedEmpId(employee?.id);
+    }
+  }, [employee]);
 
   return (
     <View style={[styles.container]}>
-
-
-      {/* <Animated.ScrollView
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: {} } }],
-          { useNativeDriver: false }
-        )}
+      <ReusableDropdown
+        label="Expense Approver"
+        field="employee"
+        value={selectedEmpId}
+        data={employeeListData}
+        // error={touched.employee && errors.employee}
+        onChange={(val: string) => console.log(val)}
+        onLoadMore={handleLoadMoreEmployees}
+        loadingMore={loadingEmpMore}
+        searchText={employeeSearch}
+        setSearchText={setEmployeeSearch}
+        // disabled={true}
+      />
+      <View style={styles.HeadingHead}>
+        <Text style={styles.SectionHeading}>Expense</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AddExpenseItemScreen')}>
+          <View style={[{display: 'flex', flexDirection: 'row', gap: 10}]}>
+            <Text style={[{fontSize: Size.sm, fontFamily: Fonts.medium}]}>
+              ₹ 2,200
+            </Text>
+            <CirclePlus
+              size={20}
+              color={Colors.black}
+              style={[{position: 'relative'}]}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+      <Animated.ScrollView
+        onScroll={Animated.event([{nativeEvent: {contentOffset: {}}}], {
+          useNativeDriver: false,
+        })}
         scrollEventThrottle={16}
-        contentContainerStyle={{ padding: 10 }}
-      >
-        <ReusableInput label="Expense Approvaer" value={''} onChangeText={function (text: string): void {
-          throw new Error('Function not implemented.');
-        }} onBlur={function (): void {
-          throw new Error('Function not implemented.');
-        }} />
-      </Animated.ScrollView> */}
-
-      
-        <View style={styles.HeadingHead}>
-          <Text style={styles.SectionHeading}>Total Expense</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('AddExpenseItemScreen')}>
-            <View style={[{display:'flex', flexDirection:'row', gap: 10}]}>
-              <Text style={[{fontSize:Size.sm, fontFamily:Fonts.medium}]}>₹ 2,200</Text> 
-              <CirclePlus size={20} color={Colors.black} style={[{position:'relative', }]} />
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.dataBoxSection}>
-          <View style={styles.dataBox}>
-            <View>
-              <Text style={styles.quantityCount}>Food</Text>
-              <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
-            </View>
-            <View style={styles.positionValue}>
-              {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-              <Text style={styles.incressValu}>₹ 1,000</Text>
-            </View>
+        contentContainerStyle={styles.dataBoxSection}>
+        <View style={styles.dataBox}>
+          <View>
+            <Text style={styles.quantityCount}>Food</Text>
+            <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
           </View>
-          <View style={styles.dataBox}>
-            <View>
-              <Text style={styles.quantityCount}>Other</Text>
-              <Text style={styles.quantitytime}>Sanctioned : ₹ 200 27 Nov</Text>
-            </View>
-            <View style={styles.positionValue}>
-              {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-              <Text style={styles.incressValu}>₹ 200</Text>
-            </View>
-          </View>
-          <View style={styles.dataBox}>
-            <View>
-              <Text style={styles.quantityCount}>Food</Text>
-              <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
-            </View>
-            <View style={styles.positionValue}>
-              {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-              <Text style={styles.incressValu}>₹ 1,000</Text>
-            </View>
+          <View style={styles.positionValue}>
+            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
+            <Text style={styles.incressValu}>₹ 1,000</Text>
           </View>
         </View>
-      
-
-
-
-
-
-
-
-
+        <View style={styles.dataBox}>
+          <View>
+            <Text style={styles.quantityCount}>Other</Text>
+            <Text style={styles.quantitytime}>Sanctioned : ₹ 200 27 Nov</Text>
+          </View>
+          <View style={styles.positionValue}>
+            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
+            <Text style={styles.incressValu}>₹ 200</Text>
+          </View>
+        </View>
+        <View style={styles.dataBox}>
+          <View>
+            <Text style={styles.quantityCount}>Food</Text>
+            <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
+          </View>
+          <View style={styles.positionValue}>
+            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
+            <Text style={styles.incressValu}>₹ 1,000</Text>
+          </View>
+        </View>
+      </Animated.ScrollView>
     </View>
-
-
-
-
-
   );
 };
 
@@ -98,165 +147,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.transparent,
     position: 'relative',
-    paddingHorizontal: 20,
-  },
-
-  //header-box-section css start
-  headerSec: {
-    backgroundColor: Colors.white,
-    minHeight: 200,
-    width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    // iOS Shadow
-    shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-
-    // Android Shadow
-    elevation: 2,
-  },
-  welcomeText: {
-    fontFamily: Fonts.light,
-    color: Colors.white,
-    fontSize: Size.sm,
-  },
-  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
-  welcomBox: {
-    padding: 15,
-    backgroundColor: Colors.orange,
-    borderRadius: 15,
-    paddingVertical: 20,
-    marginTop: 10,
-    borderBottomRightRadius: 0,
-    borderBottomLeftRadius: 0,
-    position: 'relative',
-  },
-
-  linkBox: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    borderRadius: 15,
-    marginTop: 8,
-    gap: 10,
-  },
-
-  dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.white,
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.white,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
-  },
-  monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.white,
-    fontSize: Size.xs,
-  },
-
-  linkContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    color: Colors.white,
-    gap: 1,
-    alignItems: 'flex-start',
-    width: '80%',
-  },
-
-  planLink: {
-    backgroundColor: Colors.white,
     padding: 20,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
   },
-
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
-  checkinButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'relative',
-    gap: 5,
-    //marginTop: 15,
-    marginRight: 15,
-    marginLeft: 15,
-  },
-  checkinButtonText: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.md,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-
-  //header-box-section css end
-  //countBox-section css start
-  countBoxSection: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 10,
-    flexDirection: 'row',
-  },
-  countBox: {
-    backgroundColor: Colors.white,
-    width: width * 0.28,
-    borderRadius: 15,
-    padding: 10,
-    minHeight: 110,
-  },
-  countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
-  },
-  countBoxTitle: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xsmd,
-  },
-  countBoxDay: {
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    fontSize: Size.md,
-    lineHeight: 20,
-    position: 'relative',
-    marginTop: 0,
-  },
-  //countBox-section css end
 
   //target&achivement section css start
   HeadingHead: {
@@ -264,16 +156,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 10,
     gap: 10,
-    marginTop: 15,
   },
   SectionHeading: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.md,
     color: Colors.darkButton,
-
   },
-  dataBoxSection: { paddingTop: 15 },
+  dataBoxSection: {paddingTop: 15},
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -285,7 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
+  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -310,7 +201,6 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     lineHeight: 20,
   },
-
   decriseValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -323,66 +213,5 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
     borderRadius: 8,
-  },
-
-  //incentive section css start
-  incentiveContent: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-  iconbox: {
-    width: 60,
-    height: 60,
-    backgroundColor: Colors.sucess,
-    borderRadius: 18,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  listLink: {
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: width * 0.9,
-  },
-  listLinkText: {
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    fontFamily: Fonts.regular,
-  },
-  arrobox: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#F0F2F6',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 100,
-  },
-
-  //incentive section css start
-  LinkSection: { backgroundColor: Colors.white },
-
-  IconlinkBox: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-    paddingHorizontal: 20,
-  },
-  linkTitle: {
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    fontFamily: Fonts.medium,
   },
 });

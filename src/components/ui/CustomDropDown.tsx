@@ -32,6 +32,7 @@ type Props = {
   onAddPress?: () => void;
   onOpen?: () => void;
   name?: string;
+  disabled?: boolean;
 };
 
 const DropdownComponent = ({
@@ -49,6 +50,7 @@ const DropdownComponent = ({
   onAddPress,
   onOpen,
   name,
+  disabled = false,
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
@@ -77,6 +79,7 @@ const DropdownComponent = ({
                 setVisible(true);
                 onOpen?.();
               }}
+              disabled={disabled}
               style={[
                 styles.dropdown,
                 {
@@ -85,6 +88,9 @@ const DropdownComponent = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   width: '100%',
+                  backgroundColor: disabled ? '#F3F3F3' : '#FFFFFF',
+                  borderColor: disabled ? '#D4D4D4' : Colors.inputBorder,
+                  opacity: disabled ? 0.6 : 1,
                 },
               ]}>
               <Text
@@ -92,6 +98,7 @@ const DropdownComponent = ({
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
+                  disabled && {color: '#9E9E9E'},
                   selectedId && styles.selectedTextActive, // 👈 add this line
                 ]}>
                 {selectedLabel}
@@ -168,6 +175,17 @@ const DropdownComponent = ({
               </TouchableOpacity>
             )}
             style={{maxHeight: 200, minWidth: '90%'}}
+            ListEmptyComponent={
+              <View style={{padding: 20, alignItems: 'center'}}>
+                <Text
+                  style={{
+                    color: Colors.inputBorder,
+                    fontFamily: Fonts.regular,
+                  }}>
+                  No {selectText} found
+                </Text>
+              </View>
+            }
           />
         </Menu>
       </View>
