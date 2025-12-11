@@ -910,3 +910,35 @@ export interface EmployeeData {
   total_qty: number;
   total_value: number;
 }
+
+//Expense
+export type RExpenseClaimType = {
+  data: {name: string}[];
+};
+
+export type ClaimData = {
+  claim: string;
+  claimed: number;
+  date: string;
+  expense_type: string;
+  sanctioned: number;
+};
+export type RExpenseClaimByEmp = {
+  message: {data: ClaimData[]};
+};
+
+export interface ExpenseItem {
+  expense_type: string;
+  expense_date: string; // ISO date string
+  amount: number;
+}
+
+export interface ExpenseClaimPayload {
+  employee: string;
+
+  posting_date: string;
+  custom_travel_start_date: string;
+  custom_travel_end_date: string;
+
+  expenses: ExpenseItem[];
+}

@@ -16,6 +16,9 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {expenseItemSchema} from '../../../types/schema';
 import {ActivityIndicator} from 'react-native';
+import {useCreateExpenseClaimMutation} from '../../../features/tada/tadaApi';
+import {ExpenseClaimPayload} from '../../../types/baseType';
+import {useAppSelector} from '../../../store/hook';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -30,7 +33,6 @@ type Props = {
 const initialValues = {
   date: '',
   claim_type: '',
-  description: '',
   amount: '',
   sanc_amount: '',
   attachment: null,
@@ -39,6 +41,11 @@ const initialValues = {
 const AddExpenseItemScreen = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  const [createExpenseClaim, {error}] = useCreateExpenseClaimMutation();
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
   const {
     values,
@@ -55,10 +62,24 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
       try {
         setLoading(true);
 
-        const payload = {data: formValues};
+        const payload: ExpenseClaimPayload = {
+          employee: employee.id,
+          posting_date: formValues.date,
+          custom_travel_start_date: formValues.date,
+          custom_travel_end_date: formValues.date,
+          expenses: [
+            {
+              expense_type: formValues.claim_type,
+              expense_date: formValues.date,
+              amount: Number(formValues.amount), // convert safely
+            },
+          ],
+        };
+
         console.log('Submitting payload:', payload);
 
-        // const res = await addDistributor(payload).unwrap();
+        const res = await createExpenseClaim(payload).unwrap();
+        console.log('🚀 ~ AddExpenseItemScreen ~ res:', res);
 
         Toast.show({
           type: 'success',
@@ -69,21 +90,16 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
         actions.resetForm();
         setLoading(false);
       } catch (error: any) {
-        console.error('Expense Item API Error:', error);
-
         Toast.show({
           type: 'error',
-          text1: `❌ ${
-            error?.data?.message?.message || 'Internal Server Error'
-          }`,
-          text2: 'Please try again later.',
+          text1: error?.data?.message?.message || 'Internal Server Error',
           position: 'top',
         });
-
         setLoading(false);
       }
     },
   });
+  console.log('🚀 ~ AddExpenseItemScreen ~ errors:', errors);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

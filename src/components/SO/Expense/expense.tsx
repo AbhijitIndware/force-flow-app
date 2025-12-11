@@ -36,7 +36,7 @@ const ExpenseComponent = ({navigation}: any) => {
             style={[styles.countBoxIcon, {backgroundColor: Colors.holdLight}]}>
             <RotateCw strokeWidth={1.4} color={Colors.orange} />
           </View>
-          <Text style={styles.countBoxDay}>8976</Text>
+          <Text style={styles.countBoxDay}>0</Text>
           <Text style={styles.countBoxTitle}>Pending</Text>
         </View>
         <View style={styles.countBox}>
@@ -47,7 +47,7 @@ const ExpenseComponent = ({navigation}: any) => {
             ]}>
             <CircleCheckBig strokeWidth={1.4} color={Colors.success} />
           </View>
-          <Text style={styles.countBoxDay}>34691</Text>
+          <Text style={styles.countBoxDay}>0</Text>
           <Text style={styles.countBoxTitle}>Approve</Text>
         </View>
         <View style={styles.countBox}>
@@ -55,7 +55,7 @@ const ExpenseComponent = ({navigation}: any) => {
             style={[styles.countBoxIcon, {backgroundColor: Colors.lightRed}]}>
             <CircleX strokeWidth={1.4} color={Colors.error} />
           </View>
-          <Text style={styles.countBoxDay}>76543</Text>
+          <Text style={styles.countBoxDay}>0</Text>
           <Text style={styles.countBoxTitle}>Reject</Text>
         </View>
       </View>

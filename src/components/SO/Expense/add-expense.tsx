@@ -4,92 +4,52 @@ import {Colors} from '../../../utils/colors';
 import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {CirclePlus} from 'lucide-react-native';
-import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
-import {uniqueByValue} from '../../../utils/utils';
 import {useAppSelector} from '../../../store/hook';
+import {useGetExpenseClaimByEmployeeQuery} from '../../../features/tada/tadaApi';
+import moment from 'moment';
+import LoadingScreen from '../../ui/LoadingScreen';
 
 const AddExpenseComponent = ({navigation}: any) => {
-  const [empPage, setEmpPage] = useState(1);
-  const [employeeListData, setEmployeeListData] = useState<
-    {label: string; value: string}[]
-  >([]);
-  const [employeeSearch, setEmployeeSearch] = useState('');
-  const [loadingEmpMore, setLoadingEmpMore] = useState(false);
-  const [selectedEmpId, setSelectedEmpId] = useState<any>('');
-
-  const {
-    data: employeeData,
-    error,
-    isFetching: fetchingEmp,
-  } = useGetEmployeeQuery({
-    page: String(empPage),
-    page_size: '20',
-    name: employeeSearch,
-  });
+  const [total, setTotal] = useState<number>(0);
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-
-  const transformEmployeeList = (arr: any[] = []) =>
-    arr.map(item => ({
-      label: `${item.employee_name}`,
-      value: item.name,
-    }));
-
-  /** ─── Employee Data Merge ─────────────────────────── */
-  useEffect(() => {
-    if (employeeData?.message?.data) {
-      setLoadingEmpMore(false);
-      const newData = transformEmployeeList(employeeData.message.data);
-      if (employeeSearch.trim() !== '' || empPage === 1) {
-        setEmployeeListData(uniqueByValue(newData));
-      } else {
-        setEmployeeListData(prev => uniqueByValue([...prev, ...newData]));
-      }
-    }
-  }, [employeeData]);
-
-  /** ─── Pagination Handlers ─────────────────────────── */
-  const handleLoadMoreEmployees = () => {
-    if (fetchingEmp) return;
-
-    const current = employeeData?.message?.pagination?.page ?? 1;
-    const total = employeeData?.message?.pagination?.total_pages ?? 1;
-
-    if (current >= total) return;
-    setLoadingEmpMore(true);
-    setEmpPage(prev => prev + 1);
-  };
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
+  const {data: claimByEmp, isFetching} = useGetExpenseClaimByEmployeeQuery({
+    employee: employee?.id,
+  });
 
   useEffect(() => {
-    if (employee?.id) {
-      setSelectedEmpId(employee?.id);
+    if (claimByEmp?.message?.data) {
+      let _total = claimByEmp?.message?.data?.reduce(
+        (total, expense) => total + expense?.claimed,
+        0,
+      );
+      setTotal(_total);
     }
-  }, [employee]);
+  }, [claimByEmp]);
 
   return (
     <View style={[styles.container]}>
-      <ReusableDropdown
-        label="Expense Approver"
-        field="employee"
-        value={selectedEmpId}
-        data={employeeListData}
-        // error={touched.employee && errors.employee}
-        onChange={(val: string) => console.log(val)}
-        onLoadMore={handleLoadMoreEmployees}
-        loadingMore={loadingEmpMore}
-        searchText={employeeSearch}
-        setSearchText={setEmployeeSearch}
-        // disabled={true}
-      />
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>Expense Approver</Text>
+
+        <View style={styles.readonlyInput}>
+          <Text style={styles.readonlyText}>
+            {user?.full_name || 'No Employee Found'}
+          </Text>
+        </View>
+      </View>
+
       <View style={styles.HeadingHead}>
         <Text style={styles.SectionHeading}>Expense</Text>
         <TouchableOpacity
           onPress={() => navigation.navigate('AddExpenseItemScreen')}>
           <View style={[{display: 'flex', flexDirection: 'row', gap: 10}]}>
             <Text style={[{fontSize: Size.sm, fontFamily: Fonts.medium}]}>
-              ₹ 2,200
+              ₹ {total}
             </Text>
             <CirclePlus
               size={20}
@@ -99,43 +59,36 @@ const AddExpenseComponent = ({navigation}: any) => {
           </View>
         </TouchableOpacity>
       </View>
-      <Animated.ScrollView
-        onScroll={Animated.event([{nativeEvent: {contentOffset: {}}}], {
-          useNativeDriver: false,
-        })}
-        scrollEventThrottle={16}
-        contentContainerStyle={styles.dataBoxSection}>
-        <View style={styles.dataBox}>
-          <View>
-            <Text style={styles.quantityCount}>Food</Text>
-            <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
-          </View>
-          <View style={styles.positionValue}>
-            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-            <Text style={styles.incressValu}>₹ 1,000</Text>
-          </View>
-        </View>
-        <View style={styles.dataBox}>
-          <View>
-            <Text style={styles.quantityCount}>Other</Text>
-            <Text style={styles.quantitytime}>Sanctioned : ₹ 200 27 Nov</Text>
-          </View>
-          <View style={styles.positionValue}>
-            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-            <Text style={styles.incressValu}>₹ 200</Text>
-          </View>
-        </View>
-        <View style={styles.dataBox}>
-          <View>
-            <Text style={styles.quantityCount}>Food</Text>
-            <Text style={styles.quantitytime}>Sanctioned : ₹ 1,000 27 Nov</Text>
-          </View>
-          <View style={styles.positionValue}>
-            {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-            <Text style={styles.incressValu}>₹ 1,000</Text>
-          </View>
-        </View>
-      </Animated.ScrollView>
+      {isFetching ? (
+        <LoadingScreen />
+      ) : (
+        <Animated.ScrollView
+          onScroll={Animated.event([{nativeEvent: {contentOffset: {}}}], {
+            useNativeDriver: false,
+          })}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.dataBoxSection}>
+          {claimByEmp?.message?.data?.map((expense, index) => (
+            <View key={`${expense?.claim}-${index}`} style={styles.dataBox}>
+              <View>
+                <Text style={styles.quantityCount}>
+                  {expense?.expense_type}
+                </Text>
+                <Text style={styles.quantitytime}>
+                  Sanctioned : ₹ {expense.sanctioned}
+                </Text>
+                <Text style={styles.quantitytime}>
+                  {moment(expense.date).format('LL')}
+                </Text>
+              </View>
+              <View style={styles.positionValue}>
+                {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
+                <Text style={styles.incressValu}>₹ {expense.claimed}</Text>
+              </View>
+            </View>
+          ))}
+        </Animated.ScrollView>
+      )}
     </View>
   );
 };
@@ -148,6 +101,32 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.transparent,
     position: 'relative',
     padding: 20,
+  },
+  inputWrapper: {
+    marginBottom: 15,
+  },
+
+  inputLabel: {
+    fontSize: Size.sm,
+    fontFamily: Fonts.medium,
+    marginBottom: 6,
+    color: Colors.darkButton,
+  },
+
+  readonlyInput: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: Colors.border || '#DADADA',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+    backgroundColor: '#F7F7F7',
+  },
+
+  readonlyText: {
+    fontSize: Size.sm,
+    fontFamily: Fonts.regular,
+    color: Colors.black,
   },
 
   //target&achivement section css start

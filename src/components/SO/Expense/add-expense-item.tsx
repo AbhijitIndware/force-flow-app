@@ -1,5 +1,5 @@
 // Add ExpenseItem.tsx
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Animated, StyleSheet, TouchableOpacity} from 'react-native';
 import ReusableInput from '../../ui-lib/reuseable-input';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
@@ -9,6 +9,7 @@ import {Text} from 'react-native';
 import {Colors} from '../../../utils/colors';
 import {Upload} from 'lucide-react-native';
 import {pick} from '@react-native-documents/picker';
+import {useGetExpenseClaimTypeQuery} from '../../../features/tada/tadaApi';
 
 interface Props {
   values: Record<string, string | any>;
@@ -29,6 +30,10 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
 }
+interface DropdownOption {
+  label: string;
+  value: string;
+}
 
 const AddExpenseItem: React.FC<Props> = ({
   values,
@@ -39,6 +44,9 @@ const AddExpenseItem: React.FC<Props> = ({
   setFieldValue,
   scrollY,
 }) => {
+  const [claimType, setClaimType] = useState<DropdownOption[]>([]);
+  const {data} = useGetExpenseClaimTypeQuery();
+
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
     if (field === 'zone') {
@@ -48,76 +56,6 @@ const AddExpenseItem: React.FC<Props> = ({
       setFieldValue('city', '');
     }
   };
-  // const handlePickAttachment = () => {
-  //   Alert.alert(
-  //     'Select Attachment',
-  //     'Choose a file type',
-  //     [
-  //       {text: 'Camera', onPress: handleOpenCamera},
-  //       {text: 'Gallery', onPress: handleOpenGallery},
-  //       {text: 'Document', onPress: handlePickDocument},
-  //       {text: 'Cancel', style: 'cancel'},
-  //     ],
-  //     {cancelable: true},
-  //   );
-  // };
-
-  // const handleOpenCamera = async () => {
-  //   launchCamera(
-  //     {
-  //       mediaType: 'photo',
-  //       cameraType: 'back',
-  //       quality: 0.8,
-  //       includeBase64: true,
-  //     },
-  //     response => {
-  //       if (response.didCancel) return;
-  //       if (response.errorCode) {
-  //         console.warn('Camera error:', response.errorMessage);
-  //         return;
-  //       }
-
-  //       if (response.assets && response.assets.length > 0) {
-  //         const img = response.assets[0];
-  //         if (img.base64 && img.type) {
-  //           setFieldValue('attachment', {
-  //             data: img.base64,
-  //             mime: img.type,
-  //             name: img.fileName || 'image.jpg',
-  //           });
-  //         }
-  //       }
-  //     },
-  //   );
-  // };
-
-  // const handleOpenGallery = async () => {
-  //   launchImageLibrary(
-  //     {
-  //       mediaType: 'photo',
-  //       includeBase64: true,
-  //       quality: 0.8,
-  //     },
-  //     response => {
-  //       if (response.didCancel) return;
-  //       if (response.errorCode) {
-  //         console.warn('Gallery error:', response.errorMessage);
-  //         return;
-  //       }
-
-  //       if (response.assets && response.assets.length > 0) {
-  //         const img = response.assets[0];
-  //         if (img.base64 && img.type) {
-  //           setFieldValue('attachment', {
-  //             data: img.base64,
-  //             mime: img.type,
-  //             name: img.fileName,
-  //           });
-  //         }
-  //       }
-  //     },
-  //   );
-  // };
 
   const handlePickDocument = async () => {
     try {
@@ -151,6 +89,17 @@ const AddExpenseItem: React.FC<Props> = ({
     }
   };
 
+  useEffect(() => {
+    if (data?.data) {
+      setClaimType(
+        data.data.map(claimType => ({
+          label: claimType.name,
+          value: claimType.name,
+        })),
+      );
+    }
+  }, [data]);
+
   return (
     <Animated.ScrollView
       onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
@@ -166,19 +115,19 @@ const AddExpenseItem: React.FC<Props> = ({
       />
       <ReusableDropdown
         label="Expense Claim Type"
-        field="distributor_group"
-        value={values.distributor_group}
-        data={[]}
-        error={touched.distributor_group && errors.distributor_group}
-        onChange={(val: string) => onSelect('distributor_group', val)}
+        field="claim_type"
+        value={values.claim_type}
+        data={claimType}
+        error={touched.claim_type && errors.claim_type}
+        onChange={(val: string) => onSelect('claim_type', val)}
       />
-      <ReusableInput
+      {/* <ReusableInput
         label="Description"
         value={values.description}
         onChangeText={handleChange('description')}
         onBlur={() => handleBlur('description')}
         error={touched.description && errors.description}
-      />
+      /> */}
       <ReusableInput
         label="Amount"
         value={values.amount}
@@ -189,7 +138,7 @@ const AddExpenseItem: React.FC<Props> = ({
       />
       <ReusableInput
         label="Sanctioned Amount"
-        value={values.amount}
+        value={values.sanc_amount}
         onChangeText={handleChange('sanc_amount')}
         onBlur={() => handleBlur('sanc_amount')}
         error={touched.sanc_amount && errors.sanc_amount}

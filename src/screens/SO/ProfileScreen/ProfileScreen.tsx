@@ -49,11 +49,9 @@ const ProfileScreen = ({navigation}: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
-  console.log('🚀 ~ ProfileScreen ~ user:', user);
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  console.log('🚀 ~ ProfileScreen ~ employee:', employee);
   const dispatch = useAppDispatch();
 
   const handleLogout = () => {
