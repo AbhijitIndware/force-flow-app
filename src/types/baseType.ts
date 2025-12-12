@@ -931,11 +931,12 @@ export interface ExpenseItem {
   expense_type: string;
   expense_date: string; // ISO date string
   amount: number;
+  custom_claim_description: string;
 }
 
 export interface ExpenseClaimPayload {
   employee: string;
-
+  // company: string;
   posting_date: string;
   custom_travel_start_date: string;
   custom_travel_end_date: string;

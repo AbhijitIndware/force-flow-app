@@ -45,6 +45,7 @@ export type SoAppStackParamList = {
   ExpenseScreen: undefined;
   AddExpenseScreen: undefined;
   AddExpenseItemScreen: undefined;
+  ExpenseClaimScreen: {id: string};
 };
 
 export type menuType = {

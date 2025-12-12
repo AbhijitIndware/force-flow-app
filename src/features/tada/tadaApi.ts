@@ -44,6 +44,7 @@ export const tadaApi = createApi({
         url: `/resource/Expense%20Claim%20Type`,
         method: 'GET',
       }),
+      providesTags: ['Expense'],
     }),
     getExpenseClaimByEmployee: builder.query<
       RExpenseClaimByEmp,
@@ -52,24 +53,22 @@ export const tadaApi = createApi({
       query: ({employee}) => ({
         url: `/method/softsens.api.get_expense_rows_by_employee?employee=${employee}`,
         method: 'GET',
-        // params: {
-        //   filters: JSON.stringify([
-        //     ['Expense Claim', 'employee', '=', employee],
-        //   ]),
-        // },
       }),
+      providesTags: ['Expense'],
     }),
     getClaimList: builder.query<RExpenseClaimType, void>({
       query: () => ({
         url: `/resource/Expense%20Claim`,
         method: 'GET',
       }),
+      providesTags: ['Expense'],
     }),
-    getClaimById: builder.query<RExpenseClaimType, {claimId: string}>({
+    getClaimById: builder.query<any, {claimId: string}>({
       query: ({claimId}) => ({
         url: `/resource/Expense%20Claim/${claimId}`,
         method: 'GET',
       }),
+      providesTags: ['Expense'],
     }),
 
     //Expense Mutation
@@ -79,6 +78,7 @@ export const tadaApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['Expense'],
     }),
   }),
 });

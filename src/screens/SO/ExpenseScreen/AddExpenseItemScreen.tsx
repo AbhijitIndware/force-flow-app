@@ -33,8 +33,8 @@ type Props = {
 const initialValues = {
   date: '',
   claim_type: '',
+  description: '',
   amount: '',
-  sanc_amount: '',
   attachment: null,
 };
 
@@ -64,6 +64,7 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
 
         const payload: ExpenseClaimPayload = {
           employee: employee.id,
+          // company: 'Softsens',
           posting_date: formValues.date,
           custom_travel_start_date: formValues.date,
           custom_travel_end_date: formValues.date,
@@ -71,12 +72,11 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
             {
               expense_type: formValues.claim_type,
               expense_date: formValues.date,
+              custom_claim_description: formValues.description,
               amount: Number(formValues.amount), // convert safely
             },
           ],
         };
-
-        console.log('Submitting payload:', payload);
 
         const res = await createExpenseClaim(payload).unwrap();
         console.log('🚀 ~ AddExpenseItemScreen ~ res:', res);
@@ -89,6 +89,9 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
 
         actions.resetForm();
         setLoading(false);
+        setTimeout(() => {
+          navigation.goBack();
+        }, 500);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -99,7 +102,6 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
       }
     },
   });
-  console.log('🚀 ~ AddExpenseItemScreen ~ errors:', errors);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>

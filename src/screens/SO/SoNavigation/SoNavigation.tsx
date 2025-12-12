@@ -23,6 +23,7 @@ import StockReport from '../ActivityScreen/StockReport';
 import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
 import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
+import ExpenseClaimScreen from '../ExpenseScreen/ExpenseClaimScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -139,8 +140,12 @@ const SoNavigation = () => {
         component={AddExpenseItemScreen}
         options={{headerShown: false}}
       />
+      <Stack.Screen
+        name="ExpenseClaimScreen"
+        component={ExpenseClaimScreen}
+        options={{headerShown: false}}
+      />
     </Stack.Navigator>
-
   );
 };
 

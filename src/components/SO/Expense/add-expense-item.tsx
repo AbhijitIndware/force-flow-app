@@ -121,27 +121,19 @@ const AddExpenseItem: React.FC<Props> = ({
         error={touched.claim_type && errors.claim_type}
         onChange={(val: string) => onSelect('claim_type', val)}
       />
-      {/* <ReusableInput
+      <ReusableInput
         label="Description"
         value={values.description}
         onChangeText={handleChange('description')}
         onBlur={() => handleBlur('description')}
         error={touched.description && errors.description}
-      /> */}
+      />
       <ReusableInput
         label="Amount"
         value={values.amount}
         onChangeText={handleChange('amount')}
         onBlur={() => handleBlur('amount')}
         error={touched.amount && errors.amount}
-        keyboardType="numeric"
-      />
-      <ReusableInput
-        label="Sanctioned Amount"
-        value={values.sanc_amount}
-        onChangeText={handleChange('sanc_amount')}
-        onBlur={() => handleBlur('sanc_amount')}
-        error={touched.sanc_amount && errors.sanc_amount}
         keyboardType="numeric"
       />
       {/* ----------------------- */}

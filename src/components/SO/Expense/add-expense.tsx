@@ -17,9 +17,14 @@ const AddExpenseComponent = ({navigation}: any) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
-  const {data: claimByEmp, isFetching} = useGetExpenseClaimByEmployeeQuery({
+  const {
+    data: claimByEmp,
+    isFetching,
+    error,
+  } = useGetExpenseClaimByEmployeeQuery({
     employee: employee?.id,
   });
+  console.log('🚀 ~ AddExpenseComponent ~ error:', error);
 
   useEffect(() => {
     if (claimByEmp?.message?.data) {
@@ -69,7 +74,12 @@ const AddExpenseComponent = ({navigation}: any) => {
           scrollEventThrottle={16}
           contentContainerStyle={styles.dataBoxSection}>
           {claimByEmp?.message?.data?.map((expense, index) => (
-            <View key={`${expense?.claim}-${index}`} style={styles.dataBox}>
+            <TouchableOpacity
+              key={`${expense?.claim}-${index}`}
+              style={styles.dataBox}
+              onPress={() =>
+                navigation.navigate('ExpenseClaimScreen', {id: expense?.claim})
+              }>
               <View>
                 <Text style={styles.quantityCount}>
                   {expense?.expense_type}
@@ -85,7 +95,7 @@ const AddExpenseComponent = ({navigation}: any) => {
                 {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
                 <Text style={styles.incressValu}>₹ {expense.claimed}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </Animated.ScrollView>
       )}
