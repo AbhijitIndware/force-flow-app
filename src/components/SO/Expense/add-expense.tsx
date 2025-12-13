@@ -24,7 +24,6 @@ const AddExpenseComponent = ({navigation}: any) => {
   } = useGetExpenseClaimByEmployeeQuery({
     employee: employee?.id,
   });
-  console.log('🚀 ~ AddExpenseComponent ~ error:', error);
 
   useEffect(() => {
     if (claimByEmp?.message?.data) {
@@ -51,6 +50,7 @@ const AddExpenseComponent = ({navigation}: any) => {
       <View style={styles.HeadingHead}>
         <Text style={styles.SectionHeading}>Expense</Text>
         <TouchableOpacity
+          disabled={isFetching}
           onPress={() => navigation.navigate('AddExpenseItemScreen')}>
           <View style={[{display: 'flex', flexDirection: 'row', gap: 10}]}>
             <Text style={[{fontSize: Size.sm, fontFamily: Fonts.medium}]}>
@@ -78,7 +78,10 @@ const AddExpenseComponent = ({navigation}: any) => {
               key={`${expense?.claim}-${index}`}
               style={styles.dataBox}
               onPress={() =>
-                navigation.navigate('ExpenseClaimScreen', {id: expense?.claim})
+                navigation.navigate('ExpenseClaimScreen', {
+                  id: expense?.claim,
+                  name: expense?.expense_type,
+                })
               }>
               <View>
                 <Text style={styles.quantityCount}>

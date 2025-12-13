@@ -52,8 +52,6 @@ const AddExpenseScreen = ({navigation}: Props) => {
         setLoading(true);
 
         const payload = {data: formValues};
-        console.log('Submitting payload:', payload);
-
         // const res = await addDistributor(payload).unwrap();
 
         Toast.show({
@@ -88,7 +86,7 @@ const AddExpenseScreen = ({navigation}: Props) => {
         navigation={() => navigation.navigate('ExpenseScreen')}
       />
       <AddExpenseComponent navigation={navigation} />
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.submitBtn, loading && {opacity: 0.7}]}
         onPress={() => handleSubmit()}
         disabled={loading}>
@@ -97,7 +95,7 @@ const AddExpenseScreen = ({navigation}: Props) => {
         ) : (
           <Text style={styles.submitText}>Save</Text>
         )}
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </SafeAreaView>
   );
 };

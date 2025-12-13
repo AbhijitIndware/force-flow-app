@@ -10,11 +10,16 @@ import {Colors} from '../../../utils/colors';
 import {Upload} from 'lucide-react-native';
 import {pick} from '@react-native-documents/picker';
 import {useGetExpenseClaimTypeQuery} from '../../../features/tada/tadaApi';
+import {FormikTouched} from 'formik';
+import {Image} from 'react-native';
 
 interface Props {
   values: Record<string, string | any>;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
+  errors: Record<string, string | any>;
+  touched: Record<
+    string,
+    boolean | FormikTouched<any> | FormikTouched<any>[] | undefined
+  >;
   handleBlur: {
     (e: React.FocusEvent<any, Element>): void;
     <T = any>(fieldOrEvent: T): T extends string ? (e: any) => void : void;
@@ -47,6 +52,10 @@ const AddExpenseItem: React.FC<Props> = ({
   const [claimType, setClaimType] = useState<DropdownOption[]>([]);
   const {data} = useGetExpenseClaimTypeQuery();
 
+  const isImage = (type?: string) => {
+    return !!type && type.startsWith('image/');
+  };
+
   const onSelect = (field: string, val: string) => {
     setFieldValue(field, val);
     if (field === 'zone') {
@@ -67,23 +76,11 @@ const AddExpenseItem: React.FC<Props> = ({
 
       const {uri, name, type} = doc[0];
 
-      // Convert to base64
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result?.toString().split(',')[1];
-
-        setFieldValue('attachment', {
-          data: base64,
-          mime: type || 'application/octet-stream',
-          name,
-          uri,
-        });
-      };
-
-      reader.readAsDataURL(blob);
+      setFieldValue('attachment', {
+        uri,
+        name,
+        type: type || 'application/octet-stream',
+      });
     } catch (err) {
       console.warn('Document picker error:', err);
     }
@@ -163,6 +160,21 @@ const AddExpenseItem: React.FC<Props> = ({
             Upload images or documennts
           </Text>
         </TouchableOpacity>
+
+        {/* -------- PREVIEW SECTION -------- */}
+        {values.attachment && (
+          <View style={styles.previewContainer}>
+            {isImage(values.attachment.type) ? (
+              <Image
+                source={{uri: values.attachment.uri}}
+                style={styles.fullWidthImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <Text style={styles.fileName}>📎 {values.attachment.name}</Text>
+            )}
+          </View>
+        )}
       </View>
     </Animated.ScrollView>
   );
@@ -196,5 +208,45 @@ const styles = StyleSheet.create({
     color: 'red',
     marginTop: 4,
     fontSize: 12,
+  },
+  uploadBox: {
+    marginTop: 5,
+    height: 100,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+
+  uploadHint: {
+    color: '#000',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+
+  previewContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+
+  imagePreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+  },
+  fullWidthImage: {
+    width: '100%',
+    height: 200, // adjust if needed
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: '#f9f9f9',
   },
 });

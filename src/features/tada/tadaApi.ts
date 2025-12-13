@@ -3,6 +3,7 @@ import {apiBaseUrl} from '../apiBaseUrl';
 import {
   ExpenseClaimPayload,
   RExpenseClaimByEmp,
+  RExpenseClaimDetail,
   RExpenseClaimType,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
@@ -19,7 +20,7 @@ export const tadaApi = createApi({
     baseUrl: apiBaseUrl,
     prepareHeaders: headers => {
       headers.set('Authorization', `Basic ${encodedAuth}`);
-      headers.set('Content-Type', 'application/json');
+      // headers.set('Content-Type', 'application/json');
       return headers;
     },
   }),
@@ -63,7 +64,7 @@ export const tadaApi = createApi({
       }),
       providesTags: ['Expense'],
     }),
-    getClaimById: builder.query<any, {claimId: string}>({
+    getClaimById: builder.query<RExpenseClaimDetail, {claimId: string}>({
       query: ({claimId}) => ({
         url: `/resource/Expense%20Claim/${claimId}`,
         method: 'GET',
@@ -80,6 +81,14 @@ export const tadaApi = createApi({
       }),
       invalidatesTags: ['Expense'],
     }),
+    uploadAttachmentForClaim: builder.mutation<any, FormData>({
+      query: formData => ({
+        url: `/method/upload_file`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['Expense'],
+    }),
   }),
 });
 export const {
@@ -93,6 +102,7 @@ export const {
 
   //Expense Mutation
   useCreateExpenseClaimMutation,
+  useUploadAttachmentForClaimMutation,
 } = tadaApi;
 
 interface PjpState {

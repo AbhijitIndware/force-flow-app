@@ -927,7 +927,7 @@ export type RExpenseClaimByEmp = {
   message: {data: ClaimData[]};
 };
 
-export interface ExpenseItem {
+export interface IExpenseItem {
   expense_type: string;
   expense_date: string; // ISO date string
   amount: number;
@@ -941,5 +941,107 @@ export interface ExpenseClaimPayload {
   custom_travel_start_date: string;
   custom_travel_end_date: string;
 
+  expenses: IExpenseItem[];
+}
+
+export interface FrappeFileUploadPayload {
+  doctype: string;
+  file_name: string;
+  is_private: number;
+  attached_to_doctype: string;
+  attached_to_name: string;
+  content: string; // Base64 string
+}
+
+export interface RExpenseClaimDetail {
+  data: ExpenseClaim;
+}
+export interface ExpenseClaim {
+  name: string;
+  doctype: 'Expense Claim';
+  docstatus: number;
+  approval_status: string;
+  status: string;
+
+  employee: string;
+  employee_name: string;
+
+  posting_date: string;
+
+  company: string;
+  cost_center: string;
+
+  custom_travel_start_date: string;
+  custom_travel_end_date: string;
+  custom_from_city: string;
+  custom_to_city: string;
+  custom_city_class: string;
+  custom_travel_type: string;
+
+  custom_days: number;
+  custom_distance_km: number;
+
+  custom_manager_approval_bike_over_100: number;
+  custom_manager_approval_for_extra: number;
+  custom_manager_approval_promotional: number;
+
+  advances: any[]; // no sample inside → keep as any[]
+  taxes: any[];
+
+  total_claimed_amount: number;
+  total_sanctioned_amount: number;
+  total_amount_reimbursed: number;
+  total_taxes_and_charges: number;
+  total_advance_amount: number;
+  grand_total: number;
+
   expenses: ExpenseItem[];
+
+  creation: string;
+  modified: string;
+  owner: string;
+  modified_by: string;
+
+  naming_series: string;
+  is_paid: number;
+  idx: number;
+}
+
+export interface ExpenseItem {
+  name: string;
+  doctype: 'Expense Claim Detail';
+  parent: string;
+  parenttype: string;
+  parentfield: string;
+
+  idx: number;
+  docstatus: number;
+
+  expense_type: string;
+  expense_date: string;
+
+  description?: string;
+  custom_claim_description: string;
+
+  amount: number;
+  sanctioned_amount: number;
+
+  default_account?: string;
+
+  // Telecom-related fields
+  custom_telecom_handset_cost: number;
+  custom_telecom_isd_amount: number;
+  custom_telecom_late_fee: number;
+  custom_telecom_other_disallowed: number;
+
+  // Travel fields
+  custom_is_local: number;
+  custom_is_promotional?: number;
+  custom_ta_km: number;
+  custom_ta_mode: string;
+
+  creation: string;
+  modified: string;
+  modified_by: string;
+  owner: string;
 }

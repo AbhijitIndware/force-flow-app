@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   Text,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {flexCol} from '../../../utils/styles';
@@ -16,9 +16,13 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {expenseItemSchema} from '../../../types/schema';
 import {ActivityIndicator} from 'react-native';
-import {useCreateExpenseClaimMutation} from '../../../features/tada/tadaApi';
+import {
+  useCreateExpenseClaimMutation,
+  useUploadAttachmentForClaimMutation,
+} from '../../../features/tada/tadaApi';
 import {ExpenseClaimPayload} from '../../../types/baseType';
 import {useAppSelector} from '../../../store/hook';
+import RNFS from 'react-native-fs';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -40,9 +44,12 @@ const initialValues = {
 
 const AddExpenseItemScreen = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
+  const [claimId, setClaimId] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [createExpenseClaim, {error}] = useCreateExpenseClaimMutation();
+  const [createExpenseClaim, {isSuccess}] = useCreateExpenseClaimMutation();
+  const [uploadAttachmentForClaim, {isSuccess: attachmentSucess}] =
+    useUploadAttachmentForClaimMutation();
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
@@ -55,16 +62,19 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
     handleBlur,
     handleSubmit,
     setFieldValue,
+    resetForm,
   } = useFormik({
     initialValues,
     validationSchema: expenseItemSchema,
-    onSubmit: async (formValues, actions) => {
+    onSubmit: async (formValues: any) => {
       try {
         setLoading(true);
 
+        // ---------------------
+        // 1️⃣ CREATE CLAIM
+        // ---------------------
         const payload: ExpenseClaimPayload = {
           employee: employee.id,
-          // company: 'Softsens',
           posting_date: formValues.date,
           custom_travel_start_date: formValues.date,
           custom_travel_end_date: formValues.date,
@@ -73,25 +83,29 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
               expense_type: formValues.claim_type,
               expense_date: formValues.date,
               custom_claim_description: formValues.description,
-              amount: Number(formValues.amount), // convert safely
+              amount: Number(formValues.amount),
             },
           ],
         };
 
         const res = await createExpenseClaim(payload).unwrap();
-        console.log('🚀 ~ AddExpenseItemScreen ~ res:', res);
+        const createdId = res?.data?.name;
+        setClaimId(createdId);
 
-        Toast.show({
-          type: 'success',
-          text1: 'Expense item saved successfully',
-          position: 'top',
-        });
+        // If no attachment, skip upload
+        if (!formValues.attachment) {
+          Toast.show({
+            type: 'success',
+            text1: 'Expense saved successfully',
+            position: 'top',
+          });
 
-        actions.resetForm();
-        setLoading(false);
-        setTimeout(() => {
-          navigation.goBack();
-        }, 500);
+          resetForm();
+          setLoading(false);
+          return navigation.goBack();
+        }
+
+        // Continue to upload in useEffect
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -102,6 +116,61 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
       }
     },
   });
+
+  // ---------------------
+  // 2️⃣ WHEN CLAIM CREATED → UPLOAD FILE
+  // ---------------------
+  useEffect(() => {
+    if (isSuccess && claimId && values.attachment) {
+      uploadAttachment();
+    }
+  }, [isSuccess]);
+
+  const uploadAttachment = async () => {
+    try {
+      const file = values.attachment;
+
+      const formData = new FormData();
+
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+      } as any);
+      formData.append('filename', file.name);
+      formData.append('is_private', '1');
+      formData.append('doctype', 'Expense Claim');
+      formData.append('docname', claimId as string);
+
+      const res = await uploadAttachmentForClaim(formData).unwrap();
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: err?.error || 'Internal Server Error',
+        position: 'top',
+      });
+      setLoading(false);
+      throw err;
+    }
+  };
+
+  // ---------------------
+  // 3️⃣ WHEN ATTACHMENT SUCCESS → TOAST + NAVIGATE
+  // ---------------------
+  useEffect(() => {
+    if (attachmentSucess) {
+      Toast.show({
+        type: 'success',
+        text1: 'Expense & attachment uploaded successfully',
+        position: 'top',
+      });
+
+      resetForm();
+      setLoading(false);
+
+      setTimeout(() => navigation.goBack(), 500);
+    }
+  }, [attachmentSucess]);
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
