@@ -17,7 +17,7 @@ import {
 import {windowHeight} from '../../../utils/utils';
 import {Colors} from '../../../utils/colors';
 import moment from 'moment';
-import {apiBaseUrl} from '../../../features/apiBaseUrl';
+import {imageBaseUrl} from '../../../features/apiBaseUrl';
 
 const ExpenseClaimDetail = ({
   expenseData,
@@ -154,7 +154,7 @@ const ExpenseClaimDetail = ({
                       source={
                         imageError[file.name]
                           ? FALLBACK_IMAGE
-                          : {uri: `${apiBaseUrl}${file.file_url}`}
+                          : {uri: `${imageBaseUrl}${file.file_url}`}
                       }
                       style={styles.attachmentImage}
                       resizeMode="cover"
@@ -185,7 +185,7 @@ const ExpenseClaimDetail = ({
 
             {previewImage && (
               <Image
-                source={{uri: `${apiBaseUrl}${previewImage}`}}
+                source={{uri: `${imageBaseUrl}${previewImage}`}}
                 style={styles.previewImage}
                 resizeMode="contain"
               />
