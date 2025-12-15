@@ -2,6 +2,7 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
   ExpenseClaimPayload,
+  RAttachmentByClaim,
   RExpenseClaimByEmp,
   RExpenseClaimDetail,
   RExpenseClaimType,
@@ -71,6 +72,30 @@ export const tadaApi = createApi({
       }),
       providesTags: ['Expense'],
     }),
+    getAttachmentByClaimId: builder.query<
+      RAttachmentByClaim,
+      {claimId: string}
+    >({
+      query: ({claimId}) => ({
+        url: `/resource/File`,
+        method: 'GET',
+        params: {
+          filters: JSON.stringify([
+            ['attached_to_doctype', '=', 'Expense Claim'],
+            ['attached_to_name', '=', claimId],
+          ]),
+          fields: JSON.stringify([
+            'name',
+            'file_name',
+            'file_url',
+            'is_private',
+            'creation',
+            'attached_to_name',
+          ]),
+        },
+      }),
+      providesTags: ['Expense'],
+    }),
 
     //Expense Mutation
     createExpenseClaim: builder.mutation<any, ExpenseClaimPayload>({
@@ -99,6 +124,7 @@ export const {
   useGetClaimListQuery,
   useGetClaimByIdQuery,
   useGetExpenseCityQuery,
+  useGetAttachmentByClaimIdQuery,
 
   //Expense Mutation
   useCreateExpenseClaimMutation,

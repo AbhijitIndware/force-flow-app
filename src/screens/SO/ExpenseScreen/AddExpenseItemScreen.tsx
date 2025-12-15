@@ -107,6 +107,7 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
 
         // Continue to upload in useEffect
       } catch (error: any) {
+        console.log('🚀 ~ AddExpenseItemScreen ~ error:', error);
         Toast.show({
           type: 'error',
           text1: error?.data?.message?.message || 'Internal Server Error',
@@ -138,7 +139,7 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
         type: file.type || 'application/octet-stream',
       } as any);
       formData.append('filename', file.name);
-      formData.append('is_private', '1');
+      formData.append('is_private', '0');
       formData.append('doctype', 'Expense Claim');
       formData.append('docname', claimId as string);
 

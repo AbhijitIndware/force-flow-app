@@ -1,17 +1,39 @@
-import {ScrollView, StyleSheet, Text, View} from 'react-native';
-import React from 'react';
-import {ExpenseItem, ExpenseClaim} from '../../../types/baseType';
+import {
+  Image,
+  Linking,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {useState} from 'react';
+import {
+  ExpenseItem,
+  ExpenseClaim,
+  ExpenseClaimAttachment,
+} from '../../../types/baseType';
 import {windowHeight} from '../../../utils/utils';
 import {Colors} from '../../../utils/colors';
 import moment from 'moment';
+import {apiBaseUrl} from '../../../features/apiBaseUrl';
 
 const ExpenseClaimDetail = ({
   expenseData,
   data,
+  attachmentData,
 }: {
   expenseData: ExpenseItem;
   data: ExpenseClaim;
+  attachmentData: ExpenseClaimAttachment[];
 }) => {
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<Record<string, boolean>>({});
+
+  const FALLBACK_IMAGE = require('../../../assets/images/not-found.png');
+
   return (
     <ScrollView style={{flex: 1}} contentContainerStyle={{padding: 16}}>
       <View style={styles.card}>
@@ -97,6 +119,79 @@ const ExpenseClaimDetail = ({
           label="Travel Mode"
           value={expenseData.custom_ta_mode || '—'}
         /> */}
+
+        {/* ---------------- ATTACHMENTS ---------------- */}
+        {attachmentData?.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Attachments</Text>
+
+            {attachmentData.map(file => {
+              const isImage = /\.(jpg|jpeg|png)$/i.test(file.file_name);
+
+              return (
+                <TouchableOpacity
+                  key={file.name}
+                  style={[styles.attachmentCard]}
+                  disabled={imageError[file.name]}
+                  onPress={() => {
+                    if (isImage) {
+                      setPreviewImage(file.file_url);
+                      setPreviewVisible(true);
+                    }
+                  }}>
+                  <View style={styles.attachmentRow}>
+                    <Text style={styles.attachmentName} numberOfLines={1}>
+                      {file.file_name}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.attachmentDate}>
+                    {moment(file.creation).format('DD MMM YYYY, hh:mm A')}
+                  </Text>
+
+                  {isImage && (
+                    <Image
+                      source={
+                        imageError[file.name]
+                          ? FALLBACK_IMAGE
+                          : {uri: `${apiBaseUrl}${file.file_url}`}
+                      }
+                      style={styles.attachmentImage}
+                      resizeMode="cover"
+                      onError={() =>
+                        setImageError(prev => ({
+                          ...prev,
+                          [file.name]: true,
+                        }))
+                      }
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </>
+        )}
+        <Modal
+          visible={previewVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPreviewVisible(false)}>
+          <View style={styles.previewOverlay}>
+            <TouchableOpacity
+              style={styles.previewClose}
+              onPress={() => setPreviewVisible(false)}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+
+            {previewImage && (
+              <Image
+                source={{uri: `${apiBaseUrl}${previewImage}`}}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
 
         <Text style={styles.sectionTitle}>Travel Details</Text>
 
@@ -283,5 +378,68 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 13,
     fontWeight: '700',
+  },
+  attachmentCard: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+
+  attachmentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  attachmentName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+
+  privateTag: {
+    fontSize: 12,
+    color: Colors.error,
+    marginLeft: 8,
+  },
+
+  attachmentDate: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+
+  attachmentImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 6,
+    marginTop: 8,
+    objectFit: 'contain',
+  },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  previewImage: {
+    width: '90%',
+    height: '80%',
+  },
+
+  previewClose: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+  },
+
+  closeText: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

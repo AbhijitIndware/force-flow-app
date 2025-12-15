@@ -1045,3 +1045,16 @@ export interface ExpenseItem {
   modified_by: string;
   owner: string;
 }
+
+export interface ExpenseClaimAttachment {
+  name: string;
+  file_name: string;
+  file_url: string;
+  is_private: 0 | 1; // ERPNext uses 0/1 instead of boolean
+  creation: string; // ISO datetime string
+  attached_to_name: string;
+}
+
+export type RAttachmentByClaim = {
+  data: ExpenseClaimAttachment[];
+};

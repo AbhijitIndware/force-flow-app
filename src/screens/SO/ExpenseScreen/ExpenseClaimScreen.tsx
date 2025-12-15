@@ -6,7 +6,10 @@ import {SafeAreaView} from 'react-native';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetClaimByIdQuery} from '../../../features/tada/tadaApi';
+import {
+  useGetAttachmentByClaimIdQuery,
+  useGetClaimByIdQuery,
+} from '../../../features/tada/tadaApi';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import ExpenseClaimDetail from '../../../components/SO/Expense/expense-claim-detail';
 import {ExpenseItem} from '../../../types/baseType';
@@ -27,6 +30,11 @@ const ExpenseClaimScreen = ({navigation, route}: Props) => {
     {claimId: id as string},
     {skip: !id},
   );
+  const {data: attachmentData} = useGetAttachmentByClaimIdQuery(
+    {claimId: id as string},
+    {skip: !id},
+  );
+  console.log('🚀 ~ ExpenseClaimScreen ~ attachmentData:', attachmentData);
 
   return (
     <SafeAreaView
@@ -40,7 +48,7 @@ const ExpenseClaimScreen = ({navigation, route}: Props) => {
       <PageHeader
         title={name || 'Expense Detail'}
         navigation={() => {
-          navigation.navigate('Home');
+          navigation.navigate('AddExpenseScreen');
         }}
       />
       {/* Data Loaded */}
@@ -50,6 +58,7 @@ const ExpenseClaimScreen = ({navigation, route}: Props) => {
         <ExpenseClaimDetail
           expenseData={data?.data?.expenses[0] as ExpenseItem}
           data={data?.data as any}
+          attachmentData={attachmentData?.data || []}
         />
       )}
     </SafeAreaView>
