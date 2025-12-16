@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Image,
   Linking,
   Modal,
@@ -31,6 +32,7 @@ const ExpenseClaimDetail = ({
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
+  const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
 
   const FALLBACK_IMAGE = require('../../../assets/images/not-found.png');
 
@@ -150,21 +152,47 @@ const ExpenseClaimDetail = ({
                   </Text>
 
                   {isImage && (
-                    <Image
-                      source={
-                        imageError[file.name]
-                          ? FALLBACK_IMAGE
-                          : {uri: `${imageBaseUrl}${file.file_url}`}
-                      }
-                      style={styles.attachmentImage}
-                      resizeMode="cover"
-                      onError={() =>
-                        setImageError(prev => ({
-                          ...prev,
-                          [file.name]: true,
-                        }))
-                      }
-                    />
+                    <View style={styles.imageWrapper}>
+                      {imageLoading[file.name] && (
+                        <ActivityIndicator
+                          size="small"
+                          color="#999"
+                          style={styles.imageLoader}
+                        />
+                      )}
+
+                      <Image
+                        source={
+                          imageError[file.name]
+                            ? FALLBACK_IMAGE
+                            : {uri: `${imageBaseUrl}${file.file_url}`}
+                        }
+                        style={styles.attachmentImage}
+                        resizeMode="cover"
+                        onLoadStart={() =>
+                          setImageLoading(prev => ({
+                            ...prev,
+                            [file.name]: true,
+                          }))
+                        }
+                        onLoadEnd={() =>
+                          setImageLoading(prev => ({
+                            ...prev,
+                            [file.name]: false,
+                          }))
+                        }
+                        onError={() => {
+                          setImageLoading(prev => ({
+                            ...prev,
+                            [file.name]: false,
+                          }));
+                          setImageError(prev => ({
+                            ...prev,
+                            [file.name]: true,
+                          }));
+                        }}
+                      />
+                    </View>
                   )}
                 </TouchableOpacity>
               );
@@ -441,5 +469,15 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  imageWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  imageLoader: {
+    position: 'absolute',
+    zIndex: 1,
   },
 });

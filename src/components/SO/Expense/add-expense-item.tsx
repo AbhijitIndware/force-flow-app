@@ -12,6 +12,10 @@ import {pick} from '@react-native-documents/picker';
 import {useGetExpenseClaimTypeQuery} from '../../../features/tada/tadaApi';
 import {FormikTouched} from 'formik';
 import {Image} from 'react-native';
+import {Modal, Pressable} from 'react-native';
+import {launchCamera} from 'react-native-image-picker';
+import {flexCol} from '../../../utils/styles';
+import moment from 'moment';
 
 interface Props {
   values: Record<string, string | any>;
@@ -50,6 +54,8 @@ const AddExpenseItem: React.FC<Props> = ({
   scrollY,
 }) => {
   const [claimType, setClaimType] = useState<DropdownOption[]>([]);
+  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+
   const {data} = useGetExpenseClaimTypeQuery();
 
   const isImage = (type?: string) => {
@@ -84,6 +90,26 @@ const AddExpenseItem: React.FC<Props> = ({
     } catch (err) {
       console.warn('Document picker error:', err);
     }
+  };
+
+  const handleOpenCamera = async () => {
+    setShowAttachmentOptions(false);
+
+    const result = await launchCamera({
+      mediaType: 'photo',
+      cameraType: 'back',
+      quality: 0.8,
+    });
+
+    if (result.didCancel || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+
+    setFieldValue('attachment', {
+      uri: asset.uri,
+      name: `photo_${moment().format('YYYY-MM-DD')}.jpg`,
+      type: asset.type || 'image/jpeg',
+    });
   };
 
   useEffect(() => {
@@ -140,7 +166,7 @@ const AddExpenseItem: React.FC<Props> = ({
         <Text style={styles.label}>Attachment</Text>
 
         <TouchableOpacity
-          onPress={handlePickDocument}
+          onPress={() => setShowAttachmentOptions(true)}
           style={{
             marginTop: 5,
             height: 100,
@@ -160,19 +186,67 @@ const AddExpenseItem: React.FC<Props> = ({
             Upload images or documennts
           </Text>
         </TouchableOpacity>
+        <Modal
+          visible={showAttachmentOptions}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowAttachmentOptions(false)}>
+          <Pressable
+            style={styles.modalOverlay}
+            onPress={() => setShowAttachmentOptions(false)}
+          />
 
-        {/* -------- PREVIEW SECTION -------- */}
+          <View style={styles.bottomSheet}>
+            <Pressable
+              style={styles.optionBtn}
+              onPress={() => {
+                setShowAttachmentOptions(false);
+                handlePickDocument();
+              }}>
+              <Text style={styles.optionText}>📁 Select from Drive</Text>
+            </Pressable>
+
+            <Pressable style={styles.optionBtn} onPress={handleOpenCamera}>
+              <Text style={styles.optionText}>📷 Click Photo</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.optionBtn, {borderTopWidth: 1}]}
+              onPress={() => setShowAttachmentOptions(false)}>
+              <Text style={[styles.optionText, {color: 'red'}]}>Cancel</Text>
+            </Pressable>
+          </View>
+        </Modal>
+
         {values.attachment && (
-          <View style={styles.previewContainer}>
-            {isImage(values.attachment.type) ? (
-              <Image
-                source={{uri: values.attachment.uri}}
-                style={styles.fullWidthImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={styles.fileName}>📎 {values.attachment.name}</Text>
-            )}
+          <View style={[flexCol, {gap: 10}]}>
+            <View style={styles.previewContainer}>
+              {isImage(values.attachment.type) ? (
+                <Image
+                  source={{uri: values.attachment.uri}}
+                  style={styles.fullWidthImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.fileCard}>
+                  <View style={styles.fileIconContainer}>
+                    <Text style={styles.fileIcon}>📄</Text>
+                  </View>
+
+                  <View style={styles.fileInfo}>
+                    <Text numberOfLines={1} style={styles.fileName}>
+                      {values.attachment.name}
+                    </Text>
+                    <Text style={styles.fileType}>PDF Document</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity onPress={() => setFieldValue('attachment', null)}>
+              <Text style={{color: 'red', fontSize: 15, fontWeight: 700}}>
+                Remove
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -198,11 +272,6 @@ const styles = StyleSheet.create({
   uploadText: {
     color: '#fff',
     fontWeight: '600',
-  },
-  fileName: {
-    marginTop: 8,
-    fontSize: 13,
-    color: '#555',
   },
   errorText: {
     color: 'red',
@@ -248,5 +317,64 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.borderLight,
     backgroundColor: '#f9f9f9',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  bottomSheet: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  optionBtn: {
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  fileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    gap: 12,
+  },
+
+  fileIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#E11D48', // PDF red
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  fileIcon: {
+    fontSize: 22,
+    color: '#fff',
+  },
+
+  fileInfo: {
+    flex: 1,
+  },
+
+  fileName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111',
+  },
+
+  fileType: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
   },
 });
