@@ -19,6 +19,7 @@ import {windowHeight} from '../../../utils/utils';
 import {Colors} from '../../../utils/colors';
 import moment from 'moment';
 import {imageBaseUrl} from '../../../features/apiBaseUrl';
+import PdfPreviewModal from '../../ui-lib/pdf-viewer';
 
 const ExpenseClaimDetail = ({
   expenseData,
@@ -33,6 +34,8 @@ const ExpenseClaimDetail = ({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
+  const [pdfUri, setPdfUri] = useState<string | null>(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   const FALLBACK_IMAGE = require('../../../assets/images/not-found.png');
 
@@ -129,76 +132,112 @@ const ExpenseClaimDetail = ({
 
             {attachmentData.map(file => {
               const isImage = /\.(jpg|jpeg|png)$/i.test(file.file_name);
+              const isPdf = /\.pdf$/i.test(file.file_name);
 
               return (
-                <TouchableOpacity
-                  key={file.name}
-                  style={[styles.attachmentCard]}
-                  disabled={imageError[file.name]}
-                  onPress={() => {
-                    if (isImage) {
-                      setPreviewImage(file.file_url);
-                      setPreviewVisible(true);
-                    }
-                  }}>
-                  <View style={styles.attachmentRow}>
+                <View key={file.name} style={styles.attachmentCard}>
+                  {/* ---------- HEADER ---------- */}
+                  <View style={styles.attachmentHeader}>
                     <Text style={styles.attachmentName} numberOfLines={1}>
                       {file.file_name}
                     </Text>
+
+                    {isPdf && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPdfUri(`${imageBaseUrl}${file.file_url}`);
+                          setShowPdfPreview(true);
+                        }}>
+                        <Text style={styles.downloadText}>Preview</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
 
                   <Text style={styles.attachmentDate}>
                     {moment(file.creation).format('DD MMM YYYY, hh:mm A')}
                   </Text>
 
+                  {/* ---------- IMAGE PREVIEW ---------- */}
                   {isImage && (
-                    <View style={styles.imageWrapper}>
-                      {imageLoading[file.name] && (
-                        <ActivityIndicator
-                          size="small"
-                          color="#999"
-                          style={styles.imageLoader}
-                        />
-                      )}
+                    <TouchableOpacity
+                      disabled={imageError[file.name]}
+                      onPress={() => {
+                        setPreviewImage(file.file_url);
+                        setPreviewVisible(true);
+                      }}>
+                      <View style={styles.imageWrapper}>
+                        {imageLoading[file.name] && (
+                          <ActivityIndicator
+                            size="small"
+                            color="#999"
+                            style={styles.imageLoader}
+                          />
+                        )}
 
-                      <Image
-                        source={
-                          imageError[file.name]
-                            ? FALLBACK_IMAGE
-                            : {uri: `${imageBaseUrl}${file.file_url}`}
-                        }
-                        style={styles.attachmentImage}
-                        resizeMode="cover"
-                        onLoadStart={() =>
-                          setImageLoading(prev => ({
-                            ...prev,
-                            [file.name]: true,
-                          }))
-                        }
-                        onLoadEnd={() =>
-                          setImageLoading(prev => ({
-                            ...prev,
-                            [file.name]: false,
-                          }))
-                        }
-                        onError={() => {
-                          setImageLoading(prev => ({
-                            ...prev,
-                            [file.name]: false,
-                          }));
-                          setImageError(prev => ({
-                            ...prev,
-                            [file.name]: true,
-                          }));
-                        }}
-                      />
+                        <Image
+                          source={
+                            imageError[file.name]
+                              ? FALLBACK_IMAGE
+                              : {uri: `${imageBaseUrl}${file.file_url}`}
+                          }
+                          style={styles.attachmentImage}
+                          resizeMode="cover"
+                          onLoadStart={() =>
+                            setImageLoading(prev => ({
+                              ...prev,
+                              [file.name]: true,
+                            }))
+                          }
+                          onLoadEnd={() =>
+                            setImageLoading(prev => ({
+                              ...prev,
+                              [file.name]: false,
+                            }))
+                          }
+                          onError={() => {
+                            setImageLoading(prev => ({
+                              ...prev,
+                              [file.name]: false,
+                            }));
+                            setImageError(prev => ({
+                              ...prev,
+                              [file.name]: true,
+                            }));
+                          }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  )}
+
+                  {/* ---------- PDF CARD ---------- */}
+                  {isPdf && (
+                    <View style={styles.pdfCard}>
+                      <View style={styles.pdfIcon}>
+                        <Text style={styles.pdfIconText}>PDF</Text>
+                      </View>
+
+                      <View style={{flex: 1}}>
+                        <Text numberOfLines={1} style={styles.pdfName}>
+                          {file.file_name}
+                        </Text>
+                        <Text style={styles.pdfHint}>Tap Preview to view</Text>
+                      </View>
                     </View>
                   )}
-                </TouchableOpacity>
+
+                  {pdfUri && (
+                    <PdfPreviewModal
+                      visible={showPdfPreview}
+                      uri={pdfUri}
+                      onClose={() => setShowPdfPreview(false)}
+                    />
+                  )}
+                </View>
               );
             })}
           </>
         )}
+
         <Modal
           visible={previewVisible}
           transparent
@@ -479,5 +518,55 @@ const styles = StyleSheet.create({
   imageLoader: {
     position: 'absolute',
     zIndex: 1,
+  },
+  attachmentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  downloadText: {
+    color: '#2563EB',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+
+  pdfCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    gap: 12,
+  },
+
+  pdfIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#DC2626',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  pdfIconText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+
+  pdfName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111',
+  },
+
+  pdfHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
   },
 });
