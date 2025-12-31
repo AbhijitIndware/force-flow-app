@@ -7,8 +7,8 @@ import {SafeAreaView} from 'react-native';
 import {Colors} from '../../../utils/colors';
 import {flexCol} from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetSalesOrderByIdQuery} from '../../../features/base/base-api';
-import {PjpDailyStore, RSoDetailData} from '../../../types/baseType';
+import {useGetDailyPjpByIdQuery} from '../../../features/base/base-api';
+import {PjpDailyStore} from '../../../types/baseType';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {TouchableOpacity} from 'react-native';
 import PjpDetailComponent from '../../../components/SO/Activity/Pjp/PjpDetailComponent';
@@ -25,6 +25,11 @@ type Props = {
 };
 const PjpDetailScreen = ({navigation, route}: Props) => {
   const {details} = route.params;
+
+  const {data, isFetching, refetch} = useGetDailyPjpByIdQuery(
+    details?.pjp_daily_store_id,
+  );
+  console.log('🚀 ~ PjpDetailScreen ~ data:', data);
 
   // inside component
   const isPastDate = details?.date
@@ -47,15 +52,15 @@ const PjpDetailScreen = ({navigation, route}: Props) => {
           </TouchableOpacity>
         )}
       </View>
-      {/* {isFetching ? (
+      {isFetching ? (
         <ActivityIndicator size="large" />
-      ) : ( */}
-      <PjpDetailComponent
-        detail={details as PjpDailyStore}
-        navigation={navigation}
-        // refetch={refetch}
-      />
-      {/* )} */}
+      ) : (
+        <PjpDetailComponent
+          detail={data?.message?.data as PjpDailyStore}
+          navigation={navigation}
+          refetch={refetch}
+        />
+      )}
     </SafeAreaView>
   );
 };

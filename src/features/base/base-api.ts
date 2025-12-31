@@ -35,6 +35,8 @@ import {
   RSoList,
   RStoreList,
   RSalesReport,
+  IUpdatePjpRoutePayload,
+  RUpdatePjpRoute,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -272,6 +274,14 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
+    updatePjpRoute: builder.mutation<RUpdatePjpRoute, IUpdatePjpRoutePayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.modify_location_pjp_daily_stores',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
 
     //Partner
     addDistributor: builder.mutation<any, IAddDistributorPayload>({
@@ -435,6 +445,8 @@ export const {
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
   useGetProdCountQuery,
+  useUpdatePjpRouteMutation,
+
   //Partner
   useGetStoreListQuery,
   useGetDistributorListQuery,

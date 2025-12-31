@@ -475,19 +475,26 @@ export interface RPjpDailyStores {
   };
 }
 export type PjpDailyStoreDetail = {
-  status: string;
-  message: string;
-  stores: {
-    store: string;
-    store_name: string;
-    store_category: string;
-  }[];
+  creation: string;
+  // stores: {
+  //   store: string;
+  //   store_name: string;
+  //   store_category: string;
+  // }[];
+  stores: Store[];
   pjp_daily_store_doc: string;
   pjp_date: string; // ISO date string "2025-08-29"
   pjp_emp: string;
+
+  start_location: string;
+  end_location: string;
+  running_status: 'None' | 'Running' | 'Completed' | null;
 };
 export interface RPjpDailyById {
-  message: PjpDailyStoreDetail;
+  message: {
+    status: string;
+    data: PjpDailyStore;
+  };
 }
 
 export interface PjpDailyStore {
@@ -499,6 +506,9 @@ export interface PjpDailyStore {
   modified: string; // timestamp
   stores: Store[];
   total_stores: number;
+  start_location: string;
+  end_location: string;
+  running_status: 'None' | 'Running' | 'Completed' | null;
 }
 
 export interface Store {
@@ -536,6 +546,32 @@ export type IUpdatePjpPayload = {
     document_name: string;
   };
 };
+
+export type IUpdatePjpRoutePayload = {
+  data: {
+    document_name: string;
+    action_type: string;
+    start_location?: string;
+    end_location?: string;
+  };
+};
+export type RUpdatePjpRoute = {
+  message: {
+    status: string;
+    message: string;
+    document_name: string;
+    updated_fields: string[];
+  };
+};
+
+export interface RUpdateProdCount {
+  message: {
+    status: string;
+    message: string;
+    document_name: string;
+    updated_fields: string[];
+  };
+}
 
 export interface RProdCount {
   message: {

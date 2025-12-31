@@ -9,7 +9,7 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -27,7 +27,7 @@ import {
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 import {useAppSelector} from '../../../store/hook';
-import {PjpDailyStoreDetail} from '../../../types/baseType';
+import {PjpDailyStore} from '../../../types/baseType';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
@@ -49,12 +49,12 @@ const initial = {
 };
 
 // helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
-const mapPjpDetailToForm = (detail: PjpDailyStoreDetail): any => {
+const mapPjpDetailToForm = (detail: PjpDailyStore): any => {
   return {
-    date: detail.pjp_date,
-    employee: detail.pjp_emp,
+    date: detail.date,
+    employee: detail.employee,
     stores: detail.stores.map(s => ({
-      store: s.store, // or s.store if API expects that
+      store: s.store_id, // or s.store if API expects that
     })),
   };
 };
@@ -207,7 +207,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   useEffect(() => {
     if (pjpDetails?.message && id) {
-      const _initial_value = mapPjpDetailToForm(pjpDetails.message);
+      const _initial_value = mapPjpDetailToForm(pjpDetails?.message?.data);
       // console.log('_initial_value', _initial_value);
       setInitialValues({
         ..._initial_value,
