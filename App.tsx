@@ -9,6 +9,7 @@ import Toast from 'react-native-toast-message';
 import {toastConfig} from './src/components/ui-lib/custom-toast';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {PaperProvider} from 'react-native-paper';
+import DisclaimerModal from './DisclaimerModal';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,7 +23,7 @@ function App(): React.JSX.Element {
               <StatusBar
                 barStyle={isDarkMode ? 'light-content' : 'dark-content'}
               />
-
+              <DisclaimerModal />
               <MainNavigation />
             </NavigationContainer>
           </PaperProvider>
