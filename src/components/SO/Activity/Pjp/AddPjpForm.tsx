@@ -124,6 +124,17 @@ const AddPjpForm: React.FC<Props> = ({
         onBlur={() => handleBlur('pan_no')}
         disabled={true}
       />
+      {/* Warning message */}
+      {values.stores.length < 15 && (
+        <Text
+          style={{
+            color: '#F59E0B', // amber warning
+            marginBottom: 8,
+            fontSize: 12,
+          }}>
+          ⚠️ Minimum 15 stores required
+        </Text>
+      )}
       {values.stores.map((storeItem, index) => (
         <View key={index} style={{marginBottom: 12, position: 'relative'}}>
           <ReusableDropdown

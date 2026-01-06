@@ -17,6 +17,7 @@ import {
   requestLocationPermission,
 } from '../../../../utils/utils';
 import Toast from 'react-native-toast-message';
+import MinStoresWarningModal from './MinStoresWarningModal';
 
 type Props = {
   detail: PjpDailyStore;
@@ -28,6 +29,8 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [updatePjpRoute] = useUpdatePjpRouteMutation();
+
+  const [showMinStoreModal, setShowMinStoreModal] = useState(false);
 
   const pjpStatus = detail?.running_status;
   const isCompleted = pjpStatus === null || pjpStatus === 'Completed';
@@ -153,7 +156,10 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
               : styles.startButton,
             loading && {opacity: 0.6},
           ]}
-          onPress={handleStartEndPjp}
+          onPress={() => {
+            if (detail.stores.length < 15) setShowMinStoreModal(true);
+            else handleStartEndPjp();
+          }}
           activeOpacity={0.85}
           disabled={loading || isCompleted}>
           <Text style={styles.buttonText}>
@@ -172,6 +178,16 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         </TouchableOpacity>
       </View>
 
+      <MinStoresWarningModal
+        visible={showMinStoreModal}
+        onCancel={() => {
+          setShowMinStoreModal(false);
+        }}
+        onContinue={() => {
+          setShowMinStoreModal(false);
+          handleStartEndPjp();
+        }}
+      />
       {/* Stores List */}
       <View style={styles.card}>
         <Text style={styles.title}>Stores</Text>

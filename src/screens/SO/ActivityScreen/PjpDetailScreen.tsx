@@ -29,7 +29,6 @@ const PjpDetailScreen = ({navigation, route}: Props) => {
   const {data, isFetching, refetch} = useGetDailyPjpByIdQuery(
     details?.pjp_daily_store_id,
   );
-  console.log('🚀 ~ PjpDetailScreen ~ data:', data);
 
   // inside component
   const isPastDate = details?.date
