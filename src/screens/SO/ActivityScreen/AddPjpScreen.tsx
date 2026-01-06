@@ -31,6 +31,7 @@ import {PjpDailyStore} from '../../../types/baseType';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
+import MinStoresWarningModal from '../../../components/SO/Activity/Pjp/MinStoresWarningModal';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -87,6 +88,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  const [showMinStoreModal, setShowMinStoreModal] = useState(false);
 
   /** ─── Employee State ─────────────────────────────── */
   const [empPage, setEmpPage] = useState(1);
@@ -304,6 +306,17 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         onLoadMoreStores={handleLoadMoreStores}
         loadingMoreStores={loadingStoreMore}
       />
+      <MinStoresWarningModal
+        visible={showMinStoreModal}
+        onCancel={() => {
+          setShowMinStoreModal(false);
+        }}
+        onContinue={() => {
+          setShowMinStoreModal(false);
+          handleSubmit();
+        }}
+      />
+
       <View
         style={{
           paddingHorizontal: 20,
@@ -316,7 +329,10 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         }}>
         <TouchableOpacity
           style={[styles.submitBtn, loading && {opacity: 0.7}]}
-          onPress={() => handleSubmit()}
+          onPress={() => {
+            if (values.stores.length < 15) setShowMinStoreModal(true);
+            else handleSubmit();
+          }}
           disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />

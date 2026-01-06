@@ -377,6 +377,7 @@ export interface POOrderDetails {
   order_id: string;
   supplier: string;
   supplier_name: string;
+  distributor: string;
   transaction_date: string; // ISO date string
   schedule_date: string; // ISO date string
   status: string;

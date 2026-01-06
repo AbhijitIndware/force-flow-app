@@ -201,10 +201,8 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
               justifyContent: 'space-between',
               alignItems: 'center',
             }}>
-            <Text style={styles.contentHeading}>Supplier:</Text>
-            <Text style={styles.contenttext}>
-              {order_details.supplier_name}
-            </Text>
+            <Text style={styles.contentHeading}>Distributor:</Text>
+            <Text style={styles.contenttext}>{order_details.distributor}</Text>
           </View>
           <View
             style={{
@@ -293,16 +291,31 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
                 <View style={{paddingHorizontal: 16}}>
                   <View
                     style={{
-                      display: 'flex',
                       width: '100%',
                       flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
+                      alignItems: 'flex-start',
                     }}>
-                    <Text style={styles.contentHeading}>Item Name:</Text>
-                    <Text style={styles.contenttext}>{item.item_name}</Text>
+                    {/* Left label */}
+                    <View style={{width: 100}}>
+                      <Text style={styles.contentHeading}>Item Name:</Text>
+                    </View>
+
+                    {/* Right value */}
+                    <View style={{flex: 1}}>
+                      <Text
+                        style={[
+                          styles.contenttext,
+                          {
+                            flexWrap: 'wrap',
+                            textAlign: 'right',
+                          },
+                        ]}>
+                        {item.item_name}
+                      </Text>
+                    </View>
                   </View>
-                  <View
+
+                  {/* <View
                     style={{
                       display: 'flex',
                       width: '100%',
@@ -312,7 +325,7 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
                     }}>
                     <Text style={styles.contentHeading}>Description:</Text>
                     <Text style={styles.contenttext}>{item.description}</Text>
-                  </View>
+                  </View> */}
                   <View
                     style={{
                       display: 'flex',

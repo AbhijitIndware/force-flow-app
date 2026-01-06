@@ -184,52 +184,73 @@ const AddStoreScreen = ({
   });
 
   const [addStore] = useAddStoreMutation();
-  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
-    page_size: '20',
-    page: String(listConfig.zone.page),
-    search: listConfig.zone.search as string,
-  });
+  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery(
+    {
+      page_size: '20',
+      page: String(listConfig.zone.page),
+      search: listConfig.zone.search as string,
+    },
+    {refetchOnFocus: true},
+  );
 
-  const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
-    zone: values.zone,
-    page_size: '20',
-    page: String(listConfig.state.page),
-    search: listConfig.state.search,
-  });
+  const {data: stateData, isFetching: stateFetching} = useGetStateQuery(
+    {
+      zone: values.zone,
+      page_size: '20',
+      page: String(listConfig.state.page),
+      search: listConfig.state.search,
+    },
+    {refetchOnFocus: true},
+  );
 
-  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
-    state: values.state,
-    page_size: '20',
-    page: String(listConfig.city.page),
-    search: listConfig.city.search,
-  });
+  const {data: cityData, isFetching: cityFetching} = useGetCityQuery(
+    {
+      state: values.state,
+      page_size: '20',
+      page: String(listConfig.city.page),
+      search: listConfig.city.search,
+    },
+    {refetchOnFocus: true},
+  );
 
   const {data: distributorData, isFetching: distributorFetching} =
-    useGetDistributorQuery({
-      page_size: '20',
-      page: String(listConfig.distributor.page),
-      search: listConfig.distributor.search,
-    });
+    useGetDistributorQuery(
+      {
+        page_size: '20',
+        page: String(listConfig.distributor.page),
+        search: listConfig.distributor.search,
+      },
+      {refetchOnFocus: true},
+    );
 
-  const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery({
-    page_size: '20',
-    page: String(listConfig.type.page),
-    search: listConfig.type.search,
-  });
+  const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery(
+    {
+      page_size: '20',
+      page: String(listConfig.type.page),
+      search: listConfig.type.search,
+    },
+    {refetchOnFocus: true},
+  );
 
   const {data: categoryData, isFetching: categoryFetching} =
-    useGetStoreCategoryQuery({
-      page_size: '20',
-      page: String(listConfig.category.page),
-      search: listConfig.category.search,
-      filters: JSON.stringify({store_type: values.store_type}),
-    });
+    useGetStoreCategoryQuery(
+      {
+        page_size: '20',
+        page: String(listConfig.category.page),
+        search: listConfig.category.search,
+        filters: JSON.stringify({store_type: values.store_type}),
+      },
+      {refetchOnFocus: true},
+    );
 
-  const {data: beatData, isFetching: beatFetching} = useGetBeatQuery({
-    page_size: '20',
-    page: String(listConfig.beat.page),
-    search: listConfig.beat.search,
-  });
+  const {data: beatData, isFetching: beatFetching} = useGetBeatQuery(
+    {
+      page_size: '20',
+      page: String(listConfig.beat.page),
+      search: listConfig.beat.search,
+    },
+    {refetchOnFocus: true},
+  );
 
   // Assuming values.map_location is a string like "22.5643,88.3693"
   const [latitude, longitude] = values?.map_location?.split(',');

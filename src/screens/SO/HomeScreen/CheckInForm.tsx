@@ -100,10 +100,8 @@ const CheckInForm = ({navigation}: Props) => {
           current_location: values.current_location,
           bypass_store_category: formValues.bypass_store_category,
         };
-        console.log('🚀 ~ CheckInForm ~ value:', value);
 
         const res = await addCheckIn(value).unwrap();
-        console.log('🚀 ~ CheckInForm ~ res:', res);
         if (res?.message?.success === true) {
           Toast.show({
             type: 'success',
@@ -111,7 +109,7 @@ const CheckInForm = ({navigation}: Props) => {
             position: 'top',
           });
           actions.resetForm();
-          handleVerifyLocation();
+          handleVerifyLocation({showToast: false});
           navigation.navigate('Home');
         } else {
           Toast.show({
@@ -140,13 +138,15 @@ const CheckInForm = ({navigation}: Props) => {
     value: i.store,
   }));
 
-  const handleVerifyLocation = async () => {
+  const handleVerifyLocation = async ({showToast}: {showToast: boolean}) => {
     try {
       if (!selectedStore) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Please select a store before verifying location',
-        });
+        if (showToast) {
+          Toast.show({
+            type: 'error',
+            text1: '❌ Please select a store before verifying location',
+          });
+        }
         return;
       }
 
@@ -157,23 +157,29 @@ const CheckInForm = ({navigation}: Props) => {
       }).unwrap();
 
       if (res?.message?.data?.location_validation?.valid) {
-        Toast.show({
-          type: 'success',
-          text1: '✅ Location verified',
-        });
+        if (showToast) {
+          Toast.show({
+            type: 'success',
+            text1: '✅ Location verified',
+          });
+        }
         setLocationVerified(true);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Location verification failed',
-        });
+        if (showToast) {
+          Toast.show({
+            type: 'error',
+            text1: '❌ Location verification failed',
+          });
+        }
       }
     } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: '❌ Verification error',
-        text2: err?.data?.message?.message ?? 'Please try again later.',
-      });
+      if (showToast) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Verification error',
+          text2: err?.data?.message?.message ?? 'Please try again later.',
+        });
+      }
     }
   };
 
@@ -219,7 +225,9 @@ const CheckInForm = ({navigation}: Props) => {
       {!locationVerified ? (
         <TouchableOpacity
           style={[styles.submitBtn, verifying && {opacity: 0.7}]}
-          onPress={handleVerifyLocation}
+          onPress={() => {
+            handleVerifyLocation({showToast: true});
+          }}
           disabled={verifying}>
           {verifying ? (
             <ActivityIndicator size="small" color={Colors.white} />

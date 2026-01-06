@@ -142,12 +142,21 @@ const AddMarketVisitScreen = ({
     arr.map(i => ({label: i.name, value: i.name}));
 
   const [addStore] = useAddStoreMutation();
-  const {data: cityData} = useGetCityQuery({});
-  const {data: stateData} = useGetStateQuery({zone: values.zone});
-  const {data: zoneData} = useGetZoneQuery({});
-  const {data: distributorData} = useGetDistributorQuery({});
-  const {data: typeData} = useGetStoreTypeQuery({});
-  const {data: categoryData} = useGetStoreCategoryQuery({});
+  const {data: cityData} = useGetCityQuery({}, {refetchOnFocus: true});
+  const {data: stateData} = useGetStateQuery(
+    {zone: values.zone},
+    {refetchOnFocus: true},
+  );
+  const {data: zoneData} = useGetZoneQuery({}, {refetchOnFocus: true});
+  const {data: distributorData} = useGetDistributorQuery(
+    {},
+    {refetchOnFocus: true},
+  );
+  const {data: typeData} = useGetStoreTypeQuery({}, {refetchOnFocus: true});
+  const {data: categoryData} = useGetStoreCategoryQuery(
+    {},
+    {refetchOnFocus: true},
+  );
 
   const zoneList = useMemo(
     () => transformList(zoneData?.message?.data),

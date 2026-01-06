@@ -15,6 +15,7 @@ export const soStatusColors: Record<string, string> = {
   Cancelled: '#EF4444', // same as Reject
   'To Deliver and Bill': '#22C55E',
   'To Receive and Bill': '#22C55E',
+  Delivered: '#22C55E', // green
 };
 
 export async function requestLocationPermission(): Promise<boolean> {

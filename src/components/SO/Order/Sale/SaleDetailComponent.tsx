@@ -60,9 +60,10 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
-          text1: `✅ ${res.message.message}`,
+          text1: '✅ Sales order submitted successfully',
           position: 'top',
         });
+
         // navigation.navigate('OrdersScreen');
       } else {
         Toast.show({
