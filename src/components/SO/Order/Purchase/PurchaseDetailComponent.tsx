@@ -202,7 +202,14 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
               alignItems: 'center',
             }}>
             <Text style={styles.contentHeading}>Distributor:</Text>
-            <Text style={styles.contenttext}>
+            <Text
+              style={[
+                styles.contenttext,
+                {
+                  flexWrap: 'wrap',
+                  textAlign: 'right',
+                },
+              ]}>
               {order_details.distributor_name}
             </Text>
           </View>
