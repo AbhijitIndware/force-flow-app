@@ -800,6 +800,7 @@ export interface ReportResult {
   billed_amount: number;
   company: string;
   currency: string;
+  store_name: string;
 }
 
 export interface ReportColumn {

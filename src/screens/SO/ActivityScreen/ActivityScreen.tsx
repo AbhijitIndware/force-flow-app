@@ -120,7 +120,7 @@ const ActivityScreen = ({navigation, route}: Props) => {
                 }}
                 onPress={() =>
                   navigation.navigate('StockReport', {
-                    reportName: 'Stock Balance',
+                    reportName: 'Stock Balance F',
                   })
                 }>
                 <Text

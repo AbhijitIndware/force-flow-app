@@ -289,7 +289,7 @@ const StockReport = ({navigation, route}: Props) => {
                   const requiredFields = [
                     'item_code',
                     // 'item_name',
-                    'warehouse',
+                    'store_name',
                     'bal_qty',
                     'bal_val',
                   ];

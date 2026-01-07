@@ -29,12 +29,21 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
   return (
     <View style={[styles.headerTitleContainer, boxShadow]}>
       <View style={styles.backButtonSection}>
+        {/* Back Button */}
         <TouchableOpacity onPress={navigation}>
           <Feather name="arrow-left" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{title as string}</Text>
+
+        <Text style={styles.headerTitle}>{title}</Text>
       </View>
       <View style={styles.alignment}>
+        {/* Home Icon */}
+        <TouchableOpacity
+          style={[, {marginTop: 5}]}
+          onPress={() => navigations.navigate('HomeScreen')}>
+          <Feather name="home" size={24} color={Colors.greyDark} />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.notification}>
           <View style={styles.notificationBatch}>
             <Text style={styles.notificationCount}>0</Text>
