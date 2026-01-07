@@ -225,8 +225,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoImage: {
-    width: width * 0.6,
-    height: 60,
+    width: width * 0.8,
+    height: 150,
+    marginBottom: 10,
   },
   footer: {
     minHeight: 150,

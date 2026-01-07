@@ -303,8 +303,8 @@ const styles = StyleSheet.create({
   },
 
   logoImage: {
-    width: width * 0.25,
-    height: 38,
+    width: width * 0.2,
+    height: 50,
   },
 
   notification: {position: 'relative', top: 6},

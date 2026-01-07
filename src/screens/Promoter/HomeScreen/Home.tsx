@@ -135,7 +135,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     <View style={styles.headerTitleContainer}>
       <View>
         <Image
-          source={require('../../../assets/images/brand.png')}
+          source={require('../../../assets/images/softsence-logo-dashboard.png')}
           resizeMode="cover"
           style={styles.logoImage}
         />
@@ -147,7 +147,8 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.userInfo}
+        <TouchableOpacity
+          style={styles.userInfo}
           onPress={() => props.navigation.navigate('ProfileScreen')}>
           <Image
             source={require('../../../assets/images/user.jpg')}
@@ -323,8 +324,8 @@ const styles = StyleSheet.create({
   },
 
   logoImage: {
-    width: width * 0.4,
-    height: 36,
+    width: width * 0.2,
+    height: 50,
   },
 
   notification: {position: 'relative', top: 6},
