@@ -26,7 +26,17 @@ const PurchaseComponent = ({
         <View style={styles.timeSection}>
           <Text style={styles.time}>PO ID: {item.order_id}</Text>
         </View>
-        <View style={[flexRow, {gap: 0, position: 'relative',width:'50%',maxWidth:190, justifyContent:'flex-end'}]}>
+        <View
+          style={[
+            flexRow,
+            {
+              gap: 0,
+              position: 'relative',
+              width: '50%',
+              maxWidth: 190,
+              justifyContent: 'flex-end',
+            },
+          ]}>
           <Text
             style={[
               styles.present,
@@ -98,8 +108,16 @@ const PurchaseComponent = ({
           </Text>
         </View>
         <View>
-          <Text style={styles.contentText}>Supplier: {item.supplier_name}</Text>
-          <Text style={styles.contentText}>
+          <Text
+            style={styles.contentText}
+            numberOfLines={2}
+            ellipsizeMode="tail">
+            Distributor: {item.distributor_name}
+          </Text>
+          <Text
+            style={styles.contentText}
+            numberOfLines={2}
+            ellipsizeMode="tail">
             Schedule Date: {item.schedule_date}
           </Text>
           <Text
@@ -254,16 +272,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap:10,
+    gap: 10,
   },
   timeSection: {
-   display: 'flex',
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    width:'50%',
-    maxWidth:175,
-    flexWrap:'wrap',
+    width: '50%',
+    maxWidth: 175,
+    flexWrap: 'wrap',
   },
   time: {
     color: Colors.darkButton,
@@ -284,8 +302,8 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 50,
     paddingHorizontal: 10,
-    maxWidth:130,
-    textAlign:'center',
+    maxWidth: 130,
+    textAlign: 'center',
   },
 
   lateEntry: {
@@ -359,6 +377,7 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.xs,
     lineHeight: 20,
+    width: windowWidth * 0.6,
   },
 
   checkinButton: {

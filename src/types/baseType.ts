@@ -233,6 +233,7 @@ export type RSoDetailData = {
     creation: string; // timestamp
     modified: string; // timestamp
     docstatus: number;
+    store_name: string;
   };
   items: {
     item_code: string;
@@ -350,6 +351,8 @@ export interface PurchaseOrder {
   order_id: string;
   supplier: string;
   supplier_name: string;
+  distributor: string;
+  distributor_name: string;
   transaction_date: string; // ISO date string
   schedule_date: string; // ISO date string
   grand_total: number;
@@ -378,6 +381,7 @@ export interface POOrderDetails {
   supplier: string;
   supplier_name: string;
   distributor: string;
+  distributor_name: string;
   transaction_date: string; // ISO date string
   schedule_date: string; // ISO date string
   status: string;
@@ -399,6 +403,7 @@ export interface POOrderItem {
   amount: number;
   uom: string;
   warehouse: string;
+
   schedule_date: string; // ISO date string
   sales_order: string | null;
   received_qty: number;

@@ -79,12 +79,14 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     gap: 5,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     color: Colors.darkButton,
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
+    marginTop: 5,
   },
   BackIconContainer: {
     width: 23,

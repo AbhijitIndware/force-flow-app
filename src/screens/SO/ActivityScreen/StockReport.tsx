@@ -124,7 +124,7 @@ const StockReport = ({navigation, route}: Props) => {
         },
       ]}>
       <PageHeader
-        title={reportName || 'Stock Report'}
+        title={'Stock Report'}
         navigation={() => navigation.goBack()}
       />
 
@@ -257,7 +257,7 @@ const StockReport = ({navigation, route}: Props) => {
           style={styles.container}
           contentContainerStyle={styles.content}>
           {/* Header */}
-          <Text style={styles.title}>{reportName || 'Stock Report'}</Text>
+          {/* <Text style={styles.title}>{'Stock Report'}</Text> */}
 
           {/* Chart */}
           {chartData.length > 0 && (
