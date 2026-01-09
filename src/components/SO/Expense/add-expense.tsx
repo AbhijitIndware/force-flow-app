@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   Animated,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -24,8 +25,7 @@ import {ExpenseClaimPayload} from '../../../types/baseType';
 import {useAppSelector} from '../../../store/hook';
 import {pick} from '@react-native-documents/picker';
 import {launchCamera} from 'react-native-image-picker';
-import {flexCol} from '../../../utils/styles';
-import {Image} from '@rneui/base';
+import {windowWidth} from '../../../utils/utils';
 
 type LocalExpenseItem = {
   expense_type: string;
@@ -42,7 +42,8 @@ const AddExpenseComponent = ({navigation}: any) => {
   const [attachment, setAttachment] = useState<any | null>(null);
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
 
-  const [uploadAttachmentForClaim] = useUploadAttachmentForClaimMutation();
+  const [uploadAttachmentForClaim, {isLoading: isUploading}] =
+    useUploadAttachmentForClaimMutation();
   const [createExpenseClaim, {isSuccess, isLoading}] =
     useCreateExpenseClaimMutation();
   const employee = useAppSelector(
@@ -64,14 +65,14 @@ const AddExpenseComponent = ({navigation}: any) => {
       formData.append('filename', attachment.name);
       formData.append('is_private', '0');
       formData.append('doctype', 'Expense Claim');
-      formData.append('docname', 'LOCAL_EXPENSE'); // placeholder
+      formData.append('docname', claimId as string);
 
-      await uploadAttachmentForClaim(formData).unwrap();
+      const res = await uploadAttachmentForClaim(formData).unwrap();
 
-      Toast.show({
-        type: 'success',
-        text1: 'Attachment uploaded successfully',
-      });
+      // Toast.show({
+      //   type: 'success',
+      //   text1: 'Attachment uploaded successfully',
+      // });
     } catch (err: any) {
       Toast.show({
         type: 'error',
@@ -94,18 +95,8 @@ const AddExpenseComponent = ({navigation}: any) => {
       };
 
       const res = await createExpenseClaim(payload).unwrap();
-      console.log('🚀 ~ handleSaveExpenseToServer ~ res:', res);
       const createdId = res?.data?.name;
       setClaimId(createdId);
-
-      // If no attachment, skip upload
-      if (!attachment) {
-        Toast.show({
-          type: 'success',
-          text1: 'Expense saved successfully',
-          position: 'top',
-        });
-      }
 
       // Continue to upload in useEffect
     } catch (error: any) {
@@ -166,11 +157,39 @@ const AddExpenseComponent = ({navigation}: any) => {
     });
   };
 
+  const clearFormData = () => {
+    setExpenses([]);
+    setTotal(0);
+    setAttachment(null);
+    setClaimId(null);
+  };
+
   useEffect(() => {
-    if (isSuccess && claimId && attachment) {
-      uploadAttachment();
+    if (isSuccess && claimId) {
+      // Upload attachment if exists
+      if (attachment) {
+        uploadAttachment().then(() => {
+          Toast.show({
+            type: 'success',
+            text1: 'Expense saved successfully',
+            position: 'top',
+          });
+
+          // Clear all local data
+          clearFormData();
+        });
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Expense saved successfully',
+          position: 'top',
+        });
+
+        // Clear local data
+        clearFormData();
+      }
     }
-  }, [isSuccess]);
+  }, [isSuccess, claimId]);
 
   return (
     <View style={styles.container}>
@@ -186,7 +205,9 @@ const AddExpenseComponent = ({navigation}: any) => {
       <View style={styles.HeadingHead}>
         <Text style={styles.SectionHeading}>Expense</Text>
 
-        <TouchableOpacity onPress={() => setShowModal(true)}>
+        <TouchableOpacity
+          disabled={isLoading || isUploading}
+          onPress={() => setShowModal(true)}>
           <View style={{flexDirection: 'row', gap: 10}}>
             <Text style={{fontSize: Size.sm, fontFamily: Fonts.medium}}>
               ₹ {total}
@@ -279,14 +300,13 @@ const AddExpenseComponent = ({navigation}: any) => {
               </Pressable>
             </View>
           </Modal>
-
           {attachment && (
-            <View style={[flexCol, {gap: 10}]}>
+            <View style={[{flexDirection: 'column', gap: 10}]}>
               <View style={styles.previewContainer}>
                 {isImage(attachment.type) ? (
                   <Image
                     source={{uri: attachment.uri}}
-                    style={styles.fullWidthImage}
+                    style={[styles.fullWidthImage, {height: 200}]}
                     resizeMode="contain"
                   />
                 ) : (
@@ -294,7 +314,6 @@ const AddExpenseComponent = ({navigation}: any) => {
                     <View style={styles.fileIconContainer}>
                       <Text style={styles.fileIcon}>📄</Text>
                     </View>
-
                     <View style={styles.fileInfo}>
                       <Text numberOfLines={1} style={styles.fileName}>
                         {attachment.name}
@@ -304,8 +323,9 @@ const AddExpenseComponent = ({navigation}: any) => {
                   </View>
                 )}
               </View>
+
               <TouchableOpacity onPress={() => setAttachment(null)}>
-                <Text style={{color: 'red', fontSize: 15, fontWeight: 700}}>
+                <Text style={{color: 'red', fontSize: 15, fontWeight: '700'}}>
                   Remove
                 </Text>
               </TouchableOpacity>
@@ -314,13 +334,13 @@ const AddExpenseComponent = ({navigation}: any) => {
         </View>
       )}
       <TouchableOpacity
-        style={[styles.submitBtn, isLoading && {opacity: 0.7}]}
+        style={[styles.submitBtn, (isLoading || isUploading) && {opacity: 0.7}]}
         onPress={() => handleSaveExpenseToServer()}
-        disabled={isLoading}>
-        {isLoading ? (
+        disabled={isLoading || isUploading}>
+        {isLoading || isUploading ? (
           <ActivityIndicator size="small" color={Colors.white} />
         ) : (
-          <Text style={styles.submitText}>Save</Text>
+          <Text style={styles.submitText}>Submit</Text>
         )}
       </TouchableOpacity>
     </View>
@@ -450,7 +470,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.borderLight,
   },
   fullWidthImage: {
-    width: '100%',
+    width: windowWidth * 0.7,
     height: 200, // adjust if needed
     borderRadius: 8,
     borderWidth: 1,

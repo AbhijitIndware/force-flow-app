@@ -24,6 +24,7 @@ import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
 import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
 import ExpenseClaimScreen from '../ExpenseScreen/ExpenseClaimScreen';
+import ExpenseListScreen from '../ExpenseScreen/ExpenseListScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -143,6 +144,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="ExpenseClaimScreen"
         component={ExpenseClaimScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ExpenseListScreen"
+        component={ExpenseListScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

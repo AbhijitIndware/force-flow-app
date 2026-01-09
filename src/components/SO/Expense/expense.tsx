@@ -84,7 +84,7 @@ const ExpenseComponent = ({navigation}: any) => {
 
         <View style={[styles.dataBox, {marginTop: 2}]}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}
+            onPress={() => navigation.navigate('ExpenseListScreen')}
             style={[styles.positionValue]}>
             <View style={styles.incentiveContent}>
               <View style={styles.iconbox}>

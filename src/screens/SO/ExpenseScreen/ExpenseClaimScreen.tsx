@@ -34,7 +34,6 @@ const ExpenseClaimScreen = ({navigation, route}: Props) => {
     {claimId: id as string},
     {skip: !id},
   );
-  console.log('🚀 ~ ExpenseClaimScreen ~ attachmentData:', attachmentData);
 
   return (
     <SafeAreaView
