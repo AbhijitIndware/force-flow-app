@@ -177,6 +177,7 @@ const AddExpenseComponent = ({navigation}: any) => {
 
           // Clear all local data
           clearFormData();
+          navigation.goBack();
         });
       } else {
         Toast.show({
@@ -187,6 +188,7 @@ const AddExpenseComponent = ({navigation}: any) => {
 
         // Clear local data
         clearFormData();
+        navigation.goBack();
       }
     }
   }, [isSuccess, claimId]);

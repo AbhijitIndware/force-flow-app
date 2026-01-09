@@ -30,6 +30,7 @@ const ExpenseClaimScreen = ({navigation, route}: Props) => {
     {claimId: id as string},
     {skip: !id},
   );
+  console.log('🚀 ~ ExpenseClaimScreen ~ data:', data);
   const {data: attachmentData} = useGetAttachmentByClaimIdQuery(
     {claimId: id as string},
     {skip: !id},

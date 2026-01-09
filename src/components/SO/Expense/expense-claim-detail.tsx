@@ -30,6 +30,7 @@ const ExpenseClaimDetail = ({
   data: ExpenseClaim;
   attachmentData: ExpenseClaimAttachment[];
 }) => {
+  console.log('🚀 ~ ExpenseClaimDetail ~ expenseData:', expenseData);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<Record<string, boolean>>({});
@@ -57,7 +58,7 @@ const ExpenseClaimDetail = ({
 
         {/* ---------------- CLAIM DETAILS ---------------- */}
         <Text style={styles.sectionTitle}>Claim Information</Text>
-        <StatusRow label="Status" status={data.approval_status} />
+        <StatusRow label="Status" status={data.status} />
 
         <InfoRow label="Company" value={data.company} />
         <InfoRow label="Employee" value={data.employee_name} />
