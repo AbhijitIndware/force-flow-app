@@ -50,6 +50,7 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
   const [createExpenseClaim, {isSuccess}] = useCreateExpenseClaimMutation();
   const [uploadAttachmentForClaim, {isSuccess: attachmentSucess}] =
     useUploadAttachmentForClaimMutation();
+
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );

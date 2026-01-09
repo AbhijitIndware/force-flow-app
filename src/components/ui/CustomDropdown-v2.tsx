@@ -6,10 +6,9 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
+  Text,
   Platform,
 } from 'react-native';
-import {Text, ActivityIndicator, Menu, Button} from 'react-native-paper';
 import {Fonts} from '../../constants';
 import {Colors} from '../../utils/colors';
 import {Size} from '../../utils/fontSize';
@@ -22,7 +21,6 @@ type Props = {
   selectedId: string | null;
   setSelectedId: (val: string) => void;
   height?: number;
-  styleType?: string;
   onLoadMore?: () => void;
   loadingMore?: boolean;
   searchText?: string;
@@ -31,11 +29,11 @@ type Props = {
   addButtonText?: string;
   onAddPress?: () => void;
   onOpen?: () => void;
-  name?: string;
   disabled?: boolean;
+  name: string;
 };
 
-const DropdownComponent = ({
+const DropdownComponentV2 = ({
   selectText,
   data,
   selectedId,
@@ -43,21 +41,26 @@ const DropdownComponent = ({
   height = 50,
   onLoadMore,
   loadingMore = false,
-  searchText,
-  setSearchText,
+  searchText: propSearchText,
+  setSearchText: propSetSearchText,
   showAddButton,
   addButtonText,
   onAddPress,
   onOpen,
-  name,
   disabled = false,
+  name,
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
+  const [internalSearchText, setInternalSearchText] = useState('');
+
+  const searchText = propSearchText ?? internalSearchText;
+  const setSearchText = propSetSearchText ?? setInternalSearchText;
 
   const handleSelect = (value: string) => {
     setSelectedId(value);
     setVisible(false);
+    setSearchText('');
   };
 
   const selectedLabel =
@@ -65,55 +68,55 @@ const DropdownComponent = ({
       ? data.find(item => item.value === selectedId)?.label
       : `Select ${selectText}`;
 
+  // Filtered data based on search
+  const filteredData = useMemo(() => {
+    if (!searchText) return data;
+    return data.filter(item =>
+      item.label.toLowerCase().includes(searchText.toLowerCase()),
+    );
+  }, [data, searchText]);
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
-        <Menu
-          visible={visible}
-          onDismiss={() => setVisible(false)}
-          anchor={
-            <TouchableOpacity
-              onLayout={e => setAnchorWidth(e.nativeEvent.layout.width)}
-              onPress={() => {
-                setVisible(true);
-                onOpen?.();
-              }}
-              disabled={disabled}
-              style={[
-                styles.dropdown,
-                {
-                  height,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
-                  backgroundColor: disabled ? '#F3F3F3' : '#FFFFFF',
-                  borderColor: disabled ? '#D4D4D4' : Colors.inputBorder,
-                  opacity: disabled ? 0.6 : 1,
-                },
-              ]}>
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[
-                  styles.selectedText,
-                  disabled && {color: '#9E9E9E'},
-                  selectedId && styles.selectedTextActive, // 👈 add this line
-                ]}>
-                {selectedLabel}
-              </Text>
-              <ChevronDown color={Colors.inputBorder} size={18} />
-            </TouchableOpacity>
-          }
-          // anchorPosition="bottom"
-          contentStyle={{
-            backgroundColor: Colors.white,
-            width: anchorWidth || '90%',
-            alignSelf: 'center',
-            zIndex: 9999,
-          }}>
-          {/* Add Button */}
+    <View style={styles.container}>
+      <TouchableOpacity
+        onLayout={e => setAnchorWidth(e.nativeEvent.layout.width)}
+        onPress={() => {
+          setVisible(!visible);
+          onOpen?.();
+        }}
+        disabled={disabled}
+        style={[
+          styles.dropdown,
+          {
+            height,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            backgroundColor: disabled ? '#F3F3F3' : '#FFFFFF',
+            borderColor: disabled ? '#D4D4D4' : Colors.inputBorder,
+            opacity: disabled ? 0.6 : 1,
+          },
+        ]}>
+        <Text
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          style={[
+            styles.selectedText,
+            disabled && {color: '#9E9E9E'},
+            selectedId && styles.selectedTextActive,
+          ]}>
+          {selectedLabel}
+        </Text>
+        <ChevronDown color={Colors.inputBorder} size={18} />
+      </TouchableOpacity>
+
+      {visible && (
+        <View
+          style={[
+            styles.dropdownList,
+            {width: anchorWidth, top: height + 4, zIndex: 9999},
+          ]}>
           {showAddButton && (
             <TouchableOpacity
               onPress={() => {
@@ -128,40 +131,30 @@ const DropdownComponent = ({
           )}
 
           {/* Search Input */}
-          <View style={styles.searchContainer}>
-            <TextInput
-              value={searchText}
-              onChangeText={text => {
-                setSearchText?.(text);
-              }}
-              placeholder={`Search ${selectText}...`}
-              placeholderTextColor={Colors.inputBorder}
-              style={styles.inputSearchStyle}
-            />
-          </View>
+          <TextInput
+            value={searchText}
+            onChangeText={text => setSearchText(text)}
+            placeholder={`Search ${selectText}...`}
+            placeholderTextColor={Colors.inputBorder}
+            style={styles.inputSearchStyle}
+          />
 
-          {/* List */}
           <FlatList
-            data={data}
-            keyExtractor={item => `${item.value}-${item?.label}`}
+            data={filteredData}
+            keyExtractor={item => `${item.value}-${item.label}`}
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={
               loadingMore ? (
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.primary}
-                  style={{marginVertical: 10}}
-                />
+                <Text style={{padding: 10, textAlign: 'center'}}>
+                  Loading...
+                </Text>
               ) : null
             }
             renderItem={({item}) => (
               <TouchableOpacity
-                onPress={() => {
-                  handleSelect(item.value);
-                  setSearchText?.('');
-                }}
+                onPress={() => handleSelect(item.value)}
                 style={[
                   styles.item,
                   item.value === selectedId && styles.selectedItem,
@@ -175,8 +168,7 @@ const DropdownComponent = ({
                 </Text>
               </TouchableOpacity>
             )}
-            style={{maxHeight: 200, minWidth: '90%', zIndex: 9999}}
-            contentContainerStyle={{zIndex: 9999}}
+            style={{maxHeight: 160}}
             ListEmptyComponent={
               <View style={{padding: 20, alignItems: 'center'}}>
                 <Text
@@ -189,13 +181,13 @@ const DropdownComponent = ({
               </View>
             }
           />
-        </Menu>
-      </View>
-    </KeyboardAvoidingView>
+        </View>
+      )}
+    </View>
   );
 };
 
-export default DropdownComponent;
+export default DropdownComponentV2;
 
 const styles = StyleSheet.create({
   container: {
@@ -217,29 +209,39 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   selectedTextActive: {
-    color: Colors.black, // make text black when selected
+    color: Colors.black,
   },
-
+  dropdownList: {
+    position: 'absolute',
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
   addButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   addButtonText: {
     color: Colors.primary,
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
   },
-  searchContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingHorizontal: 10,
-    // paddingVertical: 2,
-  },
   inputSearchStyle: {
-    // height: 35,
     color: Colors.black,
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 15 : 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   item: {
     paddingVertical: 8,

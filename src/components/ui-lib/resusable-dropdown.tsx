@@ -1,9 +1,9 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
-import DropdownComponent from '../ui/CustomDropDown';
 import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
+import DropdownComponentV2 from '../ui/CustomDropdown-v2';
 
 interface DropdownOption {
   label: string;
@@ -53,7 +53,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.label}>{label}</Text>
-      <DropdownComponent
+      <DropdownComponentV2
         selectText={label}
         data={data}
         selectedId={value ? String(value) : null}
