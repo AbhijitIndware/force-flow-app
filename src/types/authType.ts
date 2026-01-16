@@ -29,3 +29,16 @@ export type RLogin = {
     };
   };
 };
+
+export interface RCheckSession {
+  message: {
+    valid: boolean;
+    auth_type: string;
+    user: string;
+    full_name: string;
+    sid: string;
+    session_expiry: string;
+    remaining_seconds: number;
+    remaining_time: string;
+  };
+}

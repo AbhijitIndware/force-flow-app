@@ -1,7 +1,7 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {createSlice} from '@reduxjs/toolkit';
 import {apiBaseUrl} from '../apiBaseUrl.js';
-import {ILogin, RLogin} from '../../types/authType';
+import {ILogin, RCheckSession, RLogin} from '../../types/authType';
 
 //Auth api calling
 export const authApi = createApi({
@@ -16,6 +16,12 @@ export const authApi = createApi({
         url: '/method/salesforce_management.mobile_app_apis.authentications.login.login',
         method: 'POST',
         body,
+      }),
+    }),
+    checkSession: builder.query<RCheckSession, {sId: string}>({
+      query: ({sId}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.authentications.login.check_session?sid=${sId}`,
+        method: 'GET',
       }),
     }),
   }),
@@ -81,4 +87,4 @@ export const authSlice = createSlice({
 
 export const {logout} = authSlice.actions;
 export default authSlice.reducer;
-export const {useLoginMutation} = authApi;
+export const {useLoginMutation, useCheckSessionQuery} = authApi;

@@ -5,14 +5,20 @@ import {MainNavigationStackParamList} from '../../types/Navigation';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
-import {useAppSelector} from '../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../store/hook';
 import {View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {logout, useCheckSessionQuery} from '../../features/auth/auth';
+import {useNavigation} from '@react-navigation/native';
+import {ActivityIndicator} from 'react-native';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
 
 const MainNavigation = () => {
+  const dispatch = useAppDispatch();
+  const navigation = useNavigation();
+
   const sId = useAppSelector(state => state?.persistedReducer?.authSlice?.sId);
   const isAuthenticated = !!sId;
   const employee = useAppSelector(
@@ -20,6 +26,24 @@ const MainNavigation = () => {
   );
   const userType = employee?.designation !== 'Promoter' ? 'SO' : 'PROMOTER';
   const insets = useSafeAreaInsets();
+
+  const {data, isLoading, isError} = useCheckSessionQuery(
+    {sId: sId as string},
+    {skip: !sId},
+  );
+  console.log('🚀 ~ MainNavigation ~ sId:', sId);
+  console.log('🚀 ~ MainNavigation ~ data:', data);
+
+  React.useEffect(() => {
+    if (data?.message?.valid === false) {
+      dispatch(logout());
+    }
+  }, [data]);
+
+  // 🔥 Show loader while validating session
+  if (isLoading && isAuthenticated) {
+    return <FullScreenLoader />;
+  }
 
   return isAuthenticated && userType ? (
     <AppStackNavigator userType={userType} insets={insets} />
@@ -71,3 +95,9 @@ const AppStackNavigator = ({
 );
 
 export default MainNavigation;
+
+const FullScreenLoader = () => (
+  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+    <ActivityIndicator size="large" color="#000" />
+  </View>
+);
