@@ -44,11 +44,11 @@ import {PaginationInfo} from '../../types/Navigation';
 // Base api calling ---
 export const baseApi = createApi({
   reducerPath: 'baseApi',
-  // baseQuery: baseQueryWithAuthGuard,
-  baseQuery: fetchBaseQuery({
-    baseUrl: apiBaseUrl,
-    credentials: 'include',
-  }),
+  baseQuery: baseQueryWithAuthGuard,
+  // baseQuery: fetchBaseQuery({
+  //   baseUrl: apiBaseUrl,
+  //   credentials: 'include',
+  // }),
   tagTypes: ['Distributor', 'SO', 'PO', 'PJP', 'Store', ''],
   endpoints: builder => ({
     //Daily PJP Activity Check-in ---

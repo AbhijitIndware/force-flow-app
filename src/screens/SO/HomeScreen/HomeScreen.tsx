@@ -87,7 +87,6 @@ const HomeScreen = ({navigation}: Props) => {
   const {data: teamReportData, isFetching} = useGetSalesRepotsQuery({
     view_type: 'team_include_self',
   });
-  console.log('🚀 ~ HomeScreen ~ teamReportData:', teamReportData);
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,

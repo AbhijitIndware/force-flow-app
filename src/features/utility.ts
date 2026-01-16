@@ -10,6 +10,7 @@ import {logout} from './auth/auth';
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
+  credentials: 'include',
   prepareHeaders: (headers, {getState}) => {
     const sId = (getState() as RootState).persistedReducer.authSlice.sId;
     // console.log('🚀 ~ sId:', sId);
@@ -27,6 +28,7 @@ export const baseQueryWithAuthGuard: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
+  console.log('🚀 ~ baseQueryWithAuthGuard ~ result:', result);
 
   if (result?.error && result?.error.status === 401) {
     api.dispatch(logout());
