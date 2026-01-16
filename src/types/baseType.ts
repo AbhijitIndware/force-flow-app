@@ -25,8 +25,8 @@ export interface IAddStorePayload {
     zone: string;
     state: string;
     map_location: string;
-    start_time: string; // Format: "HH:mm:ss"
-    end_time: string; // Format: "HH:mm:ss"
+    // start_time: string; // Format: "HH:mm:ss"
+    // end_time: string; // Format: "HH:mm:ss"
     pan_no: string;
     gst_no: string;
     city: string;

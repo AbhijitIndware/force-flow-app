@@ -258,7 +258,8 @@ const AddStoreForm: React.FC<Props> = ({
         onBlur={() => handleBlur('map_location')}
         error={touched.map_location && errors.map_location}
       />
-      <View style={styles.inputWrapper}>
+
+      {/* <View style={styles.inputWrapper}>
         <Text style={styles.label}>Start Time</Text>
         <TouchableOpacity
           style={styles.timeInput}
@@ -281,7 +282,7 @@ const AddStoreForm: React.FC<Props> = ({
               : 'Select End Time'}
           </Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
       <ReusableInput
         label="PAN No"
         value={values.pan_no}

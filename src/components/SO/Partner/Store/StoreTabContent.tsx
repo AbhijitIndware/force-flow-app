@@ -1,73 +1,67 @@
-/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
-  StyleSheet,
-  Text,
+  RefreshControl,
   View,
+  Text,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {Colors} from '../../../../utils/colors';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
-import {Clock2, Funnel, Search} from 'lucide-react-native';
-import {useGetStoreListQuery} from '../../../../features/base/base-api';
-import {useCallback, useEffect, useState} from 'react';
-import {Store} from '../../../../types/baseType';
-import {windowHeight} from '../../../../utils/utils';
-import {FlatList} from 'react-native';
-import {RefreshControl} from 'react-native';
 import moment from 'moment';
+import {useGetStoreListQuery} from '../../../../features/base/base-api';
+import {Store} from '../../../../types/baseType';
+import {Clock2} from 'lucide-react-native';
 
 const {width} = Dimensions.get('window');
 
 const StoreTabContent = ({navigation, setTotalCount}: any) => {
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState(1);
   const [orders, setOrders] = useState<Store[]>([]);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data, isLoading, isFetching, refetch, isUninitialized, error} =
-    useGetStoreListQuery({
-      page: String(page),
-      page_size: '20',
+  const [refreshing, setRefreshing] = useState(false);
 
-      // search: storeSearch,
-      include_subordinates: '1',
-      include_direct_subordinates: '1',
-    });
+  const {data, isFetching, refetch} = useGetStoreListQuery({
+    page: String(page),
+    page_size: '20',
+    include_subordinates: '1',
+    include_direct_subordinates: '1',
+  });
 
-  // append new data when page changes
+  const stores = data?.message?.data?.stores ?? [];
+  const pagination = data?.message?.data?.pagination;
+  const hasNextPage =
+    pagination &&
+    pagination?.page < pagination?.total_pages &&
+    stores.length > 0;
+
+  // update list on data change
   useEffect(() => {
-    if (data?.message?.data?.stores) {
-      setOrders(prev => {
-        const map = new Map();
-        [...prev, ...data.message.data.stores].forEach(item => {
-          map.set(item, item);
-        });
-        return Array.from(map.values());
-      });
+    if (stores.length > 0) {
+      setOrders(prev => (page === 1 ? stores : [...prev, ...stores]));
     }
 
-    if (data?.message?.data?.pagination) {
-      setTotalCount(data.message.data.pagination.total_count);
+    if (pagination) {
+      setTotalCount(pagination.total_count);
     }
   }, [data]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
+    setPage(1);
+    setOrders([]);
+
     setTimeout(() => {
+      refetch();
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
+    }, 300);
   }, []);
 
   const loadMore = () => {
-    if (
-      !isFetching &&
-      data?.message?.data &&
-      data?.message?.data?.pagination?.page <
-        data?.message?.data?.pagination?.total_pages
-    ) {
+    if (!isFetching && hasNextPage) {
       setPage(prev => prev + 1);
     }
   };
@@ -120,78 +114,37 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
   };
 
   return (
-    <View
-      style={{
-        width: '100%',
-        flex: 1,
-        backgroundColor: Colors.lightBg,
-        position: 'relative',
-      }}>
-      <View
-        style={[
-          styles.bodyContent,
-          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
-        ]}>
-        <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>All Store</Text>
-          <View style={styles.bodyHeaderIcon}>
-            <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-            <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-          </View>
-        </View>
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: Colors.lightBg,
-          }}>
-          {isLoading || isFetching ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <ActivityIndicator size="large" />
+    <View style={{flex: 1, backgroundColor: Colors.lightBg}}>
+      <FlashList
+        data={orders}
+        renderItem={renderItem}
+        // estimatedItemSize={140}
+        keyExtractor={(item, index) => index.toString()}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.2}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListFooterComponent={
+          isFetching ? (
+            <View style={{paddingVertical: 20}}>
+              <ActivityIndicator size="small" />
             </View>
-          ) : (
-            <>
-              {(data?.message?.data?.stores?.length || 0) === 0 ? (
-                <View
-                  style={{
-                    height: windowHeight * 0.5,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}>
-                  <Text style={{fontSize: 16, color: 'gray'}}>
-                    No Store Found
-                  </Text>
-                </View>
-              ) : (
-                <FlatList
-                  data={orders}
-                  nestedScrollEnabled={true}
-                  refreshControl={
-                    <RefreshControl
-                      refreshing={refreshing}
-                      onRefresh={onRefresh}
-                    />
-                  }
-                  renderItem={renderItem}
-                  keyExtractor={(item, index) => index.toString()}
-                  showsVerticalScrollIndicator={false}
-                  onEndReached={loadMore}
-                  onEndReachedThreshold={0.5}
-                  ListFooterComponent={
-                    isFetching ? <ActivityIndicator size="small" /> : null
-                  }
-                />
-              )}
-            </>
-          )}
-        </View>
-      </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          <View
+            style={{
+              paddingTop: 100,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {!isFetching && (
+              <Text style={{color: 'gray', fontSize: 16}}>No Store Found</Text>
+            )}
+          </View>
+        }
+      />
     </View>
   );
 };
@@ -199,31 +152,21 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
 export default StoreTabContent;
 
 const styles = StyleSheet.create({
-  bodyContent: {flex: 1},
-  bodyHeader: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E4E9',
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 15,
+    marginVertical: 8,
+    marginHorizontal: 12,
   },
-  bodyHeaderTitle: {
-    color: Colors.darkButton,
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    lineHeight: 20,
+  status: {
+    fontFamily: Fonts.regular,
+    color: Colors.sucess,
+    backgroundColor: Colors.lightSuccess,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  bodyHeaderIcon: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 20,
-  },
-
   //atteddanceCard section css
   atteddanceCard: {
     display: 'flex',
@@ -299,7 +242,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingHorizontal: 15,
   },
-
   cardbody: {
     display: 'flex',
     flexDirection: 'row',
@@ -340,73 +282,4 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     lineHeight: 20,
   },
-
-  checkinButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'absolute',
-    bottom: -65,
-    gap: 5,
-    zIndex: 1,
-    width: width * 0.9,
-  },
-  checkinButtonText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-  countBoxSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 17,
-    flexDirection: 'row',
-  },
-  countBox: {
-    backgroundColor: Colors.white,
-    width: '33.33%',
-    borderRadius: 15,
-    padding: 10,
-    minHeight: 135,
-    shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 15,
-  },
-  countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
-  },
-  countBoxTitle: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
-    lineHeight: 18,
-  },
-  countBoxDay: {
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    fontSize: Size.xslg,
-    lineHeight: 20,
-    position: 'relative',
-  },
-  //countBox-section css end
 });

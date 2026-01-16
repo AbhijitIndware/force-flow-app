@@ -28,12 +28,11 @@ const DistributorTabcontent = ({navigation, setTotalCount}: any) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data, isLoading, isFetching, refetch, isUninitialized, error} =
-    useGetDistributorListQuery();
-  //     {
-  //     page,
-  //     page_size: PAGE_SIZE,
-  //     status: '',
-  //   }
+    useGetDistributorListQuery({
+      page,
+      page_size: PAGE_SIZE,
+      status: '',
+    });
 
   // append new data when page changes
   useEffect(() => {

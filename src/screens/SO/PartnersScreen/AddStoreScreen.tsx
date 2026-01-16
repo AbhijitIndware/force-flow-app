@@ -46,8 +46,8 @@ const initial = {
   state: '',
   city: '',
   map_location: '',
-  start_time: '',
-  end_time: '',
+  // start_time: '',
+  // end_time: '',
   pan_no: '',
   gst_no: '',
   pin_code: '',
@@ -222,6 +222,7 @@ const AddStoreScreen = ({
       },
       {refetchOnFocus: true},
     );
+  console.log('🚀 ~ AddStoreScreen ~ distributorData:', distributorData);
 
   const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery(
     {

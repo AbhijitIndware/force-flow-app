@@ -329,15 +329,18 @@ export const baseApi = createApi({
       }),
       providesTags: ['Store'],
     }),
-    getDistributorList: builder.query<RDistributorList, void>({
-      query: () => ({
+    getDistributorList: builder.query<
+      RDistributorList,
+      {page: number; page_size: number; status: string}
+    >({
+      query: ({page, page_size, status}) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_by_owner`,
         method: 'GET',
-        // params: {
-        //   page: page,
-        //   limit: page_size,
-        //   // status: status,
-        // },
+        params: {
+          page: page,
+          page_size: page_size,
+          // status: status,
+        },
       }),
       providesTags: ['Distributor'],
     }),
