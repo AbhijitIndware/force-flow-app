@@ -1228,3 +1228,36 @@ export interface CheckinRecords {
   check_in: string | null;
   check_out: string | null;
 }
+
+export interface CreateSalesInvoiceItem {
+  item_code: string;
+  qty: number;
+  rate: number;
+  warehouse: string;
+}
+
+export interface ISalesInvoiceParams {
+  // customer: string;
+  // warehouse: string;
+  items: CreateSalesInvoiceItem[];
+}
+
+// types/warehouse.ts
+
+export interface WarehouseStock {
+  warehouse_id: string;
+  store_id: string;
+  store_name: string;
+  actual_qty: number;
+}
+
+export interface RGetWarehousesWithStock {
+  message: {
+    success: boolean;
+    data: {
+      employee: string;
+      item_code: string;
+      warehouses: WarehouseStock[];
+    };
+  };
+}

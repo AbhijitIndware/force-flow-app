@@ -26,6 +26,7 @@ import {
   Search,
 } from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
+import {useGetSalesInvoicesListQuery} from '../../../features/base/promoter-base-api';
 //import { fonts } from '@rneui/base';
 
 const {width} = Dimensions.get('window');
@@ -45,6 +46,15 @@ const SalesScreen = ({navigation}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
+
+  const {data, isLoading, isFetching, isError, refetch} =
+    useGetSalesInvoicesListQuery({
+      status: selectedCategory, // 👈 coming from UI
+      page: 1,
+      page_size: 10,
+      search: '',
+    });
+  console.log('🚀 ~ SalesScreen ~ data:', data);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -324,7 +334,7 @@ const SalesScreen = ({navigation}: Props) => {
             }}>
             <TouchableOpacity
               style={styles.checkinButton}
-              onPress={() => navigation.navigate('AttendanceScreen')}>
+              onPress={() => navigation.navigate('AddSalesScreen')}>
               <CalendarDays strokeWidth={1.4} color={Colors.white} />
               <Text style={styles.checkinButtonText}>Register Sale</Text>
             </TouchableOpacity>

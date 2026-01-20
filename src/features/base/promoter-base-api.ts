@@ -4,8 +4,10 @@ import {
   AttendanceData,
   ICheckInRequest,
   ICheckOutRequest,
+  ISalesInvoiceParams,
   PromoterAttendanceData,
   RAttendanceShift,
+  RGetWarehousesWithStock,
   RPromoterAttendance,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
@@ -108,19 +110,7 @@ export const promoterBaseApi = createApi({
       }),
       providesTags: ['Promoter'],
     }),
-    createSalesInvoice: builder.mutation<
-      any,
-      {
-        customer: string;
-        warehouse: string;
-        items: {
-          item_code: string;
-          qty: number;
-          rate: number;
-          warehouse: string;
-        }[];
-      }
-    >({
+    createSalesInvoice: builder.mutation<any, ISalesInvoiceParams>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.promoter_app.sales_invoice_mobile_api.create_sales_invoice`,
         method: 'POST',
@@ -136,6 +126,16 @@ export const promoterBaseApi = createApi({
       }),
       invalidatesTags: ['Promoter'],
     }),
+    getWarehousesWithStock: builder.query<
+      RGetWarehousesWithStock,
+      {item_code: string}
+    >({
+      query: ({item_code}) => ({
+        url: `salesforce_management.mobile_app_apis.promoter_app.promoter_masters.get_warehouses_with_stock`,
+        method: 'GET',
+        params: {item_code},
+      }),
+    }),
   }),
 });
 export const {
@@ -144,6 +144,12 @@ export const {
   usePromoterCheckinMutation,
   usePromoterCheckOutMutation,
   useGetAttendanceHistoryQuery,
+
+  //Sales
+  useGetSalesInvoicesListQuery,
+  useCreateSalesInvoiceMutation,
+  useLazyGetWarehousesWithStockQuery,
+  useGetWarehousesWithStockQuery,
 } = promoterBaseApi;
 
 interface PromoterState {

@@ -181,7 +181,7 @@ export interface Item {
   description: string;
   image: string | null;
   disabled: number;
-  selling_rate: number;
+  selling_rate: number; //For quantity
   buying_rate: number;
   available_qty: number;
 }

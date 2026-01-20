@@ -118,3 +118,26 @@ export const PromoterCheckinSchema = Yup.object().shape({
     .typeError('Longitude must be a number'),
   address: Yup.string().required('Address is required'),
 });
+
+export const addSalesInvoiceSchema = Yup.object({
+  items: Yup.array()
+    .of(
+      Yup.object({
+        item_code: Yup.string().required('Item code is required'),
+
+        qty: Yup.number()
+          .typeError('Quantity must be a number')
+          .required('Quantity is required')
+          .positive('Quantity must be greater than 0'),
+
+        rate: Yup.number()
+          .typeError('Rate must be a number')
+          .required('Rate is required')
+          .positive('Rate must be greater than 0'),
+
+        warehouse: Yup.string().required('Warehouse is required'),
+      }),
+    )
+    .min(1, 'At least one item is required')
+    .required('Items are required'),
+});
