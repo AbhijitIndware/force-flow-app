@@ -102,3 +102,19 @@ export const expenseItemSchema = Yup.object().shape({
     .typeError('Amount must be a number')
     .required('Amount is required'),
 });
+
+//Promoter
+export const PromoterCheckinSchema = Yup.object().shape({
+  store: Yup.string().required('Store is required'),
+  image: Yup.object().shape({
+    mime: Yup.string().nullable(),
+    data: Yup.string().nullable(),
+  }),
+  latitude: Yup.number()
+    .required('Latitude is required')
+    .typeError('Latitude must be a number'),
+  longitude: Yup.number()
+    .required('Longitude is required')
+    .typeError('Longitude must be a number'),
+  address: Yup.string().required('Address is required'),
+});

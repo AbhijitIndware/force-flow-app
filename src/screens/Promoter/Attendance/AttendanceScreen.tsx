@@ -30,6 +30,7 @@ import {
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react-native';
+import {useGetAttendanceHistoryQuery} from '../../../features/base/promoter-base-api';
 // import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 // import { Size } from '../../utils/fontSize';
 
@@ -46,53 +47,6 @@ type Props = {
   route: any;
 };
 
-const DATA = [
-  {
-    id: '1',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '2',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '3',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '4',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'Present',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-  {
-    id: '5',
-    title: 'Accestisa new mart',
-    time: '11:03:45 AM',
-    status: 'General',
-    storename: 'Store name',
-    date: '19',
-    month: 'APR',
-  },
-];
 type ItemProps = {
   title: string;
   storeName: string;
@@ -141,6 +95,19 @@ const AttendanceCard = ({
 const AttendanceScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
+
+  const {
+    data: attendanceHistory,
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetAttendanceHistoryQuery({
+    page: 1,
+    page_size: 20,
+    from_date: '2026-01-01',
+    to_date: '2026-01-31',
+  });
+  console.log('🚀 ~ AttendanceScreen ~ attendanceHistory:', attendanceHistory);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -426,8 +393,8 @@ const AttendanceScreen = ({navigation}: Props) => {
                     </View>
                   </View>
                   {/* card section start here */}
-                  <FlatList
-                    data={DATA}
+                  {/* <FlatList
+                    data={[]}
                     renderItem={({item}) => (
                       <AttendanceCard
                         time={item.time}
@@ -439,7 +406,7 @@ const AttendanceScreen = ({navigation}: Props) => {
                       />
                     )}
                     keyExtractor={item => item.id}
-                  />
+                  /> */}
                 </View>
               </View>
             </TabView.Item>

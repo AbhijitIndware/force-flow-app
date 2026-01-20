@@ -11,6 +11,7 @@ import DownloadScreen from '../DownloadScreen/DownloadScreen';
 import ProductFeedbackScreen from '../ProductFeedbackScreen/ProductfeedbackScreen';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
 import CheckingScreen from '../CheckingScreen/CheckingScreen';
+import CheckOutScreen from '../CheckingScreen/CheckOutScreen';
 
 const Stack = createNativeStackNavigator<PromoterAppStackParamList>();
 
@@ -50,6 +51,11 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="CheckingScreen"
         component={CheckingScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="CheckOutScreen"
+        component={CheckOutScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

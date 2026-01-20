@@ -66,6 +66,73 @@ export const getCurrentLocation = async (): Promise<string> => {
   });
 };
 
+export const getCurrentLatLongWithAddress = async (): Promise<{
+  latitude: number;
+  longitude: number;
+  // address: string;
+}> => {
+  const hasPermission = await requestLocationPermission();
+  if (!hasPermission) {
+    throw new Error('Location permission not granted');
+  }
+
+  // get lat/long
+  const coords = await new Promise<{latitude: number; longitude: number}>(
+    (resolve, reject) => {
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          resolve({latitude, longitude});
+        },
+        error => reject(error),
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+          forceRequestLocation: true,
+          showLocationDialog: true,
+        },
+      );
+    },
+  );
+
+  // get address from coordinates
+  // const address = await getAddressFromCoordinates(
+  //   coords.latitude,
+  //   coords.longitude,
+  // );
+
+  return {
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    // address: address,
+  };
+};
+
+export const getAddressFromCoordinates = async (
+  latitude: number,
+  longitude: number,
+): Promise<string> => {
+  try {
+    const apiKey = 'YOUR_GOOGLE_MAP_API_KEY';
+
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`,
+    );
+
+    const json = await response.json();
+
+    if (json.status === 'OK' && json.results.length > 0) {
+      return json.results[0].formatted_address;
+    }
+
+    return '';
+  } catch (error) {
+    console.log('Reverse geocoding error:', error);
+    return '';
+  }
+};
+
 export const uniqueByValue = <T extends {value: string}>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(i => {

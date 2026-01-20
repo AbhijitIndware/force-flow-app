@@ -32,6 +32,10 @@ import {
   Package,
   UserRoundCog,
 } from 'lucide-react-native';
+import {usePromoterStatusQuery} from '../../../features/base/promoter-base-api';
+import {useAppSelector} from '../../../store/hook';
+import {AttendanceData} from '../../../types/baseType';
+import moment from 'moment';
 
 const {width} = Dimensions.get('window');
 
@@ -45,9 +49,38 @@ type Props = {
   route: any;
 };
 
+const getLastCheckMessage = (data: AttendanceData) => {
+  const {actions, checkin_records} = data;
+
+  const checkInTime = checkin_records.check_in
+    ? moment(checkin_records.check_in).format('hh:mm A')
+    : null;
+
+  const checkOutTime = checkin_records.check_out
+    ? moment(checkin_records.check_out).format('hh:mm A')
+    : null;
+
+  if (actions.can_check_in) {
+    if (checkInTime) return `Last check-in at ${checkInTime}.`;
+    return "You haven't checked in yet.";
+  }
+
+  if (checkOutTime) return `Last check-out at ${checkOutTime}.`;
+
+  return 'No attendance records yet.';
+};
+
+const formatDay = (date: string) => moment(date).format('DD');
+const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
+
 const HomeScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const {data} = usePromoterStatusQuery();
+  console.log('🚀 ~ HomeScreen ~ data:', data);
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -76,19 +109,29 @@ const HomeScreen = ({navigation, route}: Props) => {
           <View style={styles.headerSec}>
             <View style={styles.welcomBox}>
               <Text style={styles.welcomeText}>
-                Hello <Text style={styles.name}>Santanu</Text>
+                Hello <Text style={styles.name}>{user?.full_name}</Text>
               </Text>
               <TouchableOpacity
                 style={styles.linkBox}
                 onPress={() => navigation.navigate('AttendanceScreen')}>
                 <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>21</Text>
-                  <Text style={styles.monthText}>APR</Text>
+                  <Text style={styles.dateText}>
+                    {formatDay(data?.message?.data?.attendance_date as string)}
+                  </Text>
+
+                  <Text style={styles.monthText}>
+                    {formatMonth(
+                      data?.message?.data?.attendance_date as string,
+                    )}
+                  </Text>
                 </View>
+
                 <View style={styles.linkContent}>
                   <Text style={styles.paraText}>
-                    Last check-in at 11:05 pm.
+                    {data?.message?.data &&
+                      getLastCheckMessage(data?.message?.data!)}
                   </Text>
+
                   <Ionicons
                     name="chevron-forward-circle-sharp"
                     size={24}
@@ -98,12 +141,21 @@ const HomeScreen = ({navigation, route}: Props) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.checkinButton}
-              onPress={() => navigation.navigate('CheckingScreen')}>
-              <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-              <Text style={styles.checkinButtonText}>Check-in</Text>
-            </TouchableOpacity>
+            {data?.message?.data?.actions?.can_check_in ? (
+              <TouchableOpacity
+                style={styles.checkinButton}
+                onPress={() => navigation.navigate('CheckingScreen')}>
+                <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+                <Text style={styles.checkinButtonText}>Check-in</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.checkinButton}
+                onPress={() => navigation.navigate('CheckOutScreen')}>
+                <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+                <Text style={styles.checkinButtonText}>Check-out</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.countBoxSection}>

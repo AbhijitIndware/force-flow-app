@@ -1101,3 +1101,130 @@ export interface ExpenseClaimAttachment {
 export type RAttachmentByClaim = {
   data: ExpenseClaimAttachment[];
 };
+
+//Promoter
+export type PromoterAttendanceData = {
+  checked_in: boolean;
+  checked_out: boolean;
+  actions: {
+    can_check_in: boolean;
+    can_check_out: boolean;
+  };
+  shift_info: {
+    store: string[];
+    start_time: string; // or Date if backend returns actual date format
+    end_time: string; // same as above
+  } | null; // if shift info may not exist
+  has_bypass_role: boolean;
+
+  assigned_store: any;
+  attendance_date: string;
+  checkin_records: {check_in: null; check_out: null};
+  employee: string;
+  employee_name: string;
+  message: string;
+};
+
+export interface RPromoterAttendance {
+  message: {
+    success: boolean;
+    data: AttendanceData;
+  };
+}
+
+export interface ICheckInRequest {
+  store: string;
+  image: {
+    mime: string; // e.g. "image/png"
+    data: string; // base64 encoded string
+  };
+  latitude: number | null;
+  longitude: number | null;
+  address: string;
+}
+export interface ICheckOutRequest {
+  image: {
+    mime: string; // e.g. "image/png"
+    data: string; // base64 encoded string
+  };
+  latitude: number | null;
+  longitude: number | null;
+  address: string;
+}
+
+export interface AvailableStore {
+  store_id: string;
+  store_name: string;
+  city: string;
+  state: string;
+  map_location: string; // "lat,long" as string
+  is_primary: boolean;
+}
+
+export interface ShiftAssignment {
+  name: string;
+  shift_type: string;
+  start_date: string;
+  end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_floater: number; // 1 or 0
+}
+
+export interface AttendanceShiftData {
+  employee: string;
+  employee_name: string;
+  has_bypass_role: boolean;
+  shift_assignment: ShiftAssignment | null;
+  primary_store: string;
+  available_stores: AvailableStore[];
+}
+
+export interface RAttendanceShift {
+  message: {
+    success: boolean;
+    data: AttendanceShiftData;
+  };
+}
+
+export interface AttendanceData {
+  checked_in: boolean;
+  checked_out: boolean;
+  actions: AttendanceActions;
+  attendance_date: string;
+  employee: string;
+  employee_name: string;
+  has_bypass_role: boolean;
+  shift_info: ShiftInfo;
+  assigned_store: string;
+  available_stores: StoreInfo[];
+  checkin_records: CheckinRecords;
+  message: string;
+}
+
+export interface AttendanceActions {
+  can_check_in: boolean;
+  can_check_out: boolean;
+}
+
+export interface ShiftInfo {
+  store: string;
+  store_name: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_floater: number;
+}
+
+export interface StoreInfo {
+  store_id: string;
+  store_name: string;
+  city: string;
+  state: string;
+  map_location: string;
+  is_primary: boolean;
+}
+
+export interface CheckinRecords {
+  check_in: string | null;
+  check_out: string | null;
+}

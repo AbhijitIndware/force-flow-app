@@ -5,6 +5,10 @@ import {authApi, authSlice} from '../features/auth/auth';
 import {dropdownApi} from '../features/dropdown/dropdown-api';
 import {baseApi, pjpSlice} from '../features/base/base-api';
 import {tadaApi, tadaSlice} from '../features/tada/tadaApi';
+import {
+  promoterBaseApi,
+  promoterSlice,
+} from '../features/base/promoter-base-api';
 
 const persistConfig = {
   key: 'root',
@@ -15,6 +19,7 @@ const authReducer = combineReducers({
   authSlice: authSlice.reducer,
   pjpSlice: pjpSlice.reducer,
   tadaSlice: tadaSlice.reducer,
+  promoterSlice: promoterSlice.reducer,
 });
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
@@ -25,6 +30,7 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [dropdownApi.reducerPath]: dropdownApi.reducer,
     [baseApi.reducerPath]: baseApi.reducer,
+    [promoterBaseApi.reducerPath]: promoterBaseApi.reducer,
     [tadaApi.reducerPath]: tadaApi.reducer,
   },
   middleware: getDefaultMiddleware =>
@@ -33,6 +39,7 @@ export const store = configureStore({
       dropdownApi.middleware,
       baseApi.middleware,
       tadaApi.middleware,
+      promoterBaseApi.middleware,
     ]),
 });
 

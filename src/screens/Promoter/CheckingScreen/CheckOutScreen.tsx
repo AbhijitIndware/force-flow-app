@@ -1,7 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
   Dimensions,
-  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -12,32 +11,29 @@ import {
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
+import React from 'react';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 
-import {CalendarCheck, Clock2, Upload} from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
+import {CalendarCheck} from 'lucide-react-native';
 import {
   useGetAvailableStoreQuery,
-  usePromoterCheckinMutation,
+  usePromoterCheckOutMutation,
 } from '../../../features/base/promoter-base-api';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
-import {ICheckInRequest} from '../../../types/baseType';
+import {ICheckOutRequest} from '../../../types/baseType';
 import {PromoterCheckinSchema} from '../../../types/schema';
-import moment from 'moment';
-import AddCheckInForm from '../../../components/Promoter/Checkin/CheckinForm';
-import {Animated} from 'react-native';
+import AddCheckOutForm from '../../../components/Promoter/Checkin/CheckoutForm';
+import {useAppSelector} from '../../../store/hook';
 
 const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
-  'CheckingScreen'
+  'CheckOutScreen'
 >;
 
 type Props = {
@@ -46,8 +42,7 @@ type Props = {
 };
 
 // Initial values
-const initial: ICheckInRequest = {
-  store: '',
+const initial: ICheckOutRequest = {
   image: {
     mime: '',
     data: '',
@@ -57,51 +52,19 @@ const initial: ICheckInRequest = {
   address: '',
 };
 
-const CheckingScreen = ({navigation}: Props) => {
+const CheckOutScreen = ({navigation}: Props) => {
+  const promoterStatus = useAppSelector(
+    state => state?.persistedReducer?.promoterSlice?.promoterStatus,
+  );
   const {data} = useGetAvailableStoreQuery();
-  const [promoterCheckin, {isLoading}] = usePromoterCheckinMutation();
+  const [promoterCheckOut, {isLoading}] = usePromoterCheckOutMutation();
 
-  const formattedStartTime = data?.message?.data?.shift_assignment?.start_time
-    ? moment(
-        data?.message?.data?.shift_assignment?.start_time,
-        'HH:mm:ss',
-      ).format('hh:mm A')
-    : 'N/A';
-
-  const formattedEndTime = data?.message?.data?.shift_assignment?.end_time
-    ? moment(
-        data?.message?.data?.shift_assignment?.end_time,
-        'HH:mm:ss',
-      ).format('hh:mm A')
-    : 'N/A';
-
-  const formattedStartDate = data?.message?.data?.shift_assignment?.start_date
-    ? moment(data?.message?.data?.shift_assignment?.start_date).format(
-        'DD MMM YYYY',
-      )
-    : 'N/A';
-
-  const formattedEndDate = data?.message?.data?.shift_assignment?.end_date
-    ? moment(data?.message?.data?.shift_assignment?.end_date).format(
-        'DD MMM YYYY',
-      )
-    : 'N/A';
-
-  const {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-    setFieldValue,
-  } = useFormik({
+  const {values, errors, touched, handleSubmit, setFieldValue} = useFormik({
     initialValues: initial,
     validationSchema: PromoterCheckinSchema,
     onSubmit: async (formValues, actions) => {
       try {
-        const payload: ICheckInRequest = {
-          store: formValues.store,
+        const payload: ICheckOutRequest = {
           image: formValues.image,
           latitude: formValues.latitude,
           longitude: formValues.longitude,
@@ -109,7 +72,7 @@ const CheckingScreen = ({navigation}: Props) => {
         };
         // console.log('🚀 ~ CheckingScreen ~ payload:', payload);
 
-        const res = await promoterCheckin(payload).unwrap();
+        const res = await promoterCheckOut(payload).unwrap();
 
         if (res?.message?.success === true) {
           Toast.show({
@@ -148,7 +111,7 @@ const CheckingScreen = ({navigation}: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      <PageHeader title="Check-in" navigation={() => navigation.goBack()} />
+      <PageHeader title="Check-out" navigation={() => navigation.goBack()} />
       <ScrollView
         contentContainerStyle={styles.container}
         nestedScrollEnabled={true}>
@@ -169,63 +132,21 @@ const CheckingScreen = ({navigation}: Props) => {
               </Text>
             </View>
           </View>
-        </View>
-
-        <View style={styles.ShiftSection}>
-          <Text style={styles.HeadingText}>Shift Details</Text>
-
-          <View
-            style={[
-              styles.ShiftDetailsBox,
-              {marginTop: 10, paddingVertical: 20},
-            ]}>
-            {/* Time Section */}
-            <View style={styles.TimeBoxSection}>
-              {data?.message?.data?.shift_assignment?.start_time && (
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>
-                    Start Time: {formattedStartTime}
-                  </Text>
-                </View>
-              )}
-
-              {data?.message?.data?.shift_assignment?.end_time && (
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>End Time: {formattedEndTime}</Text>
-                </View>
-              )}
+          <View style={styles.EmpInfoView}>
+            <Text style={styles.lableText}>Store</Text>
+            <View style={styles.ViewInputBox}>
+              <Text style={styles.InputText}>
+                {promoterStatus?.shift_info?.store_name || 'N/A'}
+              </Text>
             </View>
-
-            {/* Shift Type */}
-            <Text style={styles.labelText}>Shift Type</Text>
-            <Text style={styles.valueText}>
-              {data?.message?.data?.shift_assignment?.shift_type || 'N/A'}
-            </Text>
-
-            {/* Shift Date Range */}
-            <Text style={styles.labelText}>Shift Duration</Text>
-            <Text style={styles.valueText}>
-              {formattedStartDate} → {formattedEndDate}
-            </Text>
           </View>
         </View>
 
-        <AddCheckInForm
+        <AddCheckOutForm
           values={values}
           errors={errors}
           touched={touched}
-          handleChange={handleChange}
-          handleBlur={handleBlur}
           setFieldValue={setFieldValue}
-          scrollY={new Animated.Value(0)}
-          storeList={
-            (data?.message?.data?.available_stores || [])?.map((row: any) => ({
-              label: row.store_name,
-              value: row.store_id,
-            })) || []
-          }
         />
 
         <TouchableOpacity
@@ -233,14 +154,14 @@ const CheckingScreen = ({navigation}: Props) => {
           disabled={isLoading}
           onPress={() => handleSubmit()}>
           <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>Check-in</Text>
+          <Text style={styles.checkinButtonText}>Check-Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default CheckingScreen;
+export default CheckOutScreen;
 
 const styles = StyleSheet.create({
   container: {

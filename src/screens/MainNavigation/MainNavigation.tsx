@@ -24,16 +24,14 @@ const MainNavigation = () => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const userType = employee?.designation !== 'Promoter' ? 'SO' : 'PROMOTER';
+  const userType =
+    employee?.designation !== 'Promoter' ? 'Sales Officer' : 'PROMOTER';
   const insets = useSafeAreaInsets();
 
   const {data, isLoading, isError} = useCheckSessionQuery(
     {sId: sId as string},
     {skip: !sId},
   );
-  console.log('🚀 ~ MainNavigation ~ sId:', sId);
-  console.log('🚀 ~ MainNavigation ~ data:', data);
-
   React.useEffect(() => {
     if (data?.message?.valid === false) {
       dispatch(logout());
@@ -72,7 +70,7 @@ const AppStackNavigator = ({
   userType,
   insets,
 }: {
-  userType: 'PROMOTER' | 'SO';
+  userType: 'PROMOTER' | 'Sales Officer';
   insets: any;
 }) => (
   <View
