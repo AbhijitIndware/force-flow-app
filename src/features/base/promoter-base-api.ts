@@ -2,6 +2,7 @@ import {createApi} from '@reduxjs/toolkit/query/react';
 import {baseQueryWithAuthGuard} from '../utility';
 import {
   AttendanceData,
+  GetInvoiceDetailsResponse,
   ICheckInRequest,
   ICheckOutRequest,
   ISalesInvoiceParams,
@@ -9,6 +10,7 @@ import {
   RAttendanceShift,
   RGetWarehousesWithStock,
   RPromoterAttendance,
+  RSalesInvoiceList,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
 
@@ -82,9 +84,9 @@ export const promoterBaseApi = createApi({
 
     //Invoices
     getSalesInvoicesList: builder.query<
-      any,
+      RSalesInvoiceList,
       {
-        status: string;
+        status?: string;
         page: number;
         page_size: number;
         search?: string;
@@ -102,7 +104,10 @@ export const promoterBaseApi = createApi({
       }),
       providesTags: ['Promoter'],
     }),
-    getSalesInvoiceDetails: builder.query<any, {invoice_id: string}>({
+    getSalesInvoiceDetails: builder.query<
+      GetInvoiceDetailsResponse,
+      {invoice_id: string}
+    >({
       query: ({invoice_id}) => ({
         url: `/method/salesforce_management.mobile_app_apis.promoter_app.sales_invoice_mobile_api.get_sales_invoice_details`,
         method: 'GET',
@@ -131,7 +136,7 @@ export const promoterBaseApi = createApi({
       {item_code: string}
     >({
       query: ({item_code}) => ({
-        url: `salesforce_management.mobile_app_apis.promoter_app.promoter_masters.get_warehouses_with_stock`,
+        url: `/method/salesforce_management.mobile_app_apis.promoter_app.promoter_masters.get_warehouses_with_stock`,
         method: 'GET',
         params: {item_code},
       }),
@@ -150,6 +155,8 @@ export const {
   useCreateSalesInvoiceMutation,
   useLazyGetWarehousesWithStockQuery,
   useGetWarehousesWithStockQuery,
+  useSubmitSalesInvoiceMutation,
+  useGetSalesInvoiceDetailsQuery,
 } = promoterBaseApi;
 
 interface PromoterState {

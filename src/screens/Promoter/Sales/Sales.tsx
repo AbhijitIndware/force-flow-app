@@ -1,9 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Animated,
   Dimensions,
   RefreshControl,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,20 +13,17 @@ import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {
-  Banknote,
-  CalendarDays,
-  Clock2,
-  EllipsisVertical,
-  Funnel,
-  Search,
-} from 'lucide-react-native';
+import {Banknote, CalendarDays, Funnel, Search} from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
 import {useGetSalesInvoicesListQuery} from '../../../features/base/promoter-base-api';
+import PageHeader from '../../../components/ui/PageHeader';
+import SalesItemCard from '../../../components/Promoter/Sales/SalesItemCard';
+import {SalesInvoice} from '../../../types/baseType';
+import SearchModal from '../../../components/ui/SearchModal';
 //import { fonts } from '@rneui/base';
 
 const {width} = Dimensions.get('window');
@@ -41,25 +38,40 @@ type Props = {
   route: any;
 };
 
-const SalesScreen = ({navigation}: Props) => {
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
+const getDateParts = (dateStr: string) => {
+  const date = new Date(dateStr);
 
-  const {data, isLoading, isFetching, isError, refetch} =
-    useGetSalesInvoicesListQuery({
-      status: selectedCategory, // 👈 coming from UI
-      page: 1,
-      page_size: 10,
-      search: '',
-    });
-  console.log('🚀 ~ SalesScreen ~ data:', data);
+  return {
+    date: date.getDate().toString(),
+    month: date.toLocaleString('default', {month: 'short'}),
+  };
+};
+
+const SalesScreen = ({navigation}: Props) => {
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const [isFilterVisible, setFilterVisible] = useState(false);
+  const [isSearchVisible, setSearchVisible] = useState(false);
+
+  const [searchText, setSearchText] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<
+    'All' | 'Draft' | 'Pending' | 'Delivered' | 'Cancelled'
+  >('All');
+
+  const {data, isFetching, refetch} = useGetSalesInvoicesListQuery({
+    status: selectedStatus === 'All' ? undefined : selectedStatus,
+    search: searchText || undefined,
+    page: 1,
+    page_size: 100,
+  });
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
 
@@ -72,275 +84,175 @@ const SalesScreen = ({navigation}: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      {refreshing ? (
+      <PageHeader title="Sales" navigation={() => navigation.goBack()} />
+      {refreshing || isFetching ? (
         <LoadingScreen />
       ) : (
-        <>
-          <ScrollView
-            nestedScrollEnabled={true}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }>
-            <View style={styles.headerSec}>
-              <View style={styles.salesHeaderData}>
-                <Text
-                  style={{
-                    fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
-                    color: Colors.darkButton,
-                  }}>
-                  Total Sales
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.semiBold,
-                    fontSize: Size.md,
-                    color: Colors.darkButton,
-                  }}>
-                  ₹325000
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.regular,
-                    fontSize: Size.xs,
-                    color: Colors.sucess,
-                    lineHeight: 16,
-                    marginTop: 5,
-                  }}>
-                  +3.5 % MTD{' '}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.medium,
-                    fontSize: Size.xs,
-                    color: Colors.darkButton,
-                  }}>
-                  81.33% achieved{' '}
-                </Text>
-              </View>
-              <View style={styles.welcomBox}>
-                <Text style={styles.welcomeText}>
-                  Target <Text style={styles.name}>₹325000</Text>
-                </Text>
-                <View style={styles.linkBox}>
-                  <View style={styles.linkContent}>
-                    <Banknote size={30} color={Colors.white} />
-                    <Text style={styles.welcomeText}>
-                      Incentive earned <Text style={styles.name}>₹2347</Text>
-                    </Text>
-                  </View>
+        <Animated.ScrollView
+          onScroll={Animated.event(
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
+          )}
+          stickyHeaderIndices={[1]} // Index of the Tab header
+          scrollEventThrottle={16}
+          nestedScrollEnabled={true}
+          removeClippedSubviews={false}
+          contentContainerStyle={{position: 'relative'}}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }>
+          <View style={styles.headerSec}>
+            <View style={styles.salesHeaderData}>
+              <Text
+                style={{
+                  fontFamily: Fonts.regular,
+                  fontSize: Size.sm,
+                  color: Colors.darkButton,
+                }}>
+                Total Sales
+              </Text>
+              <Text
+                style={{
+                  fontFamily: Fonts.semiBold,
+                  fontSize: Size.md,
+                  color: Colors.darkButton,
+                }}>
+                ₹0
+              </Text>
+              <Text
+                style={{
+                  fontFamily: Fonts.regular,
+                  fontSize: Size.xs,
+                  color: Colors.sucess,
+                  lineHeight: 16,
+                  marginTop: 5,
+                }}>
+                0% MTD{' '}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: Fonts.medium,
+                  fontSize: Size.xs,
+                  color: Colors.darkButton,
+                }}>
+                0% achieved{' '}
+              </Text>
+            </View>
+            <View style={styles.welcomBox}>
+              <Text style={styles.welcomeText}>
+                Target <Text style={styles.name}>₹0</Text>
+              </Text>
+              <View style={styles.linkBox}>
+                <View style={styles.linkContent}>
+                  <Banknote size={30} color={Colors.white} />
+                  <Text style={styles.welcomeText}>
+                    Incentive earned <Text style={styles.name}>₹0</Text>
+                  </Text>
                 </View>
               </View>
             </View>
-            <View
-              style={[
-                styles.bodyContent,
-                {paddingHorizontal: 20, marginTop: 70},
-              ]}>
-              <View style={styles.bodyHeader}>
-                <Text style={styles.bodyHeaderTitle}>Recent Attendance</Text>
-                <View style={styles.bodyHeaderIcon}>
-                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  <FilterModal
-                    visible={isModalVisible}
-                    onClose={() => setModalVisible(false)}
-                    onApply={() => setModalVisible(false)}>
-                    <Text
-                      onPress={() => setSelectedCategory('All')}
-                      style={{paddingVertical: 10}}>
-                      All
-                    </Text>
-                    <Text
-                      onPress={() => setSelectedCategory('Electronics')}
-                      style={{paddingVertical: 10}}>
-                      Electronics
-                    </Text>
-                    <Text
-                      onPress={() => setSelectedCategory('Books')}
-                      style={{paddingVertical: 10}}>
-                      Books
-                    </Text>
-                  </FilterModal>
-                  <TouchableOpacity onPress={() => setModalVisible(true)}>
-                    <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              {/* card section start here */}
-              <View style={styles.atteddanceCard}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.timeSection}>
-                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}>11:03:45 AM</Text>
-                  </View>
-                  <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                    Delivered
-                  </Text>
-                  <EllipsisVertical size={20} color={Colors.darkButton} />
-                </View>
-                <View style={styles.cardbody}>
-                  <View style={styles.dateBox}>
-                    <Text style={styles.dateText}>19</Text>
-                    <Text style={styles.monthText}>APR</Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                        lineHeight: 18,
-                      }}>
-                      Sales Order no: FF/223467
-                    </Text>
-                    <Text style={styles.contentText}>Store name</Text>
-                    <Text style={styles.contentText}>Accestisa new mart</Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                      }}>
-                      Amount: ₹ 1240
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.atteddanceCard}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.timeSection}>
-                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}>11:03:45 AM</Text>
-                  </View>
-                  <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                    Delivered
-                  </Text>
-                  <EllipsisVertical size={20} color={Colors.darkButton} />
-                </View>
-                <View style={styles.cardbody}>
-                  <View style={styles.dateBox}>
-                    <Text style={styles.dateText}>19</Text>
-                    <Text style={styles.monthText}>APR</Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                        lineHeight: 18,
-                      }}>
-                      Sales Order no: FF/223467
-                    </Text>
-                    <Text style={styles.contentText}>Store name</Text>
-                    <Text style={styles.contentText}>Accestisa new mart</Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                      }}>
-                      Amount: ₹ 1240
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.atteddanceCard}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.timeSection}>
-                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}>11:03:45 AM</Text>
-                  </View>
-                  <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                    Delivered
-                  </Text>
-                  <EllipsisVertical size={20} color={Colors.darkButton} />
-                </View>
-                <View style={styles.cardbody}>
-                  <View style={styles.dateBox}>
-                    <Text style={styles.dateText}>19</Text>
-                    <Text style={styles.monthText}>APR</Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                        lineHeight: 18,
-                      }}>
-                      Sales Order no: FF/223467
-                    </Text>
-                    <Text style={styles.contentText}>Store name</Text>
-                    <Text style={styles.contentText}>Accestisa new mart</Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                      }}>
-                      Amount: ₹ 1240
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.atteddanceCard}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.timeSection}>
-                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                    <Text style={styles.time}>11:03:45 AM</Text>
-                  </View>
-                  <Text style={[styles.present, {marginLeft: 'auto'}]}>
-                    Delivered
-                  </Text>
-                  <EllipsisVertical size={20} color={Colors.darkButton} />
-                </View>
-                <View style={styles.cardbody}>
-                  <View style={styles.dateBox}>
-                    <Text style={styles.dateText}>19</Text>
-                    <Text style={styles.monthText}>APR</Text>
-                  </View>
-                  <View>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                        lineHeight: 18,
-                      }}>
-                      Sales Order no: FF/223467
-                    </Text>
-                    <Text style={styles.contentText}>Store name</Text>
-                    <Text style={styles.contentText}>Accestisa new mart</Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.semiBold,
-                        fontSize: Size.xsmd,
-                        color: Colors.darkButton,
-                      }}>
-                      Amount: ₹ 1240
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-          <View
-            style={{
-              paddingHorizontal: 20,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <TouchableOpacity
-              style={styles.checkinButton}
-              onPress={() => navigation.navigate('AddSalesScreen')}>
-              <CalendarDays strokeWidth={1.4} color={Colors.white} />
-              <Text style={styles.checkinButtonText}>Register Sale</Text>
-            </TouchableOpacity>
           </View>
-        </>
+          <View
+            style={[
+              styles.bodyContent,
+              {paddingHorizontal: 20, marginTop: 70},
+            ]}>
+            <View style={styles.bodyHeader}>
+              <Text style={styles.bodyHeaderTitle}>Recent Sales Invoices</Text>
+              <View style={styles.bodyHeaderIcon}>
+                <SearchModal
+                  visible={isSearchVisible}
+                  onClose={() => setSearchVisible(false)}
+                  onSearch={text => {
+                    setSearchText(text);
+                  }}
+                />
+
+                <FilterModal
+                  visible={isFilterVisible}
+                  onClose={() => setFilterVisible(false)}
+                  onApply={() => setFilterVisible(false)}>
+                  {['All', 'Draft', 'Pending', 'Delivered', 'Cancelled'].map(
+                    status => (
+                      <Text
+                        key={status}
+                        onPress={() => {
+                          setSelectedStatus(status as any);
+                          setFilterVisible(false);
+                        }}
+                        style={{
+                          paddingVertical: 12,
+                          fontFamily: Fonts.medium,
+                          color:
+                            selectedStatus === status
+                              ? Colors.darkButton
+                              : Colors.gray,
+                        }}>
+                        {status}
+                      </Text>
+                    ),
+                  )}
+                </FilterModal>
+                {/* 🔍 Search */}
+                <TouchableOpacity onPress={() => setSearchVisible(true)}>
+                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
+                </TouchableOpacity>
+
+                {/* 🧰 Filter */}
+                <TouchableOpacity onPress={() => setFilterVisible(true)}>
+                  <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+          <View
+            style={[
+              styles.bodyContent,
+              {paddingHorizontal: 20, paddingBottom: 100},
+            ]}>
+            {data?.message?.data?.sales_invoices?.length ? (
+              data.message.data.sales_invoices.map(
+                (item: SalesInvoice, index: number) => {
+                  const {date, month} = getDateParts(item.posting_date);
+
+                  return (
+                    <SalesItemCard
+                      key={item.invoice_id || index}
+                      time={item.posting_date}
+                      date={date}
+                      month={month}
+                      orderNo={item.invoice_id}
+                      // storeName={item.store_name}
+                      // customerName={item.customer_name}
+                      amount={item.grand_total}
+                      status={item.status}
+                      navigation={navigation}
+                    />
+                  );
+                },
+              )
+            ) : (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyText}>No sales invoice found</Text>
+              </View>
+            )}
+          </View>
+        </Animated.ScrollView>
       )}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <TouchableOpacity
+          style={styles.checkinButton}
+          onPress={() => navigation.navigate('AddSalesScreen')}>
+          <CalendarDays strokeWidth={1.4} color={Colors.white} />
+          <Text style={styles.checkinButtonText}>Register Sales Invoice</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -358,19 +270,23 @@ const styles = StyleSheet.create({
   //header-box-section css start
   headerSec: {
     backgroundColor: Colors.white,
-    minHeight: 200,
+    minHeight: 150,
     width: '100%',
     paddingHorizontal: 20,
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
+    position: 'relative',
+    zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
     shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
+    paddingBottom: 10,
 
     // Android Shadow
     elevation: 2,
+    marginBottom: 15,
   },
 
   salesHeaderData: {
@@ -427,7 +343,10 @@ const styles = StyleSheet.create({
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: {flex: 1, paddingBottom: 100},
+  bodyContent: {
+    width: '100%',
+    backgroundColor: Colors.lightBg,
+  },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -590,5 +509,16 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.white,
     lineHeight: 22,
+  },
+  emptyBox: {
+    marginTop: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  emptyText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.inputBorder,
   },
 });

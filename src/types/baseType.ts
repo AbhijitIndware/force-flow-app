@@ -1261,3 +1261,85 @@ export interface RGetWarehousesWithStock {
     };
   };
 }
+
+export interface SalesInvoice {
+  invoice_id: string;
+  currency: string;
+  docstatus: number;
+  posting_date: string; // YYYY-MM-DD
+  due_date: string; // YYYY-MM-DD
+  grand_total: number;
+  outstanding_amount: number;
+  item_count: number;
+  is_paid: boolean;
+  is_return: number;
+  status: string;
+}
+
+export interface SalesInvoiceListData {
+  pagination: Pagination;
+  sales_invoices: SalesInvoice[];
+}
+export interface SalesInvoiceListMessage {
+  success: boolean;
+  data: SalesInvoiceListData;
+}
+export interface RSalesInvoiceList {
+  message: SalesInvoiceListMessage;
+}
+
+//Invoice Detail
+export interface InvoiceDetails {
+  company: string;
+  invoice_id: string;
+  currency: string;
+  docstatus: number;
+  status: string;
+  posting_date: string; // YYYY-MM-DD
+  due_date: string; // YYYY-MM-DD
+  selling_price_list: string;
+  is_return: number;
+  owner: string;
+  creation: string; // timestamp
+  modified: string; // timestamp
+}
+
+// Invoice item
+export interface InvoiceItem {
+  item_code: string;
+  item_name: string;
+  description: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  discount_percentage: number;
+  discount_amount: number;
+  uom: string;
+  warehouse: string;
+}
+
+// Totals
+export interface InvoiceTotals {
+  total_qty: number;
+  total: number;
+  net_total: number;
+  grand_total: number;
+  rounded_total: number;
+  outstanding_amount: number;
+  paid_amount: number;
+  total_taxes_and_charges: number;
+}
+export interface InvoiceData {
+  invoice_details: InvoiceDetails;
+  items: InvoiceItem[];
+  payments: any[]; // 🔹 can be replaced with a proper type if structure is known
+  taxes: any[]; // 🔹 same here
+  totals: InvoiceTotals;
+}
+export interface GetInvoiceDetailsResponse {
+  message: {
+    success: boolean;
+
+    data: InvoiceData;
+  };
+}

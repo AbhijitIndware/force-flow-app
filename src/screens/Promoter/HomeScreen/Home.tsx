@@ -206,7 +206,10 @@ const Home = ({navigation, route}: Props) => {
             backgroundColor: Colors.lightBg,
           },
         }}
-        tabBar={props => <MyTabBar {...props} />}>
+        tabBar={props => {
+          let index = props.state.index;
+          return index === 0 ? <MyTabBar {...props} /> : null;
+        }}>
         <Tab.Screen
           name="HomeScreen"
           component={HomeScreen}
@@ -228,6 +231,7 @@ const Home = ({navigation, route}: Props) => {
           component={SalesScreen}
           options={{
             tabBarLabel: 'Sales',
+            headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Ionicons
@@ -244,6 +248,7 @@ const Home = ({navigation, route}: Props) => {
           component={IncentiveScreen}
           options={{
             tabBarLabel: 'Incentives',
+            headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Ionicons
@@ -260,6 +265,7 @@ const Home = ({navigation, route}: Props) => {
           component={StockScreen}
           options={{
             tabBarLabel: 'Stock',
+            headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Feather
@@ -282,6 +288,7 @@ const Home = ({navigation, route}: Props) => {
           }}
           options={{
             tabBarLabel: 'More',
+            headerShown: false,
             tabBarIcon: ({focused}) => (
               <MaterialCommunityIcons
                 name="text"

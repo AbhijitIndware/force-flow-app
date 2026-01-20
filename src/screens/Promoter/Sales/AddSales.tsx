@@ -97,7 +97,6 @@ const AddSaleScreen = ({navigation}: Props) => {
     triggerGetWarehouses,
     {data: warehouseData, isFetching: warehouseFetching, error},
   ] = useLazyGetWarehousesWithStockQuery();
-
   /* ---------------- Formik ---------------- */
 
   const {
@@ -118,6 +117,7 @@ const AddSaleScreen = ({navigation}: Props) => {
         console.log('🚀 Create Sales Invoice Payload:', formValues);
 
         const res = await createSalesInvoice(formValues).unwrap();
+        console.log('🚀 Create Sales Invoice res:', res);
 
         if (res?.message?.success) {
           Toast.show({
