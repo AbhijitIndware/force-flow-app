@@ -77,6 +77,13 @@ const SaleInvoiceComponent = ({detail, refetch}: Props) => {
     }, 1500);
   }, [refetch]);
 
+  const statusStyle: Record<string, any> = {
+    Draft: styles.draft,
+    Pending: styles.pending,
+    Paid: styles.delivered,
+    Cancelled: styles.cancelled,
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -86,7 +93,11 @@ const SaleInvoiceComponent = ({detail, refetch}: Props) => {
       }>
       {/* ================= Invoice Details ================= */}
       <View style={styles.card}>
-        <CardHeader title="Invoice Details" status={invoice_details.status} />
+        <CardHeader
+          title="Invoice Details"
+          status={invoice_details.status}
+          statusStyle={statusStyle}
+        />
 
         <View style={styles.cardBody}>
           <Row label="Invoice ID" value={invoice_details.invoice_id} />
@@ -180,21 +191,23 @@ export default SaleInvoiceComponent;
 
 /* ================= Reusable Components ================= */
 
-const CardHeader = ({title, status}: {title: string; status?: string}) => (
+const CardHeader = ({
+  title,
+  status,
+  statusStyle,
+}: {
+  title: string;
+  status?: string;
+  statusStyle?: any;
+}) => (
   <View style={styles.cardInnerHeaderRow}>
     <Text style={styles.title}>{title}</Text>
 
-    {status && (
-      <View
-        style={[
-          styles.statusBadge,
-          {
-            backgroundColor: `${soStatusColors[status]}40`,
-          },
-        ]}>
+    {status && statusStyle[status] && (
+      <View style={[styles.statusBadge, statusStyle[status]]}>
         <Text
           style={{
-            color: soStatusColors[status],
+            color: statusStyle[status].color, // ✅ correct
             fontFamily: Fonts.semiBold,
             fontSize: Size.xs,
           }}>
@@ -215,6 +228,26 @@ const Row = ({label, value}: {label: string; value: any}) => (
 /* ================= Styles ================= */
 
 const styles = StyleSheet.create({
+  delivered: {
+    backgroundColor: Colors.lightSuccess,
+    color: Colors.sucess,
+  },
+
+  pending: {
+    backgroundColor: Colors.holdLight,
+    color: Colors.orange,
+  },
+
+  draft: {
+    backgroundColor: Colors.lightBlue,
+    color: Colors.blue,
+  },
+
+  cancelled: {
+    backgroundColor: Colors.lightDenger,
+    color: Colors.denger,
+  },
+
   container: {
     flex: 1,
     padding: 12,

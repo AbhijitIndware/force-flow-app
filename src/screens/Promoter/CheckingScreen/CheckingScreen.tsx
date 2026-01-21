@@ -58,7 +58,7 @@ const initial: ICheckInRequest = {
 };
 
 const CheckingScreen = ({navigation}: Props) => {
-  const {data} = useGetAvailableStoreQuery();
+  const {data, isFetching: isDataLoading} = useGetAvailableStoreQuery();
   const [promoterCheckin, {isLoading}] = usePromoterCheckinMutation();
 
   const formattedStartTime = data?.message?.data?.shift_assignment?.start_time
@@ -110,6 +110,7 @@ const CheckingScreen = ({navigation}: Props) => {
         // console.log('🚀 ~ CheckingScreen ~ payload:', payload);
 
         const res = await promoterCheckin(payload).unwrap();
+        console.log('🚀 ~ CheckingScreen ~ res:', res);
 
         if (res?.message?.success === true) {
           Toast.show({
@@ -149,93 +150,101 @@ const CheckingScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader title="Check-in" navigation={() => navigation.goBack()} />
-      <ScrollView
-        contentContainerStyle={styles.container}
-        nestedScrollEnabled={true}>
-        <View style={styles.EmpInfoSection}>
-          <View style={styles.EmpInfoView}>
-            <Text style={styles.lableText}>Employee Id</Text>
-            <View style={styles.ViewInputBox}>
-              <Text style={styles.InputText}>
-                {data?.message?.data?.employee}
+      {isDataLoading ? (
+        <LoadingScreen />
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.container}
+          nestedScrollEnabled={true}>
+          <View style={styles.EmpInfoSection}>
+            <View style={styles.EmpInfoView}>
+              <Text style={styles.lableText}>Employee Id</Text>
+              <View style={styles.ViewInputBox}>
+                <Text style={styles.InputText}>
+                  {data?.message?.data?.employee}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.EmpInfoView}>
+              <Text style={styles.lableText}>Employee name</Text>
+              <View style={styles.ViewInputBox}>
+                <Text style={styles.InputText}>
+                  {data?.message?.data?.employee_name}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.ShiftSection}>
+            <Text style={styles.HeadingText}>Shift Details</Text>
+
+            <View
+              style={[
+                styles.ShiftDetailsBox,
+                {marginTop: 10, paddingVertical: 20},
+              ]}>
+              {/* Time Section */}
+              <View style={styles.TimeBoxSection}>
+                {data?.message?.data?.shift_assignment?.start_time && (
+                  <View style={styles.timeSection}>
+                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+                    <Text style={styles.time}>
+                      Start Time: {formattedStartTime}
+                    </Text>
+                  </View>
+                )}
+
+                {data?.message?.data?.shift_assignment?.end_time && (
+                  <View style={styles.timeSection}>
+                    <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+                    <Text style={styles.time}>
+                      End Time: {formattedEndTime}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Shift Type */}
+              <Text style={styles.labelText}>Shift Type</Text>
+              <Text style={styles.valueText}>
+                {data?.message?.data?.shift_assignment?.shift_type || 'N/A'}
+              </Text>
+
+              {/* Shift Date Range */}
+              <Text style={styles.labelText}>Shift Duration</Text>
+              <Text style={styles.valueText}>
+                {formattedStartDate} → {formattedEndDate}
               </Text>
             </View>
           </View>
-          <View style={styles.EmpInfoView}>
-            <Text style={styles.lableText}>Employee name</Text>
-            <View style={styles.ViewInputBox}>
-              <Text style={styles.InputText}>
-                {data?.message?.data?.employee_name}
-              </Text>
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.ShiftSection}>
-          <Text style={styles.HeadingText}>Shift Details</Text>
+          <AddCheckInForm
+            values={values}
+            errors={errors}
+            touched={touched}
+            handleChange={handleChange}
+            handleBlur={handleBlur}
+            setFieldValue={setFieldValue}
+            scrollY={new Animated.Value(0)}
+            storeList={
+              (data?.message?.data?.available_stores || [])?.map(
+                (row: any) => ({
+                  label: row.store_name,
+                  value: row.store_id,
+                }),
+              ) || []
+            }
+          />
 
-          <View
-            style={[
-              styles.ShiftDetailsBox,
-              {marginTop: 10, paddingVertical: 20},
-            ]}>
-            {/* Time Section */}
-            <View style={styles.TimeBoxSection}>
-              {data?.message?.data?.shift_assignment?.start_time && (
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>
-                    Start Time: {formattedStartTime}
-                  </Text>
-                </View>
-              )}
-
-              {data?.message?.data?.shift_assignment?.end_time && (
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>End Time: {formattedEndTime}</Text>
-                </View>
-              )}
-            </View>
-
-            {/* Shift Type */}
-            <Text style={styles.labelText}>Shift Type</Text>
-            <Text style={styles.valueText}>
-              {data?.message?.data?.shift_assignment?.shift_type || 'N/A'}
-            </Text>
-
-            {/* Shift Date Range */}
-            <Text style={styles.labelText}>Shift Duration</Text>
-            <Text style={styles.valueText}>
-              {formattedStartDate} → {formattedEndDate}
-            </Text>
-          </View>
-        </View>
-
-        <AddCheckInForm
-          values={values}
-          errors={errors}
-          touched={touched}
-          handleChange={handleChange}
-          handleBlur={handleBlur}
-          setFieldValue={setFieldValue}
-          scrollY={new Animated.Value(0)}
-          storeList={
-            (data?.message?.data?.available_stores || [])?.map((row: any) => ({
-              label: row.store_name,
-              value: row.store_id,
-            })) || []
-          }
-        />
-
-        <TouchableOpacity
-          style={styles.checkinButton}
-          disabled={isLoading}
-          onPress={() => handleSubmit()}>
-          <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>Check-in</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.checkinButton}
+            disabled={isLoading}
+            onPress={() => handleSubmit()}>
+            <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+            <Text style={styles.checkinButtonText}>Check-in</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

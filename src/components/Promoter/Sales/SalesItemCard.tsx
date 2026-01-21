@@ -36,7 +36,7 @@ const SalesItemCard: React.FC<Props> = ({
   const statusStyle: Record<string, any> = {
     Draft: styles.draft,
     Pending: styles.pending,
-    Delivered: styles.delivered,
+    Paid: styles.delivered,
     Cancelled: styles.cancelled,
   };
 

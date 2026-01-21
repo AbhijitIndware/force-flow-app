@@ -28,6 +28,7 @@ import {ICheckOutRequest} from '../../../types/baseType';
 import {PromoterCheckinSchema} from '../../../types/schema';
 import AddCheckOutForm from '../../../components/Promoter/Checkin/CheckoutForm';
 import {useAppSelector} from '../../../store/hook';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 
 const {width} = Dimensions.get('window');
 
@@ -56,7 +57,7 @@ const CheckOutScreen = ({navigation}: Props) => {
   const promoterStatus = useAppSelector(
     state => state?.persistedReducer?.promoterSlice?.promoterStatus,
   );
-  const {data} = useGetAvailableStoreQuery();
+  const {data, isFetching: isDataLoading} = useGetAvailableStoreQuery();
   const [promoterCheckOut, {isLoading}] = usePromoterCheckOutMutation();
 
   const {values, errors, touched, handleSubmit, setFieldValue} = useFormik({
@@ -112,51 +113,55 @@ const CheckOutScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader title="Check-out" navigation={() => navigation.goBack()} />
-      <ScrollView
-        contentContainerStyle={styles.container}
-        nestedScrollEnabled={true}>
-        <View style={styles.EmpInfoSection}>
-          <View style={styles.EmpInfoView}>
-            <Text style={styles.lableText}>Employee Id</Text>
-            <View style={styles.ViewInputBox}>
-              <Text style={styles.InputText}>
-                {data?.message?.data?.employee}
-              </Text>
+      {isDataLoading ? (
+        <LoadingScreen />
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.container}
+          nestedScrollEnabled={true}>
+          <View style={styles.EmpInfoSection}>
+            <View style={styles.EmpInfoView}>
+              <Text style={styles.lableText}>Employee Id</Text>
+              <View style={styles.ViewInputBox}>
+                <Text style={styles.InputText}>
+                  {data?.message?.data?.employee}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.EmpInfoView}>
+              <Text style={styles.lableText}>Employee name</Text>
+              <View style={styles.ViewInputBox}>
+                <Text style={styles.InputText}>
+                  {data?.message?.data?.employee_name}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.EmpInfoView}>
+              <Text style={styles.lableText}>Store</Text>
+              <View style={styles.ViewInputBox}>
+                <Text style={styles.InputText}>
+                  {promoterStatus?.shift_info?.store_name || 'N/A'}
+                </Text>
+              </View>
             </View>
           </View>
-          <View style={styles.EmpInfoView}>
-            <Text style={styles.lableText}>Employee name</Text>
-            <View style={styles.ViewInputBox}>
-              <Text style={styles.InputText}>
-                {data?.message?.data?.employee_name}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.EmpInfoView}>
-            <Text style={styles.lableText}>Store</Text>
-            <View style={styles.ViewInputBox}>
-              <Text style={styles.InputText}>
-                {promoterStatus?.shift_info?.store_name || 'N/A'}
-              </Text>
-            </View>
-          </View>
-        </View>
 
-        <AddCheckOutForm
-          values={values}
-          errors={errors}
-          touched={touched}
-          setFieldValue={setFieldValue}
-        />
+          <AddCheckOutForm
+            values={values}
+            errors={errors}
+            touched={touched}
+            setFieldValue={setFieldValue}
+          />
 
-        <TouchableOpacity
-          style={styles.checkinButton}
-          disabled={isLoading}
-          onPress={() => handleSubmit()}>
-          <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>Check-Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.checkinButton}
+            disabled={isLoading}
+            onPress={() => handleSubmit()}>
+            <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+            <Text style={styles.checkinButtonText}>Check-Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };

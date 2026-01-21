@@ -77,7 +77,6 @@ const HomeScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data} = usePromoterStatusQuery();
-  console.log('🚀 ~ HomeScreen ~ data:', data);
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
@@ -164,14 +163,14 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <CalendarCheck2 strokeWidth={1.4} color={Colors.white} />
               </View>
               <Text style={styles.countBoxTitle}>Attendance</Text>
-              <Text style={styles.countBoxDay}>24 Days</Text>
+              <Text style={styles.countBoxDay}>0Days</Text>
             </View>
             <View style={styles.countBox}>
               <View style={styles.countBoxIcon}>
                 <Network strokeWidth={1.4} color={Colors.white} />
               </View>
               <Text style={styles.countBoxTitle}>AON</Text>
-              <Text style={styles.countBoxDay}>1244 Days</Text>
+              <Text style={styles.countBoxDay}>0 Days</Text>
             </View>
           </View>
 
@@ -215,7 +214,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                         lineHeight: 20,
                       },
                     ]}>
-                    <Text style={{fontFamily: Fonts.customefont}}>₹</Text>2115
+                    <Text style={{fontFamily: Fonts.customefont}}>₹</Text>0
                   </Text>
                 </View>
                 <Ionicons

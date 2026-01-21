@@ -1,41 +1,17 @@
 /* eslint-disable react-native/no-inline-styles */
-import {
-  Dimensions,
-  FlatList,
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Dimensions, SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
+import React from 'react';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import {Tab, TabView} from '@rneui/themed';
 import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
-// import { Fonts } from '../../constants';
-import {
-  AlarmClockMinus,
-  CalendarCheck,
-  Clock2,
-  Funnel,
-  Search,
-  UserRoundCheck,
-  UserRoundX,
-} from 'lucide-react-native';
-import {useGetAttendanceHistoryQuery} from '../../../features/base/promoter-base-api';
-// import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-// import { Size } from '../../utils/fontSize';
-
+import {Funnel, Search} from 'lucide-react-native';
+import RecentPromoterAttendanceScreen from '../../../components/Promoter/Attendance/RecentPromoterAttendanceScreen';
 const {width} = Dimensions.get('window');
-//const { height } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -47,74 +23,8 @@ type Props = {
   route: any;
 };
 
-type ItemProps = {
-  title: string;
-  storeName: string;
-  time: string;
-  date: string;
-  month: string;
-  status: string;
-};
-
-const AttendanceCard = ({
-  time,
-  title,
-  status,
-  date,
-  month,
-  storeName,
-}: ItemProps) => (
-  <View style={styles.atteddanceCard}>
-    <View style={styles.cardHeader}>
-      <View style={styles.timeSection}>
-        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-        <Text style={styles.time}> {time}</Text>
-      </View>
-      <Text style={styles.present}>{status}</Text>
-      {/* <Text style={styles.lateEntry}>Present</Text>
-      <Text style={styles.leave}>Present</Text>
-      <Text style={styles.absent}>Present</Text> */}
-    </View>
-    <View style={styles.cardbody}>
-      <View style={styles.dateBox}>
-        <Text style={styles.dateText}>{date}</Text>
-        <Text style={styles.monthText}>{month}</Text>
-      </View>
-      <View>
-        <Text style={styles.contentText}>{storeName}</Text>
-        <Text style={styles.contentText}>{title}</Text>
-        <View style={styles.timeSection}>
-          <Clock2 size={14} color="#4A4A4A" strokeWidth={2} />
-          <Text style={styles.time}>Shift Time: 11:03:45 AM</Text>
-        </View>
-      </View>
-    </View>
-  </View>
-);
-
 const AttendanceScreen = ({navigation}: Props) => {
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
-
-  const {
-    data: attendanceHistory,
-    isLoading,
-    isFetching,
-    refetch,
-  } = useGetAttendanceHistoryQuery({
-    page: 1,
-    page_size: 20,
-    from_date: '2026-01-01',
-    to_date: '2026-01-31',
-  });
-  console.log('🚀 ~ AttendanceScreen ~ attendanceHistory:', attendanceHistory);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
 
   return (
     <SafeAreaView
@@ -129,290 +39,70 @@ const AttendanceScreen = ({navigation}: Props) => {
         title="Attendance & Shifts"
         navigation={() => navigation.goBack()}
       />
-      {refreshing ? (
-        <LoadingScreen />
-      ) : (
-        <>
-          <View style={styles.tabSection}>
-            <Tab
-              value={index}
-              onChange={e => setIndex(e)}
-              indicatorStyle={{
-                height: 0,
-              }}
-              variant="primary"
-              style={{backgroundColor: Colors.transparent, padding: 0}}>
-              <Tab.Item
-                title="Attendance"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 6,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-              />
-              <Tab.Item
-                title="Shifts"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 6,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-              />
-            </Tab>
+      <View style={styles.tabSection}>
+        <Tab
+          value={index}
+          onChange={e => setIndex(e)}
+          indicatorStyle={{
+            height: 0,
+          }}
+          variant="primary"
+          style={{backgroundColor: Colors.transparent, padding: 0}}>
+          <Tab.Item
+            title="Attendance"
+            titleStyle={{
+              fontSize: Size.xs,
+              fontFamily: Fonts.medium,
+              lineHeight: 6,
+            }}
+            containerStyle={active => ({
+              backgroundColor: active ? Colors.Orangelight : undefined,
+              borderRadius: active ? 10 : undefined,
+              borderColor: active ? '#FFBF83' : undefined,
+              borderTopWidth: active ? 1 : undefined,
+              borderLeftWidth: active ? 1 : undefined,
+              borderRightWidth: active ? 1 : undefined,
+            })}
+          />
+          <Tab.Item
+            title="Shifts"
+            titleStyle={{
+              fontSize: Size.xs,
+              fontFamily: Fonts.medium,
+              lineHeight: 6,
+            }}
+            containerStyle={active => ({
+              backgroundColor: active ? Colors.Orangelight : undefined,
+              borderRadius: active ? 10 : undefined,
+              borderColor: active ? '#FFBF83' : undefined,
+              borderTopWidth: active ? 1 : undefined,
+              borderLeftWidth: active ? 1 : undefined,
+              borderRightWidth: active ? 1 : undefined,
+            })}
+          />
+        </Tab>
+      </View>
+      <TabView value={index} onChange={setIndex} animationType="spring">
+        <TabView.Item
+          style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
+          <RecentPromoterAttendanceScreen navigation={navigation} />
+        </TabView.Item>
+
+        <TabView.Item style={{width: '100%', backgroundColor: Colors.lightBg}}>
+          <View style={styles.container}>
+            <View
+              style={[styles.bodyContent, {paddingTop: 15, paddingBottom: 30}]}>
+              <View style={styles.bodyHeader}>
+                <Text style={styles.bodyHeaderTitle}>Recent Attendance</Text>
+                <View style={styles.bodyHeaderIcon}>
+                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
+                  <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+                </View>
+              </View>
+            </View>
           </View>
-          <TabView value={index} onChange={setIndex} animationType="spring">
-            <TabView.Item
-              style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
-              <View style={[styles.container]}>
-                <View style={styles.counterSection}>
-                  <View style={styles.countCard}>
-                    <View>
-                      <View style={styles.boxIcon}>
-                        <UserRoundCheck size={22} color={Colors.sucess} />
-                      </View>
-                    </View>
-                    <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>21</Text>
-                      <Text style={styles.counttext}>Present</Text>
-                    </View>
-                  </View>
-                  <View style={styles.countCard}>
-                    <View>
-                      <View
-                        style={[
-                          styles.boxIcon,
-                          {backgroundColor: Colors.lightDenger},
-                        ]}>
-                        <UserRoundX size={22} color={Colors.denger} />
-                      </View>
-                    </View>
-                    <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>02</Text>
-                      <Text style={styles.counttext}>Absent</Text>
-                    </View>
-                  </View>
-                  <View style={styles.countCard}>
-                    <View>
-                      <View
-                        style={[
-                          styles.boxIcon,
-                          {backgroundColor: Colors.holdLight},
-                        ]}>
-                        <AlarmClockMinus size={22} color={Colors.orange} />
-                      </View>
-                    </View>
-                    <View style={styles.countBox}>
-                      <Text style={styles.countNumber}>03</Text>
-                      <Text style={styles.counttext}> Late entry</Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={styles.bodyContent}>
-                  <View style={styles.bodyHeader}>
-                    <Text style={styles.bodyHeaderTitle}>
-                      Recent Attendance
-                    </Text>
-                    <View style={styles.bodyHeaderIcon}>
-                      <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                      <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    </View>
-                  </View>
-                  {/* card section start here */}
-
-                  <ScrollView
-                    nestedScrollEnabled={true}
-                    refreshControl={
-                      <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                      />
-                    }>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.present}>Present</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.lateEntry}>Late entry</Text>
-                        {/* <Text style={styles.present}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.leave}>Leave</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.absent}>Absent</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    <View style={styles.atteddanceCard}>
-                      <View style={styles.cardHeader}>
-                        <View style={styles.timeSection}>
-                          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                          <Text style={styles.time}> In Time: 11:03:45 AM</Text>
-                        </View>
-                        <Text style={styles.present}>Present</Text>
-                        {/* <Text style={styles.lateEntry}>Present</Text>
-                          <Text style={styles.leave}>Present</Text>
-                          <Text style={styles.absent}>Present</Text> */}
-                      </View>
-                      <View style={styles.cardbody}>
-                        <View style={styles.dateBox}>
-                          <Text style={styles.dateText}>19</Text>
-                          <Text style={styles.monthText}>APR</Text>
-                        </View>
-                        <View>
-                          <Text style={styles.contentText}>Store name</Text>
-                          <Text style={styles.contentText}>
-                            Accestisa new mart
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </ScrollView>
-
-                  <TouchableOpacity
-                    style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
-                    <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-                    <Text style={styles.checkinButtonText}>Check-in</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TabView.Item>
-
-            <TabView.Item
-              style={{width: '100%', backgroundColor: Colors.lightBg}}>
-              <View style={styles.container}>
-                <View
-                  style={[
-                    styles.bodyContent,
-                    {paddingTop: 15, paddingBottom: 30},
-                  ]}>
-                  <View style={styles.bodyHeader}>
-                    <Text style={styles.bodyHeaderTitle}>
-                      Recent Attendance
-                    </Text>
-                    <View style={styles.bodyHeaderIcon}>
-                      <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                      <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                    </View>
-                  </View>
-                  {/* card section start here */}
-                  {/* <FlatList
-                    data={[]}
-                    renderItem={({item}) => (
-                      <AttendanceCard
-                        time={item.time}
-                        status={item.status}
-                        title={item.title}
-                        storeName={item.storename}
-                        date={item.date}
-                        month={item.month}
-                      />
-                    )}
-                    keyExtractor={item => item.id}
-                  /> */}
-                </View>
-              </View>
-            </TabView.Item>
-          </TabView>
-        </>
-      )}
+        </TabView.Item>
+      </TabView>
     </SafeAreaView>
   );
 };
