@@ -3,7 +3,10 @@ import {Colors} from '../../../utils/colors';
 import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {useAppSelector} from '../../../store/hook';
-import {useGetExpenseClaimByEmployeeQuery} from '../../../features/tada/tadaApi';
+import {
+  useGetApproverNameQuery,
+  useGetExpenseClaimByEmployeeQuery,
+} from '../../../features/tada/tadaApi';
 import moment from 'moment';
 import LoadingScreen from '../../ui/LoadingScreen';
 
@@ -11,9 +14,11 @@ const ExpenseListComponent = ({navigation}: any) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
+  const {data: approverData} = useGetApproverNameQuery(
+    {empId: employee?.id},
+    {skip: !employee?.id},
   );
+
   const {data: claimByEmp, isFetching} = useGetExpenseClaimByEmployeeQuery({
     employee: employee?.id,
   });
@@ -25,7 +30,7 @@ const ExpenseListComponent = ({navigation}: any) => {
 
         <View style={styles.readonlyInput}>
           <Text style={styles.readonlyText}>
-            {user?.full_name || 'No Employee Found'}
+            {approverData?.message?.approver_name || 'No Employee Found'}
           </Text>
         </View>
       </View>

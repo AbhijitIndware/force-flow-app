@@ -2,6 +2,7 @@ import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {apiBaseUrl} from '../apiBaseUrl';
 import {
   ExpenseClaimPayload,
+  RApproverNamw,
   RAttachmentByClaim,
   RExpenseClaimByEmp,
   RExpenseClaimDetail,
@@ -114,6 +115,16 @@ export const tadaApi = createApi({
       }),
       invalidatesTags: ['Expense'],
     }),
+    getApproverName: builder.query<RApproverNamw, {empId: string}>({
+      query: ({empId}) => ({
+        url: `/method/softsens.api.get_approver_by_employee_no`,
+        method: 'GET',
+        params: {
+          employee_number: empId,
+        },
+      }),
+      providesTags: ['Expense'],
+    }),
   }),
 });
 export const {
@@ -129,6 +140,7 @@ export const {
   //Expense Mutation
   useCreateExpenseClaimMutation,
   useUploadAttachmentForClaimMutation,
+  useGetApproverNameQuery,
 } = tadaApi;
 
 interface PjpState {

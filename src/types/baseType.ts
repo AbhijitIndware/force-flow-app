@@ -1343,3 +1343,13 @@ export interface GetInvoiceDetailsResponse {
     data: InvoiceData;
   };
 }
+
+export interface RApproverNamw {
+  message: {
+    success: boolean;
+    employee_number: string;
+    employee_name: string;
+    approver_employee_no: string;
+    approver_name: string;
+  };
+}
