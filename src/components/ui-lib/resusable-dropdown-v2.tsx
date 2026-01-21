@@ -3,7 +3,7 @@ import {View, Text, StyleSheet} from 'react-native';
 import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
-import DropdownComponent from '../ui/CustomDropDown';
+import DropdownComponentV2 from '../ui/CustomDropdown-v2';
 
 interface DropdownOption {
   label: string;
@@ -31,7 +31,7 @@ interface ReusableDropdownProps {
   disabled?: boolean;
 }
 
-const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
+const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
   label,
   field,
   value,
@@ -53,7 +53,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   return (
     <View style={styles.inputWrapper}>
       <Text style={styles.label}>{label}</Text>
-      <DropdownComponent
+      <DropdownComponentV2
         selectText={label}
         data={data}
         selectedId={value ? String(value) : null}
@@ -85,4 +85,4 @@ const styles = StyleSheet.create({
   error: {fontSize: Size.xs, color: 'red', marginTop: 4},
 });
 
-export default ReusableDropdown;
+export default ReusableDropdownv2;

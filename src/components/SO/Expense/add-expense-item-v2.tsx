@@ -6,6 +6,7 @@ import ReusableDropdown from '../../ui-lib/resusable-dropdown';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
 import {useGetExpenseClaimTypeQuery} from '../../../features/tada/tadaApi';
 import {FormikTouched} from 'formik';
+import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 
 interface Props {
   values: Record<string, string | any>;
@@ -80,7 +81,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
         onChange={(val: string) => setFieldValue('date', val)}
         error={touched.date && errors.date}
       />
-      <ReusableDropdown
+      <ReusableDropdownv2
         label="Expense Claim Type"
         field="claim_type"
         value={values.claim_type}
