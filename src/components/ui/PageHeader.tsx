@@ -12,6 +12,7 @@ import {boxShadow} from '../../utils/styles';
 import Feather from 'react-native-vector-icons/Feather';
 import {Size} from '../../utils/fontSize';
 import {useNavigation} from '@react-navigation/native';
+import {useAppSelector} from '../../store/hook';
 const {width} = Dimensions.get('window');
 type Props = {
   title: string;
@@ -26,6 +27,14 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
       navigations.navigate('ProfileScreen');
     }
   };
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
+  const profileImageSource = employee?.image_base64
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    : require('../../assets/images/user.jpg');
+
   return (
     <View style={[styles.headerTitleContainer, boxShadow]}>
       <View style={styles.backButtonSection}>
@@ -52,7 +61,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo} onPress={() => handleClick()}>
           <Image
-            source={require('../../assets/images/user.jpg')}
+            source={profileImageSource}
             resizeMode="cover"
             style={styles.avtarImage}
           />

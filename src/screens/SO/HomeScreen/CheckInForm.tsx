@@ -100,6 +100,7 @@ const CheckInForm = ({navigation}: Props) => {
           current_location: values.current_location,
           bypass_store_category: formValues.bypass_store_category,
         };
+        console.log('🚀 ~ CheckInForm ~ value:', value);
 
         const res = await addCheckIn(value).unwrap();
         if (res?.message?.success === true) {
@@ -138,6 +139,30 @@ const CheckInForm = ({navigation}: Props) => {
     value: i.store,
   }));
 
+  const ensureCurrentLocation = async (): Promise<string | null> => {
+    if (values?.current_location) {
+      return values.current_location;
+    }
+
+    try {
+      const hasPermission = await requestLocationPermission();
+      if (!hasPermission) {
+        throw new Error('Location permission not granted');
+      }
+
+      const location = await getCurrentLocation();
+      setFieldValue('current_location', location);
+      return location;
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Unable to fetch location',
+        text2: 'Please enable location and try again',
+      });
+      return null;
+    }
+  };
+
   const handleVerifyLocation = async ({showToast}: {showToast: boolean}) => {
     try {
       if (!selectedStore) {
@@ -149,6 +174,10 @@ const CheckInForm = ({navigation}: Props) => {
         }
         return;
       }
+
+      // 🔥 Ensure location exists
+      const location = await ensureCurrentLocation();
+      if (!location) return;
 
       const res = await verifyLocation({
         store: selectedStore as string,

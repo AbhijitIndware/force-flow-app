@@ -52,6 +52,7 @@ const ProfileScreen = ({navigation}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+
   const dispatch = useAppDispatch();
 
   const handleLogout = () => {
@@ -65,6 +66,10 @@ const ProfileScreen = ({navigation}: Props) => {
     dispatch(dropdownApi.util.resetApiState()); // clear RTK Query cache
     persistor.purge();
   };
+
+  const profileImageSource = employee?.image_base64
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    : require('../../../assets/images/user.jpg');
 
   return (
     <SafeAreaView
@@ -88,7 +93,7 @@ const ProfileScreen = ({navigation}: Props) => {
             <View style={styles.salesHeaderData}>
               <View style={styles.userInfo}>
                 <Image
-                  source={require('../../../assets/images/user.jpg')}
+                  source={profileImageSource}
                   resizeMode="cover"
                   style={styles.avtarImage}
                 />
@@ -376,7 +381,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
   },
   avtarImage: {
-    height: 82,
-    width: 82,
+    height: 100,
+    width: 100,
   },
 });

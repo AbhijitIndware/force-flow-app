@@ -107,10 +107,7 @@ const CheckingScreen = ({navigation}: Props) => {
           longitude: formValues.longitude,
           address: formValues.address,
         };
-        // console.log('🚀 ~ CheckingScreen ~ payload:', payload);
-
         const res = await promoterCheckin(payload).unwrap();
-        console.log('🚀 ~ CheckingScreen ~ res:', res);
 
         if (res?.message?.success === true) {
           Toast.show({

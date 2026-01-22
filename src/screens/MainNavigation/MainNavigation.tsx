@@ -8,8 +8,11 @@ import SignupScreen from '../AuthScreen/SignupScreen';
 import {useAppDispatch, useAppSelector} from '../../store/hook';
 import {View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {logout, useCheckSessionQuery} from '../../features/auth/auth';
-import {useNavigation} from '@react-navigation/native';
+import {
+  logout,
+  useCheckSessionQuery,
+  useGetProfileDataQuery,
+} from '../../features/auth/auth';
 import {ActivityIndicator} from 'react-native';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
@@ -17,7 +20,6 @@ const AppStack = createStackNavigator<MainNavigationStackParamList>();
 
 const MainNavigation = () => {
   const dispatch = useAppDispatch();
-  const navigation = useNavigation();
 
   const sId = useAppSelector(state => state?.persistedReducer?.authSlice?.sId);
   const isAuthenticated = !!sId;
@@ -28,6 +30,13 @@ const MainNavigation = () => {
     employee?.designation !== 'Promoter' ? 'Sales Officer' : 'PROMOTER';
   const insets = useSafeAreaInsets();
 
+  useGetProfileDataQuery(
+    {emp_id: employee?.company_emp_id as string},
+    {
+      refetchOnFocus: true,
+      skip: !employee?.company_emp_id,
+    },
+  );
   const {data, isLoading, isError} = useCheckSessionQuery(
     {sId: sId as string},
     {skip: !sId},

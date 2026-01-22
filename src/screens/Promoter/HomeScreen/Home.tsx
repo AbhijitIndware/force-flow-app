@@ -30,6 +30,7 @@ import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
 import {useState} from 'react';
 import MoreOptionsModal from '../../../components/home/MoreOption';
+import {useAppSelector} from '../../../store/hook';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
@@ -131,6 +132,14 @@ function MyTabBar({state, descriptors, navigation}: any) {
 }
 
 const CustomHeader = (props: BottomTabHeaderProps) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
+  const profileImageSource = employee?.image_base64
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    : require('../../../assets/images/user.jpg');
+
   return (
     <View style={styles.headerTitleContainer}>
       <View>
@@ -151,7 +160,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           style={styles.userInfo}
           onPress={() => props.navigation.navigate('ProfileScreen')}>
           <Image
-            source={require('../../../assets/images/user.jpg')}
+            source={profileImageSource}
             resizeMode="cover"
             style={styles.avtarImage}
           />

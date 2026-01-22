@@ -7,7 +7,10 @@ import {
   ICheckOutRequest,
   ISalesInvoiceParams,
   PromoterAttendanceData,
+  RAttendanceHistory,
   RAttendanceShift,
+  RCheckIn,
+  RCheckOut,
   RGetWarehousesWithStock,
   RPromoterAttendance,
   RSalesInvoiceList,
@@ -35,14 +38,14 @@ export const promoterBaseApi = createApi({
       }),
       providesTags: ['Promoter'],
     }),
-    promoterCheckin: builder.mutation<any, ICheckInRequest>({
+    promoterCheckin: builder.mutation<RCheckIn, ICheckInRequest>({
       query: () => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_attendance_checkin',
         method: 'POST',
       }),
       invalidatesTags: ['Promoter'],
     }),
-    promoterCheckOut: builder.mutation<any, ICheckOutRequest>({
+    promoterCheckOut: builder.mutation<RCheckOut, ICheckOutRequest>({
       query: () => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_attendance_checkout',
         method: 'POST',
@@ -50,7 +53,7 @@ export const promoterBaseApi = createApi({
       invalidatesTags: ['Promoter'],
     }),
     getAttendanceHistory: builder.query<
-      any,
+      RAttendanceHistory,
       {
         page: number;
         page_size: number;

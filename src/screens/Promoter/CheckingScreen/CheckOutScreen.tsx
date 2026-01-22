@@ -71,8 +71,6 @@ const CheckOutScreen = ({navigation}: Props) => {
           longitude: formValues.longitude,
           address: formValues.address,
         };
-        // console.log('🚀 ~ CheckingScreen ~ payload:', payload);
-
         const res = await promoterCheckOut(payload).unwrap();
 
         if (res?.message?.success === true) {

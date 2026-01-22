@@ -9,8 +9,6 @@ import {
 } from 'react-native';
 import {launchCamera} from 'react-native-image-picker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import {getCurrentLatLongWithAddress, windowWidth} from '../../../utils/utils';
-import MapReusableInput from '../../ui-lib/map-input';
 import {Upload} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';

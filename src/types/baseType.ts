@@ -1142,6 +1142,37 @@ export interface ICheckInRequest {
   longitude: number | null;
   address: string;
 }
+/* ---------- Root Response ---------- */
+
+export interface RCheckIn {
+  message: CheckInMessage;
+  _server_messages?: string; // stringified JSON array (Frappe)
+}
+
+/* ---------- Message ---------- */
+
+export interface CheckInMessage {
+  success: boolean;
+  message: string;
+  data: CheckInData;
+}
+
+/* ---------- Data ---------- */
+
+export interface CheckInData {
+  log_id: string;
+  attendance_id: string;
+  checkin_id: string | null;
+  employee: string;
+  employee_name: string;
+  store: string;
+  checkin_time: string; // ISO datetime string
+  attendance_date: string; // YYYY-MM-DD
+  entry_type: 'Late' | 'On Time' | string;
+  image_url: string;
+  has_bypass_role: boolean;
+}
+
 export interface ICheckOutRequest {
   image: {
     mime: string; // e.g. "image/png"
@@ -1150,6 +1181,28 @@ export interface ICheckOutRequest {
   latitude: number | null;
   longitude: number | null;
   address: string;
+}
+export type RCheckOut = {
+  message: CheckoutMessage;
+  _server_messages?: string; // JSON string array from Frappe
+};
+
+/* ---------- Message ---------- */
+
+export interface CheckoutMessage {
+  success: boolean;
+  message: string;
+  data: CheckoutData;
+}
+
+/* ---------- Data ---------- */
+
+export interface CheckoutData {
+  log_id: string;
+  attendance_id: string;
+  checkout_id: string | null;
+  working_hours: string | null;
+  checkout_image_url: string;
 }
 
 export interface AvailableStore {
@@ -1353,3 +1406,57 @@ export interface RApproverNamw {
     approver_name: string;
   };
 }
+
+// Attendance History
+export interface RAttendanceHistory {
+  message: AttendanceHistoryMessage;
+}
+
+/* ---------- Message ---------- */
+
+export interface AttendanceHistoryMessage {
+  success: boolean;
+  data: AttendanceHistoryData;
+}
+
+/* ---------- Data ---------- */
+export interface PromoterAttendanceRecord {
+  name: string;
+  attendance_date: string;
+  status: 'Checked In' | 'Checked Out' | 'Absent' | 'Present' | string;
+  store: string;
+  store_name: string;
+  checkin_time?: string;
+  checkout_time?: string;
+  working_hours?: number;
+}
+
+export interface AttendanceHistoryData {
+  employee: string;
+  employee_name: string;
+  pagination: AttendancePagination;
+  records: PromoterAttendanceRecord[];
+  summary: Record<string, number>; // e.g. { "Checked Out": 1 }
+}
+
+/* ---------- Pagination ---------- */
+
+export interface AttendancePagination {
+  page: number;
+  page_size: number;
+  total_records: number;
+  total_pages: number;
+}
+
+/* ---------- Record ---------- */
+
+// export interface AttendanceRecord {
+//   name: string; // log_id
+//   attendance_date: string; // YYYY-MM-DD
+//   status: 'Checked In' | 'Checked Out' | string;
+//   store: string;
+//   store_name: string;
+//   checkin_time: string; // time string
+//   checkout_time: string | null; // nullable for active sessions
+//   working_hours: number | null; // hours in decimal
+// }

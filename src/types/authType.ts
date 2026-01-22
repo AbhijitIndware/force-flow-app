@@ -19,14 +19,7 @@ export type RLogin = {
       api_key: string;
       api_secret: string;
     };
-    employee: {
-      id: string;
-      designation: string;
-      company_email: string;
-      department: string;
-      branch: string;
-      personal_email: string;
-    };
+    employee: Employee;
   };
 };
 
@@ -41,4 +34,22 @@ export interface RCheckSession {
     remaining_seconds: number;
     remaining_time: string;
   };
+}
+
+export interface Employee {
+  id: string;
+  company_emp_id: string;
+  designation: string;
+  company_email: string;
+  personal_email: string | null;
+  department: string | null;
+  branch: string | null;
+  image: string;
+  image_base64: string;
+}
+
+export interface EmployeeProfileResponse {
+  status: 'success' | 'error';
+  message: string;
+  data: Employee;
 }

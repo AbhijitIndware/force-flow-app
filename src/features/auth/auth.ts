@@ -1,7 +1,13 @@
 import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
 import {createSlice} from '@reduxjs/toolkit';
 import {apiBaseUrl} from '../apiBaseUrl.js';
-import {ILogin, RCheckSession, RLogin} from '../../types/authType';
+import {
+  Employee,
+  EmployeeProfileResponse,
+  ILogin,
+  RCheckSession,
+  RLogin,
+} from '../../types/authType';
 
 //Auth api calling
 export const authApi = createApi({
@@ -24,6 +30,15 @@ export const authApi = createApi({
         method: 'GET',
       }),
     }),
+    getProfileData: builder.query<EmployeeProfileResponse, {emp_id: string}>({
+      query: ({emp_id}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.authentications.profile.profile_data`,
+        method: 'GET',
+        params: {
+          emp_id,
+        },
+      }),
+    }),
   }),
 });
 
@@ -33,7 +48,7 @@ interface InitialState {
   error?: Boolean;
   user: any | null;
   api_credentials: any | null;
-  employee: any | null;
+  employee: Employee | null;
   sId: string | null;
 }
 const initialState: InitialState = {
@@ -81,10 +96,30 @@ export const authSlice = createSlice({
         state.status = 'Pending';
         state.loading = true;
         state.error = false;
+      })
+      .addMatcher(
+        authApi.endpoints.getProfileData.matchFulfilled,
+        (state, action) => {
+          state.status = 'Fullfilled';
+          state.loading = false;
+          state.error = false;
+          state.employee = action?.payload.data;
+        },
+      )
+      .addMatcher(authApi.endpoints.getProfileData.matchRejected, state => {
+        state.status = 'Rejected';
+        state.loading = false;
+        state.error = true;
+      })
+      .addMatcher(authApi.endpoints.getProfileData.matchPending, state => {
+        state.status = 'Pending';
+        state.loading = true;
+        state.error = false;
       });
   },
 });
 
 export const {logout} = authSlice.actions;
 export default authSlice.reducer;
-export const {useLoginMutation, useCheckSessionQuery} = authApi;
+export const {useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery} =
+  authApi;

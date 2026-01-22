@@ -24,7 +24,7 @@ import {
 } from 'lucide-react-native';
 import {FlatList} from 'react-native';
 import {windowHeight} from '../../../utils/utils';
-import {AttendanceRecord} from '../../../types/baseType';
+import {PromoterAttendanceRecord} from '../../../types/baseType';
 import moment from 'moment';
 import {useGetAttendanceHistoryQuery} from '../../../features/base/promoter-base-api';
 import DateTimePicker from 'react-native-modal-datetime-picker';
@@ -59,10 +59,10 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
 
   // append new data when page changes
   useEffect(() => {
-    if (data?.message?.records) {
+    if (data?.message?.data?.records) {
       setAttendance(prev => {
         const map = new Map();
-        [...prev, ...data.message.records].forEach(item => {
+        [...prev, ...data?.message?.data?.records].forEach(item => {
           map.set(item.name, item);
         });
         return Array.from(map.values());
@@ -82,45 +82,56 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
     if (
       !isFetching &&
       data?.message &&
-      data?.message?.pagination?.page < data?.message?.pagination?.total_pages
+      data?.message?.data?.pagination?.page <
+        data?.message?.data?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
   };
 
-  const renderItem = ({item}: {item: AttendanceRecord}) => (
-    <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-          <Text style={styles.time}>
-            {' '}
-            In Time: {moment(item?.in_time).format('hh:mm:ss A')}
+  const renderItem = ({item}: {item: PromoterAttendanceRecord}) => {
+    const inTime = item.checkin_time
+      ? moment(item.checkin_time, 'H:mm:ss.SSSSSS').format('hh:mm A')
+      : '--';
+
+    return (
+      <View style={styles.atteddanceCard}>
+        <View style={styles.cardHeader}>
+          <View style={styles.timeSection}>
+            <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+            <Text style={styles.time}> In Time: {inTime}</Text>
+          </View>
+
+          <Text
+            style={[
+              item.status === 'Checked Out' ? styles.present : styles.absent,
+            ]}>
+            {item.status}
           </Text>
         </View>
-        <Text
-          style={[item?.status === 'Present' ? styles.present : styles.absent]}>
-          {item?.status}
-        </Text>
+
+        <View style={styles.cardbody}>
+          <View style={styles.dateBox}>
+            <Text style={styles.dateText}>
+              {moment(item.attendance_date).date()}
+            </Text>
+            <Text style={styles.monthText}>
+              {moment(item.attendance_date).format('MMM')}
+            </Text>
+          </View>
+
+          <View>
+            <Text style={styles.contentText}>Employee name</Text>
+            <Text style={styles.contentText}>
+              {data?.message?.data?.employee_name}
+            </Text>
+
+            <Text style={styles.contentText}>Store: {item.store_name}</Text>
+          </View>
+        </View>
       </View>
-      <View style={styles.cardbody}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>
-            {new Date(item.attendance_date).getDate()}
-          </Text>
-          <Text style={styles.monthText}>
-            {new Date(item.attendance_date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
-        </View>
-        <View>
-          <Text style={styles.contentText}>Employee name</Text>
-          <Text style={styles.contentText}>{item.employee_name}</Text>
-        </View>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={[styles.container]}>
