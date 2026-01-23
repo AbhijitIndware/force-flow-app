@@ -2,6 +2,7 @@
 import {
   ActivityIndicator,
   Dimensions,
+  Modal,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -86,6 +87,9 @@ const HomeScreen = ({navigation}: Props) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedStoreValue, setSelectedStoreValue] =
     useState<StoreData | null>(null);
+  const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
+  const [checkoutPayload, setCheckoutPayload] = useState<any>(null);
+
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
   const {data: teamReportData, isFetching} = useGetSalesRepotsQuery({
@@ -116,7 +120,19 @@ const HomeScreen = ({navigation}: Props) => {
   }, []);
 
   const handleCallLocationPermission = async () => {
-    const hasPermission = await requestLocationPermission();
+    let hasPermission = await requestLocationPermission();
+
+    // 🔁 Ask again if rejected
+    if (!hasPermission) {
+      Toast.show({
+        type: 'info',
+        text1: '📍 Location permission is required',
+        text2: 'Please allow location access to continue',
+      });
+
+      hasPermission = await requestLocationPermission();
+    }
+
     if (!hasPermission) {
       throw new Error('Location permission not granted');
     }
@@ -129,9 +145,61 @@ const HomeScreen = ({navigation}: Props) => {
     return location;
   };
 
+  // const handleCheckOut = async () => {
+  //   try {
+  //     // 🔒 Wait until location is found
+  //     const current_location = await handleCallLocationPermission();
+
+  //     if (!current_location) {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: '❌ Unable to fetch location',
+  //         position: 'top',
+  //       });
+  //       return;
+  //     }
+
+  //     const payload = {
+  //       store: selectedStore as string,
+  //       current_location: current_location, // ✅ added here
+  //     };
+  //     console.log('🚀 ~ handleCheckOut ~ payload:', payload);
+
+  //     const res = await checkOut(payload).unwrap();
+
+  //     if (res?.message?.success) {
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: `✅ ${res.message.message || 'Checked out successfully'}`,
+  //         position: 'top',
+  //       });
+
+  //       dispatch(setSelectedStore(''));
+  //       dispatch(resetLocation());
+  //       setSelectedStoreValue(null);
+  //     } else {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: `❌ ${res.message?.message || 'Check-out failed'}`,
+  //         position: 'top',
+  //       });
+  //     }
+  //   } catch (error: any) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: `❌ ${
+  //         error?.data?.message?.message ||
+  //         error?.message ||
+  //         'Internal Server Error'
+  //       }`,
+  //       text2: 'Please try again later.',
+  //       position: 'top',
+  //     });
+  //   }
+  // };
+
   const handleCheckOut = async () => {
     try {
-      // 🔒 Wait until location is found
       const current_location = await handleCallLocationPermission();
 
       if (!current_location) {
@@ -145,11 +213,26 @@ const HomeScreen = ({navigation}: Props) => {
 
       const payload = {
         store: selectedStore as string,
-        current_location, // ✅ added here
+        current_location: current_location,
       };
-      console.log('🚀 ~ handleCheckOut ~ payload:', payload);
 
-      const res = await checkOut(payload).unwrap();
+      // 🛑 Stop here, open confirmation modal
+      setCheckoutPayload(payload);
+      setCheckoutModalVisible(true);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: `❌ ${error?.message || 'Location permission denied'}`,
+        position: 'top',
+      });
+    }
+  };
+
+  const confirmCheckOut = async () => {
+    if (!checkoutPayload) return;
+
+    try {
+      const res = await checkOut(checkoutPayload).unwrap();
 
       if (res?.message?.success) {
         Toast.show({
@@ -161,6 +244,8 @@ const HomeScreen = ({navigation}: Props) => {
         dispatch(setSelectedStore(''));
         dispatch(resetLocation());
         setSelectedStoreValue(null);
+        setCheckoutModalVisible(false);
+        setCheckoutPayload(null);
       } else {
         Toast.show({
           type: 'error',
@@ -171,12 +256,7 @@ const HomeScreen = ({navigation}: Props) => {
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${
-          error?.data?.message?.message ||
-          error?.message ||
-          'Internal Server Error'
-        }`,
-        text2: 'Please try again later.',
+        text1: `❌ ${error?.message || 'Internal Server Error'}`,
         position: 'top',
       });
     }
@@ -343,6 +423,41 @@ const HomeScreen = ({navigation}: Props) => {
               </View>
             </View>
           </View>
+          <Modal
+            visible={checkoutModalVisible}
+            transparent
+            animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Confirm Check-out</Text>
+
+                <Text style={styles.modalLabel}>Store</Text>
+                <Text style={styles.modalValue}>{checkoutPayload?.store}</Text>
+
+                <Text style={styles.modalLabel}>Current Location</Text>
+                <Text style={styles.modalValue}>
+                  {checkoutPayload?.current_location}
+                </Text>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      setCheckoutModalVisible(false);
+                      setCheckoutPayload(null);
+                    }}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={confirmCheckOut}>
+                    <Text style={styles.confirmText}>Confirm</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
@@ -962,5 +1077,60 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.sm,
     fontFamily: Fonts.medium,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  modalLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 8,
+  },
+  modalValue: {
+    fontSize: 14,
+    color: '#000',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+  },
+  cancelButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#E5E7EB',
+    marginRight: 10,
+  },
+
+  confirmButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#16A34A',
+  },
+
+  cancelText: {
+    color: '#374151',
+    fontWeight: '500',
+  },
+
+  confirmText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });

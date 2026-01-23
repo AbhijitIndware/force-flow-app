@@ -39,46 +39,11 @@ export async function requestLocationPermission(): Promise<boolean> {
   return false;
 }
 
-export const getCurrentLocation = async (): Promise<string> => {
-  const hasPermission = await requestLocationPermission();
-  if (!hasPermission) {
-    throw new Error('Location permission not granted');
-  }
-
-  return new Promise((resolve, reject) => {
-    Geolocation.getCurrentPosition(
-      position => {
-        const {latitude, longitude} = position.coords;
-        resolve(`${latitude},${longitude}`);
-      },
-      error => {
-        console.error('❌ Geolocation error:', error);
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
-        forceRequestLocation: true, // fixes "no provider" sometimes
-        showLocationDialog: true, // shows "Turn on GPS" dialog
-      },
-    );
-  });
-};
-
-export const getCurrentLatLongWithAddress = async (): Promise<{
-  latitude: number;
-  longitude: number;
-  // address: string;
-}> => {
-  const hasPermission = await requestLocationPermission();
-  if (!hasPermission) {
-    throw new Error('Location permission not granted');
-  }
-
-  // get lat/long
-  const coords = await new Promise<{latitude: number; longitude: number}>(
-    (resolve, reject) => {
+const getPositionWithRetry = async (
+  retries = 1,
+): Promise<{latitude: number; longitude: number}> => {
+  try {
+    return await new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
         position => {
           const {latitude, longitude} = position.coords;
@@ -87,26 +52,60 @@ export const getCurrentLatLongWithAddress = async (): Promise<{
         error => reject(error),
         {
           enableHighAccuracy: true,
-          timeout: 15000,
+          timeout: 20000, // ⏱️ increased
           maximumAge: 10000,
           forceRequestLocation: true,
           showLocationDialog: true,
         },
       );
-    },
-  );
+    });
+  } catch (error: any) {
+    // ⏱️ Retry once on timeout
+    if (error?.code === 3 && retries > 0) {
+      return getPositionWithRetry(retries - 1);
+    }
+    throw error;
+  }
+};
 
-  // get address from coordinates
-  // const address = await getAddressFromCoordinates(
-  //   coords.latitude,
-  //   coords.longitude,
-  // );
+export const getCurrentLocation = async (): Promise<string> => {
+  const hasPermission = await requestLocationPermission();
+  if (!hasPermission) {
+    throw new Error('Location permission not granted');
+  }
 
-  return {
-    latitude: coords.latitude,
-    longitude: coords.longitude,
-    // address: address,
-  };
+  try {
+    const {latitude, longitude} = await getPositionWithRetry();
+    return `${latitude},${longitude}`;
+  } catch (error: any) {
+    if (error?.code === 3) {
+      throw new Error(
+        'Location request timed out. Please move to an open area and try again.',
+      );
+    }
+    throw error;
+  }
+};
+
+export const getCurrentLatLongWithAddress = async (): Promise<{
+  latitude: number;
+  longitude: number;
+}> => {
+  const hasPermission = await requestLocationPermission();
+  if (!hasPermission) {
+    throw new Error('Location permission not granted');
+  }
+
+  try {
+    return await getPositionWithRetry();
+  } catch (error: any) {
+    if (error?.code === 3) {
+      throw new Error(
+        'Location request timed out. Please move to an open area and try again.',
+      );
+    }
+    throw error;
+  }
 };
 
 export const getAddressFromCoordinates = async (

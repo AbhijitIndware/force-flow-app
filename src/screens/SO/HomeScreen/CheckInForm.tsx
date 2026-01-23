@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Animated,
   View,
+  Modal,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
 import {Colors} from '../../../utils/colors';
@@ -55,6 +56,9 @@ const initial = {
 const CheckInForm = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
   const [locationVerified, setLocationVerified] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
+
   const scrollY = useRef(new Animated.Value(0)).current;
   const dispatch = useAppDispatch();
 
@@ -94,45 +98,68 @@ const CheckInForm = ({navigation}: Props) => {
       try {
         setLoading(true);
 
-        let value = {
+        const location = await ensureCurrentLocation();
+        if (!location) {
+          setLoading(false);
+          return;
+        }
+
+        const payload = {
           store: formValues.store,
           image: formValues.image,
-          current_location: values.current_location,
+          current_location: location,
           bypass_store_category: formValues.bypass_store_category,
         };
-        console.log('🚀 ~ CheckInForm ~ value:', value);
+        console.log('🚀 ~ CheckInForm ~ payload:', payload);
 
-        const res = await addCheckIn(value).unwrap();
-        if (res?.message?.success === true) {
-          Toast.show({
-            type: 'success',
-            text1: `✅ ${res.message.message}`,
-            position: 'top',
-          });
-          actions.resetForm();
-          handleVerifyLocation({showToast: false});
-          navigation.navigate('Home');
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
-            position: 'top',
-          });
-        }
+        // 🛑 DO NOT call API yet
+        setPendingPayload(payload);
+        setConfirmModalVisible(true);
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1: `❌ ${
-            error?.data?.message?.message || 'Internal Server Error'
-          }`,
-          text2: 'Please try again later.',
-          position: 'top',
+          text1: '❌ Unable to prepare check-in',
         });
       } finally {
         setLoading(false);
       }
     },
   });
+
+  const handleConfirmCheckIn = async () => {
+    if (!pendingPayload) return;
+
+    try {
+      setLoading(true);
+
+      const res = await addCheckIn(pendingPayload).unwrap();
+
+      if (res?.message?.success === true) {
+        Toast.show({
+          type: 'success',
+          text1: `✅ ${res.message.message}`,
+          position: 'top',
+        });
+
+        setConfirmModalVisible(false);
+        setPendingPayload(null);
+        setLocationVerified(false);
+        navigation.navigate('Home');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: `❌ ${res.message.message || 'Something went wrong'}`,
+        });
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
     label: i.store_name,
@@ -141,6 +168,7 @@ const CheckInForm = ({navigation}: Props) => {
 
   const ensureCurrentLocation = async (): Promise<string | null> => {
     if (values?.current_location) {
+      setFieldValue('current_location', values.current_location);
       return values.current_location;
     }
 
@@ -177,11 +205,12 @@ const CheckInForm = ({navigation}: Props) => {
 
       // 🔥 Ensure location exists
       const location = await ensureCurrentLocation();
+      setFieldValue('current_location', location);
       if (!location) return;
 
       const res = await verifyLocation({
         store: selectedStore as string,
-        current_location: values?.current_location,
+        current_location: location,
         validate_location: false,
       }).unwrap();
 
@@ -213,12 +242,24 @@ const CheckInForm = ({navigation}: Props) => {
   };
 
   const handleCallLocationPermission = async () => {
-    const hasPermission = await requestLocationPermission();
+    let hasPermission = await requestLocationPermission();
+
+    // 🔁 Ask again if rejected
+    if (!hasPermission) {
+      Toast.show({
+        type: 'info',
+        text1: '📍 Location permission is required',
+        text2: 'Please allow location access to continue',
+      });
+
+      hasPermission = await requestLocationPermission();
+    }
+
     if (!hasPermission) {
       throw new Error('Location permission not granted');
-    } else {
-      handleSetValue();
     }
+
+    await handleSetValue();
   };
 
   const handleSetValue = async () => {
@@ -250,6 +291,61 @@ const CheckInForm = ({navigation}: Props) => {
           onChange={(val: string) => onSelect('store', val)}
         />
       </View>
+      <Modal visible={confirmModalVisible} transparent animationType="fade">
+        <View style={modalStyles.overlay}>
+          <View style={modalStyles.container}>
+            {/* Header */}
+            <Text style={modalStyles.title}>Confirm Check-In</Text>
+            <Text style={modalStyles.subtitle}>
+              Please review the details before proceeding
+            </Text>
+
+            {/* Divider */}
+            <View style={modalStyles.divider} />
+
+            {/* Store */}
+            <View style={modalStyles.row}>
+              <Text style={modalStyles.label}>Store</Text>
+              <Text style={modalStyles.value}>{pendingPayload?.store}</Text>
+            </View>
+
+            {/* Location */}
+            <View style={modalStyles.row}>
+              <Text style={modalStyles.label}>Location</Text>
+              <Text style={modalStyles.locationText}>
+                {pendingPayload?.current_location}
+              </Text>
+            </View>
+
+            {/* Divider */}
+            <View style={modalStyles.divider} />
+
+            {/* Actions */}
+            <View style={modalStyles.actions}>
+              <TouchableOpacity
+                style={modalStyles.cancelBtn}
+                onPress={() => {
+                  setConfirmModalVisible(false);
+                  setPendingPayload(null);
+                  setLocationVerified(false);
+                }}>
+                <Text style={modalStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={modalStyles.confirmBtn}
+                onPress={handleConfirmCheckIn}
+                disabled={loading}>
+                {loading ? (
+                  <ActivityIndicator color={Colors.white} />
+                ) : (
+                  <Text style={modalStyles.confirmText}>Confirm</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {!locationVerified ? (
         <TouchableOpacity
@@ -326,5 +422,86 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+});
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  container: {
+    width: '88%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 14,
+  },
+  row: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  cancelText: {
+    color: '#374151',
+    fontWeight: '600',
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.darkButton,
+    alignItems: 'center',
+  },
+  confirmText: {
+    color: Colors.white,
+    fontWeight: '700',
   },
 });
