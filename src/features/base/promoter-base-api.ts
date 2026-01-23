@@ -64,7 +64,7 @@ export const promoterBaseApi = createApi({
       }
     >({
       query: ({page, page_size, from_date, to_date}) => ({
-        url: `/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_get_attendance_history`,
+        url: `/method/salesforce_management.mobile_app_apis.attendence.get_attendence.get_attendance_records`,
         method: 'GET',
         params: {
           page,

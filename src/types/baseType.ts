@@ -1413,34 +1413,30 @@ export interface RApproverNamw {
 
 // Attendance History
 export interface RAttendanceHistory {
-  message: AttendanceHistoryMessage;
-}
-
-/* ---------- Message ---------- */
-
-export interface AttendanceHistoryMessage {
-  success: boolean;
-  data: AttendanceHistoryData;
+  message: AttendanceHistoryData;
 }
 
 /* ---------- Data ---------- */
 export interface PromoterAttendanceRecord {
-  name: string;
-  attendance_date: string;
-  status: 'Checked In' | 'Checked Out' | 'Absent' | 'Present' | string;
-  store: string;
-  store_name: string;
-  checkin_time?: string;
-  checkout_time?: string;
-  working_hours?: number;
+  attendance_date: string; // YYYY-MM-DD
+  employee_name: string;
+  in_time: string; // YYYY-MM-DD HH:mm:ss.SSSSSS
+  out_time: string; // YYYY-MM-DD HH:mm:ss.SSSSSS
+  name: string; // Attendance ID
+  status: string;
+  working_hours: number; // hours (can be 0)
 }
 
 export interface AttendanceHistoryData {
+  success: boolean;
   employee: string;
   employee_name: string;
   pagination: AttendancePagination;
   records: PromoterAttendanceRecord[];
-  summary: Record<string, number>; // e.g. { "Checked Out": 1 }
+  summary: {
+    Absent: Number;
+    Present: Number;
+  };
 }
 
 /* ---------- Pagination ---------- */

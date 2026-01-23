@@ -60,10 +60,10 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
 
   // append new data when page changes
   useEffect(() => {
-    if (data?.message?.data?.records) {
+    if (data?.message?.records) {
       setAttendance(prev => {
         const map = new Map();
-        [...prev, ...data?.message?.data?.records].forEach(item => {
+        [...prev, ...data?.message?.records].forEach(item => {
           map.set(item.name, item);
         });
         return Array.from(map.values());
@@ -83,34 +83,42 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
     if (
       !isFetching &&
       data?.message &&
-      data?.message?.data?.pagination?.page <
-        data?.message?.data?.pagination?.total_pages
+      data?.message?.pagination?.page < data?.message?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
   };
 
   const renderItem = ({item}: {item: PromoterAttendanceRecord}) => {
-    const inTime = item.checkin_time
-      ? moment(item.checkin_time, 'H:mm:ss.SSSSSS').format('hh:mm A')
+    const inTime = item.in_time
+      ? moment(item.in_time, 'YYYY-MM-DD HH:mm:ss.SSSSSS').format('hh:mm A')
+      : '--';
+
+    const outTime = item.out_time
+      ? moment(item.out_time, 'YYYY-MM-DD HH:mm:ss.SSSSSS').format('hh:mm A')
       : '--';
 
     return (
       <View style={styles.atteddanceCard}>
+        {/* Header */}
         <View style={styles.cardHeader}>
           <View style={styles.timeSection}>
             <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-            <Text style={styles.time}> In Time: {inTime}</Text>
+            <Text style={styles.time}>
+              In: {inTime} | Out: {outTime}
+            </Text>
           </View>
 
           <Text
             style={[
-              item.status === 'Checked Out' ? styles.present : styles.absent,
+              // styles.status,
+              item.status === 'Present' ? styles.present : styles.absent,
             ]}>
             {item.status}
           </Text>
         </View>
 
+        {/* Body */}
         <View style={styles.cardbody}>
           <View style={styles.dateBox}>
             <Text style={styles.dateText}>
@@ -122,12 +130,12 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
           </View>
 
           <View>
-            <Text style={styles.contentText}>Employee name</Text>
-            <Text style={styles.contentText}>
-              {data?.message?.data?.employee_name}
-            </Text>
+            <Text style={styles.contentText}>Employee</Text>
+            <Text style={styles.contentText}>{item.employee_name}</Text>
 
-            <Text style={styles.contentText}>Store: {item.store_name}</Text>
+            <Text style={styles.contentText}>
+              Working Hours: {item.working_hours} hrs
+            </Text>
           </View>
         </View>
       </View>
@@ -144,7 +152,9 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
             </View>
           </View>
           <View style={styles.countBox}>
-            <Text style={styles.countNumber}>0</Text>
+            <Text style={styles.countNumber}>
+              {String(data?.message?.summary?.Present)}
+            </Text>
             <Text style={styles.counttext}>Present</Text>
           </View>
         </View>
@@ -156,7 +166,9 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
             </View>
           </View>
           <View style={styles.countBox}>
-            <Text style={styles.countNumber}>0</Text>
+            <Text style={styles.countNumber}>
+              {String(data?.message?.summary?.Absent)}
+            </Text>
             <Text style={styles.counttext}>Absent</Text>
           </View>
         </View>
