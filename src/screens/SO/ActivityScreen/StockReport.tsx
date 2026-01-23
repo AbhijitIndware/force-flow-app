@@ -61,6 +61,7 @@ const StockReport = ({navigation, route}: Props) => {
   const [storeListData, setStoreListData] = useState<
     {label: string; value: string}[]
   >([]);
+  console.log('🚀 ~ StockReport ~ storeListData:', storeListData);
   const [storeSearch, setStoreSearch] = useState('');
   const [loadingStoreMore, setLoadingStoreMore] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
@@ -83,7 +84,7 @@ const StockReport = ({navigation, route}: Props) => {
 
   const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
     page: String(storePage),
-    page_size: '20',
+    page_size: '100',
     search: storeSearch,
     include_subordinates: '1',
     include_direct_subordinates: '1',
@@ -98,7 +99,7 @@ const StockReport = ({navigation, route}: Props) => {
     to_date: endDate.format('YYYY-MM-DD'),
     valuation_field_type: 'Currency',
     item_code: selectedItems,
-    store_name: selectedStores,
+    store: selectedStores,
   });
 
   // 🚀 Call the RTK Query hook with parameters
@@ -111,6 +112,7 @@ const StockReport = ({navigation, route}: Props) => {
     });
 
   const reportData = data?.message ?? {};
+  console.log('🚀 ~ StockReport ~ reportData:', reportData);
   const {
     result = [],
     columns = [],
@@ -270,7 +272,10 @@ const StockReport = ({navigation, route}: Props) => {
 
         {/* 🔄 Refresh Button */}
         <TouchableOpacity
-          onPress={() => refetch()}
+          onPress={() => {
+            refetch();
+            setSelectedStores([]);
+          }}
           style={{
             borderWidth: 1,
             borderColor: '#ccc',
@@ -368,6 +373,7 @@ const StockReport = ({navigation, route}: Props) => {
             setStoreSearch(text);
           }}
           showAddButton={false}
+          clearTextAfterSearch={false}
         />
         {/* <ReusableDropdown
           label="Item"

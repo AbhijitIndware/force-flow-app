@@ -33,6 +33,7 @@ type Props = {
   onOpen?: () => void;
   name?: string;
   disabled?: boolean;
+  clearTextAfterSearch: boolean;
 };
 
 const DropdownComponent = ({
@@ -51,6 +52,7 @@ const DropdownComponent = ({
   onOpen,
   name,
   disabled = false,
+  clearTextAfterSearch,
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
@@ -160,7 +162,7 @@ const DropdownComponent = ({
               <TouchableOpacity
                 onPress={() => {
                   handleSelect(item.value);
-                  setSearchText?.('');
+                  clearTextAfterSearch && setSearchText?.('');
                 }}
                 style={[
                   styles.item,

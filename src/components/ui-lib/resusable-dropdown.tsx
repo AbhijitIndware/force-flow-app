@@ -29,6 +29,7 @@ interface ReusableDropdownProps {
 
   onOpen?: () => void;
   disabled?: boolean;
+  clearTextAfterSearch?: boolean;
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -49,6 +50,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
 
   onOpen,
   disabled,
+  clearTextAfterSearch = true,
 }) => {
   return (
     <View style={styles.inputWrapper}>
@@ -68,6 +70,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         onAddPress={onAddPress}
         onOpen={onOpen}
         disabled={disabled}
+        clearTextAfterSearch={clearTextAfterSearch}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
