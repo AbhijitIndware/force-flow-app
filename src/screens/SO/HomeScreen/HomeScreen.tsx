@@ -45,6 +45,10 @@ import Toast from 'react-native-toast-message';
 import {StoreData} from '../../../types/baseType';
 import moment from 'moment';
 import {useIsFocused} from '@react-navigation/native';
+import {
+  getCurrentLocation,
+  requestLocationPermission,
+} from '../../../utils/utils';
 
 const {width} = Dimensions.get('window');
 
@@ -111,9 +115,40 @@ const HomeScreen = ({navigation}: Props) => {
     }, 2000);
   }, []);
 
+  const handleCallLocationPermission = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      throw new Error('Location permission not granted');
+    }
+
+    return await handleSetValue();
+  };
+
+  const handleSetValue = async () => {
+    const location = await getCurrentLocation();
+    return location;
+  };
+
   const handleCheckOut = async () => {
     try {
-      let payload = {store: selectedStore as string};
+      // 🔒 Wait until location is found
+      const current_location = await handleCallLocationPermission();
+
+      if (!current_location) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Unable to fetch location',
+          position: 'top',
+        });
+        return;
+      }
+
+      const payload = {
+        store: selectedStore as string,
+        current_location, // ✅ added here
+      };
+      console.log('🚀 ~ handleCheckOut ~ payload:', payload);
+
       const res = await checkOut(payload).unwrap();
 
       if (res?.message?.success) {
@@ -122,6 +157,7 @@ const HomeScreen = ({navigation}: Props) => {
           text1: `✅ ${res.message.message || 'Checked out successfully'}`,
           position: 'top',
         });
+
         dispatch(setSelectedStore(''));
         dispatch(resetLocation());
         setSelectedStoreValue(null);
@@ -133,10 +169,13 @@ const HomeScreen = ({navigation}: Props) => {
         });
       }
     } catch (error: any) {
-      // console.error('Checkout error:', error);
       Toast.show({
         type: 'error',
-        text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`,
+        text1: `❌ ${
+          error?.data?.message?.message ||
+          error?.message ||
+          'Internal Server Error'
+        }`,
         text2: 'Please try again later.',
         position: 'top',
       });

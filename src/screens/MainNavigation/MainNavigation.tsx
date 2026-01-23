@@ -26,17 +26,20 @@ const MainNavigation = () => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  const employeeId = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.empId,
+  );
   const userType =
     employee?.designation !== 'Promoter' ? 'Sales Officer' : 'PROMOTER';
   const insets = useSafeAreaInsets();
-
   useGetProfileDataQuery(
-    {emp_id: employee?.company_emp_id as string},
+    {emp_id: employeeId as string},
     {
       refetchOnFocus: true,
-      skip: !employee?.company_emp_id,
+      skip: !employeeId,
     },
   );
+
   const {data, isLoading, isError} = useCheckSessionQuery(
     {sId: sId as string},
     {skip: !sId},

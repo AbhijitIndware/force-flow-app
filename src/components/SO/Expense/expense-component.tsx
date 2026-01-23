@@ -15,12 +15,12 @@ const ExpenseListComponent = ({navigation}: any) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
   const {data: approverData} = useGetApproverNameQuery(
-    {empId: employee?.id},
+    {empId: employee?.id as string},
     {skip: !employee?.id},
   );
 
   const {data: claimByEmp, isFetching} = useGetExpenseClaimByEmployeeQuery({
-    employee: employee?.id,
+    employee: employee?.id as string,
   });
 
   return (

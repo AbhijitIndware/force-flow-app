@@ -146,9 +146,9 @@ const AddStoreScreen = ({
         setLoading(true);
         let value = {
           ...formValues,
-          created_by_employee: employee.id, // Replace with actual user ID
+          created_by_employee: employee?.id as string, // Replace with actual user ID
           created_by_employee_name: user?.full_name, // Replace with actual user name
-          created_by_employee_designation: employee.designation, // Replace with actual designation
+          created_by_employee_designation: employee?.designation as string, // Replace with actual designation
         };
 
         const payload = {data: value};
@@ -222,7 +222,6 @@ const AddStoreScreen = ({
       },
       {refetchOnFocus: true},
     );
-  console.log('🚀 ~ AddStoreScreen ~ distributorData:', distributorData);
 
   const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery(
     {

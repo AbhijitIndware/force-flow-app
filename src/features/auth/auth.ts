@@ -50,6 +50,7 @@ interface InitialState {
   api_credentials: any | null;
   employee: Employee | null;
   sId: string | null;
+  empId: string | null;
 }
 const initialState: InitialState = {
   status: null,
@@ -59,6 +60,7 @@ const initialState: InitialState = {
   api_credentials: null,
   employee: null,
   sId: null,
+  empId: null,
 };
 
 //auth api response handling(saving the token)
@@ -74,6 +76,7 @@ export const authSlice = createSlice({
       state.api_credentials = null;
       state.employee = null;
       state.sId = null;
+      state.empId = null;
     },
   },
   extraReducers: builder => {
@@ -86,6 +89,7 @@ export const authSlice = createSlice({
         state.api_credentials = action?.payload.message?.api_credentials;
         state.user = action?.payload.message?.user;
         state.sId = action?.payload.message?.user?.sid;
+        state.empId = action?.payload.message?.employee?.id;
       })
       .addMatcher(authApi.endpoints.login.matchRejected, state => {
         state.status = 'Rejected';
@@ -103,7 +107,7 @@ export const authSlice = createSlice({
           state.status = 'Fullfilled';
           state.loading = false;
           state.error = false;
-          state.employee = action?.payload.data;
+          state.employee = action?.payload?.message?.employee;
         },
       )
       .addMatcher(authApi.endpoints.getProfileData.matchRejected, state => {

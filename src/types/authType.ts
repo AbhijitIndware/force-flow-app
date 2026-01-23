@@ -49,7 +49,9 @@ export interface Employee {
 }
 
 export interface EmployeeProfileResponse {
-  status: 'success' | 'error';
-  message: string;
-  data: Employee;
+  message: {
+    status: 'success' | 'error';
+
+    employee: Employee;
+  };
 }

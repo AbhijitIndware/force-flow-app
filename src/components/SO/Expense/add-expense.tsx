@@ -87,7 +87,7 @@ const AddExpenseComponent = ({navigation}: any) => {
       // 1️⃣ CREATE CLAIM
       // ---------------------
       const payload: ExpenseClaimPayload = {
-        employee: employee.id,
+        employee: employee?.id as string,
         posting_date: expenses[0].expense_date,
         custom_travel_start_date: expenses[0].expense_date,
         custom_travel_end_date: expenses[0].expense_date,

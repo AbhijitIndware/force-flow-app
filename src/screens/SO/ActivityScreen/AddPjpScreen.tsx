@@ -114,6 +114,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     page_size: '20',
     name: employeeSearch,
   });
+
   const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
     page: String(storePage),
     page_size: '20',

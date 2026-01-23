@@ -121,7 +121,7 @@ const AddPjpForm: React.FC<Props> = ({
             ?.employee_number || ''
         }
         onChangeText={() => {}}
-        onBlur={() => handleBlur('pan_no')}
+        onBlur={() => {}}
         disabled={true}
       />
       {/* Warning message */}

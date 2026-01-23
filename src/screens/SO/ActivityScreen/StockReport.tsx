@@ -15,7 +15,10 @@ import {BarChart} from 'react-native-gifted-charts';
 import moment from 'moment';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
-import {useGetReportQuery} from '../../../features/base/base-api';
+import {
+  useGetReportQuery,
+  useGetStoreListQuery,
+} from '../../../features/base/base-api';
 import {ReportMessage} from '../../../types/baseType';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
@@ -23,6 +26,9 @@ import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import {RotateCw} from 'lucide-react-native';
 import DateTimePicker, {useDefaultStyles} from 'react-native-ui-datepicker';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import {uniqueByValue} from '../../../utils/utils';
+import {useGetItemsQuery} from '../../../features/dropdown/dropdown-api';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -33,7 +39,15 @@ type Props = {
   navigation: NavigationProp;
   route: any;
 };
-
+// 🏬 Unique by Store Name (or code)
+export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
+  const seen = new Set<string>();
+  return arr.filter(store => {
+    if (seen.has(store.name)) return false;
+    seen.add(store.name);
+    return true;
+  });
+};
 const StockReport = ({navigation, route}: Props) => {
   const {reportName} = route.params;
   // 🗓️ State for date filters
@@ -42,12 +56,49 @@ const StockReport = ({navigation, route}: Props) => {
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
 
+  /** ─── Store State ─────────────────────────────────── */
+  const [storePage, setStorePage] = useState(1);
+  const [storeListData, setStoreListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [loadingStoreMore, setLoadingStoreMore] = useState(false);
+  const [selectedStores, setSelectedStores] = useState<string[]>([]);
+
+  const [searchItem, setSearchItem] = useState('');
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+
+  const [itemPage, setItemPage] = useState(1);
+  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+
+  const [itemListData, setItemListData] = useState<
+    {label: string; value: string}[]
+  >([]);
+
+  const {data: itemData, isFetching: itemFetching} = useGetItemsQuery({
+    search: searchItem,
+    page: String(itemPage),
+    page_size: '20',
+  });
+
+  const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
+    page: String(storePage),
+    page_size: '20',
+    search: storeSearch,
+    include_subordinates: '1',
+    include_direct_subordinates: '1',
+  });
+  const transformToDropdownList = (arr: any[] = []) =>
+    arr.map(item => ({label: item.store_name, value: item.name}));
+
   // 🧾 Filters — converted to JSON string
   const filters = JSON.stringify({
     company: 'Softsens',
     from_date: startDate.format('YYYY-MM-DD'),
     to_date: endDate.format('YYYY-MM-DD'),
     valuation_field_type: 'Currency',
+    item_code: selectedItems,
+    store_name: selectedStores,
   });
 
   // 🚀 Call the RTK Query hook with parameters
@@ -113,6 +164,71 @@ const StockReport = ({navigation, route}: Props) => {
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   });
+  /** ─── Store Data Merge ────────────────────────────── */
+  useEffect(() => {
+    if (storeData?.message?.data?.stores) {
+      setLoadingStoreMore(false);
+      const newData = transformToDropdownList(storeData.message.data.stores);
+      if (storeSearch.trim() !== '' || storePage === 1) {
+        setStoreListData(uniqueByValue(newData));
+      } else {
+        setStoreListData(prev => uniqueByValue([...prev, ...newData]));
+      }
+    }
+  }, [storeData]);
+
+  useEffect(() => {
+    setStorePage(1);
+  }, [storeSearch]);
+
+  const handleLoadMoreStores = () => {
+    if (fetchingStore || loadingStoreMore) return;
+
+    const current = storeData?.message?.pagination?.page ?? 1;
+    const total = storeData?.message?.pagination?.total_pages ?? 1;
+
+    if (current >= total) return; // 🚫 Stop loading
+
+    setLoadingStoreMore(true);
+    setStorePage(prev => prev + 1);
+  };
+
+  /* ---------------- Item Pagination ---------------- */
+
+  const handleLoadMoreItems = () => {
+    if (itemFetching || loadingMoreItems) return;
+
+    const currentPage = itemData?.message?.pagination?.page ?? 1;
+    const totalPages = itemData?.message?.pagination?.total_pages ?? 1;
+
+    if (currentPage >= totalPages) return;
+
+    setLoadingMoreItems(true);
+    setItemPage(prev => prev + 1);
+  };
+
+  /* ---------------- Effects ---------------- */
+
+  useEffect(() => {
+    if (itemData?.message?.data) {
+      setLoadingMoreItems(false);
+
+      const newDropdownData = itemData.message.data.map(item => ({
+        value: item.item_code,
+        label: `${item.item_name} - ₹${item.selling_rate}`,
+      }));
+
+      if (searchItem || itemPage === 1) {
+        setItemListData(uniqueByValue(newDropdownData));
+      } else {
+        setItemListData(prev => uniqueByValue([...prev, ...newDropdownData]));
+      }
+    }
+  }, [itemData]);
+
+  useEffect(() => {
+    setItemPage(1);
+  }, [searchItem]);
 
   return (
     <SafeAreaView
@@ -233,6 +349,44 @@ const StockReport = ({navigation, route}: Props) => {
             </View>
           </View>
         </Modal>
+      </View>
+
+      {/* Store and Item Filter */}
+      <View style={[flexCol, {paddingHorizontal: 20, width: '95%'}]}>
+        <ReusableDropdown
+          label="Store"
+          field={`store`}
+          value={selectedStores[0] ?? ''}
+          data={storeListData}
+          onChange={(val: string) => {
+            setSelectedStores([val]); // single store
+          }}
+          onLoadMore={handleLoadMoreStores}
+          loadingMore={loadingStoreMore}
+          searchText={storeSearch}
+          setSearchText={(text: string) => {
+            setStoreSearch(text);
+          }}
+          showAddButton={false}
+        />
+        {/* <ReusableDropdown
+          label="Item"
+          field="item"
+          value={selectedItems[0] ?? ''}
+          data={itemListData}
+          onChange={(val: string) => {
+            setSelectedItems([val]); // single item
+          }}
+          onLoadMore={handleLoadMoreItems}
+          loadingMore={loadingMoreItems}
+          searchText={searchItem}
+          setSearchText={(text: string) => {
+            setSearchItem(text);
+            setItemPage(1);
+            setItemListData([]);
+          }}
+          showAddButton={false}
+        /> */}
       </View>
 
       {isLoading || isFetching ? (

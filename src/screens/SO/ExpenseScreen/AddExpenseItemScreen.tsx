@@ -75,7 +75,7 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
         // 1️⃣ CREATE CLAIM
         // ---------------------
         const payload: ExpenseClaimPayload = {
-          employee: employee.id,
+          employee: employee?.id as string,
           posting_date: formValues.date,
           custom_travel_start_date: formValues.date,
           custom_travel_end_date: formValues.date,
