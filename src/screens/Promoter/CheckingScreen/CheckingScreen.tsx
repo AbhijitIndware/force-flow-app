@@ -32,6 +32,7 @@ import {PromoterCheckinSchema} from '../../../types/schema';
 import moment from 'moment';
 import AddCheckInForm from '../../../components/Promoter/Checkin/CheckinForm';
 import {Animated} from 'react-native';
+import {ActivityIndicator} from 'react-native';
 
 const {width} = Dimensions.get('window');
 
@@ -54,6 +55,7 @@ const initial: ICheckInRequest = {
   },
   latitude: null,
   longitude: null,
+  current_location: '',
   address: '',
 };
 
@@ -105,10 +107,13 @@ const CheckingScreen = ({navigation}: Props) => {
           image: formValues.image,
           latitude: formValues.latitude,
           longitude: formValues.longitude,
+          current_location: `${formValues.latitude},${formValues.longitude}`,
           address: formValues.address,
         };
+        console.log('🚀 ~ CheckingScreen ~ payload:', payload);
         const res = await promoterCheckin(payload).unwrap();
 
+        console.log('🚀 ~ CheckingScreen ~ res:', res);
         if (res?.message?.success === true) {
           Toast.show({
             type: 'success',
@@ -237,8 +242,14 @@ const CheckingScreen = ({navigation}: Props) => {
             style={styles.checkinButton}
             disabled={isLoading}
             onPress={() => handleSubmit()}>
-            <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-            <Text style={styles.checkinButtonText}>Check-in</Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+            )}
+            <Text style={styles.checkinButtonText}>
+              {isLoading ? 'Checking in…' : 'Check-in'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       )}

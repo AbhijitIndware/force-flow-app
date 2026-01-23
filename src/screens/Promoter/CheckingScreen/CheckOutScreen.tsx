@@ -25,10 +25,11 @@ import {
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import {ICheckOutRequest} from '../../../types/baseType';
-import {PromoterCheckinSchema} from '../../../types/schema';
+import {PromoterCheckOutSchema} from '../../../types/schema';
 import AddCheckOutForm from '../../../components/Promoter/Checkin/CheckoutForm';
 import {useAppSelector} from '../../../store/hook';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
+import {ActivityIndicator} from 'react-native';
 
 const {width} = Dimensions.get('window');
 
@@ -50,6 +51,7 @@ const initial: ICheckOutRequest = {
   },
   latitude: null,
   longitude: null,
+  current_location: '',
   address: '',
 };
 
@@ -62,13 +64,14 @@ const CheckOutScreen = ({navigation}: Props) => {
 
   const {values, errors, touched, handleSubmit, setFieldValue} = useFormik({
     initialValues: initial,
-    validationSchema: PromoterCheckinSchema,
+    validationSchema: PromoterCheckOutSchema,
     onSubmit: async (formValues, actions) => {
       try {
         const payload: ICheckOutRequest = {
           image: formValues.image,
           latitude: formValues.latitude,
           longitude: formValues.longitude,
+          current_location: `${formValues.latitude},${formValues.longitude}`,
           address: formValues.address,
         };
         const res = await promoterCheckOut(payload).unwrap();
@@ -155,8 +158,14 @@ const CheckOutScreen = ({navigation}: Props) => {
             style={styles.checkinButton}
             disabled={isLoading}
             onPress={() => handleSubmit()}>
-            <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-            <Text style={styles.checkinButtonText}>Check-Out</Text>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <CalendarCheck strokeWidth={1.4} color={Colors.white} />
+            )}
+            <Text style={styles.checkinButtonText}>
+              {isLoading ? 'Checking out..' : 'Check-out'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       )}

@@ -1140,6 +1140,7 @@ export interface ICheckInRequest {
   };
   latitude: number | null;
   longitude: number | null;
+  current_location: string;
   address: string;
 }
 /* ---------- Root Response ---------- */
@@ -1180,6 +1181,7 @@ export interface ICheckOutRequest {
   };
   latitude: number | null;
   longitude: number | null;
+  current_location: string;
   address: string;
 }
 export type RCheckOut = {
@@ -1244,6 +1246,8 @@ export interface AttendanceData {
   checked_in: boolean;
   checked_out: boolean;
   actions: AttendanceActions;
+  checkout_time: string;
+  checkin_time: string;
   attendance_date: string;
   employee: string;
   employee_name: string;

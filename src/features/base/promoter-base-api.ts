@@ -39,16 +39,18 @@ export const promoterBaseApi = createApi({
       providesTags: ['Promoter'],
     }),
     promoterCheckin: builder.mutation<RCheckIn, ICheckInRequest>({
-      query: () => ({
+      query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_attendance_checkin',
         method: 'POST',
+        body,
       }),
       invalidatesTags: ['Promoter'],
     }),
     promoterCheckOut: builder.mutation<RCheckOut, ICheckOutRequest>({
-      query: () => ({
+      query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_attendance_checkout',
         method: 'POST',
+        body,
       }),
       invalidatesTags: ['Promoter'],
     }),

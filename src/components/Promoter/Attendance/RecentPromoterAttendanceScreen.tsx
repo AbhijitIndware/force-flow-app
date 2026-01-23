@@ -56,6 +56,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
       from_date: moment(fromDate).format('YYYY-MM-DD'),
       to_date: moment(toDate).format('YYYY-MM-DD'),
     });
+  console.log('🚀 ~ RecentPromoterAttendanceScreen ~ data:', data);
 
   // append new data when page changes
   useEffect(() => {

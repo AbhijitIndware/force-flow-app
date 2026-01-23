@@ -50,22 +50,26 @@ type Props = {
 };
 
 const getLastCheckMessage = (data: AttendanceData) => {
-  const {actions, checkin_records} = data;
+  const {actions, checked_in, checked_out, checkin_time, checkout_time} = data;
 
-  const checkInTime = checkin_records.check_in
-    ? moment(checkin_records.check_in).format('hh:mm A')
+  const checkInTime = checkin_time
+    ? moment(checkin_time, 'HH:mm:ss.SSSSSS').format('hh:mm A')
     : null;
 
-  const checkOutTime = checkin_records.check_out
-    ? moment(checkin_records.check_out).format('hh:mm A')
+  const checkOutTime = checkout_time
+    ? moment(checkout_time, 'HH:mm:ss.SSSSSS').format('hh:mm A')
     : null;
 
+  if (checked_in && checked_out && checkOutTime) {
+    return `Last check-out at ${checkOutTime}.`;
+  }
   if (actions.can_check_in) {
-    if (checkInTime) return `Last check-in at ${checkInTime}.`;
     return "You haven't checked in yet.";
   }
 
-  if (checkOutTime) return `Last check-out at ${checkOutTime}.`;
+  if (checked_in && checkInTime) {
+    return `Last check-in at ${checkInTime}.`;
+  }
 
   return 'No attendance records yet.';
 };
@@ -76,7 +80,10 @@ const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
 const HomeScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data} = usePromoterStatusQuery();
+  const {data, refetch} = usePromoterStatusQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  console.log('🚀 ~ HomeScreen ~ data:', data);
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
@@ -85,6 +92,7 @@ const HomeScreen = ({navigation, route}: Props) => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
 
@@ -140,14 +148,15 @@ const HomeScreen = ({navigation, route}: Props) => {
               </TouchableOpacity>
             </View>
 
-            {data?.message?.data?.actions?.can_check_in ? (
+            {data?.message?.data?.actions?.can_check_in && (
               <TouchableOpacity
                 style={styles.checkinButton}
                 onPress={() => navigation.navigate('CheckingScreen')}>
                 <CalendarCheck strokeWidth={1.4} color={Colors.white} />
                 <Text style={styles.checkinButtonText}>Check-in</Text>
               </TouchableOpacity>
-            ) : (
+            )}
+            {data?.message?.data?.actions?.can_check_out && (
               <TouchableOpacity
                 style={styles.checkinButton}
                 onPress={() => navigation.navigate('CheckOutScreen')}>
