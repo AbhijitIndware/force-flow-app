@@ -31,6 +31,8 @@ import {
   windowWidth,
 } from '../../../utils/utils';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
+import moment from 'moment';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -267,6 +269,12 @@ const CheckInForm = ({navigation}: Props) => {
     setFieldValue('current_location', location);
   };
 
+  const pjpDate = pjpInitializedData?.message?.data?.date;
+
+  const formattedDate = pjpDate
+    ? moment(pjpDate).format('dddd, DD MMM YYYY')
+    : 'Today';
+
   useEffect(() => {
     handleCallLocationPermission();
     if (user?.email && pjpInitializedData?.message?.data?.date) {
@@ -280,120 +288,203 @@ const CheckInForm = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
-
-      <View style={{padding: 20}}>
-        <ReusableDropdown
-          label="Store"
-          field="value"
-          value={values.store}
-          data={storeDailyList}
-          error={touched.store && errors.store}
-          onChange={(val: string) => onSelect('store', val)}
-        />
-      </View>
-      <Modal visible={confirmModalVisible} transparent animationType="fade">
-        <View style={modalStyles.overlay}>
-          <View style={modalStyles.container}>
-            {/* Header */}
-            <Text style={modalStyles.title}>Confirm Check-In</Text>
-            <Text style={modalStyles.subtitle}>
-              Please review the details before proceeding
-            </Text>
-
-            {/* Divider */}
-            <View style={modalStyles.divider} />
-
-            {/* Store */}
-            <View style={modalStyles.row}>
-              <Text style={modalStyles.label}>Store</Text>
-              <Text style={modalStyles.value}>{pendingPayload?.store}</Text>
-            </View>
-
-            {/* Location */}
-            <View style={modalStyles.row}>
-              <Text style={modalStyles.label}>Location</Text>
-              <Text style={modalStyles.locationText}>
-                {pendingPayload?.current_location}
-              </Text>
-            </View>
-
-            {/* Divider */}
-            <View style={modalStyles.divider} />
-
-            {/* Actions */}
-            <View style={modalStyles.actions}>
-              <TouchableOpacity
-                style={modalStyles.cancelBtn}
-                onPress={() => {
-                  setConfirmModalVisible(false);
-                  setPendingPayload(null);
-                  setLocationVerified(false);
-                }}>
-                <Text style={modalStyles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={modalStyles.confirmBtn}
-                onPress={handleConfirmCheckIn}
-                disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color={Colors.white} />
-                ) : (
-                  <Text style={modalStyles.confirmText}>Confirm</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {!locationVerified ? (
-        <TouchableOpacity
-          style={[styles.submitBtn, verifying && {opacity: 0.7}]}
-          onPress={() => {
-            handleVerifyLocation({showToast: true});
-          }}
-          disabled={verifying}>
-          {verifying ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <Text style={styles.submitText}>Verify Location</Text>
-          )}
-        </TouchableOpacity>
+      {isFetching ? (
+        <LoadingScreen />
       ) : (
-        <View>
-          <AddCheckInForm
-            values={values}
-            errors={errors}
-            touched={touched}
-            handleChange={handleChange}
-            handleBlur={handleBlur}
-            setFieldValue={setFieldValue}
-            scrollY={scrollY}
-            storeList={storeDailyList}
-          />
-          <View
-            style={{
-              paddingHorizontal: 20,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: Colors.bgColor,
-              width: '100%',
-              height: 80,
-            }}>
-            <TouchableOpacity
-              style={[styles.submitBtn, loading && {opacity: 0.7}]}
-              onPress={() => handleSubmit()}
-              disabled={loading}>
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.white} />
+        <>
+          {!isFetching && storeDailyList.length === 0 ? (
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: 24,
+                backgroundColor: Colors.lightBg,
+              }}>
+              {/* Title */}
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '700',
+                  color: '#111827',
+                  marginBottom: 6,
+                  textAlign: 'center',
+                }}>
+                No PJP Available
+              </Text>
+
+              {/* Date */}
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: '#6B7280',
+                  marginBottom: 14,
+                  textAlign: 'center',
+                }}>
+                {formattedDate}
+              </Text>
+
+              {/* Description */}
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#4B5563',
+                  marginBottom: 26,
+                  textAlign: 'center',
+                  lineHeight: 20,
+                }}>
+                You don’t have a Daily PJP for this date.
+                {'\n'}Please add one to continue check-in.
+              </Text>
+
+              {/* CTA */}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                style={{
+                  backgroundColor: Colors.darkButton,
+                  paddingVertical: 15,
+                  paddingHorizontal: 36,
+                  borderRadius: 16,
+                  elevation: 3,
+                }}
+                onPress={() => navigation.navigate('AddPjpScreen')}>
+                <Text
+                  style={{
+                    color: Colors.white,
+                    fontWeight: '700',
+                    fontSize: 15,
+                    letterSpacing: 0.3,
+                  }}>
+                  Add PJP
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={{padding: 20}}>
+                <ReusableDropdown
+                  label="Store"
+                  field="value"
+                  value={values.store}
+                  data={storeDailyList}
+                  error={touched.store && errors.store}
+                  onChange={(val: string) => onSelect('store', val)}
+                />
+              </View>
+
+              <Modal
+                visible={confirmModalVisible}
+                transparent
+                animationType="fade">
+                <View style={modalStyles.overlay}>
+                  <View style={modalStyles.container}>
+                    {/* Header */}
+                    <Text style={modalStyles.title}>Confirm Check-In</Text>
+                    <Text style={modalStyles.subtitle}>
+                      Please review the details before proceeding
+                    </Text>
+
+                    {/* Divider */}
+                    <View style={modalStyles.divider} />
+
+                    {/* Store */}
+                    <View style={modalStyles.row}>
+                      <Text style={modalStyles.label}>Store</Text>
+                      <Text style={modalStyles.value}>
+                        {pendingPayload?.store}
+                      </Text>
+                    </View>
+
+                    {/* Location */}
+                    <View style={modalStyles.row}>
+                      <Text style={modalStyles.label}>Location</Text>
+                      <Text style={modalStyles.locationText}>
+                        {pendingPayload?.current_location}
+                      </Text>
+                    </View>
+
+                    {/* Divider */}
+                    <View style={modalStyles.divider} />
+
+                    {/* Actions */}
+                    <View style={modalStyles.actions}>
+                      <TouchableOpacity
+                        style={modalStyles.cancelBtn}
+                        onPress={() => {
+                          setConfirmModalVisible(false);
+                          setPendingPayload(null);
+                          setLocationVerified(false);
+                        }}>
+                        <Text style={modalStyles.cancelText}>Cancel</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={modalStyles.confirmBtn}
+                        onPress={handleConfirmCheckIn}
+                        disabled={loading}>
+                        {loading ? (
+                          <ActivityIndicator color={Colors.white} />
+                        ) : (
+                          <Text style={modalStyles.confirmText}>Confirm</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Modal>
+
+              {!locationVerified ? (
+                <TouchableOpacity
+                  style={[styles.submitBtn, verifying && {opacity: 0.7}]}
+                  onPress={() => {
+                    handleVerifyLocation({showToast: true});
+                  }}
+                  disabled={verifying}>
+                  {verifying ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Text style={styles.submitText}>Verify Location</Text>
+                  )}
+                </TouchableOpacity>
               ) : (
-                <Text style={styles.submitText}>CheckIn</Text>
+                <View>
+                  <AddCheckInForm
+                    values={values}
+                    errors={errors}
+                    touched={touched}
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    setFieldValue={setFieldValue}
+                    scrollY={scrollY}
+                    storeList={storeDailyList}
+                  />
+                  <View
+                    style={{
+                      paddingHorizontal: 20,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      backgroundColor: Colors.bgColor,
+                      width: '100%',
+                      height: 80,
+                    }}>
+                    <TouchableOpacity
+                      style={[styles.submitBtn, loading && {opacity: 0.7}]}
+                      onPress={() => handleSubmit()}
+                      disabled={loading}>
+                      {loading ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Text style={styles.submitText}>CheckIn</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
               )}
-            </TouchableOpacity>
-          </View>
-        </View>
+            </>
+          )}
+        </>
       )}
     </SafeAreaView>
   );

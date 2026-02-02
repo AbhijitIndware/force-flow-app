@@ -97,6 +97,7 @@ const AddStoreScreen = ({
     category: {page: 1, search: ''},
     beat: {page: 1, search: ''},
   });
+  const [useCityDropdown, setUseCityDropdown] = useState(true);
 
   const [zoneListData, setZoneListData] = useState<
     {label: string; value: string}[]
@@ -290,6 +291,28 @@ const AddStoreScreen = ({
         'pin_code',
         locationData?.message?.raw?.address?.postcode || '',
       );
+
+      const cities = locationData?.message?.cities ?? [];
+      const singleCity = locationData?.message?.city;
+      // 🏙 CITY HANDLING
+      if (cities.length > 1) {
+        // Multiple cities → dropdown
+        const cityOptions = cities.map(city => ({
+          label: city,
+          value: city,
+        }));
+
+        setCityListData(cityOptions);
+        setUseCityDropdown(true);
+        setFieldValue('city', '');
+      } else if (cities.length === 1 || singleCity) {
+        // Single city → text input
+        const cityName = cities[0] || singleCity || '';
+
+        setUseCityDropdown(false);
+        setCityListData([]);
+        setFieldValue('city', cityName);
+      }
     }
   }, [locationData]);
 
@@ -309,20 +332,20 @@ const AddStoreScreen = ({
     }
   }, [stateData]);
 
-  useEffect(() => {
-    if (cityData?.message?.data) {
-      const newData = transformList(cityData.message.data);
-      setCityListData(prev => {
-        let merged = [];
-        if (listConfig.city.search !== '' && listConfig.city.page === 1) {
-          merged = newData;
-        } else {
-          merged = [...prev, ...newData];
-        }
-        return uniqueByValue(merged);
-      });
-    }
-  }, [cityData]);
+  // useEffect(() => {
+  //   if (cityData?.message?.data) {
+  //     const newData = transformList(cityData.message.data);
+  //     setCityListData(prev => {
+  //       let merged = [];
+  //       if (listConfig.city.search !== '' && listConfig.city.page === 1) {
+  //         merged = newData;
+  //       } else {
+  //         merged = [...prev, ...newData];
+  //       }
+  //       return uniqueByValue(merged);
+  //     });
+  //   }
+  // }, [cityData]);
 
   useEffect(() => {
     if (zoneData?.message?.data) {
@@ -586,6 +609,7 @@ const AddStoreScreen = ({
           setActiveField(field);
           setTimePickerVisible(true);
         }}
+        useCityDropdown={useCityDropdown}
         // pagination props
         onLoadMoreState={handleLoadMoreStates}
         loadingMoreState={loadingMoreState}

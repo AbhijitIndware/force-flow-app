@@ -102,7 +102,7 @@ const AddExpenseComponent = ({navigation}: any) => {
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Internal Server Error',
+        text1: error?.data?.exception || 'Internal Server Error',
         position: 'top',
       });
     }

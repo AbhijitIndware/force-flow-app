@@ -27,6 +27,7 @@ interface Props {
       ? void
       : (e: string | React.ChangeEvent<any>) => void;
   };
+  useCityDropdown: boolean;
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
   storeTypeList: {label: string; value: string}[];
@@ -90,7 +91,7 @@ const AddStoreForm: React.FC<Props> = ({
   distributorList,
   weekOffList,
   onTimeSelect,
-
+  useCityDropdown,
   onLoadMoreState,
   loadingMoreState,
   onLoadMoreCity,
@@ -209,7 +210,15 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={stateSearchText}
         setSearchText={setStateSearchText}
       />
-      <ReusableDropdown
+
+      <MapReusableInput
+        label="Map Location"
+        value={values.map_location}
+        onChangeText={handleChange('map_location')}
+        onBlur={() => handleBlur('map_location')}
+        error={touched.map_location && errors.map_location}
+      />
+      {/* <ReusableDropdown
         label="City"
         field="city"
         value={values.city}
@@ -221,7 +230,31 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={citySearchText}
         setSearchText={setCitySearchText}
         onOpen={() => scrollUpOnFocus(400)}
-      />
+      /> */}
+      {useCityDropdown ? (
+        <ReusableDropdown
+          label="City"
+          field="city"
+          value={values.city}
+          data={cityList}
+          error={touched.city && errors.city}
+          onChange={(val: string) => onSelect('city', val)}
+          onLoadMore={onLoadMoreCity}
+          loadingMore={loadingMoreCity}
+          searchText={citySearchText}
+          setSearchText={setCitySearchText}
+          onOpen={() => scrollUpOnFocus(400)}
+        />
+      ) : (
+        <ReusableInput
+          label="City"
+          value={values.city}
+          onChangeText={handleChange('city')}
+          onBlur={() => handleBlur('city')}
+          error={touched.city && errors.city}
+        />
+      )}
+
       {/* <ReusableDropdown
         label="Beat"
         field="beat"
@@ -250,13 +283,6 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={distributorSearchText}
         setSearchText={setDistributorSearchText}
         onOpen={() => scrollUpOnFocus(400)}
-      />
-      <MapReusableInput
-        label="Map Location"
-        value={values.map_location}
-        onChangeText={handleChange('map_location')}
-        onBlur={() => handleBlur('map_location')}
-        error={touched.map_location && errors.map_location}
       />
 
       {/* <View style={styles.inputWrapper}>

@@ -738,6 +738,9 @@ export interface LocationResponse {
     lat: number;
     lng: number;
     address: string;
+    city: null | string;
+    cities: string[];
+    message: string;
     raw: {
       place_id: number;
       licence: string;
