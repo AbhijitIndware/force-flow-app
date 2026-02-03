@@ -27,7 +27,10 @@ import {
   useGetStoreTypeQuery,
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {useAddStoreMutation} from '../../../features/base/base-api';
+import {
+  useAddStoreMutation,
+  useCreateNewCityMutation,
+} from '../../../features/base/base-api';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import {useAppSelector} from '../../../store/hook';
@@ -37,6 +40,7 @@ import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
+import {ICity} from '../../../types/baseType';
 const {width} = Dimensions.get('window');
 const initial = {
   store_name: '',
@@ -98,6 +102,7 @@ const AddStoreScreen = ({
     beat: {page: 1, search: ''},
   });
   const [useCityDropdown, setUseCityDropdown] = useState(true);
+  const [isNewCity, setIsNewCity] = useState(false);
 
   const [zoneListData, setZoneListData] = useState<
     {label: string; value: string}[]
@@ -131,6 +136,8 @@ const AddStoreScreen = ({
   const [loadingMoreDistributor, setLoadingMoreDistributor] = useState(false);
   const [loadingMoreBeat, setLoadingMoreBeat] = useState(false);
 
+  const [createNewCity] = useCreateNewCityMutation();
+
   const {
     values,
     errors,
@@ -145,6 +152,23 @@ const AddStoreScreen = ({
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
+        // 🔥 STEP 1: Create city if it's a new one
+        if (isNewCity) {
+          const cityPayload: ICity = {
+            data: {
+              city_name: formValues.city,
+              state: formValues.state, // ✅ from form values
+            },
+          };
+
+          const cityRes = await createNewCity(cityPayload).unwrap();
+          console.log('🚀 ~ AddStoreScreen ~ cityRes:', cityRes);
+
+          // if (cityRes?.message?.status !== 'success') {
+          //   throw new Error('Failed to create city');
+          // }
+        }
+
         let value = {
           ...formValues,
           created_by_employee: employee?.id as string, // Replace with actual user ID
@@ -170,7 +194,7 @@ const AddStoreScreen = ({
             position: 'top',
           });
         }
-        setLoading(false);
+        // setLoading(false);
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -179,6 +203,9 @@ const AddStoreScreen = ({
           text2: 'Please try again later.',
           position: 'top',
         });
+        // setLoading(false);
+      } finally {
+        setIsNewCity(false);
         setLoading(false);
       }
     },
@@ -291,9 +318,9 @@ const AddStoreScreen = ({
         'pin_code',
         locationData?.message?.raw?.address?.postcode || '',
       );
-
       const cities = locationData?.message?.cities ?? [];
-      const singleCity = locationData?.message?.city;
+      const singleCity = locationData?.message?.city ?? null;
+
       // 🏙 CITY HANDLING
       if (cities.length > 1) {
         // Multiple cities → dropdown
@@ -304,14 +331,22 @@ const AddStoreScreen = ({
 
         setCityListData(cityOptions);
         setUseCityDropdown(true);
+        setIsNewCity(false);
         setFieldValue('city', '');
       } else if (cities.length === 1 || singleCity) {
         // Single city → text input
         const cityName = cities[0] || singleCity || '';
 
         setUseCityDropdown(false);
+        setIsNewCity(false);
         setCityListData([]);
         setFieldValue('city', cityName);
+      } else {
+        // ❗ No city found at all
+        setUseCityDropdown(false);
+        setIsNewCity(true);
+        setCityListData([]);
+        setFieldValue('city', '');
       }
     }
   }, [locationData]);
@@ -609,6 +644,7 @@ const AddStoreScreen = ({
           setActiveField(field);
           setTimePickerVisible(true);
         }}
+        isNewCity={isNewCity}
         useCityDropdown={useCityDropdown}
         // pagination props
         onLoadMoreState={handleLoadMoreStates}

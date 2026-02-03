@@ -72,6 +72,7 @@ interface Props {
   setCategorySearchText?: (text: string) => void;
   beatSearchText?: string;
   setBeatSearchText?: (text: string) => void;
+  isNewCity?: boolean;
 }
 
 const AddStoreForm: React.FC<Props> = ({
@@ -124,7 +125,9 @@ const AddStoreForm: React.FC<Props> = ({
   loadingMoreDistributor,
   onLoadMoreBeat,
   loadingMoreBeat,
+  isNewCity,
 }) => {
+  console.log('🚀 ~ AddStoreForm ~ isNewCity:', isNewCity);
   const scrollViewRef = useRef<any>(null);
 
   const onSelect = (field: string, val: string) => {
@@ -249,6 +252,7 @@ const AddStoreForm: React.FC<Props> = ({
         <ReusableInput
           label="City"
           value={values.city}
+          disabled={isNewCity === false}
           onChangeText={handleChange('city')}
           onBlur={() => handleBlur('city')}
           error={touched.city && errors.city}

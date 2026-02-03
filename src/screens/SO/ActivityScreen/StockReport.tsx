@@ -29,6 +29,7 @@ import DateTimePicker, {useDefaultStyles} from 'react-native-ui-datepicker';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {uniqueByValue} from '../../../utils/utils';
 import {useGetItemsQuery} from '../../../features/dropdown/dropdown-api';
+import {useAppSelector} from '../../../store/hook';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -55,13 +56,17 @@ const StockReport = ({navigation, route}: Props) => {
   const [endDate, setEndDate] = useState(moment());
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [showToPicker, setShowToPicker] = useState(false);
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
+  const userType =
+    employee?.designation !== 'Promoter' ? 'Sales Officer' : 'PROMOTER';
   /** ─── Store State ─────────────────────────────────── */
   const [storePage, setStorePage] = useState(1);
   const [storeListData, setStoreListData] = useState<
     {label: string; value: string}[]
   >([]);
-  console.log('🚀 ~ StockReport ~ storeListData:', storeListData);
   const [storeSearch, setStoreSearch] = useState('');
   const [loadingStoreMore, setLoadingStoreMore] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
@@ -109,10 +114,12 @@ const StockReport = ({navigation, route}: Props) => {
       filters,
       ignore_prepared_report: 'true',
       are_default_filters: 'true',
+      zone_wise: userType === 'Sales Officer' ? 'true' : 'false',
+      own_stores: userType === 'PROMOTER' ? 'true' : 'false',
     });
 
   const reportData = data?.message ?? {};
-  console.log('🚀 ~ StockReport ~ reportData:', reportData);
+  // console.log('🚀 ~ StockReport ~ reportData:', reportData);
   const {
     result = [],
     columns = [],
@@ -451,7 +458,7 @@ const StockReport = ({navigation, route}: Props) => {
                     // 'item_name',
                     'store_name',
                     'bal_qty',
-                    'bal_val',
+                    // 'bal_val',
                   ];
 
                   const visibleColumns = columns.filter(col =>

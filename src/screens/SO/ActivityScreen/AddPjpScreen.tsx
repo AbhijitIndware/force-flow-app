@@ -21,7 +21,9 @@ import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
   useGetDailyPjpByIdQuery,
+  useGetDailyPjpListQuery,
   useGetStoreListQuery,
+  useLazyGetDailyPjpListQuery,
   useUpdateDailyPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
@@ -88,6 +90,14 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  const [duplicatePjpId, setDuplicatePjpId] = useState<string | null>(null);
+  const [showDuplicatePjp, setShowDuplicatePjp] = useState(false);
+
+  const [
+    triggerGetDailyPjpList,
+    {data: pjpListData, isLoading: listLoading, isFetching: listFetching},
+  ] = useLazyGetDailyPjpListQuery();
+
   const [showMinStoreModal, setShowMinStoreModal] = useState(false);
 
   /** ─── Employee State ─────────────────────────────── */
@@ -189,6 +199,36 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         }
       } catch (error: any) {
         // console.error('PJP API Error:', error);
+        if (
+          error?.data?.message?.message ===
+          'PJP Daily Stores with the same Employee and Date already exists.'
+        ) {
+          setShowDuplicatePjp(true);
+
+          // 👇 Call lazy API with date
+          const response = await triggerGetDailyPjpList({
+            page: 1,
+            page_size: 10,
+            status: '',
+            date: values.date, // ✅ pass selected date
+          }).unwrap();
+
+          // 🔥 Find the existing PJP
+          const existingPjp = response?.message?.data?.pjp_daily_stores[0]; // assuming list API returns array
+
+          if (existingPjp?.pjp_daily_store_id) {
+            setDuplicatePjpId(existingPjp.pjp_daily_store_id);
+          }
+
+          Toast.show({
+            type: 'error',
+            text1: '⚠️ PJP already exists for this employee & date',
+            text2: 'You can modify the existing PJP',
+            position: 'top',
+          });
+
+          return;
+        }
         Toast.show({
           type: 'error',
           text1:
@@ -288,7 +328,46 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
-      <PageHeader title="Add Pjp" navigation={() => navigation.goBack()} />
+      <PageHeader
+        title={id ? 'Edit PJP' : 'Add Pjp'}
+        navigation={() => navigation.goBack()}
+      />
+      {showDuplicatePjp && (
+        <View
+          style={{
+            padding: 16,
+            marginHorizontal: 20,
+            marginVertical: 10,
+            borderRadius: 8,
+            backgroundColor: '#FFF3CD',
+            borderWidth: 1,
+            borderColor: '#FFE69C',
+          }}>
+          <Text style={{color: '#856404', marginBottom: 10}}>
+            A PJP already exists for the selected employee and date.
+          </Text>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.primary,
+              paddingVertical: 12,
+              borderRadius: 6,
+              alignItems: 'center',
+            }}
+            onPress={() => {
+              setShowDuplicatePjp(false);
+
+              navigation.navigate('AddPjpScreen', {
+                id: duplicatePjpId as string, // 👈 open in edit mode
+              });
+            }}>
+            <Text style={{color: Colors.white, fontWeight: '600'}}>
+              Modify Existing PJP
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <AddPjpForm
         {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
@@ -338,7 +417,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>Submit</Text>
+            <Text style={styles.submitText}>{id ? 'Modify' : 'Submit'}</Text>
           )}
         </TouchableOpacity>
       </View>

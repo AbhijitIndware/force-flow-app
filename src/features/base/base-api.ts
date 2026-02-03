@@ -39,6 +39,7 @@ import {
   RUpdatePjpRoute,
   IVisivilityClaim,
   RVisibilityClaimsList,
+  ICity,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -51,7 +52,7 @@ export const baseApi = createApi({
   //   baseUrl: apiBaseUrl,
   //   credentials: 'include',
   // }),
-  tagTypes: ['Distributor', 'SO', 'PO', 'PJP', 'Store', ''],
+  tagTypes: ['Distributor', 'SO', 'PO', 'PJP', 'Store', 'VC'],
   endpoints: builder => ({
     //Daily PJP Activity Check-in ---
     pjpInitialize: builder.mutation<RPjpInitialize, void>({
@@ -237,15 +238,19 @@ export const baseApi = createApi({
     //PJP
     getDailyPjpList: builder.query<
       RPjpDailyStores,
-      Pick<PaginationInfo, 'page' | 'page_size'> & {status: string}
+      Pick<PaginationInfo, 'page' | 'page_size'> & {
+        status: string;
+        date?: string;
+      }
     >({
-      query: ({page, page_size, status}) => ({
+      query: ({page, page_size, status, date}) => ({
         url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_daily_stores_list`,
         method: 'GET',
         params: {
           page: page,
           limit: page_size,
           // status: status,
+          date: date,
         },
       }),
       providesTags: ['PJP'],
@@ -355,6 +360,8 @@ export const baseApi = createApi({
         filters?: string;
         ignore_prepared_report?: string;
         are_default_filters?: string;
+        zone_wise?: any;
+        own_stores?: any;
       }
     >({
       query: ({
@@ -362,6 +369,8 @@ export const baseApi = createApi({
         filters,
         ignore_prepared_report,
         are_default_filters,
+        zone_wise,
+        own_stores,
       }) => ({
         url: `/method/frappe.desk.query_report.run`,
         method: 'GET',
@@ -370,6 +379,8 @@ export const baseApi = createApi({
           filters: filters,
           ignore_prepared_report: ignore_prepared_report,
           are_default_filters: are_default_filters,
+          zone_wise: zone_wise,
+          own_stores: own_stores,
         },
       }),
     }),
@@ -426,6 +437,7 @@ export const baseApi = createApi({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.get_visibility_claims_list`,
         method: 'GET',
       }),
+      providesTags: ['VC'],
     }),
     getVisibilityClaimDetail: builder.query<any, {claim_id: string}>({
       query: ({claim_id}) => ({
@@ -433,6 +445,7 @@ export const baseApi = createApi({
         method: 'GET',
         params: {claim_id},
       }),
+      providesTags: ['VC'],
     }),
     createVisibilityClaim: builder.mutation<any, IVisivilityClaim>({
       query: body => ({
@@ -440,6 +453,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['VC'],
     }),
     submitVisibilityClaim: builder.mutation<any, {claim_id: string}>({
       query: body => ({
@@ -447,10 +461,21 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
+      invalidatesTags: ['VC'],
     }),
     cancelVisibilityClaim: builder.mutation<any, {claim_id: string}>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.cancel_visibility_claim`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['VC'],
+    }),
+
+    //City
+    createNewCity: builder.mutation<any, ICity>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.city.create_city',
         method: 'POST',
         body,
       }),
@@ -482,6 +507,7 @@ export const {
   useGetSalesPurchaseCountQuery,
   //PJP
   useGetDailyPjpListQuery,
+  useLazyGetDailyPjpListQuery,
   useGetDailyPjpByIdQuery,
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
@@ -510,6 +536,9 @@ export const {
   useCreateVisibilityClaimMutation,
   useSubmitVisibilityClaimMutation,
   useCancelVisibilityClaimMutation,
+
+  //City
+  useCreateNewCityMutation,
 } = baseApi;
 
 interface PjpState {

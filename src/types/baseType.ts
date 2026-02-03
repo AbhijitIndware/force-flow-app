@@ -1499,3 +1499,12 @@ export interface VisibilityClaim {
   visibility_image: string; // file path
   docstatus: 0 | 1 | 2; // Draft | Submitted | Cancelled
 }
+
+//City
+export type ICity = {
+  data: {
+    city_name: string;
+    state: string;
+    // is_metro_or_hills: number;
+  };
+};
