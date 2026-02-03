@@ -156,3 +156,29 @@ export const addSalesInvoiceSchema = Yup.object({
     .min(1, 'At least one item is required')
     .required('Items are required'),
 });
+export const visibilityClaimSchema = Yup.object().shape({
+  store: Yup.string().required('Store is required'),
+
+  collection_amount: Yup.number()
+    .typeError('Collection amount must be a number')
+    .positive('Collection amount must be greater than 0')
+    .required('Collection amount is required'),
+
+  payment_type: Yup.string().required('Payment type is required'),
+
+  price_difference_amount: Yup.number()
+    .typeError('Price difference must be a number')
+    .min(0, 'Price difference cannot be negative')
+    .required('Price difference amount is required'),
+
+  // damage_claim: Yup.number()
+  //   .typeError('Damage claim must be a number')
+  //   .min(0, 'Damage claim cannot be negative')
+  //   .required('Damage claim amount is required'),
+
+  image: Yup.object().shape({
+    mime: Yup.string().required('Image type is required'),
+
+    data: Yup.string().required('Image is required'),
+  }),
+});

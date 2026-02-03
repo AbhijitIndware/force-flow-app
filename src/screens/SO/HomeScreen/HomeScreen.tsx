@@ -626,6 +626,55 @@ const HomeScreen = ({navigation}: Props) => {
               </TouchableOpacity>
             </View>
           </View>
+          <View style={[styles.container, {paddingTop: 20}]}>
+            <Text style={styles.SectionHeading}>Visibility Claim</Text>
+            <View
+              style={[
+                styles.dataBox,
+                {
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  marginTop: 10,
+                },
+              ]}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('VisibilityScreen')}
+                style={[
+                  styles.positionValue,
+                  {
+                    flexDirection: 'row',
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    marginTop: 0,
+                    height: 35,
+                    borderRadius: 8,
+                    width: '100%',
+                  },
+                ]}>
+                <View style={styles.incentiveContent}>
+                  <View
+                    style={[
+                      styles.iconbox,
+                      {
+                        width: 35,
+                        height: 35,
+                        borderRadius: 10,
+                        backgroundColor: Colors.darkButton,
+                      },
+                    ]}>
+                    <BanknoteArrowDown
+                      strokeWidth={2}
+                      color={Colors.white}
+                      size={20}
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.quantitytime}>Visibility</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
           <View
             style={[styles.LinkSection, {paddingVertical: 15, marginTop: 20}]}>
             <Text

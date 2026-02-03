@@ -37,6 +37,8 @@ import {
   RSalesReport,
   IUpdatePjpRoutePayload,
   RUpdatePjpRoute,
+  IVisivilityClaim,
+  RVisibilityClaimsList,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -417,6 +419,42 @@ export const baseApi = createApi({
         },
       }),
     }),
+
+    //Visibility Claim
+    getVisibiltyClaimList: builder.query<RVisibilityClaimsList, void>({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.get_visibility_claims_list`,
+        method: 'GET',
+      }),
+    }),
+    getVisibilityClaimDetail: builder.query<any, {claim_id: string}>({
+      query: ({claim_id}) => ({
+        url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.get_visibility_claim_details`,
+        method: 'GET',
+        params: {claim_id},
+      }),
+    }),
+    createVisibilityClaim: builder.mutation<any, IVisivilityClaim>({
+      query: body => ({
+        url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.create_visibility_claim`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    submitVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+      query: body => ({
+        url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.submit_visibility_claim`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    cancelVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+      query: body => ({
+        url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.cancel_visibility_claim`,
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 export const {
@@ -465,6 +503,13 @@ export const {
 
   //Sales
   useGetSalesRepotsQuery,
+
+  //Visibility Claim
+  useGetVisibiltyClaimListQuery,
+  useGetVisibilityClaimDetailQuery,
+  useCreateVisibilityClaimMutation,
+  useSubmitVisibilityClaimMutation,
+  useCancelVisibilityClaimMutation,
 } = baseApi;
 
 interface PjpState {

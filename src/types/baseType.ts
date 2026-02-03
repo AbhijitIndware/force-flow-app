@@ -1463,3 +1463,39 @@ export interface AttendancePagination {
 //   checkout_time: string | null; // nullable for active sessions
 //   working_hours: number | null; // hours in decimal
 // }
+
+//Visibility claim
+export type IVisivilityClaim = {
+  store: string;
+  collection_amount: number;
+  payment_type: 'Cash' | 'Upi' | 'Bank';
+  price_difference_amount: number;
+  damage_claim: number;
+  do_submit: boolean;
+  image: {
+    mime: string;
+    data: string;
+  };
+};
+export interface RVisibilityClaimsList {
+  message: {
+    success: boolean;
+    data: {
+      visibility_claims: VisibilityClaim[];
+      pagination: Pagination;
+    };
+  };
+}
+export interface VisibilityClaim {
+  claim_id: string;
+  employee: string;
+  employee_name: string;
+  date: string; // YYYY-MM-DD
+  store: string;
+  collection_amount: number;
+  payment_type: 'Cash' | 'Upi' | 'Bank';
+  price_difference_amount: number;
+  damage_claim: number;
+  visibility_image: string; // file path
+  docstatus: 0 | 1 | 2; // Draft | Submitted | Cancelled
+}
