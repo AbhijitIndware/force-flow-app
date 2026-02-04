@@ -200,6 +200,7 @@ const HomeScreen = ({navigation}: Props) => {
         text1: `❌ ${error?.message || 'Location permission denied'}`,
         position: 'top',
       });
+      setCheckoutModalVisible(true);
     }
   };
 
@@ -275,9 +276,8 @@ const HomeScreen = ({navigation}: Props) => {
       };
 
       const res = await startPjp(payload).unwrap();
-      console.log('🚀 ~ handleStartPjp ~ res:', res);
 
-      if (res?.message?.status === 'success') {
+      if (res?.message?.success === true) {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Started',
@@ -380,7 +380,7 @@ const HomeScreen = ({navigation}: Props) => {
                   <Text
                     style={{
                       fontSize: 14,
-                      color: Colors.denger,
+                      color: '#ffeaea', // light red
                       marginBottom: 4,
                       textAlign: 'center',
                     }}>

@@ -160,6 +160,7 @@ const CheckInForm = ({navigation}: Props) => {
       });
     } finally {
       setLoading(false);
+      setConfirmModalVisible(false);
     }
   };
 

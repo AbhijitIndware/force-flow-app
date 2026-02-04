@@ -93,7 +93,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
 
       const res = await startPjp(payload).unwrap();
 
-      if (res?.message?.status === 'success') {
+      if (res?.message?.success === true) {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Started',
@@ -136,7 +136,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
 
       const res = await endPjp(payload).unwrap();
 
-      if (res?.message?.status === 'success') {
+      if (res?.message?.success === true) {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Completed',
