@@ -8,10 +8,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
-import {PjpDailyStore} from '../../../../types/baseType';
+import {LocationPayload, PjpDailyStore} from '../../../../types/baseType';
 import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
-import {useUpdatePjpRouteMutation} from '../../../../features/base/base-api';
+import {
+  useEndPjpMutation,
+  useStartPjpMutation,
+  useUpdatePjpRouteMutation,
+} from '../../../../features/base/base-api';
 import {
   getCurrentLocation,
   requestLocationPermission,
@@ -29,6 +33,8 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [updatePjpRoute] = useUpdatePjpRouteMutation();
+  const [startPjp] = useStartPjpMutation();
+  const [endPjp] = useEndPjpMutation();
 
   const [showMinStoreModal, setShowMinStoreModal] = useState(false);
 
@@ -44,35 +50,32 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
     }, 2000);
   }, []);
 
-  const handleStartEndPjp = async () => {
-    // 🚫 Guard: Completed or null → no action
-    if (
-      detail?.running_status === null ||
-      detail?.running_status === 'Completed'
-    ) {
+  const getParsedLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
       Toast.show({
-        type: 'info',
-        text1: 'ℹ️ PJP already completed',
+        type: 'error',
+        text1: '📍 Location permission required',
       });
-      return;
+      return null;
     }
 
+    const location = await getCurrentLocation(); // "lat,lng"
+    if (!location) return null;
+
+    const [latitude, longitude] = location.split(',').map(Number);
+
+    if (isNaN(latitude) || isNaN(longitude)) return null;
+
+    return {latitude, longitude};
+  };
+
+  const handleStartPjp = async () => {
     try {
       setLoading(true);
 
-      // 1️⃣ Ask permission & get location
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        Toast.show({
-          type: 'error',
-          text1: '📍 Location permission required',
-        });
-        return;
-      }
-
-      const location = await getCurrentLocation(); // "lat,lng"
-
-      if (!location) {
+      const loc = await getParsedLocation();
+      if (!loc) {
         Toast.show({
           type: 'error',
           text1: '❌ Unable to fetch location',
@@ -80,47 +83,156 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         return;
       }
 
-      const isRunning = detail?.running_status === 'Running';
-
-      // 2️⃣ Build payload
-      const payload = {
+      const payload: LocationPayload = {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
         data: {
           document_name: detail?.pjp_daily_store_id,
-          action_type: isRunning ? 'END_PJP' : 'START_PJP',
-          ...(isRunning
-            ? {end_location: location}
-            : {start_location: location}),
         },
       };
 
-      // 3️⃣ Call API
-      const res = await updatePjpRoute(payload).unwrap();
+      const res = await startPjp(payload).unwrap();
 
       if (res?.message?.status === 'success') {
         Toast.show({
           type: 'success',
-          text1: '✅ Success',
-          text2: res?.message?.message,
+          text1: '✅ PJP Started',
+          text2: res.message.message,
         });
 
-        // 🔄 Optional: update local status instantly
-        // setDetail(prev => ({
-        //   ...prev,
-        //   running_status: isRunning ? 'Completed' : 'Running',
-        // }));
-
-        // OR refetch PJP detail here
+        refetch?.();
       }
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: '❌ Action failed',
+        text1: '❌ Failed to start PJP',
         text2: err?.data?.message ?? 'Please try again',
       });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleEndPjp = async () => {
+    try {
+      setLoading(true);
+
+      const loc = await getParsedLocation();
+      if (!loc) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Unable to fetch location',
+        });
+        return;
+      }
+
+      const payload: LocationPayload = {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        data: {
+          document_name: detail?.pjp_daily_store_id,
+        },
+      };
+
+      const res = await endPjp(payload).unwrap();
+
+      if (res?.message?.status === 'success') {
+        Toast.show({
+          type: 'success',
+          text1: '✅ PJP Completed',
+          text2: res.message.message,
+        });
+
+        refetch?.();
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Failed to end PJP',
+        text2: err?.data?.message ?? 'Please try again',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // const handleStartEndPjp = async () => {
+  //   // 🚫 Guard: Completed or null → no action
+  //   if (
+  //     detail?.running_status === null ||
+  //     detail?.running_status === 'Completed'
+  //   ) {
+  //     Toast.show({
+  //       type: 'info',
+  //       text1: 'ℹ️ PJP already completed',
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+
+  //     // 1️⃣ Ask permission & get location
+  //     const hasPermission = await requestLocationPermission();
+  //     if (!hasPermission) {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: '📍 Location permission required',
+  //       });
+  //       return;
+  //     }
+
+  //     const location = await getCurrentLocation(); // "lat,lng"
+
+  //     if (!location) {
+  //       Toast.show({
+  //         type: 'error',
+  //         text1: '❌ Unable to fetch location',
+  //       });
+  //       return;
+  //     }
+
+  //     const isRunning = detail?.running_status === 'Running';
+
+  //     // 2️⃣ Build payload
+  //     const payload = {
+  //       data: {
+  //         document_name: detail?.pjp_daily_store_id,
+  //         action_type: isRunning ? 'END_PJP' : 'START_PJP',
+  //         ...(isRunning
+  //           ? {end_location: location}
+  //           : {start_location: location}),
+  //       },
+  //     };
+
+  //     // 3️⃣ Call API
+  //     const res = await updatePjpRoute(payload).unwrap();
+
+  //     if (res?.message?.status === 'success') {
+  //       Toast.show({
+  //         type: 'success',
+  //         text1: '✅ Success',
+  //         text2: res?.message?.message,
+  //       });
+
+  //       // 🔄 Optional: update local status instantly
+  //       // setDetail(prev => ({
+  //       //   ...prev,
+  //       //   running_status: isRunning ? 'Completed' : 'Running',
+  //       // }));
+
+  //       // OR refetch PJP detail here
+  //     }
+  //   } catch (err: any) {
+  //     Toast.show({
+  //       type: 'error',
+  //       text1: '❌ Action failed',
+  //       text2: err?.data?.message ?? 'Please try again',
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <ScrollView
@@ -156,9 +268,21 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
               : styles.startButton,
             loading && {opacity: 0.6},
           ]}
+          // onPress={() => {
+          //   if (detail.stores.length < 15) setShowMinStoreModal(true);
+          //   else handleStartEndPjp();
+          // }}
           onPress={() => {
-            if (detail.stores.length < 15) setShowMinStoreModal(true);
-            else handleStartEndPjp();
+            if (detail.stores.length < 15) {
+              setShowMinStoreModal(true);
+              return;
+            }
+
+            if (isRunning) {
+              handleEndPjp();
+            } else {
+              handleStartPjp();
+            }
           }}
           activeOpacity={0.85}
           disabled={loading || isCompleted}>
@@ -185,7 +309,12 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         }}
         onContinue={() => {
           setShowMinStoreModal(false);
-          handleStartEndPjp();
+
+          if (isRunning) {
+            handleEndPjp();
+          } else {
+            handleStartPjp();
+          }
         }}
       />
       {/* Stores List */}

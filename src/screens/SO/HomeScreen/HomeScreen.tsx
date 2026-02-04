@@ -38,12 +38,15 @@ import {
   resetLocation,
   setSelectedStore,
   useCheckOutMutation,
+  useGetLocationTrackerQuery,
   useGetProdCountQuery,
   useGetSalesRepotsQuery,
+  useLazyGetDailyPjpListQuery,
   usePjpInitializeMutation,
+  useStartPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import {StoreData} from '../../../types/baseType';
+import {LocationPayload, StoreData} from '../../../types/baseType';
 import moment from 'moment';
 import {useIsFocused} from '@react-navigation/native';
 import {
@@ -83,6 +86,8 @@ function extractServerMessage(resp: any): string | null {
 const today = new Date().toISOString().split('T')[0];
 
 const HomeScreen = ({navigation}: Props) => {
+  const [isStartingPjp, setIsStartingPjp] = useState(false);
+
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [selectedStoreValue, setSelectedStoreValue] =
@@ -109,6 +114,12 @@ const HomeScreen = ({navigation}: Props) => {
 
   const [pjpInitialize, {data}] = usePjpInitializeMutation();
   const [checkOut, {isLoading}] = useCheckOutMutation();
+  const {
+    data: locationTrackerData,
+    isFetching: isLocationTrackerFetching,
+    refetch: refetchLocationTracker,
+  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
+  const [startPjp, {isLoading: isStartPjploading}] = useStartPjpMutation();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -116,6 +127,7 @@ const HomeScreen = ({navigation}: Props) => {
       setRefreshing(false);
       pjpInitialize();
       refetch();
+      refetchLocationTracker();
     }, 2000);
   }, []);
 
@@ -139,7 +151,25 @@ const HomeScreen = ({navigation}: Props) => {
 
     return await handleSetValue();
   };
+  const getParsedLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      Toast.show({
+        type: 'error',
+        text1: '📍 Location permission required',
+      });
+      return null;
+    }
 
+    const location = await getCurrentLocation(); // "lat,lng"
+    if (!location) return null;
+
+    const [latitude, longitude] = location.split(',').map(Number);
+
+    if (isNaN(latitude) || isNaN(longitude)) return null;
+
+    return {latitude, longitude};
+  };
   const handleSetValue = async () => {
     const location = await getCurrentLocation();
     return location;
@@ -262,6 +292,76 @@ const HomeScreen = ({navigation}: Props) => {
     }
   };
 
+  const [triggerGetDailyPjpList, {isLoading: isPjpLoading}] =
+    useLazyGetDailyPjpListQuery();
+
+  const handleStartPjp = async () => {
+    try {
+      setIsStartingPjp(true);
+
+      // 1️⃣ Get location first
+      const loc = await getParsedLocation();
+      if (!loc) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Unable to fetch location',
+        });
+        return;
+      }
+
+      // 2️⃣ Fetch today's PJP
+      const response = await triggerGetDailyPjpList({
+        page: 1,
+        page_size: 10,
+        status: '',
+        date: today,
+      }).unwrap();
+
+      const existingPjp =
+        response?.message?.data?.pjp_daily_stores?.[0]?.pjp_daily_store_id;
+
+      if (
+        response?.message?.data?.pjp_daily_stores?.length === 0 ||
+        !existingPjp
+      ) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ No PJP found for today',
+        });
+        return;
+      }
+
+      // 3️⃣ Start PJP
+      const payload: LocationPayload = {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        data: {
+          document_name: existingPjp,
+        },
+      };
+
+      const res = await startPjp(payload).unwrap();
+      console.log('🚀 ~ handleStartPjp ~ res:', res);
+
+      if (res?.message?.status === 'success') {
+        Toast.show({
+          type: 'success',
+          text1: '✅ PJP Started',
+          text2: res.message.message,
+        });
+        refetchLocationTracker();
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Failed to start PJP',
+        text2: err?.data?.message ?? 'Please try again',
+      });
+    } finally {
+      setIsStartingPjp(false);
+    }
+  };
+
   useEffect(() => {
     if (isFocused) {
       pjpInitialize(); // 👈 Call when screen is visible
@@ -293,6 +393,10 @@ const HomeScreen = ({navigation}: Props) => {
       dispatch(resetLocation());
     }
   }, [data]);
+
+  const isDisabled =
+    isLocationTrackerFetching ||
+    locationTrackerData?.message?.enabled === false;
 
   return (
     <SafeAreaView
@@ -337,6 +441,30 @@ const HomeScreen = ({navigation}: Props) => {
                     </View>
                   )}
                 </View>
+                {locationTrackerData?.message?.enabled === false && (
+                  <TouchableOpacity
+                    style={[
+                      styles.checkinButton,
+                      isStartingPjp && styles.checkinButtonDisabled,
+                    ]}
+                    disabled={isStartingPjp}
+                    onPress={handleStartPjp}>
+                    <Text style={styles.checkinButtonText}>
+                      {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
+                    </Text>
+
+                    {isStartingPjp ? (
+                      <ActivityIndicator color={Colors.white} />
+                    ) : (
+                      <Ionicons
+                        name="chevron-forward-circle-sharp"
+                        size={24}
+                        color={Colors.white}
+                      />
+                    )}
+                  </TouchableOpacity>
+                )}
+
                 {selectedStoreValue?.actions?.can_check_out ||
                 selectedStoreValue?.actions?.can_mark_activity ? (
                   <View>
@@ -378,8 +506,11 @@ const HomeScreen = ({navigation}: Props) => {
                   </View>
                 ) : (
                   <TouchableOpacity
-                    style={styles.checkinButton}
-                    // disabled={!locationVerifyData?.message?.data?.actions?.can_check_in}
+                    style={[
+                      styles.checkinButton,
+                      isDisabled && styles.checkinButtonDisabled,
+                    ]}
+                    disabled={isDisabled}
                     onPress={() => {
                       if (errorMessage !== '') {
                         Toast.show({
@@ -391,13 +522,18 @@ const HomeScreen = ({navigation}: Props) => {
                         navigation.navigate('CheckInForm');
                       }
                     }}>
-                    <Text style={styles.checkinButtonText}>
-                      {/* Check Out from New mart */} Check In
+                    <Text
+                      style={[
+                        styles.checkinButtonText,
+                        isDisabled && styles.checkinButtonTextDisabled,
+                      ]}>
+                      Check In
                     </Text>
+
                     <Ionicons
                       name="chevron-forward-circle-sharp"
                       size={24}
-                      color={Colors.white}
+                      color={isDisabled ? Colors.gray : Colors.white}
                     />
                   </TouchableOpacity>
                 )}
@@ -1015,6 +1151,24 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
+  //   checkinButton: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   backgroundColor: Colors.primary,
+  //   padding: 14,
+  //   borderRadius: 10,
+  // },
+
+  checkinButtonDisabled: {
+    backgroundColor: Colors.black,
+    opacity: 0.8,
+  },
+
+  checkinButtonTextDisabled: {
+    color: Colors.gray,
+  },
+
   dataBoxSection: {paddingTop: 15},
   dataBox: {
     backgroundColor: Colors.white,

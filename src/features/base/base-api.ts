@@ -40,6 +40,7 @@ import {
   IVisivilityClaim,
   RVisibilityClaimsList,
   ICity,
+  LocationPayload,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -480,6 +481,38 @@ export const baseApi = createApi({
         body,
       }),
     }),
+
+    //Location
+    getLocationTracker: builder.query<
+      {
+        message: {
+          enabled: boolean;
+        };
+      },
+      void
+    >({
+      query: () => ({
+        url: `/method/salesforce_management.mobile_app_apis.location.location.is_location_sharing_enabled`,
+        method: 'GET',
+      }),
+      providesTags: ['PJP'],
+    }),
+    startPjp: builder.mutation<any, LocationPayload>({
+      query: body => ({
+        url: `/method/salesforce_management.mobile_app_apis.location.location.start_sharing`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
+    endPjp: builder.mutation<any, LocationPayload>({
+      query: body => ({
+        url: `/method/salesforce_management.mobile_app_apis.location.location.stop_sharing`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
   }),
 });
 export const {
@@ -539,6 +572,11 @@ export const {
 
   //City
   useCreateNewCityMutation,
+
+  //Location
+  useGetLocationTrackerQuery,
+  useStartPjpMutation,
+  useEndPjpMutation,
 } = baseApi;
 
 interface PjpState {

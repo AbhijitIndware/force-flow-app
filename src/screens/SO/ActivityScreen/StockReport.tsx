@@ -105,6 +105,9 @@ const StockReport = ({navigation, route}: Props) => {
     valuation_field_type: 'Currency',
     item_code: selectedItems,
     store: selectedStores,
+
+    zone_wise: userType === 'Sales Officer' ? 1 : 0,
+    // own_stores: userType === 'PROMOTER' ? 1 : 0,
   });
 
   // 🚀 Call the RTK Query hook with parameters
@@ -114,8 +117,6 @@ const StockReport = ({navigation, route}: Props) => {
       filters,
       ignore_prepared_report: 'true',
       are_default_filters: 'true',
-      zone_wise: userType === 'Sales Officer' ? 'true' : 'false',
-      own_stores: userType === 'PROMOTER' ? 'true' : 'false',
     });
 
   const reportData = data?.message ?? {};

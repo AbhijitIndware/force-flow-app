@@ -1508,3 +1508,13 @@ export type ICity = {
     // is_metro_or_hills: number;
   };
 };
+
+
+//Location
+export type LocationPayload = {
+  latitude: number;
+  longitude: number;
+  data: {
+    document_name: string;
+  };
+};

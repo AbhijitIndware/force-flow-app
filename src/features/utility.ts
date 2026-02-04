@@ -28,7 +28,7 @@ export const baseQueryWithAuthGuard: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
-  console.log('🚀 ~ baseQueryWithAuthGuard ~ result:', result);
+  // console.log('🚀 ~ baseQueryWithAuthGuard ~ result:', result);
 
   if (result?.error && result?.error.status === 401) {
     api.dispatch(logout());
