@@ -8,7 +8,7 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
 import Toast from 'react-native-toast-message';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -41,6 +41,7 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
 import {ICity} from '../../../types/baseType';
+
 const {width} = Dimensions.get('window');
 const initial = {
   store_name: '',
@@ -283,10 +284,13 @@ const AddStoreScreen = ({
   // Assuming values.map_location is a string like "22.5643,88.3693"
   const [latitude, longitude] = values?.map_location?.split(',');
 
-  const {data: locationData} = useGetLocationByLatLongQuery({
-    latitude,
-    longitude,
-  });
+  const {data: locationData} = useGetLocationByLatLongQuery(
+    {
+      latitude,
+      longitude,
+    },
+    {skip: !values.map_location || values.map_location === ''},
+  );
 
   const transformList = (arr: {name: string}[] = []) => {
     const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
@@ -318,6 +322,17 @@ const AddStoreScreen = ({
         'pin_code',
         locationData?.message?.raw?.address?.postcode || '',
       );
+
+      // setFieldValue('county', locationData?.message?.county || '');
+      setFieldValue('zone', locationData?.message?.zone || '');
+      setFieldValue('state', locationData?.message?.state || '');
+
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: 1, search: locationData?.message?.state}, // reset state pagination & search
+        zone: {page: 1, search: locationData?.message?.zone}, // also reset city (because state depends on zone)
+      }));
+
       const cities = locationData?.message?.cities ?? [];
       const singleCity = locationData?.message?.city ?? null;
 

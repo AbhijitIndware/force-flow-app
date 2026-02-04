@@ -1,12 +1,9 @@
 // AddDistributorForm.tsx
 import React, {useRef} from 'react';
-import {Animated, StyleSheet, TouchableOpacity} from 'react-native';
+import {Animated, StyleSheet} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
-import {Text} from 'react-native';
-import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
-import {View} from 'react-native';
 import MapReusableInput from '../../../ui-lib/map-input';
 import {Size} from '../../../../utils/fontSize';
 import {Fonts} from '../../../../constants';
@@ -127,7 +124,6 @@ const AddStoreForm: React.FC<Props> = ({
   loadingMoreBeat,
   isNewCity,
 }) => {
-  console.log('🚀 ~ AddStoreForm ~ isNewCity:', isNewCity);
   const scrollViewRef = useRef<any>(null);
 
   const onSelect = (field: string, val: string) => {
@@ -189,6 +185,13 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={categorySearchText}
         setSearchText={setCategorySearchText}
       />
+      <MapReusableInput
+        label="Map Location"
+        value={values.map_location}
+        onChangeText={handleChange('map_location')}
+        onBlur={() => handleBlur('map_location')}
+        error={touched.map_location && errors.map_location}
+      />
       <ReusableDropdown
         label="Zone"
         field="zone"
@@ -214,13 +217,6 @@ const AddStoreForm: React.FC<Props> = ({
         setSearchText={setStateSearchText}
       />
 
-      <MapReusableInput
-        label="Map Location"
-        value={values.map_location}
-        onChangeText={handleChange('map_location')}
-        onBlur={() => handleBlur('map_location')}
-        error={touched.map_location && errors.map_location}
-      />
       {/* <ReusableDropdown
         label="City"
         field="city"

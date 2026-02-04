@@ -41,6 +41,7 @@ import {
   RVisibilityClaimsList,
   ICity,
   LocationPayload,
+  RLocationTracker,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -483,14 +484,7 @@ export const baseApi = createApi({
     }),
 
     //Location
-    getLocationTracker: builder.query<
-      {
-        message: {
-          enabled: boolean;
-        };
-      },
-      void
-    >({
+    getLocationTracker: builder.query<RLocationTracker, void>({
       query: () => ({
         url: `/method/salesforce_management.mobile_app_apis.location.location.is_location_sharing_enabled`,
         method: 'GET',

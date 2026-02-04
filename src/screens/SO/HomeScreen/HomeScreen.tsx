@@ -41,7 +41,6 @@ import {
   useGetLocationTrackerQuery,
   useGetProdCountQuery,
   useGetSalesRepotsQuery,
-  useLazyGetDailyPjpListQuery,
   usePjpInitializeMutation,
   useStartPjpMutation,
 } from '../../../features/base/base-api';
@@ -97,7 +96,7 @@ const HomeScreen = ({navigation}: Props) => {
 
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const {data: teamReportData, isFetching} = useGetSalesRepotsQuery({
+  const {data: teamReportData} = useGetSalesRepotsQuery({
     view_type: 'team_include_self',
   });
 
@@ -119,7 +118,7 @@ const HomeScreen = ({navigation}: Props) => {
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
   } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
-  const [startPjp, {isLoading: isStartPjploading}] = useStartPjpMutation();
+  const [startPjp] = useStartPjpMutation();
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -174,60 +173,6 @@ const HomeScreen = ({navigation}: Props) => {
     const location = await getCurrentLocation();
     return location;
   };
-
-  // const handleCheckOut = async () => {
-  //   try {
-  //     // 🔒 Wait until location is found
-  //     const current_location = await handleCallLocationPermission();
-
-  //     if (!current_location) {
-  //       Toast.show({
-  //         type: 'error',
-  //         text1: '❌ Unable to fetch location',
-  //         position: 'top',
-  //       });
-  //       return;
-  //     }
-
-  //     const payload = {
-  //       store: selectedStore as string,
-  //       current_location: current_location, // ✅ added here
-  //     };
-  //     console.log('🚀 ~ handleCheckOut ~ payload:', payload);
-
-  //     const res = await checkOut(payload).unwrap();
-
-  //     if (res?.message?.success) {
-  //       Toast.show({
-  //         type: 'success',
-  //         text1: `✅ ${res.message.message || 'Checked out successfully'}`,
-  //         position: 'top',
-  //       });
-
-  //       dispatch(setSelectedStore(''));
-  //       dispatch(resetLocation());
-  //       setSelectedStoreValue(null);
-  //     } else {
-  //       Toast.show({
-  //         type: 'error',
-  //         text1: `❌ ${res.message?.message || 'Check-out failed'}`,
-  //         position: 'top',
-  //       });
-  //     }
-  //   } catch (error: any) {
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: `❌ ${
-  //         error?.data?.message?.message ||
-  //         error?.message ||
-  //         'Internal Server Error'
-  //       }`,
-  //       text2: 'Please try again later.',
-  //       position: 'top',
-  //     });
-  //   }
-  // };
-
   const handleCheckOut = async () => {
     try {
       const current_location = await handleCallLocationPermission();
@@ -292,9 +237,6 @@ const HomeScreen = ({navigation}: Props) => {
     }
   };
 
-  const [triggerGetDailyPjpList, {isLoading: isPjpLoading}] =
-    useLazyGetDailyPjpListQuery();
-
   const handleStartPjp = async () => {
     try {
       setIsStartingPjp(true);
@@ -309,19 +251,11 @@ const HomeScreen = ({navigation}: Props) => {
         return;
       }
 
-      // 2️⃣ Fetch today's PJP
-      const response = await triggerGetDailyPjpList({
-        page: 1,
-        page_size: 10,
-        status: '',
-        date: today,
-      }).unwrap();
-
       const existingPjp =
-        response?.message?.data?.pjp_daily_stores?.[0]?.pjp_daily_store_id;
+        locationTrackerData?.message?.data?.pjp_records[0]?.name;
 
       if (
-        response?.message?.data?.pjp_daily_stores?.length === 0 ||
+        locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
         !existingPjp
       ) {
         Toast.show({
@@ -396,7 +330,7 @@ const HomeScreen = ({navigation}: Props) => {
 
   const isDisabled =
     isLocationTrackerFetching ||
-    locationTrackerData?.message?.enabled === false;
+    locationTrackerData?.message?.data?.enabled === false;
 
   return (
     <SafeAreaView
@@ -441,13 +375,33 @@ const HomeScreen = ({navigation}: Props) => {
                     </View>
                   )}
                 </View>
-                {locationTrackerData?.message?.enabled === false && (
+                {locationTrackerData?.message?.data?.pjp_records?.length ===
+                  0 && (
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: Colors.denger,
+                      marginBottom: 4,
+                      textAlign: 'center',
+                    }}>
+                    You don’t have a Daily PJP for this date.
+                    {'\n'}Please add one to continue check-in.
+                  </Text>
+                )}
+                {locationTrackerData?.message?.data?.enabled === false && (
                   <TouchableOpacity
                     style={[
                       styles.checkinButton,
-                      isStartingPjp && styles.checkinButtonDisabled,
+                      (isStartingPjp ||
+                        locationTrackerData?.message?.data?.pjp_records
+                          ?.length === 0) &&
+                        styles.checkinButtonDisabled,
                     ]}
-                    disabled={isStartingPjp}
+                    disabled={
+                      isStartingPjp ||
+                      locationTrackerData?.message?.data?.pjp_records
+                        ?.length === 0
+                    }
                     onPress={handleStartPjp}>
                     <Text style={styles.checkinButtonText}>
                       {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}

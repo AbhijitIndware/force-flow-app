@@ -49,7 +49,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
         {/* Home Icon */}
         <TouchableOpacity
           style={[, {marginTop: 5}]}
-          onPress={() => navigations.navigate('HomeScreen')}>
+          onPress={() => navigations.navigate('Home')}>
           <Feather name="home" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
 

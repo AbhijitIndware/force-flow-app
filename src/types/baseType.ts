@@ -741,6 +741,11 @@ export interface LocationResponse {
     city: null | string;
     cities: string[];
     message: string;
+
+    zone: string;
+    state: string;
+    county: string;
+
     raw: {
       place_id: number;
       licence: string;
@@ -1509,8 +1514,23 @@ export type ICity = {
   };
 };
 
-
 //Location
+export interface PjpRecord {
+  name: string;
+}
+export interface PjpData {
+  enabled: boolean;
+  has_pjp_today: boolean;
+  pjp_count: number;
+  pjp_records: PjpRecord[];
+}
+export type RLocationTracker = {
+  message: {
+    success: boolean;
+    data: PjpData;
+  };
+};
+
 export type LocationPayload = {
   latitude: number;
   longitude: number;
