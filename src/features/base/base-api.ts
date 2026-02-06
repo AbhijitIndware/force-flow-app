@@ -42,6 +42,7 @@ import {
   ICity,
   LocationPayload,
   RLocationTracker,
+  ICheckOut,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -88,7 +89,7 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
-    checkOut: builder.mutation<any, {store: string}>({
+    checkOut: builder.mutation<any, ICheckOut>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.mark_pjp_mob.mobile_check_out',
         method: 'POST',

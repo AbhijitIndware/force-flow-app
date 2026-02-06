@@ -45,7 +45,7 @@ import {
   useStartPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import {LocationPayload, StoreData} from '../../../types/baseType';
+import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
 import moment from 'moment';
 import {useIsFocused} from '@react-navigation/native';
 import {
@@ -92,7 +92,9 @@ const HomeScreen = ({navigation}: Props) => {
   const [selectedStoreValue, setSelectedStoreValue] =
     useState<StoreData | null>(null);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
-  const [checkoutPayload, setCheckoutPayload] = useState<any>(null);
+  const [checkoutPayload, setCheckoutPayload] = useState<ICheckOut | null>(
+    null,
+  );
 
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
@@ -189,6 +191,7 @@ const HomeScreen = ({navigation}: Props) => {
       const payload = {
         store: selectedStore as string,
         current_location: current_location,
+        validate_geofence: false,
       };
 
       // 🛑 Stop here, open confirmation modal

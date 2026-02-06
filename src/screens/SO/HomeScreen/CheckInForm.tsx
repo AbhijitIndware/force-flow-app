@@ -214,7 +214,7 @@ const CheckInForm = ({navigation}: Props) => {
       const res = await verifyLocation({
         store: selectedStore as string,
         current_location: location,
-        validate_location: false,
+        validate_location: true,
       }).unwrap();
 
       if (res?.message?.data?.location_validation?.valid) {
@@ -230,6 +230,9 @@ const CheckInForm = ({navigation}: Props) => {
           Toast.show({
             type: 'error',
             text1: '❌ Location verification failed',
+            text2:
+              res?.message?.data?.location_validation?.message ??
+              'Please try again later.',
           });
         }
       }
@@ -370,6 +373,7 @@ const CheckInForm = ({navigation}: Props) => {
                   value={values.store}
                   data={storeDailyList}
                   error={touched.store && errors.store}
+                  disabled={locationVerified}
                   onChange={(val: string) => onSelect('store', val)}
                 />
               </View>
@@ -589,7 +593,7 @@ const modalStyles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: Colors.darkButton,
+    backgroundColor: '#16A34A',
     alignItems: 'center',
   },
   confirmText: {

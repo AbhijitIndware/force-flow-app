@@ -163,6 +163,11 @@ export type RAddCheckIn = {
     };
   };
 };
+export type ICheckOut = {
+  store: string;
+  current_location: string;
+  validate_geofence: boolean;
+};
 export type IMarkActivity = {
   store: string;
   activity_type: {activity_type: string}[];
