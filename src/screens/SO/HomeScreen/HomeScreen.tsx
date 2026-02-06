@@ -376,53 +376,63 @@ const HomeScreen = ({navigation}: Props) => {
                   )}
                 </View>
                 {locationTrackerData?.message?.data?.pjp_records?.length ===
-                  0 && (
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      color: '#ffeaea', // light red
-                      marginBottom: 4,
-                      textAlign: 'center',
-                    }}>
-                    You don’t have a Daily PJP for this date.
-                    {'\n'}Please add one to continue check-in.
-                  </Text>
-                )}
-                {locationTrackerData?.message?.data?.enabled === false && (
-                  <TouchableOpacity
-                    style={[
-                      styles.checkinButton,
-                      (isStartingPjp ||
-                        locationTrackerData?.message?.data?.pjp_records
-                          ?.length === 0) &&
-                        styles.checkinButtonDisabled,
-                    ]}
-                    disabled={
-                      isStartingPjp ||
-                      locationTrackerData?.message?.data?.pjp_records
-                        ?.length === 0
-                    }
-                    onPress={handleStartPjp}>
-                    <Text style={styles.checkinButtonText}>
-                      {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
+                0 ? (
+                  <>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: '#ffeaea', // light red
+                        marginBottom: 4,
+                        textAlign: 'center',
+                      }}>
+                      You don’t have a Daily PJP for this date.
+                      {'\n'}Please add one to continue check-in.
                     </Text>
+                    <TouchableOpacity
+                      style={[styles.checkinButton]}
+                      onPress={() => navigation.navigate('AddPjpScreen')}>
+                      <Text style={styles.checkinButtonText}>
+                        Add Daily Pjp
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <>
+                    {locationTrackerData?.message?.data?.enabled === false && (
+                      <TouchableOpacity
+                        style={[
+                          styles.checkinButton,
+                          (isStartingPjp ||
+                            locationTrackerData?.message?.data?.pjp_records
+                              ?.length === 0) &&
+                            styles.checkinButtonDisabled,
+                        ]}
+                        disabled={
+                          isStartingPjp ||
+                          locationTrackerData?.message?.data?.pjp_records
+                            ?.length === 0
+                        }
+                        onPress={handleStartPjp}>
+                        <Text style={styles.checkinButtonText}>
+                          {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
+                        </Text>
 
-                    {isStartingPjp ? (
-                      <ActivityIndicator color={Colors.white} />
-                    ) : (
-                      <Ionicons
-                        name="chevron-forward-circle-sharp"
-                        size={24}
-                        color={Colors.white}
-                      />
+                        {isStartingPjp ? (
+                          <ActivityIndicator color={Colors.white} />
+                        ) : (
+                          <Ionicons
+                            name="chevron-forward-circle-sharp"
+                            size={24}
+                            color={Colors.white}
+                          />
+                        )}
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
-                )}
 
-                {selectedStoreValue?.actions?.can_check_out ||
-                selectedStoreValue?.actions?.can_mark_activity ? (
-                  <View>
-                    {/* <TouchableOpacity
+                    {selectedStoreValue?.actions?.can_check_out ||
+                    selectedStoreValue?.actions?.can_mark_activity ? (
+                      <View>
+                        {/* <TouchableOpacity
                       style={styles.checkinButton}
                       onPress={() => navigation.navigate('MarkActivityScreen')}
                       disabled={
@@ -437,59 +447,62 @@ const HomeScreen = ({navigation}: Props) => {
                         color={Colors.white}
                       />
                     </TouchableOpacity> */}
-                    <TouchableOpacity
-                      style={styles.checkinButton}
-                      onPress={handleCheckOut}
-                      disabled={
-                        !selectedStoreValue?.actions?.can_check_out || isLoading
-                      }>
-                      <Text style={styles.checkinButtonText}>
-                        {/* Check Out from New mart */} Check Out
-                      </Text>
+                        <TouchableOpacity
+                          style={styles.checkinButton}
+                          onPress={handleCheckOut}
+                          disabled={
+                            !selectedStoreValue?.actions?.can_check_out ||
+                            isLoading
+                          }>
+                          <Text style={styles.checkinButtonText}>
+                            {/* Check Out from New mart */} Check Out
+                          </Text>
 
-                      {isLoading ? (
-                        <ActivityIndicator size="small" />
-                      ) : (
+                          {isLoading ? (
+                            <ActivityIndicator size="small" />
+                          ) : (
+                            <Ionicons
+                              name="chevron-forward-circle-sharp"
+                              size={24}
+                              color={Colors.white}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[
+                          styles.checkinButton,
+                          isDisabled && styles.checkinButtonDisabled,
+                        ]}
+                        disabled={isDisabled}
+                        onPress={() => {
+                          if (errorMessage !== '') {
+                            Toast.show({
+                              type: 'error',
+                              text1: `❌ ${errorMessage}`,
+                              position: 'top',
+                            });
+                          } else {
+                            navigation.navigate('CheckInForm');
+                          }
+                        }}>
+                        <Text
+                          style={[
+                            styles.checkinButtonText,
+                            isDisabled && styles.checkinButtonTextDisabled,
+                          ]}>
+                          Check In
+                        </Text>
+
                         <Ionicons
                           name="chevron-forward-circle-sharp"
                           size={24}
-                          color={Colors.white}
+                          color={isDisabled ? Colors.gray : Colors.white}
                         />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={[
-                      styles.checkinButton,
-                      isDisabled && styles.checkinButtonDisabled,
-                    ]}
-                    disabled={isDisabled}
-                    onPress={() => {
-                      if (errorMessage !== '') {
-                        Toast.show({
-                          type: 'error',
-                          text1: `❌ ${errorMessage}`,
-                          position: 'top',
-                        });
-                      } else {
-                        navigation.navigate('CheckInForm');
-                      }
-                    }}>
-                    <Text
-                      style={[
-                        styles.checkinButtonText,
-                        isDisabled && styles.checkinButtonTextDisabled,
-                      ]}>
-                      Check In
-                    </Text>
-
-                    <Ionicons
-                      name="chevron-forward-circle-sharp"
-                      size={24}
-                      color={isDisabled ? Colors.gray : Colors.white}
-                    />
-                  </TouchableOpacity>
+                      </TouchableOpacity>
+                    )}
+                  </>
                 )}
               </View>
               <View style={styles.planLink}>
