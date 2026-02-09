@@ -162,7 +162,7 @@ const DropdownComponent = ({
               <TouchableOpacity
                 onPress={() => {
                   handleSelect(item.value);
-                  clearTextAfterSearch && setSearchText?.('');
+                  // clearTextAfterSearch && setSearchText?.('');
                 }}
                 style={[
                   styles.item,

@@ -21,8 +21,6 @@ import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
   useGetDailyPjpByIdQuery,
-  useGetDailyPjpListQuery,
-  useGetStoreListQuery,
   useLazyGetDailyPjpListQuery,
   useUpdateDailyPjpMutation,
 } from '../../../features/base/base-api';
@@ -93,10 +91,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const [duplicatePjpId, setDuplicatePjpId] = useState<string | null>(null);
   const [showDuplicatePjp, setShowDuplicatePjp] = useState(false);
 
-  const [
-    triggerGetDailyPjpList,
-    {data: pjpListData, isLoading: listLoading, isFetching: listFetching},
-  ] = useLazyGetDailyPjpListQuery();
+  const [triggerGetDailyPjpList] = useLazyGetDailyPjpListQuery();
 
   const [showMinStoreModal, setShowMinStoreModal] = useState(false);
 
@@ -109,28 +104,11 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [loadingEmpMore, setLoadingEmpMore] = useState(false);
 
-  /** ─── Store State ─────────────────────────────────── */
-  const [storePage, setStorePage] = useState(1);
-  const [storeListData, setStoreListData] = useState<
-    {label: string; value: string}[]
-  >([]);
-  const [storeOgData, setStoreOgData] = useState<any[]>([]);
-  const [storeSearch, setStoreSearch] = useState('');
-  const [loadingStoreMore, setLoadingStoreMore] = useState(false);
-
   /** ─── Queries ─────────────────────────────────────── */
   const {data: employeeData, isFetching: fetchingEmp} = useGetEmployeeQuery({
     page: String(empPage),
     page_size: '20',
     name: employeeSearch,
-  });
-
-  const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
-    page: String(storePage),
-    page_size: '20',
-    search: storeSearch,
-    include_subordinates: '1',
-    include_direct_subordinates: '1',
   });
 
   const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
@@ -276,31 +254,10 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     }
   }, [employeeData]);
 
-  /** ─── Store Data Merge ────────────────────────────── */
-  useEffect(() => {
-    if (storeData?.message?.data?.stores) {
-      setLoadingStoreMore(false);
-      const newData = transformToDropdownList(storeData.message.data.stores);
-      if (storeSearch.trim() !== '' || storePage === 1) {
-        setStoreListData(uniqueByValue(newData));
-        setStoreOgData(uniqueByStoreName(storeData.message.data.stores));
-      } else {
-        setStoreListData(prev => uniqueByValue([...prev, ...newData]));
-        setStoreOgData(prev =>
-          uniqueByStoreName([...prev, ...storeData.message.data.stores]),
-        );
-      }
-    }
-  }, [storeData]);
-
   /** ─── Reset pages when search changes ─────────────── */
   useEffect(() => {
     setEmpPage(1);
   }, [employeeSearch]);
-
-  useEffect(() => {
-    setStorePage(1);
-  }, [storeSearch]);
 
   /** ─── Pagination Handlers ─────────────────────────── */
   const handleLoadMoreEmployees = () => {
@@ -312,18 +269,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     if (current >= total) return;
     setLoadingEmpMore(true);
     setEmpPage(prev => prev + 1);
-  };
-
-  const handleLoadMoreStores = () => {
-    if (fetchingStore || loadingStoreMore) return;
-
-    const current = storeData?.message?.pagination?.page ?? 1;
-    const total = storeData?.message?.pagination?.total_pages ?? 1;
-
-    if (current >= total) return; // 🚫 Stop loading
-
-    setLoadingStoreMore(true);
-    setStorePage(prev => prev + 1);
   };
 
   return (
@@ -379,12 +324,12 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
         /** 👇 Store-related props */
-        storeList={storeListData}
-        storeOgData={storeOgData}
-        storeSearch={storeSearch}
-        setStoreSearch={setStoreSearch}
-        onLoadMoreStores={handleLoadMoreStores}
-        loadingMoreStores={loadingStoreMore}
+        // storeList={storeListData}
+        // storeOgData={storeOgData}
+        // storeSearch={storeSearch}
+        // setStoreSearch={setStoreSearch}
+        // onLoadMoreStores={handleLoadMoreStores}
+        // loadingMoreStores={loadingStoreMore}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}

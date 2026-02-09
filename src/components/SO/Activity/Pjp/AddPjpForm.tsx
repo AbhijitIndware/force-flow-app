@@ -11,6 +11,7 @@ import {Colors} from '../../../../utils/colors';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../../types/Navigation';
+import StoreDropdownField from './StoreDropdownField';
 
 interface FormValues {
   employee: string;
@@ -49,12 +50,12 @@ interface Props {
   onLoadMoreEmployees: () => void;
   loadingMoreEmployees: boolean;
 
-  storeList: {label: string; value: string}[];
-  storeOgData: any[];
-  storeSearch: string;
-  setStoreSearch: (val: string) => void;
-  onLoadMoreStores: () => void;
-  loadingMoreStores: boolean;
+  // storeList: {label: string; value: string}[];
+  // storeOgData: any[];
+  // storeSearch: string;
+  // setStoreSearch: (val: string) => void;
+  // onLoadMoreStores: () => void;
+  // loadingMoreStores: boolean;
 }
 
 const AddPjpForm: React.FC<Props> = ({
@@ -67,15 +68,15 @@ const AddPjpForm: React.FC<Props> = ({
   scrollY,
   employeeList,
   employeeOgData,
-  storeList,
-  onLoadMoreStores,
-  loadingMoreStores,
+  // storeList,
+  // onLoadMoreStores,
+  // loadingMoreStores,
   onLoadMoreEmployees,
   loadingMoreEmployees,
   employeeSearch,
   setEmployeeSearch,
-  storeSearch,
-  setStoreSearch,
+  // storeSearch,
+  // setStoreSearch,
 }) => {
   const navigation = useNavigation<NavigationProp>();
   const onSelect = (field: string, val: string) => {
@@ -135,7 +136,7 @@ const AddPjpForm: React.FC<Props> = ({
           ⚠️ Minimum 15 stores required
         </Text>
       )}
-      {values.stores.map((storeItem, index) => (
+      {/* {values.stores.map((storeItem, index) => (
         <View key={index} style={{marginBottom: 12, position: 'relative'}}>
           <ReusableDropdown
             label={`Store ${index + 1}`}
@@ -171,7 +172,38 @@ const AddPjpForm: React.FC<Props> = ({
             </TouchableOpacity>
           )}
         </View>
+      ))} */}
+      {values.stores.map((storeItem, index) => (
+        <View key={index} style={{marginBottom: 12, position: 'relative'}}>
+          <StoreDropdownField
+            label={`Store ${index + 1}`}
+            field={`stores[${index}].store`}
+            value={storeItem.store}
+            error={
+              touched.stores?.[index]?.store && errors.stores?.[index]?.store
+            }
+            onChange={(val: string) => {
+              const updatedStores = [...values.stores];
+              updatedStores[index].store = val;
+              setFieldValue('stores', updatedStores);
+            }}
+            navigation={navigation}
+          />
+
+          {values.stores.length > 1 && index !== 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                const updated = [...values.stores];
+                updated.splice(index, 1);
+                setFieldValue('stores', updated);
+              }}
+              style={{position: 'absolute', right: 10, top: 80}}>
+              <Text style={{color: 'red'}}>Remove</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       ))}
+
       {/* ➕ Add Store Button */}
       <TouchableOpacity
         onPress={() => setFieldValue('stores', [...values.stores, {store: ''}])}
