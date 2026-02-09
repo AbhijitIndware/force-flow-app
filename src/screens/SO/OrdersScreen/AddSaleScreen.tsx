@@ -101,13 +101,13 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const {orderId} = route.params;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
-  const [searchItem, setSearchItem] = useState('');
-  const [itemListData, setItemListData] = useState<
-    {label: string; value: string}[]
-  >([]);
-  const [itemOgListData, setItemOgListData] = useState<Item[]>([]);
-  const [itemPage, setItemPage] = useState(1);
-  const [loadingMoreItems, setLoadingMoreItems] = useState(false);
+  // const [searchItem, setSearchItem] = useState('');
+  // const [itemListData, setItemListData] = useState<
+  //   {label: string; value: string}[]
+  // >([]);
+  // const [itemOgListData, setItemOgListData] = useState<Item[]>([]);
+  // const [itemPage, setItemPage] = useState(1);
+  // const [loadingMoreItems, setLoadingMoreItems] = useState(false);
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -119,11 +119,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     useLazyGetDailyStoreQuery();
   const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
-  });
-  const {data: itemData, isFetching: itemFetching} = useGetItemsQuery({
-    search: searchItem,
-    page: String(itemPage),
-    page_size: '20',
   });
 
   useEffect(() => {
@@ -193,18 +188,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     },
   });
 
-  const handleLoadMoreItems = () => {
-    if (itemFetching || loadingMoreItems) return;
-
-    const currentPage = itemData?.message?.pagination?.page ?? 1;
-    const totalPages = itemData?.message?.pagination?.total_pages ?? 1;
-
-    if (currentPage >= totalPages) return; // 🚫 No more pages
-
-    setLoadingMoreItems(true);
-    setItemPage(prev => prev + 1);
-  };
-
   // ✅ Transform Stores/Warehouses for dropdown
   const warehouseList = storeData?.message?.stores?.map(store => ({
     value: store.warehouse_id, // what will be stored
@@ -222,32 +205,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       </SafeAreaView>
     );
   }
-
-  useEffect(() => {
-    if (itemData?.message?.data) {
-      setLoadingMoreItems(false);
-      const newData = itemData.message.data.map(item => ({
-        value: item.item_code,
-        label: `${item.item_name} (${item.item_code}) - ₹${item.selling_rate}`,
-      }));
-
-      // If search text exists → replace the list (fresh search)
-      // Else → append (pagination)
-      if (searchItem.trim() !== '' || itemPage === 1) {
-        setItemListData(uniqueByValue(newData));
-        setItemOgListData(uniqueByItemCode(itemData.message.data));
-      } else {
-        setItemListData(prev => uniqueByValue([...prev, ...newData]));
-        setItemOgListData(prev =>
-          uniqueByItemCode([...prev, ...itemData.message.data]),
-        );
-      }
-    }
-  }, [itemData]);
-
-  useEffect(() => {
-    setItemPage(() => 1); // ensures page resets immediately & cleanly
-  }, [searchItem]);
 
   useEffect(() => {
     if (salesDetails?.message?.data) {
@@ -303,18 +260,11 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         handleBlur={handleBlur}
         setFieldValue={setFieldValue}
         scrollY={scrollY}
-        itemList={itemListData || []}
-        originalItemList={itemOgListData || []}
         warehouseList={warehouseList || []}
         onDateSelect={field => {
           setActiveField(field);
           setTimePickerVisible(true);
         }}
-        setSearchItem={setSearchItem}
-        searchItem={searchItem}
-        // ✅ Pagination props
-        onLoadMoreItems={handleLoadMoreItems}
-        loadingMoreItems={loadingMoreItems}
       />
       <View
         style={{

@@ -2,15 +2,13 @@
 import React, {Dispatch, useState} from 'react';
 import {Animated, StyleSheet, TouchableOpacity, View, Text} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
-import ReusableInput from '../../../ui-lib/reuseable-input';
 import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
 import {IAddSalesOrder} from '../../../../types/baseType';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {SoItem} from '../../../../types/dropdownType';
 import {Size} from '../../../../utils/fontSize';
 import {Fonts} from '../../../../constants';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import SaleItemField from './SaleItemField';
+
 interface Props {
   values: IAddSalesOrder;
   errors: any;
@@ -30,14 +28,7 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
   warehouseList: {label: string; value: string}[];
-  itemList: {label: string; value: string}[];
-  originalItemList: SoItem[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
-
-  setSearchItem: Dispatch<React.SetStateAction<string>>;
-  searchItem: string;
-  onLoadMoreItems?: () => void;
-  loadingMoreItems?: boolean;
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -49,16 +40,9 @@ const AddSaleForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   warehouseList,
-  itemList,
-  originalItemList,
   onDateSelect,
-
-  setSearchItem,
-  searchItem,
-  loadingMoreItems,
-  onLoadMoreItems,
 }) => {
-  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  // const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const addNewItem = () => {
     const newItem = {
       item_code: '',
@@ -74,14 +58,14 @@ const AddSaleForm: React.FC<Props> = ({
     setFieldValue('items', updatedItems);
   };
 
-  const handleSelectedItemValues = (itemCode: string, index: number) => {
-    const selectedItem = originalItemList.find(
-      item => item.item_code === itemCode,
-    );
-    if (selectedItem) {
-      setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
-    }
-  };
+  // const handleSelectedItemValues = (itemCode: string, index: number) => {
+  //   const selectedItem = originalItemList.find(
+  //     item => item.item_code === itemCode,
+  //   );
+  //   if (selectedItem) {
+  //     setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
+  //   }
+  // };
 
   return (
     <Animated.ScrollView
@@ -134,14 +118,12 @@ const AddSaleForm: React.FC<Props> = ({
       />
 
       {/* Items */}
-      {values.items.map((item, index) => (
+      {/* {values.items.map((item, index) => (
         <View key={index} style={styles.itemBlock}>
-          {/* Remove button (only if index > 0) */}
           {index > 0 && (
             <TouchableOpacity
               onPress={() => removeItem(index)}
               style={styles.removeButton}>
-              {/* <Text style={styles.removeButtonText}>Remove</Text> */}
               <Ionicons name="trash-bin-outline" size={20} color={'#FF0000'} />
             </TouchableOpacity>
           )}
@@ -238,7 +220,21 @@ const AddSaleForm: React.FC<Props> = ({
               )}
           </View>
         </View>
+      ))} */}
+      {values.items.map((item, index) => (
+        <SaleItemField
+          key={index}
+          index={index}
+          item={item}
+          setFieldValue={setFieldValue}
+          removeItem={removeItem}
+          // originalItemList={originalItemList}
+          errors={errors}
+          touched={touched}
+          handleBlur={handleBlur}
+        />
       ))}
+
       {/* ➕ Add More Button */}
       <TouchableOpacity style={styles.addMoreBtn} onPress={addNewItem}>
         <Text style={styles.addMoreText}>+ Add More Item</Text>
