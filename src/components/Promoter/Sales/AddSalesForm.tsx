@@ -8,37 +8,19 @@ import {
   Text,
   Alert,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Size} from '../../../utils/fontSize';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
-import ReusableInput from '../../ui-lib/reuseable-input';
-import {ISalesInvoiceParams, WarehouseStock} from '../../../types/baseType';
-import {Item as SoItem} from '../../../types/dropdownType';
-import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import {ISalesInvoiceParams} from '../../../types/baseType';
+import PromoterSaleItemRow from './PromoterSaleItemRow';
 
 interface Props {
   values: ISalesInvoiceParams;
   errors: any;
   touched: any;
-
-  handleBlur: (field: string) => void;
-  handleChange: (field: string) => void;
-  setFieldValue: (field: string, value: any) => void;
-
+  handleBlur: any;
+  setFieldValue: any;
   scrollY: Animated.Value;
-
-  itemList: {label: string; value: string}[];
-  originalItemList: SoItem[];
-
-  warehouseList: {label: string; value: string}[];
-  warehouseLoading?: boolean;
-  ogWareHouseList: WarehouseStock[];
-
-  setSearchItem: Dispatch<React.SetStateAction<string>>;
-  searchItem: string;
-  onLoadMoreItems?: () => void;
-  loadingMoreItems?: boolean;
 }
 
 const AddPromoterSaleForm: React.FC<Props> = ({
@@ -48,18 +30,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   handleBlur,
-
-  itemList,
-  originalItemList,
-
-  warehouseList,
-  warehouseLoading,
-  ogWareHouseList,
-
-  setSearchItem,
-  searchItem,
-  loadingMoreItems,
-  onLoadMoreItems,
 }) => {
   /* ---------------- Helpers ---------------- */
 
@@ -74,27 +44,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
     const updated = values.items.filter((_, i) => i !== index);
     setFieldValue('items', updated);
   };
-
-  const handleSelectedItem = (itemCode: string, index: number) => {
-    setFieldValue(`items[${index}].item_code`, itemCode);
-    const selectedItem = originalItemList.find(
-      item => item.item_code === itemCode,
-    );
-
-    if (selectedItem) {
-      setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
-    }
-
-    // Reset warehouse on item change
-    setFieldValue(`items[${index}].warehouse`, '');
-  };
-
-  const handleSelectedWarehouse = (warehouse: string, index: number) => {
-    setFieldValue(`items[${index}].warehouse`, warehouse);
-    const selectedWh = ogWareHouseList.find(
-      item => item.warehouse_id === warehouse,
-    );
-  };
   /* ---------------- UI ---------------- */
 
   return (
@@ -105,7 +54,7 @@ const AddPromoterSaleForm: React.FC<Props> = ({
       scrollEventThrottle={16}
       contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
       {/* ---------------- Items ---------------- */}
-      {values.items.map((item, index) => {
+      {/* {values.items.map((item, index) => {
         // Get selected warehouse object
         const selectedWh = ogWareHouseList.find(
           wh => wh.warehouse_id === item.warehouse,
@@ -113,7 +62,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
 
         return (
           <View key={index} style={styles.itemBlock}>
-            {/* Remove Item */}
             {index > 0 && (
               <TouchableOpacity
                 onPress={() => removeItem(index)}
@@ -122,7 +70,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
               </TouchableOpacity>
             )}
 
-            {/* Item Dropdown */}
             <ReusableDropdown
               label="Item"
               field={`items[${index}].item_code`}
@@ -138,8 +85,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
               onLoadMore={onLoadMoreItems}
               loadingMore={loadingMoreItems}
             />
-
-            {/* Warehouse Dropdown (depends on item) */}
             <ReusableDropdown
               label="Warehouse"
               field={`items[${index}].warehouse`}
@@ -156,8 +101,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
               // }
               disabled={item.item_code === ''}
             />
-
-            {/* Quantity */}
             <ReusableInput
               label={`Quantity ${
                 selectedWh ? `(Available: ${selectedWh.actual_qty})` : ''
@@ -181,8 +124,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
               error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
               disabled={item?.warehouse === ''}
             />
-
-            {/* Rate */}
             <ReusableInput
               label="Rate"
               value={item.rate ? String(item.rate) : ''}
@@ -199,8 +140,6 @@ const AddPromoterSaleForm: React.FC<Props> = ({
               }
               disabled={item?.item_code === ''}
             />
-
-            {/* Amount */}
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Amount</Text>
               <View style={styles.amountBox}>
@@ -211,7 +150,19 @@ const AddPromoterSaleForm: React.FC<Props> = ({
             </View>
           </View>
         );
-      })}
+      })} */}
+      {values.items.map((item, index) => (
+        <PromoterSaleItemRow
+          key={index}
+          index={index}
+          item={item}
+          errors={errors}
+          touched={touched}
+          setFieldValue={setFieldValue}
+          handleBlur={handleBlur}
+          removeItem={removeItem}
+        />
+      ))}
 
       {/* Add More */}
       <TouchableOpacity style={styles.addMoreBtn} onPress={addNewItem}>
