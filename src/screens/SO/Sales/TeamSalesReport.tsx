@@ -81,12 +81,12 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
 
   // 🧾 Filters — converted to JSON string
   const filters = JSON.stringify({
-    company: 'Softsens',
+    // company: 'Softsens',
     from_date: startDate.format('YYYY-MM-DD'),
     to_date: endDate.format('YYYY-MM-DD'),
-    valuation_field_type: 'Currency',
+    // valuation_field_type: 'Currency',
     // item_code: selectedItems,
-    store: selectedStores,
+    // store: selectedStores,
 
     // zone_wise: userType === 'Sales Officer' ? 1 : 0,
   });
@@ -96,8 +96,8 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
     useGetReportQuery({
       report_name: reportName,
       filters,
-      ignore_prepared_report: 'true',
-      are_default_filters: 'true',
+      // ignore_prepared_report: 'true',
+      // are_default_filters: 'true',
     });
 
   const reportData = data?.message ?? {};
@@ -194,7 +194,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
         },
       ]}>
       <PageHeader
-        title={'Stock Report'}
+        title={'Team Sales Report'}
         navigation={() => navigation.goBack()}
       />
 
@@ -309,7 +309,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
       </View>
 
       {/* Store and Item Filter */}
-      <View style={[flexCol, {paddingHorizontal: 20, width: '95%'}]}>
+      {/* <View style={[flexCol, {paddingHorizontal: 20, width: '95%'}]}>
         <ReusableDropdown
           label="Store"
           field={`store`}
@@ -327,7 +327,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
           showAddButton={false}
           clearTextAfterSearch={false}
         />
-      </View>
+      </View> */}
 
       {isLoading || isFetching ? (
         <LoadingScreen />
