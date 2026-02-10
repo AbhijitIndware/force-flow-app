@@ -1074,7 +1074,7 @@ const styles = StyleSheet.create({
   //countBox-section css start
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingTop: 100,
+    paddingTop: 110,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',

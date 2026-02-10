@@ -30,6 +30,8 @@ import {
 import {
   useAddStoreMutation,
   useCreateNewCityMutation,
+  useGetStoreByIdQuery,
+  useUpdateStoreMutation,
 } from '../../../features/base/base-api';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
@@ -40,7 +42,7 @@ import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
-import {ICity} from '../../../types/baseType';
+import {ICity, Store, StoreDataById} from '../../../types/baseType';
 
 const {width} = Dimensions.get('window');
 const initial = {
@@ -74,12 +76,46 @@ const weekOffList = [
   {label: 'Saturday', value: 'Saturday'},
   {label: 'Sunday', value: 'Sunday'},
 ];
+type NavigationProp = NativeStackNavigationProp<
+  SoAppStackParamList,
+  'AddStoreScreen'
+>;
 
-const AddStoreScreen = ({
-  navigation,
-}: {
-  navigation: NativeStackNavigationProp<SoAppStackParamList, 'AddStoreScreen'>;
-}) => {
+type Props = {
+  navigation: NavigationProp;
+  route: any;
+};
+
+// helper: transform API data (Store) -> Formik's IAddStorePayload["data"]
+const mapStoreDetailToForm = (detail: StoreDataById): any => {
+  return {
+    store_name: detail.store_name ?? '',
+    store_type: detail.store_type ?? '',
+    store_category: detail.store_category ?? '',
+    zone: detail.zone ?? '',
+    state: detail.state ?? '',
+    city: detail.city ?? '',
+    map_location: detail.map_location ?? '',
+    pan_no: detail.pan_no ?? '',
+    gst_no: detail.gst_no ?? '',
+    pin_code: detail.pin_code ?? '',
+    distributor: detail.distributor ?? '',
+    address: detail.address ?? '',
+    weekly_off: detail.weekly_off ?? '',
+    beat: detail.beat ?? '',
+    created_by_employee: detail.created_by_employee ?? '',
+    created_by_employee_name: detail.created_by_employee_name ?? '',
+    created_by_employee_designation:
+      detail.created_by_employee_designation ?? '',
+  };
+};
+
+const AddStoreScreen = ({navigation, route}: Props) => {
+  const {storeId} = route?.params ?? {};
+  const {data: storeData, isFetching} = useGetStoreByIdQuery(storeId, {
+    skip: storeId === null || storeId === undefined,
+  });
+  const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [activeField, setActiveField] = useState<
@@ -138,6 +174,7 @@ const AddStoreScreen = ({
   const [loadingMoreBeat, setLoadingMoreBeat] = useState(false);
 
   const [createNewCity] = useCreateNewCityMutation();
+  const [updateStore] = useUpdateStoreMutation();
 
   const {
     values,
@@ -148,8 +185,9 @@ const AddStoreScreen = ({
     handleSubmit,
     setFieldValue,
   } = useFormik({
-    initialValues: initial,
+    initialValues: initialValues,
     validationSchema: storeSchema,
+    enableReinitialize: true, // 👈 important
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
@@ -163,7 +201,6 @@ const AddStoreScreen = ({
           };
 
           const cityRes = await createNewCity(cityPayload).unwrap();
-          console.log('🚀 ~ AddStoreScreen ~ cityRes:', cityRes);
 
           // if (cityRes?.message?.status !== 'success') {
           //   throw new Error('Failed to create city');
@@ -178,7 +215,18 @@ const AddStoreScreen = ({
         };
 
         const payload = {data: value};
-        const res = await addStore(payload).unwrap();
+        let res;
+
+        if (storeId) {
+          res = await updateStore({
+            data: {
+              ...formValues,
+              name: storeId,
+            },
+          }).unwrap();
+        } else {
+          res = await addStore(payload).unwrap();
+        }
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -309,11 +357,11 @@ const AddStoreScreen = ({
   // const storeCategoryList = transformList(categoryData?.message?.data);
   // const beatList = transformList(beatData?.message?.data);
 
-  useEffect(() => {
-    if (values.store_type === '') return;
-    setFieldValue('store_category', '');
-    setStoreCategoryListData([]);
-  }, [values.store_type]);
+  // useEffect(() => {
+  //   if (values.store_type === '') return;
+  //   setFieldValue('store_category', '');
+  //   setStoreCategoryListData([]);
+  // }, [values.store_type]);
 
   useEffect(() => {
     if (locationData?.message?.raw) {
@@ -415,7 +463,7 @@ const AddStoreScreen = ({
   // 🔄 Clear dependent lists when parent field changes
   useEffect(() => {
     if (values.zone !== '') {
-      setStateListData([]);
+      // setStateListData([]);
       setListConfig(prev => ({
         ...prev,
         state: {page: 1, search: ''}, // reset state pagination & search
@@ -426,7 +474,7 @@ const AddStoreScreen = ({
 
   useEffect(() => {
     if (values.state !== '') {
-      setCityListData([]);
+      // setCityListData([]);
       setListConfig(prev => ({
         ...prev,
         city: {page: 1, search: ''}, // reset city pagination & search
@@ -624,101 +672,154 @@ const AddStoreScreen = ({
     }));
   };
 
+  useEffect(() => {
+    if (storeData?.message?.data && storeId) {
+      const store = storeData.message.data;
+
+      const _initial_value = mapStoreDetailToForm(store);
+      // 👉 set dropdown search values (optional but useful for prefilled dropdowns)
+      setListConfig(prev => ({
+        ...prev,
+        zone: {...prev.zone, search: store.zone || ''},
+        state: {...prev.state, search: store.state || ''},
+        city: {...prev.city, search: store.city || ''},
+        distributor: {
+          ...prev.distributor,
+          search: store.distributor || '',
+        },
+        type: {...prev.type, search: store.store_type || ''},
+        category: {
+          ...prev.category,
+          search: store.store_category || '',
+        },
+        beat: {...prev.beat, search: store.beat || ''},
+      }));
+
+      // 👉 set form values
+      setInitialValues({
+        ..._initial_value,
+        date: _initial_value?.date,
+      });
+    }
+  }, [storeData, storeId, storeCategoryListData]);
+
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
-      <PageHeader title="Add Store" navigation={() => navigation.goBack()} />
-      <DateTimePickerModal
-        isVisible={isTimePickerVisible}
-        mode="time"
-        onConfirm={(date: Date) => {
-          if (activeField) {
-            const formatted = moment(date).format('HH:mm:ss');
-            setFieldValue(activeField, formatted);
-          }
-          setTimePickerVisible(false);
-        }}
-        onCancel={() => setTimePickerVisible(false)}
+      <PageHeader
+        title={storeId ? 'Edit Store' : 'Add Store'}
+        navigation={() => navigation.goBack()}
       />
-      <AddStoreForm
-        values={values}
-        errors={errors}
-        touched={touched}
-        handleChange={handleChange}
-        handleBlur={handleBlur}
-        setFieldValue={setFieldValue}
-        scrollY={scrollY}
-        storeTypeList={storeTypeListData}
-        storeCategoryList={storeCategoryListData}
-        zoneList={zoneListData}
-        stateList={stateListData}
-        cityList={cityListData}
-        distributorList={distributorListData}
-        beatList={beatListData}
-        weekOffList={weekOffList}
-        onTimeSelect={field => {
-          setActiveField(field);
-          setTimePickerVisible(true);
-        }}
-        isNewCity={isNewCity}
-        useCityDropdown={useCityDropdown}
-        // pagination props
-        onLoadMoreState={handleLoadMoreStates}
-        loadingMoreState={loadingMoreState}
-        onLoadMoreCity={handleLoadMoreCity}
-        loadingMoreCity={loadingMoreCity}
-        onLoadMoreZone={handleLoadMoreZones}
-        loadingMoreZone={loadingMoreZone}
-        // 🆕 add these
-        onLoadMoreType={handleLoadMoreType}
-        loadingMoreType={loadingMoreType}
-        onLoadMoreCategory={handleLoadMoreCategory}
-        loadingMoreCategory={loadingMoreCategory}
-        onLoadMoreDistributor={handleLoadMoreDistributor}
-        loadingMoreDistributor={loadingMoreDistributor}
-        onLoadMoreBeat={handleLoadMoreBeat}
-        loadingMoreBeat={loadingMoreBeat}
-        // search props 👇
-        zoneSearchText={listConfig.zone.search}
-        setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
-        stateSearchText={listConfig.state.search}
-        setStateSearchText={(text: string) => handleSearchChange('state', text)}
-        citySearchText={listConfig.city.search}
-        setCitySearchText={(text: string) => handleSearchChange('city', text)}
-        // search props
-        distributorSearchText={listConfig.distributor.search}
-        setDistributorSearchText={(text: string) =>
-          handleSearchChange('distributor', text)
-        }
-        typeSearchText={listConfig.type.search}
-        setTypeSearchText={(text: string) => handleSearchChange('type', text)}
-        categorySearchText={listConfig.category.search}
-        setCategorySearchText={(text: string) =>
-          handleSearchChange('category', text)
-        }
-        beatSearchText={listConfig.beat.search}
-        setBeatSearchText={(text: string) => handleSearchChange('beat', text)}
-      />
-      <View
-        style={{
-          paddingHorizontal: 20,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: Colors.bgColor,
-          width: '100%',
-          height: 80,
-        }}>
-        <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
-          onPress={() => handleSubmit()}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <Text style={styles.submitText}>Submit</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+
+      {isFetching ? (
+        <ActivityIndicator size="large" />
+      ) : (
+        <>
+          <DateTimePickerModal
+            isVisible={isTimePickerVisible}
+            mode="time"
+            onConfirm={(date: Date) => {
+              if (activeField) {
+                const formatted = moment(date).format('HH:mm:ss');
+                setFieldValue(activeField, formatted);
+              }
+              setTimePickerVisible(false);
+            }}
+            onCancel={() => setTimePickerVisible(false)}
+          />
+          <AddStoreForm
+            values={values}
+            errors={errors}
+            touched={touched}
+            handleChange={handleChange}
+            handleBlur={handleBlur}
+            setFieldValue={setFieldValue}
+            scrollY={scrollY}
+            storeTypeList={storeTypeListData}
+            storeCategoryList={storeCategoryListData}
+            zoneList={zoneListData}
+            stateList={stateListData}
+            cityList={cityListData}
+            distributorList={distributorListData}
+            beatList={beatListData}
+            weekOffList={weekOffList}
+            onTimeSelect={field => {
+              setActiveField(field);
+              setTimePickerVisible(true);
+            }}
+            isNewCity={isNewCity}
+            useCityDropdown={useCityDropdown}
+            // pagination props
+            onLoadMoreState={handleLoadMoreStates}
+            loadingMoreState={loadingMoreState}
+            onLoadMoreCity={handleLoadMoreCity}
+            loadingMoreCity={loadingMoreCity}
+            onLoadMoreZone={handleLoadMoreZones}
+            loadingMoreZone={loadingMoreZone}
+            // 🆕 add these
+            onLoadMoreType={handleLoadMoreType}
+            loadingMoreType={loadingMoreType}
+            onLoadMoreCategory={handleLoadMoreCategory}
+            loadingMoreCategory={loadingMoreCategory}
+            onLoadMoreDistributor={handleLoadMoreDistributor}
+            loadingMoreDistributor={loadingMoreDistributor}
+            onLoadMoreBeat={handleLoadMoreBeat}
+            loadingMoreBeat={loadingMoreBeat}
+            // search props 👇
+            zoneSearchText={listConfig.zone.search}
+            setZoneSearchText={(text: string) =>
+              handleSearchChange('zone', text)
+            }
+            stateSearchText={listConfig.state.search}
+            setStateSearchText={(text: string) =>
+              handleSearchChange('state', text)
+            }
+            citySearchText={listConfig.city.search}
+            setCitySearchText={(text: string) =>
+              handleSearchChange('city', text)
+            }
+            // search props
+            distributorSearchText={listConfig.distributor.search}
+            setDistributorSearchText={(text: string) =>
+              handleSearchChange('distributor', text)
+            }
+            typeSearchText={listConfig.type.search}
+            setTypeSearchText={(text: string) =>
+              handleSearchChange('type', text)
+            }
+            categorySearchText={listConfig.category.search}
+            setCategorySearchText={(text: string) =>
+              handleSearchChange('category', text)
+            }
+            beatSearchText={listConfig.beat.search}
+            setBeatSearchText={(text: string) =>
+              handleSearchChange('beat', text)
+            }
+          />
+          <View
+            style={{
+              paddingHorizontal: 20,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: Colors.bgColor,
+              width: '100%',
+              height: 80,
+            }}>
+            <TouchableOpacity
+              style={[styles.submitBtn, loading && {opacity: 0.7}]}
+              onPress={() => handleSubmit()}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.submitText}>
+                  {storeId ? 'Modify' : 'Submit'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 };

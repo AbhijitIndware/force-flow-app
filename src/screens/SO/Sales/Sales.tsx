@@ -16,12 +16,13 @@ import {SoAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {Banknote} from 'lucide-react-native';
-import {Tab} from '@rneui/themed';
+import {Button, Tab} from '@rneui/themed';
 import {Animated} from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
 import {useGetSalesRepotsQuery} from '../../../features/base/base-api';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const {width} = Dimensions.get('window');
 
@@ -132,7 +133,39 @@ const SalesScreen = ({navigation, route}: Props) => {
                 </View>
               </View>
             </View>
+            <Button
+              type="clear"
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginVertical: 5,
+              }}
+              onPress={() =>
+                navigation.navigate('TeamsSalesReport', {
+                  reportName: 'PJP Report',
+                })
+              }>
+              <Text
+                style={{
+                  fontFamily: Fonts.medium,
+                  fontSize: Size.xsmd,
+                  color: Colors.orange,
+                  lineHeight: 22,
+                  marginRight: 8,
+                }}>
+                View Team Sales Report
+              </Text>
+              <View style={styles.arrobox}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={14}
+                  color={Colors.lightSuccess}
+                />
+              </View>
+            </Button>
           </View>
+
           <View style={styles.tabSection}>
             <Tab
               value={index}
@@ -232,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 5,
   },
 
   welcomeText: {
@@ -246,11 +279,9 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: Colors.darkButton,
     borderRadius: 15,
-    paddingVertical: 20,
-    marginTop: 10,
+    paddingVertical: 10,
+    marginTop: 5,
     position: 'relative',
-    bottom: -10,
-    marginBottom: -50,
   },
 
   linkBox: {
@@ -304,6 +335,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 20,
+  },
+  arrobox: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#FF7B00',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
   },
 
   //atteddanceCard section css
@@ -450,7 +491,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 20,
     position: 'relative',
-    marginTop: 70,
+    marginTop: 10,
     // paddingTop: 10,
   },
   upparrow: {

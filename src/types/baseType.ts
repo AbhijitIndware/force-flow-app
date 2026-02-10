@@ -39,6 +39,107 @@ export interface IAddStorePayload {
     created_by_employee_designation: string;
   };
 }
+export interface IUpdateStorePayload {
+  data: {
+    name: string;
+    store_name: string;
+    store_type: string;
+    store_category: string;
+    zone: string;
+    state: string;
+    map_location: string;
+    // start_time: string; // Format: "HH:mm:ss"
+    // end_time: string; // Format: "HH:mm:ss"
+    pan_no: string;
+    gst_no: string;
+    city: string;
+    pin_code: string;
+    distributor: string;
+    address: string;
+    weekly_off: string;
+    created_by_employee: string;
+    created_by_employee_name: string;
+    created_by_employee_designation: string;
+  };
+}
+export interface ModifyStoreResponse {
+  message: {
+    status: string;
+    message: string;
+    store_name: string;
+  };
+}
+
+export interface GetStoreResponse {
+  message: {
+    status: string;
+    data: StoreDataById;
+  };
+}
+
+export interface StoreDataById {
+  name: string;
+  owner: string;
+  creation: string;
+  modified: string;
+  modified_by: string;
+  docstatus: number;
+  idx: number;
+  status: string;
+
+  store_name: string;
+  store_type: string;
+  store_category: string;
+  map_location: string;
+  start_time: string;
+  end_time: string;
+  beat: string;
+  custom_promoter: number;
+
+  pan_no: string;
+  gst_no: string;
+  zone: string;
+  state: string;
+  city: string;
+  pin_code: string;
+  distributor: string;
+  address: string;
+  weekly_off: string;
+
+  np_scheme_number: number;
+  np_po_value_start: number;
+  np_po_value_end: number;
+  np_po_monthly_target: number;
+  np_units_start: number;
+  np_units_end: number;
+  np_units_monthly_target: number;
+
+  op_scheme_number: number;
+  op_po_value_start: number;
+  op_po_value_end: number;
+  op_po_monthly_target: number;
+  op_units_start: number;
+  op_units_end: number;
+  op_units_monthly_target: number;
+
+  item_group: string;
+  payout: number;
+
+  created_by_employee: string;
+  created_by_employee_name: string;
+  created_by_employee_designation: string;
+
+  reports_to_name: string;
+  reports_to_designation: string;
+
+  amended_from: string | null;
+  coordinates: string | null;
+  store_street_address: string | null;
+  store_full_address: string | null;
+  map: string | null;
+
+  doctype: string;
+}
 
 type StoreEntry = {
   store: string;

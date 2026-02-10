@@ -43,6 +43,9 @@ import {
   LocationPayload,
   RLocationTracker,
   ICheckOut,
+  IUpdateStorePayload,
+  ModifyStoreResponse,
+  GetStoreResponse,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -310,6 +313,24 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['Store'],
     }),
+    updateStore: builder.mutation<ModifyStoreResponse, IUpdateStorePayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.modify_store',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['Store'],
+    }),
+    getStoreById: builder.query<GetStoreResponse, string>({
+      query: id => ({
+        url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_details`,
+        method: 'GET',
+        params: {
+          store_id: id,
+        },
+      }),
+      providesTags: ['Store'],
+    }),
     getStoreList: builder.query<
       RStoreList,
       {
@@ -547,6 +568,8 @@ export const {
   useGetDistributorListQuery,
   useAddDistributorMutation,
   useAddStoreMutation,
+  useUpdateStoreMutation,
+  useGetStoreByIdQuery,
   //Report
   useGetReportQuery,
   //Attendance

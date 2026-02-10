@@ -10,8 +10,8 @@ import {Fonts} from '../../../../constants';
 
 interface Props {
   values: Record<string, string>;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
+  errors: any;
+  touched: any;
   handleBlur: {
     (e: React.FocusEvent<any, Element>): void;
     <T = any>(fieldOrEvent: T): T extends string ? (e: any) => void : void;
@@ -127,7 +127,11 @@ const AddStoreForm: React.FC<Props> = ({
   const scrollViewRef = useRef<any>(null);
 
   const onSelect = (field: string, val: string) => {
+    // ❗ do nothing if same value selected
+    if (values[field] === val) return;
+
     setFieldValue(field, val);
+
     if (field === 'zone') {
       setFieldValue('state', '');
       setFieldValue('city', '');
@@ -167,7 +171,10 @@ const AddStoreForm: React.FC<Props> = ({
         value={values.store_type}
         data={storeTypeList}
         error={touched.store_type && errors.store_type}
-        onChange={(val: string) => onSelect('store_type', val)}
+        onChange={(val: string) => {
+          onSelect('store_type', val);
+          onSelect('store_category', '');
+        }}
         onLoadMore={onLoadMoreType}
         loadingMore={loadingMoreType}
         searchText={typeSearchText}

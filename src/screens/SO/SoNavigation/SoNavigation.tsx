@@ -27,6 +27,8 @@ import ExpenseClaimScreen from '../ExpenseScreen/ExpenseClaimScreen';
 import ExpenseListScreen from '../ExpenseScreen/ExpenseListScreen';
 import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
 import AddVisibilityScreen from '../VisibilityScreen/AddVisibilityClaim';
+import TeamsSalesReport from '../Sales/TeamSalesReport';
+import StoreDetailScreen from '../PartnersScreen/StoreDetailScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -81,6 +83,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="AddStoreScreen"
         component={AddStoreScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StoreDetailScreen"
+        component={StoreDetailScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen
@@ -161,6 +168,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="AddVisibilityScreen"
         component={AddVisibilityScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="TeamsSalesReport"
+        component={TeamsSalesReport}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

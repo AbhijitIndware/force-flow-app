@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import {FlashList} from '@shopify/flash-list';
 import {Colors} from '../../../../utils/colors';
@@ -67,12 +68,17 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
   };
 
   const renderItem = ({item}: {item: Store}) => {
+    // console.log('🚀 ~ renderItem ~ item:', item);
     const date = moment(item.creation, 'YYYY-MM-DD HH:mm:ss.SSSSSS');
     const day = date.format('DD'); // "19"
     const month = date.format('MMM');
 
     return (
-      <View style={styles.atteddanceCard}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('StoreDetailScreen', {storeId: item?.name})
+        }
+        style={styles.atteddanceCard}>
         <View style={styles.cardHeader}>
           <View style={styles.timeSection}>
             <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
@@ -109,7 +115,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
             <Text style={styles.contentText}>City: {item?.city}</Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -122,6 +128,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
         keyExtractor={(item, index) => index.toString()}
         onEndReached={loadMore}
         onEndReachedThreshold={0.2}
+        contentContainerStyle={{padding: 12}}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

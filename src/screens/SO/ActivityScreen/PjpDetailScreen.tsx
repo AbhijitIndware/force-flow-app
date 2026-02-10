@@ -2,7 +2,6 @@ import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
-import SaleDetailComponent from '../../../components/SO/Order/Sale/SaleDetailComponent';
 import {SafeAreaView} from 'react-native';
 import {Colors} from '../../../utils/colors';
 import {flexCol} from '../../../utils/styles';

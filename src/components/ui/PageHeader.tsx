@@ -88,14 +88,16 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     gap: 5,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'center',
+    width: '60%',
   },
   headerTitle: {
     color: Colors.darkButton,
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
     marginTop: 5,
+    // width: '60%',
   },
   BackIconContainer: {
     width: 23,

@@ -33,7 +33,7 @@ export type SoAppStackParamList = {
   PartnersScreen: undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: undefined;
-  AddStoreScreen: undefined;
+  AddStoreScreen: {storeId?: string} | undefined;
   AddMarketVisitScreen: undefined;
   AddPjpScreen: {id?: string} | undefined;
   AddSaleScreen: {orderId?: string} | undefined;
@@ -44,6 +44,7 @@ export type SoAppStackParamList = {
   PurchaseDetailScreen: {id: string};
   PjpDetailScreen: {details: PjpDailyStore};
   StockReport: {reportName: string};
+  TeamsSalesReport: {reportName: string};
 
   ExpenseScreen: undefined;
   AddExpenseScreen: undefined;
@@ -53,6 +54,7 @@ export type SoAppStackParamList = {
 
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
+  StoreDetailScreen: {storeId: string};
 };
 
 export type menuType = {

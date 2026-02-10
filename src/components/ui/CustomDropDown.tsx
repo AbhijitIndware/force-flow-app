@@ -63,7 +63,10 @@ const DropdownComponent = ({
   };
 
   const selectedLabel =
-    selectedId && data.find(item => item.value === selectedId)
+    selectedId &&
+    data.find(item => {
+      return item.value === selectedId;
+    })
       ? data.find(item => item.value === selectedId)?.label
       : `Select ${selectText}`;
 
