@@ -51,7 +51,7 @@ const MainNavigation = () => {
   }, [data]);
 
   // 🔥 Show loader while validating session
-  if (isLoading && isAuthenticated) {
+  if (isLoading) {
     return <FullScreenLoader />;
   }
 
