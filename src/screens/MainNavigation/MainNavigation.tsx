@@ -44,6 +44,7 @@ const MainNavigation = () => {
     {sId: sId as string},
     {skip: !sId},
   );
+  console.log('🚀 ~ MainNavigation ~ data:', data);
   React.useEffect(() => {
     if (data?.message?.valid === false) {
       dispatch(logout());
