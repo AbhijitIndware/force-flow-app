@@ -159,7 +159,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         } else {
           res = await addDailyPjp(payload).unwrap();
         }
-
+        console.log('res', res);
         if (res?.message?.status === 'success') {
           Toast.show({
             type: 'success',
@@ -176,7 +176,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           });
         }
       } catch (error: any) {
-        // console.error('PJP API Error:', error);
+        console.error('PJP API Error:', error);
         if (
           error?.data?.message?.message ===
           'PJP Daily Stores with the same Employee and Date already exists.'
