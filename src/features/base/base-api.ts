@@ -305,6 +305,16 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['Distributor'],
     }),
+    checkStoreName: builder.query<
+      {message: {exists: boolean; message?: string}},
+      string
+    >({
+      query: store_name => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.check_store_name',
+        method: 'GET',
+        params: {store_name},
+      }),
+    }),
     addStore: builder.mutation<any, IAddStorePayload>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.create_store',
@@ -570,6 +580,7 @@ export const {
   useAddStoreMutation,
   useUpdateStoreMutation,
   useGetStoreByIdQuery,
+  useCheckStoreNameQuery,
   //Report
   useGetReportQuery,
   //Attendance

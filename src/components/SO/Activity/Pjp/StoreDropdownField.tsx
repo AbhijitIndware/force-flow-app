@@ -6,6 +6,8 @@ import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 interface StoreItem {
   store_name: string;
   name: string;
+  created_by_employee_name: string;
+  store_type: string;
 }
 
 interface DropdownOption {
@@ -40,7 +42,7 @@ const PAGE_SIZE = '20';
 
 const transformStores = (arr: StoreItem[] = []): DropdownOption[] =>
   arr.map(item => ({
-    label: item.store_name,
+    label: `${item.store_name} · By: ${item.created_by_employee_name} · Type: ${item.store_type}`,
     value: item.name,
   }));
 
@@ -57,7 +59,6 @@ const StoreDropdownField = ({
   const [page, setPage] = useState(1);
   const [storeList, setStoreList] = useState<DropdownOption[]>([]);
 
-  // ✅ Fetch the selected store by exact value — only runs in edit mode
   const {data: exactMatchData} = useGetStoreListQuery(
     {
       page: '1',
@@ -69,22 +70,19 @@ const StoreDropdownField = ({
     {skip: !value},
   );
 
-  // ✅ Seed the list with the selected item immediately so edit mode shows the label
+  // ✅ Seed with full label in edit mode
   useEffect(() => {
     const stores = (exactMatchData as StoreApiResponse)?.message?.data?.stores;
     if (stores?.length) {
-      const selected = stores[0];
-      setStoreList([{label: selected.store_name, value: selected.name}]);
+      setStoreList(transformStores(stores));
     }
   }, [exactMatchData]);
 
-  // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset list and page when search changes
   useEffect(() => {
     setPage(1);
     setStoreList([]);
@@ -106,7 +104,6 @@ const StoreDropdownField = ({
 
     setStoreList(prev => {
       if (page === 1) {
-        // ✅ Pin selected item at top if it's not already in page 1 results
         if (value) {
           const existsInNewData = newData.some(i => i.value === value);
           if (!existsInNewData) {
@@ -117,7 +114,6 @@ const StoreDropdownField = ({
         return newData;
       }
 
-      // Page 2+ — merge and deduplicate
       const merged = [...prev, ...newData];
       return Array.from(new Map(merged.map(i => [i.value, i])).values());
     });

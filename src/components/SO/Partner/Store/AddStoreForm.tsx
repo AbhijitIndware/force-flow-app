@@ -1,5 +1,5 @@
 // AddDistributorForm.tsx
-import React, {useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Animated, StyleSheet} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
@@ -7,6 +7,7 @@ import {Colors} from '../../../../utils/colors';
 import MapReusableInput from '../../../ui-lib/map-input';
 import {Size} from '../../../../utils/fontSize';
 import {Fonts} from '../../../../constants';
+import {useCheckStoreNameQuery} from '../../../../features/base/base-api';
 
 interface Props {
   values: Record<string, string>;
@@ -70,9 +71,11 @@ interface Props {
   beatSearchText?: string;
   setBeatSearchText?: (text: string) => void;
   isNewCity?: boolean;
+  isEdit?: boolean;
 }
 
 const AddStoreForm: React.FC<Props> = ({
+  isEdit,
   values,
   errors,
   touched,
@@ -126,6 +129,28 @@ const AddStoreForm: React.FC<Props> = ({
 }) => {
   const scrollViewRef = useRef<any>(null);
 
+  // ── Store name duplicate check ──────────────────────────────
+  const [debouncedStoreName, setDebouncedStoreName] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    setIsTyping(true);
+    const timer = setTimeout(() => {
+      setDebouncedStoreName(values.store_name);
+      setIsTyping(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [values.store_name]);
+
+  const {data: nameCheckData, isFetching: isCheckingName} =
+    useCheckStoreNameQuery(debouncedStoreName, {
+      skip: debouncedStoreName.trim().length < 3,
+    });
+  // console.log('🚀 ~ AddStoreForm ~ isCheckingName:', isCheckingName);
+
+  const storeNameTaken = nameCheckData?.message?.exists === true;
+  // ────────────────────────────────────────────────────────────
+
   const onSelect = (field: string, val: string) => {
     // ❗ do nothing if same value selected
     if (values[field] === val) return;
@@ -158,12 +183,30 @@ const AddStoreForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
-      <ReusableInput
+      {/* <ReusableInput
         label="Store Name"
         value={values.store_name}
         onChangeText={handleChange('store_name')}
         onBlur={() => handleBlur('store_name')}
         error={touched.store_name && errors.store_name}
+      /> */}
+      {/* ── Store Name with live duplicate check ── */}
+      <ReusableInput
+        label="Store Name"
+        value={values.store_name}
+        onChangeText={handleChange('store_name')}
+        onBlur={() => handleBlur('store_name')}
+        error={
+          (touched.store_name && errors.store_name) ||
+          (!isEdit && values.store_name.trim().length >= 3
+            ? isTyping || isCheckingName
+              ? 'Checking availability...'
+              : storeNameTaken
+              ? nameCheckData?.message?.message ??
+                'This store name is already taken.'
+              : undefined
+            : undefined)
+        }
       />
       <ReusableDropdown
         label="Store Type"

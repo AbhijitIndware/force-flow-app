@@ -727,6 +727,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
             onCancel={() => setTimePickerVisible(false)}
           />
           <AddStoreForm
+            isEdit={!!storeId}
             values={values}
             errors={errors}
             touched={touched}
