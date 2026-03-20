@@ -23,6 +23,8 @@ import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
 import {useGetSalesRepotsQuery} from '../../../features/base/base-api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsmDashboard from './AsmDashboardScreen';
+import {useAppSelector} from '../../../store/hook';
 
 const {width} = Dimensions.get('window');
 
@@ -41,6 +43,9 @@ const SalesScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
   const {data, refetch, isFetching} = useGetSalesRepotsQuery({
     view_type: index === 0 ? 'self' : 'team_include_self',
@@ -207,24 +212,54 @@ const SalesScreen = ({navigation, route}: Props) => {
                   borderRightWidth: active ? 1 : undefined,
                 })}
               />
+
+              {employee?.designation === 'ASM' && (
+                <Tab.Item
+                  title="ASM"
+                  titleStyle={{
+                    fontSize: Size.xs,
+                    fontFamily: Fonts.medium,
+                    lineHeight: 9,
+                  }}
+                  containerStyle={active => ({
+                    backgroundColor: active ? Colors.Orangelight : undefined,
+                    borderRadius: active ? 10 : undefined,
+                    borderColor: active ? '#FFBF83' : undefined,
+                    borderTopWidth: active ? 1 : undefined,
+                    borderLeftWidth: active ? 1 : undefined,
+                    borderRightWidth: active ? 1 : undefined,
+                  })}
+                />
+              )}
             </Tab>
           </View>
           {/* Conditionally rendered tab content */}
-          {index === 0 ? (
-            <RecentSaleScreen
-              navigation={navigation}
-              data={data?.message?.data || []}
-              refetch={refetch}
-              isFetching={isFetching}
-            />
-          ) : (
-            <RecentTeamSaleScreen
-              navigation={navigation}
-              data={data?.message?.data || []}
-              refetch={refetch}
-              isFetching={isFetching}
-            />
-          )}
+          {(() => {
+            switch (index) {
+              case 0:
+                return (
+                  <RecentSaleScreen
+                    navigation={navigation}
+                    data={data?.message?.data || []}
+                    refetch={refetch}
+                    isFetching={isFetching}
+                  />
+                );
+              case 1:
+                return (
+                  <RecentTeamSaleScreen
+                    navigation={navigation}
+                    data={data?.message?.data || []}
+                    refetch={refetch}
+                    isFetching={isFetching}
+                  />
+                );
+              case 2:
+                return <AsmDashboard navigation={navigation} />;
+              default:
+                return null;
+            }
+          })()}
         </Animated.ScrollView>
       )}
     </SafeAreaView>

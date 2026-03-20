@@ -45,6 +45,7 @@ export type SoAppStackParamList = {
   PjpDetailScreen: {details: PjpDailyStore};
   StockReport: {reportName: string};
   TeamsSalesReport: {reportName: string};
+  AsmDashboard: undefined;
 
   ExpenseScreen: undefined;
   AddExpenseScreen: undefined;

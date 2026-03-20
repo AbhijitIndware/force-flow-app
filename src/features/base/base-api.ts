@@ -46,6 +46,8 @@ import {
   IUpdateStorePayload,
   ModifyStoreResponse,
   GetStoreResponse,
+  AsmDashboardParams,
+  AsmDashboardResponse,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -419,6 +421,19 @@ export const baseApi = createApi({
       }),
     }),
 
+    // ─── NEW: GET ASM DASHBOARD ───────────────────────────────────────────────
+    getAsmDashboard: builder.query<AsmDashboardResponse, AsmDashboardParams>({
+      query: ({date, employee}: AsmDashboardParams) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
+        method: 'GET',
+        params: {
+          date,
+          employee,
+        },
+      }),
+      // providesTags: ['Sales'],
+    }),
+
     //GET ATTENDANCE REPORT
     getAttendance: builder.query<
       AttendanceResponse,
@@ -583,6 +598,7 @@ export const {
   useCheckStoreNameQuery,
   //Report
   useGetReportQuery,
+  useGetAsmDashboardQuery,
   //Attendance
   useGetAttendanceQuery,
   //Copy PJP

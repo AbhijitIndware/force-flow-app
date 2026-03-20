@@ -24,10 +24,12 @@ import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import {RotateCw} from 'lucide-react-native';
+import {FileText, RotateCw} from 'lucide-react-native';
 import DateTimePicker from 'react-native-ui-datepicker';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {uniqueByValue} from '../../../utils/utils';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -101,7 +103,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
     });
 
   const reportData = data?.message ?? {};
-  console.log('🚀 ~ StockReport ~ reportData:', data, error);
+  console.log('🚀 ~ StockReport ~ reportData:', data, reportData);
   const {
     result = [],
     columns = [],
@@ -342,9 +344,21 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
             buttonStyle={styles.retryButton}
           />
         </View>
-      ) : !reportData ? (
-        <View style={[styles.centerView]}>
-          <Text style={styles.title}>No report data available</Text>
+      ) : !(reportData as any)?.doc ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIconWrap}>
+            <FileText size={32} color={Colors.textTertiary} strokeWidth={1.5} />
+          </View>
+          <View style={styles.emptyTextWrap}>
+            <Text style={styles.emptyTitle}>No report data available</Text>
+            <Text style={styles.emptySubtitle}>
+              Try selecting a different date or check back once data has been
+              synced.
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.emptyRetryBtn} onPress={refetch}>
+            <Text style={styles.emptyRetryText}>Retry</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <ScrollView
@@ -652,5 +666,54 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontWeight: '600',
+  },
+
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    gap: 20,
+  },
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.lightestGray,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTextWrap: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  emptyTitle: {
+    fontSize: Size.sm,
+    fontFamily: Fonts.semiBold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: Size.xs,
+    fontFamily: Fonts.regular,
+    color: Colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: 18,
+    maxWidth: 240,
+  },
+  emptyRetryBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 9,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.borderLight,
+    backgroundColor: Colors.white,
+  },
+  emptyRetryText: {
+    fontSize: Size.xs,
+    fontFamily: Fonts.medium,
+    color: Colors.textPrimary,
   },
 });

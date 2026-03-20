@@ -1644,3 +1644,121 @@ export type LocationPayload = {
     document_name: string;
   };
 };
+
+// ─── ASM Dashboard Types ─────────────────────────────────────────────────────
+
+export interface AsmOverview {
+  employee_id: string;
+  employee_name: string;
+  designation: string;
+  attendance_status: string;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  team_size: number;
+  so_count: number;
+  isr_count: number;
+  outlets_planned: number;
+  outlets_visited: number;
+  outlets_completed: number;
+  outlets_pending: number;
+  completion_rate: number;
+  orders_today: number;
+  order_value: number;
+  orders_delivered: number;
+  orders_pending: number;
+  delivery_rate: number;
+}
+
+export interface AsmKeyMetrics {
+  team_size: number;
+  team_present: number;
+  team_absent: number;
+  attendance_rate: number;
+  outlets_planned: number;
+  outlets_visited: number;
+  outlets_pending: number;
+  visit_rate: number;
+  orders_today: number;
+  order_value: number;
+  orders_delivered: number;
+  delivery_rate: number;
+}
+
+export interface AsmStorePlanning {
+  planned: number;
+  visited: number;
+  completed: number;
+  pending: number;
+  completion_rate: number;
+}
+
+export interface AsmBusinessGenerated {
+  total_orders: number;
+  draft_orders: number;
+  order_value: number;
+  orders_delivered: number;
+  orders_pending: number;
+  delivery_rate: number;
+  avg_order_value: number;
+}
+
+export interface AsmOrderStatus {
+  order_id: string;
+  time: string;
+  salesperson: string;
+  store: string;
+  order_value: number;
+  items: number;
+  status: string;
+  workflow_state: string;
+  docstatus: number;
+  payment: string;
+  delivery_status: string;
+  delivery_display_status: string;
+}
+
+export interface AsmTeamMember {
+  employee_id: string;
+  employee_name: string;
+  initials: string;
+  role: 'SO' | 'ISR';
+  designation: string;
+  reports_to: string;
+  attendance_status: 'Present' | 'Absent';
+  check_in_time: string | null;
+  check_out_time: string | null;
+  outlets_planned: number;
+  outlets_visited: number;
+  outlets_completed: number;
+  outlets_pending: number;
+  completion_rate: number;
+  orders: number;
+  order_value: number;
+  orders_delivered: number;
+  orders_pending: number;
+  avg_order_size?: number;
+  conversion_rate?: number;
+}
+
+export interface AsmDashboardMessage {
+  success: boolean;
+  date: string;
+  formatted_date: string;
+  current_time: string;
+  role_code: string;
+  asm_overview: AsmOverview;
+  key_metrics: AsmKeyMetrics;
+  store_planning: AsmStorePlanning;
+  business_generated: AsmBusinessGenerated;
+  order_status: AsmOrderStatus[];
+  team_performance: AsmTeamMember[];
+}
+
+export interface AsmDashboardResponse {
+  message: AsmDashboardMessage;
+}
+
+export interface AsmDashboardParams {
+  date: string; // format: 'YYYY-MM-DD'
+  employee: string; // format: 'HR-EMP-XXXXX'
+}
