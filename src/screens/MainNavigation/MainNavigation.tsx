@@ -6,7 +6,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
 import {useAppDispatch, useAppSelector} from '../../store/hook';
-import {View} from 'react-native';
+import {Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   logout,
@@ -14,12 +14,14 @@ import {
   useGetProfileDataQuery,
 } from '../../features/auth/auth';
 import {ActivityIndicator} from 'react-native';
+import {StyleSheet} from 'react-native';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
 
 const MainNavigation = () => {
   const dispatch = useAppDispatch();
+  const [sessionExpired, setSessionExpired] = React.useState(false);
 
   const sId = useAppSelector(state => state?.persistedReducer?.authSlice?.sId);
   const isAuthenticated = !!sId;
@@ -40,28 +42,50 @@ const MainNavigation = () => {
     },
   );
 
-  const {data, isLoading, isError} = useCheckSessionQuery(
-    {sId: sId as string},
-    {skip: !sId},
-  );
-  console.log('🚀 ~ MainNavigation ~ data:', data);
+  const {
+    data,
+    isLoading,
+    error: sessionError,
+  } = useCheckSessionQuery({sId: sId as string}, {skip: !sId});
+
   React.useEffect(() => {
-    if (data?.message?.valid === false) {
-      dispatch(logout());
+    if (
+      (sessionError as any)?.data?.message?.valid === false &&
+      (sessionError as any)?.status === 401
+    ) {
+      setSessionExpired(true);
+      // Small delay so the user can read the banner before being logged out
+      const timer = setTimeout(() => {
+        setSessionExpired(false);
+        dispatch(logout());
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [data]);
+  }, [sessionError, data]);
 
   // 🔥 Show loader while validating session
   if (isLoading) {
     return <FullScreenLoader />;
   }
 
-  return isAuthenticated && userType ? (
-    <AppStackNavigator userType={userType} insets={insets} />
-  ) : (
-    <AuthStackNavigator insets={insets} />
+  return (
+    <View style={{flex: 1}}>
+      {sessionExpired && <SessionExpiredBanner />}
+      {isAuthenticated && userType ? (
+        <AppStackNavigator userType={userType} insets={insets} />
+      ) : (
+        <AuthStackNavigator insets={insets} />
+      )}
+    </View>
   );
 };
+const SessionExpiredBanner = () => (
+  <View style={styles.banner}>
+    <Text style={styles.bannerText}>
+      ⚠️ Session expired — please log in again
+    </Text>
+  </View>
+);
 
 const AuthStackNavigator = ({insets}: any) => (
   <View
@@ -105,10 +129,27 @@ const AppStackNavigator = ({
   </View>
 );
 
-export default MainNavigation;
-
 const FullScreenLoader = () => (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
     <ActivityIndicator size="large" color="#000" />
   </View>
 );
+
+const styles = StyleSheet.create({
+  banner: {
+    backgroundColor: '#B91C1C',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+  },
+  bannerText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+});
+
+export default MainNavigation;
