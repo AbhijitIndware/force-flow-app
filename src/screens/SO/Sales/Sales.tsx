@@ -180,6 +180,24 @@ const SalesScreen = ({navigation, route}: Props) => {
               }}
               variant="primary"
               style={{backgroundColor: Colors.transparent, padding: 0}}>
+              {employee?.designation === 'ASM' && (
+                <Tab.Item
+                  title="Dashboard"
+                  titleStyle={{
+                    fontSize: Size.xs,
+                    fontFamily: Fonts.medium,
+                    lineHeight: 9,
+                  }}
+                  containerStyle={active => ({
+                    backgroundColor: active ? Colors.Orangelight : undefined,
+                    borderRadius: active ? 10 : undefined,
+                    borderColor: active ? '#FFBF83' : undefined,
+                    borderTopWidth: active ? 1 : undefined,
+                    borderLeftWidth: active ? 1 : undefined,
+                    borderRightWidth: active ? 1 : undefined,
+                  })}
+                />
+              )}
               <Tab.Item
                 title="Individual"
                 titleStyle={{
@@ -212,25 +230,6 @@ const SalesScreen = ({navigation, route}: Props) => {
                   borderRightWidth: active ? 1 : undefined,
                 })}
               />
-
-              {employee?.designation === 'ASM' && (
-                <Tab.Item
-                  title="ASM"
-                  titleStyle={{
-                    fontSize: Size.xs,
-                    fontFamily: Fonts.medium,
-                    lineHeight: 9,
-                  }}
-                  containerStyle={active => ({
-                    backgroundColor: active ? Colors.Orangelight : undefined,
-                    borderRadius: active ? 10 : undefined,
-                    borderColor: active ? '#FFBF83' : undefined,
-                    borderTopWidth: active ? 1 : undefined,
-                    borderLeftWidth: active ? 1 : undefined,
-                    borderRightWidth: active ? 1 : undefined,
-                  })}
-                />
-              )}
             </Tab>
           </View>
           {/* Conditionally rendered tab content */}
