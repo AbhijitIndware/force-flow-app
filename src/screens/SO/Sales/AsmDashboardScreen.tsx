@@ -737,9 +737,16 @@ const TeamMemberCard: React.FC<TeamMemberCardProps> = ({member}) => {
 interface TeamSectionProps {
   team: AsmTeamMember[];
   metrics: AsmKeyMetrics;
+  navigation: any;
 }
-const TeamSection: React.FC<TeamSectionProps> = ({team, metrics}) => (
-  <View style={{marginBottom: 30}}>
+const TeamSection: React.FC<TeamSectionProps> = ({
+  team,
+  metrics,
+  navigation,
+}) => (
+  <TouchableOpacity
+    style={{marginBottom: 30}}
+    onPress={() => navigation?.navigate('TeamDetailScreen')}>
     <View style={styles.teamSectionHeader}>
       <SectionHeader icon={Users} title="Team Performance" accent={C.amber} />
       <View style={styles.teamSummaryBadges}>
@@ -784,7 +791,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({team, metrics}) => (
     {team.map(member => (
       <TeamMemberCard key={member.employee_id} member={member} />
     ))}
-  </View>
+  </TouchableOpacity>
 );
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
@@ -967,7 +974,11 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
           <View style={styles.divider} />
           <OrdersSection orders={msg.order_status} />
           <View style={styles.divider} />
-          <TeamSection team={msg.team_performance} metrics={msg.key_metrics} />
+          <TeamSection
+            team={msg.team_performance}
+            metrics={msg.key_metrics}
+            navigation={navigation}
+          />
         </View>
       </ScrollView>
 

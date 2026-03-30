@@ -1,0 +1,14 @@
+import {StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+
+const TeamDetailScreen = () => {
+  return (
+    <View>
+      <Text>TeamDetailScreen</Text>
+    </View>
+  );
+};
+
+export default TeamDetailScreen;
+
+const styles = StyleSheet.create({});
