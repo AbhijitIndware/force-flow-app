@@ -7,26 +7,26 @@ import {
   Text,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {Banknote} from 'lucide-react-native';
-import {Button, Tab} from '@rneui/themed';
-import {Animated} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { Banknote } from 'lucide-react-native';
+import { Button, Tab } from '@rneui/themed';
+import { Animated } from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetSalesRepotsQuery} from '../../../features/base/base-api';
+import { useGetSalesRepotsQuery } from '../../../features/base/base-api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsmDashboard from './AsmDashboardScreen';
-import {useAppSelector} from '../../../store/hook';
+import { useAppSelector } from '../../../store/hook';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,8 +38,8 @@ type Props = {
   route: any;
 };
 
-const SalesScreen = ({navigation, route}: Props) => {
-  const {index: initialIndex} = route.params || {};
+const SalesScreen = ({ navigation, route }: Props) => {
+  const { index: initialIndex } = route.params || {};
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -47,7 +47,7 @@ const SalesScreen = ({navigation, route}: Props) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const {data, refetch, isFetching} = useGetSalesRepotsQuery({
+  const { data, refetch, isFetching } = useGetSalesRepotsQuery({
     view_type: index === 0 ? 'self' : 'team_include_self',
   });
 
@@ -79,12 +79,12 @@ const SalesScreen = ({navigation, route}: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
+          contentContainerStyle={{ position: 'relative' }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
@@ -179,7 +179,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                 height: 0,
               }}
               variant="primary"
-              style={{backgroundColor: Colors.transparent, padding: 0}}>
+              style={{ backgroundColor: Colors.transparent, padding: 0 }}>
               {employee?.designation === 'ASM' && (
                 <Tab.Item
                   title="Dashboard"
@@ -187,6 +187,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                     fontSize: Size.xs,
                     fontFamily: Fonts.medium,
                     lineHeight: 9,
+                    width: width * 1,
                   }}
                   containerStyle={active => ({
                     backgroundColor: active ? Colors.Orangelight : undefined,
@@ -204,6 +205,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
                   lineHeight: 9,
+                  width: width * 1,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -220,6 +222,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                   fontSize: Size.xs,
                   fontFamily: Fonts.medium,
                   lineHeight: 9,
+                  width: width * 1,
                 }}
                 containerStyle={active => ({
                   backgroundColor: active ? Colors.Orangelight : undefined,
@@ -285,7 +288,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     position: 'relative',
@@ -308,7 +311,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -343,10 +346,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
