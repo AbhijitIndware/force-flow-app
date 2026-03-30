@@ -235,7 +235,7 @@ const SalesScreen = ({navigation, route}: Props) => {
           {/* Conditionally rendered tab content */}
           {(() => {
             switch (index) {
-              case 0:
+              case 1:
                 return (
                   <RecentSaleScreen
                     navigation={navigation}
@@ -244,7 +244,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                     isFetching={isFetching}
                   />
                 );
-              case 1:
+              case 2:
                 return (
                   <RecentTeamSaleScreen
                     navigation={navigation}
@@ -253,7 +253,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                     isFetching={isFetching}
                   />
                 );
-              case 2:
+              case 0:
                 return <AsmDashboard navigation={navigation} />;
               default:
                 return null;
