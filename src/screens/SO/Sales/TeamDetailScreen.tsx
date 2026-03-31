@@ -6,14 +6,15 @@ import {
   SafeAreaView,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import { flexCol } from '../../../utils/styles';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {flexCol} from '../../../utils/styles';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   User,
   CalendarDays,
@@ -24,7 +25,7 @@ import {
   ListOrdered,
 } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -45,16 +46,16 @@ const teamDetail = {
 };
 
 const stores = [
-  { id: 1, name: 'Store name 1', status: 'Visited' },
-  { id: 2, name: 'Store name 2', status: 'Visited' },
-  { id: 3, name: 'Store name 3', status: 'Visited' },
-  { id: 4, name: 'Store name 4', status: 'Pending' },
-  { id: 5, name: 'Store name 5', status: 'Pending' },
-  { id: 6, name: 'Store name 6', status: 'Pending' },
-  { id: 7, name: 'Store name 7', status: 'Pending' },
+  {id: 1, name: 'Store name 1', status: 'Visited'},
+  {id: 2, name: 'Store name 2', status: 'Visited'},
+  {id: 3, name: 'Store name 3', status: 'Visited'},
+  {id: 4, name: 'Store name 4', status: 'Pending'},
+  {id: 5, name: 'Store name 5', status: 'Pending'},
+  {id: 6, name: 'Store name 6', status: 'Pending'},
+  {id: 7, name: 'Store name 7', status: 'Pending'},
 ];
 
-const TeamDetailScreen = ({ navigation, route }: Props) => {
+const TeamDetailScreen = ({navigation, route}: Props) => {
   return (
     <SafeAreaView
       style={[
@@ -72,9 +73,10 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        
         {/* Profile Card */}
-        <View style={styles.profileCard}>
+        <TouchableOpacity
+          style={styles.profileCard}
+          onPress={() => navigation.navigate('DetailByUserScreen')}>
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>AS</Text>
@@ -83,29 +85,31 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
               <Text style={styles.profileName}>{teamDetail.name}</Text>
               <View style={styles.dateRow}>
                 <CalendarDays size={14} color="#828282" />
-                <Text style={styles.dateText}>Store visited: {teamDetail.date}</Text>
+                <Text style={styles.dateText}>
+                  Store visited: {teamDetail.date}
+                </Text>
               </View>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Metrics Grid */}
         <View style={styles.metricsContainer}>
           <View style={styles.metricCard}>
-            <View style={[styles.metricIconWrap, { backgroundColor: '#E3ECFF' }]}>
+            <View style={[styles.metricIconWrap, {backgroundColor: '#E3ECFF'}]}>
               <Store size={22} color="#367CFF" strokeWidth={2} />
             </View>
-            <Text style={[styles.metricValue, { color: '#367CFF' }]}>
+            <Text style={[styles.metricValue, {color: '#367CFF'}]}>
               {teamDetail.total_store}
             </Text>
             <Text style={styles.metricLabel}>Total Store</Text>
           </View>
 
           <View style={styles.metricCard}>
-            <View style={[styles.metricIconWrap, { backgroundColor: '#FFE9D4' }]}>
+            <View style={[styles.metricIconWrap, {backgroundColor: '#FFE9D4'}]}>
               <Clock size={22} color="#FF7B00" strokeWidth={2} />
             </View>
-            <Text style={[styles.metricValue, { color: '#FF7B00' }]}>
+            <Text style={[styles.metricValue, {color: '#FF7B00'}]}>
               {teamDetail.pending_store}
             </Text>
             <Text style={styles.metricLabel}>Pending Store</Text>
@@ -121,7 +125,10 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
         </View>
 
         {stores.map((store, index) => (
-          <View key={store.id} style={styles.storeCard}>
+          <TouchableOpacity
+            key={store.id}
+            style={styles.storeCard}
+            onPress={() => navigation.navigate('DetailByStoreScreen')}>
             <View style={styles.storeIconWrap}>
               <MapPin size={18} color="#FFB302" strokeWidth={2.5} />
             </View>
@@ -133,25 +140,29 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
               style={[
                 styles.statusBadge,
                 store.status === 'Visited'
-                  ? { backgroundColor: '#E7F8EA', borderColor: '#0AB72A40' }
-                  : { backgroundColor: '#FFE9D4', borderColor: '#FF7B0040' },
+                  ? {backgroundColor: '#E7F8EA', borderColor: '#0AB72A40'}
+                  : {backgroundColor: '#FFE9D4', borderColor: '#FF7B0040'},
               ]}>
               {store.status === 'Visited' ? (
-                <CheckCircle2 size={12} color="#0AB72A" style={{ marginRight: 4 }} />
+                <CheckCircle2
+                  size={12}
+                  color="#0AB72A"
+                  style={{marginRight: 4}}
+                />
               ) : (
-                <Clock size={12} color="#FF7B00" style={{ marginRight: 4 }} />
+                <Clock size={12} color="#FF7B00" style={{marginRight: 4}} />
               )}
               <Text
                 style={[
                   styles.statusText,
                   store.status === 'Visited'
-                    ? { color: '#0AB72A' }
-                    : { color: '#FF7B00' },
+                    ? {color: '#0AB72A'}
+                    : {color: '#FF7B00'},
                 ]}>
                 {store.status}
               </Text>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
     </SafeAreaView>
@@ -171,7 +182,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
@@ -233,7 +244,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
@@ -288,7 +299,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.03,
     shadowRadius: 3,
     elevation: 1,
@@ -331,4 +342,3 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
   },
 });
-

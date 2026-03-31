@@ -31,6 +31,8 @@ import TeamsSalesReport from '../Sales/TeamSalesReport';
 import StoreDetailScreen from '../PartnersScreen/StoreDetailScreen';
 import AsmDashboard from '../Sales/AsmDashboardScreen';
 import TeamDetailScreen from '../Sales/TeamDetailScreen';
+import DetailByStoreScreen from '../Sales/DetailByStoreScreen';
+import DetailByUserScreen from '../Sales/DetailByUserScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -185,6 +187,16 @@ const SoNavigation = () => {
       <Stack.Screen
         name="TeamDetailScreen"
         component={TeamDetailScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DetailByStoreScreen"
+        component={DetailByStoreScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DetailByUserScreen"
+        component={DetailByUserScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
