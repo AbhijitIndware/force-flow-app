@@ -31,6 +31,7 @@ import IncentiveScreen from '../Incentive/Incentive';
 import {useState} from 'react';
 import MoreOptionsModal from '../../../components/home/MoreOption';
 import {useAppSelector} from '../../../store/hook';
+import {getInitials} from '../../../utils/utils';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
@@ -138,7 +139,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
-    : require('../../../assets/images/user.jpg');
+    : null;
 
   return (
     <View style={styles.headerTitleContainer}>
@@ -159,11 +160,19 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
         <TouchableOpacity
           style={styles.userInfo}
           onPress={() => props.navigation.navigate('ProfileScreen')}>
-          <Image
-            source={profileImageSource}
-            resizeMode="cover"
-            style={styles.avtarImage}
-          />
+          {profileImageSource ? (
+            <Image
+              source={profileImageSource}
+              resizeMode="cover"
+              style={styles.avtarImage}
+            />
+          ) : (
+            <View style={styles.initialsCircle}>
+              <Text style={styles.initialsText}>
+                {getInitials(employee?.full_name)}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -362,12 +371,12 @@ const styles = StyleSheet.create({
   },
   notificationCount: {color: Colors.white},
 
-  userInfo: {overflow: 'hidden', borderRadius: 15},
+  userInfo: {overflow: 'hidden', borderRadius: '50%'},
   avtarImage: {
-    width: width * 0.12,
+    width: 50,
     height: 50,
+    objectFit: 'cover',
   },
-
   tabButton: {
     width: '100%',
     justifyContent: 'center',
@@ -386,5 +395,19 @@ const styles = StyleSheet.create({
   profileIconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  initialsCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initialsText: {
+    fontFamily: Fonts.medium,
+    fontSize: 20,
+    color: Colors.white,
+    lineHeight: 12,
   },
 });

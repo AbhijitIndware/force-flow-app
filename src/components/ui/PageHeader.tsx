@@ -13,6 +13,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import {Size} from '../../utils/fontSize';
 import {useNavigation} from '@react-navigation/native';
 import {useAppSelector} from '../../store/hook';
+import {getInitials} from '../../utils/utils';
 const {width} = Dimensions.get('window');
 type Props = {
   title: string;
@@ -33,7 +34,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
 
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
-    : require('../../assets/images/user.jpg');
+    : null;
 
   return (
     <View style={[styles.headerTitleContainer, boxShadow]}>
@@ -60,11 +61,19 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.userInfo} onPress={() => handleClick()}>
-          <Image
-            source={profileImageSource}
-            resizeMode="cover"
-            style={styles.avtarImage}
-          />
+          {profileImageSource ? (
+            <Image
+              source={profileImageSource}
+              resizeMode="cover"
+              style={styles.avtarImage}
+            />
+          ) : (
+            <View style={styles.initialsCircle}>
+              <Text style={styles.initialsText}>
+                {getInitials(employee?.full_name)}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -138,9 +147,24 @@ const styles = StyleSheet.create({
   },
   notificationCount: {color: Colors.white},
 
-  userInfo: {overflow: 'hidden', borderRadius: 15},
+  userInfo: {overflow: 'hidden', borderRadius: '50%'},
   avtarImage: {
-    width: width * 0.12,
+    width: 50,
     height: 50,
+    objectFit: 'cover',
+  },
+  initialsCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initialsText: {
+    fontFamily: Fonts.medium,
+    fontSize: 20,
+    color: Colors.white,
+    lineHeight: 12,
   },
 });

@@ -26,6 +26,7 @@ import Toast from 'react-native-toast-message';
 import {persistor} from '../../../store/store';
 import {baseApi} from '../../../features/base/base-api';
 import {dropdownApi} from '../../../features/dropdown/dropdown-api';
+import {getInitials} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -69,7 +70,7 @@ const ProfileScreen = ({navigation}: Props) => {
 
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
-    : require('../../../assets/images/user.jpg');
+    : null;
 
   return (
     <SafeAreaView
@@ -92,11 +93,19 @@ const ProfileScreen = ({navigation}: Props) => {
           <View style={styles.headerSec}>
             <View style={styles.salesHeaderData}>
               <View style={styles.userInfo}>
-                <Image
-                  source={profileImageSource}
-                  resizeMode="cover"
-                  style={styles.avtarImage}
-                />
+                {profileImageSource ? (
+                  <Image
+                    source={profileImageSource}
+                    resizeMode="cover"
+                    style={styles.avtarImage}
+                  />
+                ) : (
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(user?.full_name)}
+                    </Text>
+                  </View>
+                )}
               </View>
               <Text
                 style={{
@@ -376,12 +385,27 @@ const styles = StyleSheet.create({
 
   userInfo: {
     overflow: 'hidden',
-    borderRadius: 15,
+    borderRadius: '50%',
     borderWidth: 4,
     borderColor: Colors.white,
   },
   avtarImage: {
     height: 100,
     width: 100,
+    objectFit: 'cover',
+  },
+  initialsCircle: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initialsText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 36,
+    color: Colors.white,
+    lineHeight: 42,
   },
 });

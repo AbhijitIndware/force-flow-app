@@ -46,6 +46,7 @@ export interface Employee {
   branch: string | null;
   image: string;
   image_base64: string;
+  full_name?: string;
 }
 
 export interface EmployeeProfileResponse {
