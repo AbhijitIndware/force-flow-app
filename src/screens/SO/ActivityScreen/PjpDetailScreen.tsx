@@ -35,10 +35,10 @@ const PjpDetailScreen = ({navigation, route}: Props) => {
     : false;
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
-      <PageHeader title="Pjp Detail" navigation={() => navigation.goBack()} />
+      <PageHeader title="PJP Detail" navigation={() => navigation.goBack()} />
       {/* Header with Edit */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Pjp Detail</Text>
+        <Text style={styles.headerTitle}>PJP Detail</Text>
         {!isPastDate && (
           <TouchableOpacity
             onPress={() =>
