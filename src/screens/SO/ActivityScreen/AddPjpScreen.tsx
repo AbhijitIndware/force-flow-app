@@ -9,15 +9,15 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useEffect, useRef, useState} from 'react';
-import {useFormik} from 'formik';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { useEffect, useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {dailyPjpSchema} from '../../../types/schema';
-import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { dailyPjpSchema } from '../../../types/schema';
+import { useGetEmployeeQuery } from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
   useGetDailyPjpByIdQuery,
@@ -26,13 +26,13 @@ import {
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
-import {useAppSelector} from '../../../store/hook';
-import {PjpDailyStore} from '../../../types/baseType';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {uniqueByValue} from '../../../utils/utils';
+import { useAppSelector } from '../../../store/hook';
+import { PjpDailyStore } from '../../../types/baseType';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { uniqueByValue } from '../../../utils/utils';
 import MinStoresWarningModal from '../../../components/SO/Activity/Pjp/MinStoresWarningModal';
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'AddPjpScreen'
@@ -46,7 +46,7 @@ type Props = {
 const initial = {
   date: new Date().toISOString().split('T')[0],
   employee: '',
-  stores: [{store: ''}],
+  stores: [{ store: '' }],
 };
 
 // helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
@@ -61,7 +61,7 @@ const mapPjpDetailToForm = (detail: PjpDailyStore): any => {
 };
 
 // 👨‍💼 Unique by Employee ID (or name)
-export const uniqueByEmployeeName = <T extends {name: string}>(arr: T[]) => {
+export const uniqueByEmployeeName = <T extends { name: string }>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(emp => {
     if (seen.has(emp.name)) return false;
@@ -71,7 +71,7 @@ export const uniqueByEmployeeName = <T extends {name: string}>(arr: T[]) => {
 };
 
 // 🏬 Unique by Store Name (or code)
-export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
+export const uniqueByStoreName = <T extends { name: string }>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(store => {
     if (seen.has(store.name)) return false;
@@ -80,8 +80,8 @@ export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
   });
 };
 
-const AddPjpScreen = ({navigation, route}: Props) => {
-  const {id} = route?.params ?? {};
+const AddPjpScreen = ({ navigation, route }: Props) => {
+  const { id } = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(initial);
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -98,20 +98,20 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   /** ─── Employee State ─────────────────────────────── */
   const [empPage, setEmpPage] = useState(1);
   const [employeeListData, setEmployeeListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [employeeOgData, setEmployeeOgData] = useState<any[]>([]);
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [loadingEmpMore, setLoadingEmpMore] = useState(false);
 
   /** ─── Queries ─────────────────────────────────────── */
-  const {data: employeeData, isFetching: fetchingEmp} = useGetEmployeeQuery({
+  const { data: employeeData, isFetching: fetchingEmp } = useGetEmployeeQuery({
     page: String(empPage),
     page_size: '20',
     name: employeeSearch,
   });
 
-  const {data: pjpDetails} = useGetDailyPjpByIdQuery(id, {
+  const { data: pjpDetails } = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,
   });
 
@@ -120,7 +120,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   /** ─── Transform helpers ───────────────────────────── */
   const transformToDropdownList = (arr: any[] = []) =>
-    arr.map(item => ({label: item.store_name, value: item.name}));
+    arr.map(item => ({ label: item.store_name, value: item.name }));
 
   const transformEmployeeList = (arr: any[] = []) =>
     arr.map(item => ({
@@ -146,7 +146,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         setLoading(true);
 
         // if record exists → update, else → add
-        const payload = {data: formValues};
+        const payload = { data: formValues };
         let res;
 
         if (id) {
@@ -272,9 +272,9 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   };
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title={id ? 'Edit PJP' : 'Add Pjp'}
+        title={id ? 'Edit PJP' : 'Add PJP'}
         navigation={() => navigation.goBack()}
       />
       {showDuplicatePjp && (
@@ -288,7 +288,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
             borderWidth: 1,
             borderColor: '#FFE69C',
           }}>
-          <Text style={{color: '#856404', marginBottom: 10}}>
+          <Text style={{ color: '#856404', marginBottom: 10 }}>
             A PJP already exists for the selected employee and date.
           </Text>
 
@@ -306,7 +306,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
                 id: duplicatePjpId as string, // 👈 open in edit mode
               });
             }}>
-            <Text style={{color: Colors.white, fontWeight: '600'}}>
+            <Text style={{ color: Colors.white, fontWeight: '600' }}>
               Modify Existing PJP
             </Text>
           </TouchableOpacity>
@@ -314,7 +314,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
       )}
 
       <AddPjpForm
-        {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
+        {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
         scrollY={scrollY}
         /** 👇 Employee-related props */
         employeeList={employeeListData}
@@ -323,13 +323,13 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         setEmployeeSearch={setEmployeeSearch}
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
-        /** 👇 Store-related props */
-        // storeList={storeListData}
-        // storeOgData={storeOgData}
-        // storeSearch={storeSearch}
-        // setStoreSearch={setStoreSearch}
-        // onLoadMoreStores={handleLoadMoreStores}
-        // loadingMoreStores={loadingStoreMore}
+      /** 👇 Store-related props */
+      // storeList={storeListData}
+      // storeOgData={storeOgData}
+      // storeSearch={storeSearch}
+      // setStoreSearch={setStoreSearch}
+      // onLoadMoreStores={handleLoadMoreStores}
+      // loadingMoreStores={loadingStoreMore}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}
@@ -353,7 +353,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           height: 80,
         }}>
         <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
+          style={[styles.submitBtn, loading && { opacity: 0.7 }]}
           onPress={() => {
             if (values.stores.length < 15) setShowMinStoreModal(true);
             else handleSubmit();
