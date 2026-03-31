@@ -49,9 +49,9 @@ const CATEGORY_OPTIONS = [
   { label: 'Category C', value: 'C' },
 ];
 const DURATION_OPTIONS = [
-  { label: 'Last Week', value: 'A' },
-  { label: 'Last Month', value: 'B' },
-  { label: 'Last Year', value: 'C' },
+  { label: 'Last week', value: 'A' },
+  { label: 'Last month', value: 'B' },
+  { label: 'Last six months', value: 'C' },
 ];
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -945,15 +945,31 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   if (isError || !data?.message?.success) {
     return (
       <View style={styles.centeredOuter}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 16, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <ReusableDropdown
-            label="Select category type"
-            field="category1"
-            value={category1}
-            data={CATEGORY_OPTIONS}
-            onChange={setCategory1}
-          />
-        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          {DURATION_OPTIONS.map(opt => (
+            <TouchableOpacity
+              key={opt.value}
+              onPress={() => setCategory1(opt.value)}
+              style={[
+                { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, marginRight: 8 },
+                category1 === opt.value
+                  ? { backgroundColor: C.accent, borderColor: C.accent }
+                  : { backgroundColor: C.bg, borderColor: C.border },
+              ]}>
+              <Text style={{
+                color: category1 === opt.value ? C.surface : C.text,
+                fontSize: 14,
+                fontWeight: category1 === opt.value ? '600' : '400',
+              }}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
         <DateSelectorBar
           label={toDisplayDate(selectedDate)}
           onPress={openPicker}
@@ -989,14 +1005,31 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
           />
         }>
         {/* ── Date selector bar ── */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 16, backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <ReusableDropdown
-            label="Duration"
-            field="category1"
-            value={category1}
-            data={DURATION_OPTIONS}
-            onChange={setCategory1}
-          />
+        <View style={{ backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+            {DURATION_OPTIONS.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => setCategory1(opt.value)}
+                style={[
+                  { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, marginRight: 8 },
+                  category1 === opt.value
+                    ? { backgroundColor: C.accent, borderColor: C.accent }
+                    : { backgroundColor: C.bg, borderColor: C.border },
+                ]}>
+                <Text style={{
+                  color: category1 === opt.value ? C.surface : C.text,
+                  fontSize: 14,
+                  fontWeight: category1 === opt.value ? '600' : '400',
+                }}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
         <DateSelectorBar
           label={toDisplayDate(selectedDate)}
