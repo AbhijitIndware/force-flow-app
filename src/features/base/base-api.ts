@@ -558,11 +558,11 @@ export const baseApi = createApi({
     // ─── ASM DASHBOARD APIs ───────────────────────────────────────────────────
  
     // Legacy combined dashboard endpoint
-    getAsmDashboard: builder.query<
+      getAsmDashboard: builder.query<
       AsmDashboardResponse,
-      AsmDashboardParams & {store_type?: string; zone?: string}
+      AsmDashboardParams & {store_type?: string; zone?: string; view_type?: string}
     >({
-      query: ({date, employee, store_type, zone}) => ({
+      query: ({date, employee, store_type, zone, view_type}) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
         method: 'GET',
         params: {
@@ -570,6 +570,7 @@ export const baseApi = createApi({
           employee,
           ...(store_type ? {store_type} : {}),
           ...(zone ? {zone} : {}),
+          ...(view_type ? {view_type} : {}),
         },
       }),
     }),
@@ -987,9 +988,8 @@ export const baseApi = createApi({
       {order_id: string}
     >({
       query: ({order_id}) => ({
-        url: `/method/salesforce_management.api.asm_dashboard.api_get_order_detail`,
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_order_detail?order_id=${order_id}`,
         method: 'GET',
-        params: {order_id},
       }),
     }),
  

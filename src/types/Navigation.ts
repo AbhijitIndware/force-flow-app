@@ -66,6 +66,8 @@ export type SoAppStackParamList = {
     employee_id: string;
     date: string;
   };
+  AllOrdersScreen:{ date:string, employee:string};
+  OrderDetailScreen: {order_id: string};
 };
 
 export type menuType = {

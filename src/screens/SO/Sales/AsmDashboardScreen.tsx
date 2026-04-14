@@ -33,6 +33,7 @@ import {
   X,
   LucideIcon,
   Building2,
+  ChevronRight,
 } from 'lucide-react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -200,8 +201,10 @@ export interface AsmDashboardResponse {
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const fmt = (n: number): string =>
-  `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const fmt = (n?: number): string => {
+  if (n === undefined || n === null) return '₹0';
+  return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+};
 
 const getInitials = (name: string): string =>
   name
@@ -478,7 +481,7 @@ const KpiGrid: React.FC<KpiGridProps> = ({ metrics: m }) => (
       <KpiCard
         icon={IndianRupee}
         label="Order Value"
-        value={`₹${(m.order_value / 1000).toFixed(1)}K`}
+        value={`₹${m.order_value}`}
         sub={`${m.orders_delivered} delivered`}
         color={C.purple}
         bgColor={C.purpleSoft}
@@ -532,10 +535,10 @@ const StorePlanning: React.FC<StorePlanningProps> = ({ planning: p }) => (
       <View style={styles.planLabelRow}>
         <Text style={styles.planLabel}>Completion Rate</Text>
         <Text style={[styles.planLabel, { color: C.green, fontWeight: '700' }]}>
-          {p.completion_rate.toFixed(0)}%
+          {(p.completion_rate ?? 0).toFixed(0)}%
         </Text>
       </View>
-      <ProgressBar value={p.completion_rate} color={C.green} />
+      <ProgressBar value={p.completion_rate ?? 0} color={C.green} />
     </View>
     <View style={{ marginTop: 10 }}>
       <View style={styles.planLabelRow}>
@@ -594,15 +597,32 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
 );
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
-const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => (
-  <View style={[styles.orderCard, index > 0 && { marginTop: 10 }]}>
-    <View style={styles.orderStripe} />
-    <View style={{ flex: 1 }}>
-      <View style={styles.orderTop}>
-        <View style={styles.orderIdRow}>
-          <Package size={12} color={C.accent} strokeWidth={2} />
-          <Text style={styles.orderId}>{order.order_id}</Text>
-        </View>
+interface OrderCardProps {
+  order: AsmOrderStatus;
+  index: number;
+  navigation: any
+}
+
+export const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }) => (
+  <TouchableOpacity
+    activeOpacity={0.7}
+    onPress={() => navigation?.navigate('OrderDetailScreen', { order_id: order.order_id })}
+    style={[styles.orderCard, index > 0 && { marginTop: 6 }]}>
+    {/* Left accent stripe */}
+    <View
+      style={[
+        styles.orderStripe,
+        {
+          backgroundColor:
+            order.delivery_display_status === 'Pending' ? C.amber : C.green,
+        },
+      ]}
+    />
+    {/* Content */}
+    <View style={styles.orderBody}>
+      {/* Order ID + status badge */}
+      <View style={styles.orderTopRow}>
+        <Text style={styles.orderId}>{order.order_id}</Text>
         <View
           style={[
             styles.statusTag,
@@ -611,10 +631,6 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => (
                 order.delivery_display_status === 'Pending'
                   ? C.amberSoft
                   : C.greenSoft,
-              borderColor:
-                order.delivery_display_status === 'Pending'
-                  ? `${C.amber}40`
-                  : `${C.green}40`,
             },
           ]}>
           <Text
@@ -631,50 +647,57 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => (
           </Text>
         </View>
       </View>
-      <Text style={styles.orderStore}>{order.store}</Text>
-      <View style={styles.orderMeta}>
-        <View style={styles.orderMetaItem}>
-          <Clock size={11} color={C.textMuted} strokeWidth={2} />
-          <Text style={styles.orderMetaText}>{order.time}</Text>
-        </View>
-        <View style={styles.orderMetaItem}>
-          <Users size={11} color={C.textMuted} strokeWidth={2} />
-          <Text style={styles.orderMetaText}>{order.salesperson}</Text>
-        </View>
-        <View style={styles.orderMetaItem}>
-          <ShoppingCart size={11} color={C.textMuted} strokeWidth={2} />
-          <Text style={styles.orderMetaText}>{order.items} items</Text>
-        </View>
-      </View>
-      <View style={styles.orderFooter}>
+
+      {/* Store + value + time in one row */}
+      <View style={styles.orderBottomRow}>
+        <Text style={styles.orderStore} numberOfLines={1}>
+          {order.store}
+        </Text>
         <Text style={styles.orderValue}>{fmt(order.order_value)}</Text>
-        <View style={styles.creditTag}>
-          <Text style={styles.creditTagText}>{order.payment}</Text>
-        </View>
       </View>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 interface OrdersSectionProps {
   orders: AsmOrderStatus[];
+  navigation: any;
+  date: any
 }
-const OrdersSection: React.FC<OrdersSectionProps> = ({ orders }) => (
-  <View>
-    <SectionHeader
-      icon={ShoppingCart}
-      title="Today's Orders"
-      accent={C.purple}
-    />
-    {orders.length === 0 ? (
-      <Text style={styles.emptyText}>No orders today</Text>
-    ) : (
-      orders.map((order, i) => (
-        <OrderCard key={order.order_id} order={order} index={i} />
-      ))
-    )}
-  </View>
-);
+// OrdersSection.tsx
+const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, navigation }) => {
+  const preview = orders.slice(0, 3);
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
+  return (
+    <View>
+      <SectionHeader icon={ShoppingCart} title="Today's Orders" accent={C.purple} />
+      {orders.length === 0 ? (
+        <Text style={styles.emptyText}>No orders today</Text>
+      ) : (
+        <>
+          {preview.map((order, i) => (
+            <OrderCard key={order.order_id} order={order} index={i} navigation={navigation} />
+          ))}
+          {orders.length > 3 && (
+            <TouchableOpacity
+              style={styles.viewAllBtn}
+              onPress={() =>
+                navigation.navigate('AllOrdersScreen', { date: date, employee: employee?.id })
+              }>
+              <Text style={styles.viewAllText}>
+                View all {orders.length} orders
+              </Text>
+              <ChevronRight size={14} color={C.textMuted} />
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+    </View>
+  );
+};
 
 // ─── Team Performance ─────────────────────────────────────────────────────────
 // const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member }) => {
@@ -840,14 +863,6 @@ interface TeamSectionProps {
   selectedDateStr: string;
 }
 
-interface TeamSectionProps {
-  team: AsmTeamMember[];
-  metrics: AsmKeyMetrics;
-  navigation: any;
-  // Pass the currently selected dashboard date as a YYYY-MM-DD string
-  selectedDateStr: string;
-}
-
 const TeamSection: React.FC<TeamSectionProps> = ({
   team,
   metrics,
@@ -896,7 +911,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     <Text style={styles.attendanceLabel}>
       {metrics.attendance_rate}% attendance today
     </Text>
-    {team.map(member => (
+    {team?.map(member => (
       <TeamMemberCard
         key={member.employee_id}
         member={member}
@@ -940,14 +955,12 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     {
       date: toApiDate(selectedDate),
       employee: employee?.id as string,
-      // Optional filter — only sent when user picks a store type
+      // Optional filters
       ...(selectedStoreType ? { store_type: selectedStoreType } : {}),
+      ...(category1 ? { view_type: category1 } : {}),
     },
     { refetchOnMountOrArgChange: true, skip: !employee?.id },
   );
-  console.log("🚀 ~ AsmDashboard ~ isError:", isError, error)
-  console.log("🚀 ~ AsmDashboard ~ data:", data)
-
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -1047,49 +1060,54 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   // ── Error ─────────────────────────────────────────────────────────────────
   if (isError || !data?.message?.success) {
     return (
-      <View style={styles.centeredOuter}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
+      <View style={styles.root}>
+        <StatusBar barStyle="dark-content" backgroundColor={C.surface} />
+        <View
           style={{
             backgroundColor: C.surface,
             borderBottomWidth: 1,
             borderBottomColor: C.border,
-          }}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
-          {DURATION_OPTIONS.map(opt => (
-            <TouchableOpacity
-              key={opt.value}
-              onPress={() => setCategory1(opt.value)}
-              style={[
-                {
-                  paddingHorizontal: 16,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  marginRight: 8,
-                },
-                category1 === opt.value
-                  ? { backgroundColor: C.accent, borderColor: C.accent }
-                  : { backgroundColor: C.bg, borderColor: C.border },
-              ]}>
-              <Text
-                style={{
-                  color: category1 === opt.value ? C.surface : C.text,
-                  fontSize: 14,
-                  fontWeight: category1 === opt.value ? '600' : '400',
-                }}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+          }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+            {DURATION_OPTIONS.map(opt => (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => setCategory1(opt.value)}
+                style={[
+                  {
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    marginRight: 8,
+                  },
+                  category1 === opt.value
+                    ? { backgroundColor: C.accent, borderColor: C.accent }
+                    : { backgroundColor: C.bg, borderColor: C.border },
+                ]}>
+                <Text
+                  style={{
+                    color: category1 === opt.value ? C.surface : C.text,
+                    fontSize: 14,
+                    fontWeight: category1 === opt.value ? '600' : '400',
+                  }}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
         <DateSelectorBar
           label={toDisplayDate(selectedDate)}
           onPress={openPicker}
         />
         <View style={styles.centered}>
-          <Text style={styles.errorText}>Failed to load dashboard</Text>
+          <Text style={styles.errorText}>
+            {(data?.message as any)?.error || 'Failed to load dashboard'}
+          </Text>
           <TouchableOpacity onPress={refetch} style={styles.retryBtn}>
             <Text style={styles.retryBtnText}>Retry</Text>
           </TouchableOpacity>
@@ -1183,7 +1201,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
           <View style={styles.divider} />
           <BusinessSummary business={msg.business_generated} />
           <View style={styles.divider} />
-          <OrdersSection orders={msg.order_status} />
+          <OrdersSection orders={msg.order_status} navigation={navigation} date={toApiDate(selectedDate)} />
           <View style={styles.divider} />
           <TeamSection
             team={msg.team_performance}
@@ -1460,73 +1478,65 @@ const styles = StyleSheet.create({
 
   // Orders
   orderCard: {
+    flexDirection: 'row',
     backgroundColor: C.card,
-    borderRadius: 14,
+    borderRadius: 10,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: C.border,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    paddingRight: 14,
-    paddingVertical: 14,
+    elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowRadius: 2,
   },
   orderStripe: {
-    width: 4,
-    backgroundColor: C.accent,
-    borderRadius: 2,
-    marginRight: 12,
+    width: 3,
   },
-  orderTop: {
+  orderBody: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 4,
+  },
+  orderTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
   },
-  orderIdRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   orderId: {
     color: C.amber,
-    fontSize: 10,
-    fontWeight: '600',
-    letterSpacing: 0.3,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   statusTag: {
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
-  statusTagText: { fontSize: 9, fontWeight: '700' },
-  orderStore: { color: C.text, fontSize: 13, fontWeight: '700', marginBottom: 8 },
-  orderMeta: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 10,
-    flexWrap: 'wrap',
+  statusTagText: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
-  orderMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  orderMetaText: { color: C.textMuted, fontSize: 10 },
-  orderFooter: {
+  orderBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: C.border,
-    paddingTop: 10,
   },
-  orderValue: { color: C.text, fontSize: 16, fontWeight: '800' },
-  creditTag: {
-    backgroundColor: C.purpleSoft,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: `${C.purple}30`,
+  orderStore: {
+    color: C.text,
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+    marginRight: 8,
   },
-  creditTagText: { color: C.purple, fontSize: 10, fontWeight: '700' },
+  orderValue: {
+    color: C.text,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   emptyText: {
     color: C.textMuted,
     fontSize: 13,
@@ -1672,4 +1682,29 @@ const styles = StyleSheet.create({
     backgroundColor: C.accent,
   },
   modalConfirmText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+
+  // emptyText: {
+  //   fontSize: 13,
+  //   color: C.textMuted,
+  //   textAlign: 'center',
+  //   paddingVertical: 20,
+  // },
+
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    backgroundColor: C.card,
+  },
+  viewAllText: {
+    fontSize: 13,
+    color: C.textMuted,
+  },
 });
+

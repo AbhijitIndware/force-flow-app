@@ -1,11 +1,10 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 import ReusableDropdownV3 from '../../ui-lib/reusable-dropdown-v3';
 import { useGetAsmZonesQuery } from '../../../features/base/base-api';
 import { useAppSelector } from '../../../store/hook';
 
 interface AsmStoreTypeComponentProps {
-  // Controlled: parent owns the value so it can forward it to the dashboard API
   value: string;
   onChange: (val: string) => void;
 }
@@ -20,15 +19,25 @@ const AsmStoreTypeComponent = ({ value, onChange }: AsmStoreTypeComponentProps) 
     { skip: !employee?.id },
   );
 
-  // Map API response { name, store_type } → { label, value }
   const storeTypeOptions =
     data?.message?.store_types?.map(item => ({
       label: item.store_type,
       value: item.name,
     })) ?? [];
 
+  // ✅ Clear selected store type
+  const handleClear = () => {
+    onChange('');
+  };
+
   return (
     <View style={styles.container}>
+      {/* ✅ Show button only when value is selected */}
+      {value ? (
+        <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
+          <Text style={styles.clearText}>Remove Selection</Text>
+        </TouchableOpacity>
+      ) : null}
       <ReusableDropdownV3
         label="Store Type"
         field="store_type"
@@ -36,6 +45,7 @@ const AsmStoreTypeComponent = ({ value, onChange }: AsmStoreTypeComponentProps) 
         data={storeTypeOptions}
         onChange={onChange}
       />
+
     </View>
   );
 };
@@ -44,4 +54,15 @@ export default AsmStoreTypeComponent;
 
 const styles = StyleSheet.create({
   container: {},
+
+  clearBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-end',
+  },
+
+  clearText: {
+    color: '#FF4D4F',
+    fontSize: 14,
+    fontWeight: '800',
+  },
 });
