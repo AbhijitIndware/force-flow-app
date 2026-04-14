@@ -368,12 +368,13 @@ const DateSelectorBar: React.FC<DateSelectorBarProps> = ({ label, onPress }) => 
 interface DashboardHeaderProps {
   formattedDate: string;
   overview: AsmOverview;
+  company_emp_id: string
 }
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   formattedDate,
   overview,
+  company_emp_id
 }) => {
-  const empIdShort = overview.employee_id;
   return (
     <View style={styles.header}>
       <View style={styles.headerAccentBar} />
@@ -421,7 +422,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </View>
         <View style={styles.headerIdBox}>
           <Text style={styles.headerIdLabel}>EMP ID</Text>
-          <Text style={styles.headerIdVal}>{empIdShort}</Text>
+          <Text style={styles.headerIdVal}>{company_emp_id}</Text>
         </View>
       </View>
     </View>
@@ -938,6 +939,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  console.log("🚀 ~ AsmDashboard ~ employee:", employee)
 
   // ── Date state ────────────────────────────────────────────────────────────
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -1187,6 +1189,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
         <DashboardHeader
           formattedDate={msg.formatted_date}
           overview={msg.asm_overview}
+          company_emp_id={employee?.company_emp_id as string}
         />
 
         <View style={styles.body}>
