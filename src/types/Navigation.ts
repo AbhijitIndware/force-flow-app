@@ -68,6 +68,7 @@ export type SoAppStackParamList = {
   };
   AllOrdersScreen:{ date:string, employee:string};
   OrderDetailScreen: {order_id: string};
+  TeamAttendanceListScreen: { apiParams: any; today: string };
 };
 
 export type menuType = {

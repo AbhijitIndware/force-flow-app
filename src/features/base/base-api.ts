@@ -1,6 +1,6 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import {baseQueryWithAuthGuard} from '../utility';
-import {apiBaseUrl} from '../apiBaseUrl';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuthGuard } from '../utility';
+import { apiBaseUrl } from '../apiBaseUrl';
 import {
   AttendanceResponse,
   ICopyPjpRequest,
@@ -49,8 +49,8 @@ import {
   AsmDashboardParams,
   AsmDashboardResponse,
 } from '../../types/baseType';
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {PaginationInfo} from '../../types/Navigation';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PaginationInfo } from '../../types/Navigation';
 
 // Base api calling ---
 export const baseApi = createApi({
@@ -108,7 +108,7 @@ export const baseApi = createApi({
       RSoList,
       Pick<PaginationInfo, 'page' | 'page_size'>
     >({
-      query: ({page, page_size}) => ({
+      query: ({ page, page_size }) => ({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.get_sales_orders_list?page=${page}&page_size=${page_size}`,
         method: 'GET',
       }),
@@ -168,9 +168,9 @@ export const baseApi = createApi({
     //Purchase Order
     getPurchaseOrderList: builder.query<
       RPoList,
-      Pick<PaginationInfo, 'page' | 'page_size'> & {status: string}
+      Pick<PaginationInfo, 'page' | 'page_size'> & { status: string }
     >({
-      query: ({page, page_size, status}) => ({
+      query: ({ page, page_size, status }) => ({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.get_purchase_orders_list`,
         method: 'GET',
         params: {
@@ -232,8 +232,8 @@ export const baseApi = createApi({
       }),
       providesTags: ['PO', 'SO'],
     }),
-    getProdCount: builder.query<RProdCount, {date: string}>({
-      query: ({date}) => ({
+    getProdCount: builder.query<RProdCount, { date: string }>({
+      query: ({ date }) => ({
         url: `/method/salesforce_management.mobile_app_apis.pjp_apis.productive_call.get_prod_counts`,
         method: 'GET',
         params: {
@@ -251,7 +251,7 @@ export const baseApi = createApi({
         date?: string;
       }
     >({
-      query: ({page, page_size, status, date}) => ({
+      query: ({ page, page_size, status, date }) => ({
         url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_daily_stores_list`,
         method: 'GET',
         params: {
@@ -308,13 +308,13 @@ export const baseApi = createApi({
       invalidatesTags: ['Distributor'],
     }),
     checkStoreName: builder.query<
-      {message: {exists: boolean; message?: string}},
+      { message: { exists: boolean; message?: string } },
       string
     >({
       query: store_name => ({
         url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.check_store_name',
         method: 'GET',
-        params: {store_name},
+        params: { store_name },
       }),
     }),
     addStore: builder.mutation<any, IAddStorePayload>({
@@ -374,9 +374,9 @@ export const baseApi = createApi({
     }),
     getDistributorList: builder.query<
       RDistributorList,
-      {page: number; page_size: number; status: string}
+      { page: number; page_size: number; status: string }
     >({
-      query: ({page, page_size, status}) => ({
+      query: ({ page, page_size, status }) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_by_owner`,
         method: 'GET',
         params: {
@@ -439,7 +439,7 @@ export const baseApi = createApi({
       AttendanceResponse,
       Pick<PaginationInfo, 'page' | 'page_size'>
     >({
-      query: ({page_size, page}) => ({
+      query: ({ page_size, page }) => ({
         url: `/method/salesforce_management.mobile_app_apis.attendence.get_attendence.get_attendance_records`,
         method: 'GET',
         params: {
@@ -470,8 +470,8 @@ export const baseApi = createApi({
     }),
 
     //Sales
-    getSalesRepots: builder.query<RSalesReport, {view_type: string}>({
-      query: ({view_type}) => ({
+    getSalesRepots: builder.query<RSalesReport, { view_type: string }>({
+      query: ({ view_type }) => ({
         url: `/method/salesforce_management.mobile_app_apis.report_apis.report_apis.get_daily_secondary_report`,
         method: 'GET',
         params: {
@@ -488,11 +488,11 @@ export const baseApi = createApi({
       }),
       providesTags: ['VC'],
     }),
-    getVisibilityClaimDetail: builder.query<any, {claim_id: string}>({
-      query: ({claim_id}) => ({
+    getVisibilityClaimDetail: builder.query<any, { claim_id: string }>({
+      query: ({ claim_id }) => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.get_visibility_claim_details`,
         method: 'GET',
-        params: {claim_id},
+        params: { claim_id },
       }),
       providesTags: ['VC'],
     }),
@@ -504,7 +504,7 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['VC'],
     }),
-    submitVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+    submitVisibilityClaim: builder.mutation<any, { claim_id: string }>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.submit_visibility_claim`,
         method: 'POST',
@@ -512,7 +512,7 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['VC'],
     }),
-    cancelVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+    cancelVisibilityClaim: builder.mutation<any, { claim_id: string }>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.cancel_visibility_claim`,
         method: 'POST',
@@ -556,43 +556,43 @@ export const baseApi = createApi({
     }),
 
     // ─── ASM DASHBOARD APIs ───────────────────────────────────────────────────
- 
+
     // Legacy combined dashboard endpoint
-      getAsmDashboard: builder.query<
+    getAsmDashboard: builder.query<
       AsmDashboardResponse,
-      AsmDashboardParams & {store_type?: string; zone?: string; view_type?: string}
+      AsmDashboardParams & { store_type?: string; zone?: string; view_type?: string }
     >({
-      query: ({date, employee, store_type, zone, view_type}) => ({
+      query: ({ date, employee, store_type, zone, view_type }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
         method: 'GET',
         params: {
           date,
           employee,
-          ...(store_type ? {store_type} : {}),
-          ...(zone ? {zone} : {}),
-          ...(view_type ? {view_type} : {}),
+          ...(store_type ? { store_type } : {}),
+          ...(zone ? { zone } : {}),
+          ...(view_type ? { view_type } : {}),
         },
       }),
     }),
- 
+
     // API 1 — Get Zones & Store Types (filter dropdowns)
     getAsmZones: builder.query<
       {
         message: {
           success: boolean;
           zones: string[];
-          store_types: {name: string; store_type: string}[];
+          store_types: { name: string; store_type: string }[];
         };
       },
-      {employee: string}
+      { employee: string }
     >({
-      query: ({employee}) => ({
+      query: ({ employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_zones`,
         method: 'GET',
-        params: {employee},
+        params: { employee },
       }),
     }),
- 
+
     // API 2 — ASM Overview Card
     getAsmOverview: builder.query<
       {
@@ -625,15 +625,15 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string; zone?: string; store_type?: string}
+      { date: string; employee: string; zone?: string; store_type?: string }
     >({
-      query: ({date, employee, zone, store_type}) => ({
+      query: ({ date, employee, zone, store_type }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_asm_overview`,
         method: 'GET',
-        params: {date, employee, zone, store_type},
+        params: { date, employee, zone, store_type },
       }),
     }),
- 
+
     // API 3 — Key Metrics Cards
     getAsmKeyMetrics: builder.query<
       {
@@ -658,33 +658,33 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_key_metrics`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 4 — Store Created Card
     getAsmStoreCreated: builder.query<
       {
         message: {
           success: boolean;
           date: string;
-          data: {created: number; successful: number};
+          data: { created: number; successful: number };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_created`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 5 — Store Planning Section
     getAsmStorePlanning: builder.query<
       {
@@ -700,15 +700,15 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_planning`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 6 — Business Generated Section
     getAsmBusinessGenerated: builder.query<
       {
@@ -726,15 +726,15 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_business_generated`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 7 — Today's Orders List
     getAsmOrderStatus: builder.query<
       {
@@ -757,15 +757,15 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_order_status`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 8 — Team Performance List
     getAsmTeamPerformance: builder.query<
       {
@@ -798,15 +798,15 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_team_performance`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 9 — Attendance Tab
     getAsmAttendanceTab: builder.query<
       {
@@ -831,15 +831,24 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      {
+        employee: string;
+        month?: number;
+        year?: number;
+        from_date?: string;
+        to_date?: string;
+        from_month?: number;
+        to_month?: number;
+        date?: string;
+      }
     >({
-      query: ({date, employee}) => ({
+      query: (params) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_attendance_tab`,
         method: 'GET',
-        params: {date, employee},
+        params,
       }),
     }),
- 
+
     // API 10 — Daily PJP Tab
     getAsmDailyPjpTab: builder.query<
       {
@@ -877,21 +886,21 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_daily_pjp_tab`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
- 
+
     // API 11 — PJP Target vs Achievement (Monthly)
     getAsmPjpTargetVsAchievement: builder.query<
       {
         message: {
           success: boolean;
-          period: {month: number; year: number; from: string; to: string};
+          period: { month: number; year: number; from: string; to: string };
           summary: {
             total_planned: number;
             total_visited: number;
@@ -909,21 +918,29 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; month: number; year: number}
+      {
+        employee: string;
+        month?: number;
+        year?: number;
+        from_date?: string;
+        to_date?: string;
+        from_month?: number;
+        to_month?: number;
+      }
     >({
-      query: ({employee, month, year}) => ({
+      query: (params) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_pjp_target_vs_achievement`,
         method: 'GET',
-        params: {employee, month, year},
+        params,
       }),
     }),
- 
+
     // API 12 — Target vs Achievement — PO vs SO (Monthly)
     getAsmTargetVsAchievement: builder.query<
       {
         message: {
           success: boolean;
-          period: {month: number; year: number; from: string; to: string};
+          period: { month: number; year: number; from: string; to: string };
           summary: {
             total_target: number;
             total_so: number;
@@ -941,15 +958,23 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; month: number; year: number}
+      {
+        employee: string;
+        month?: number;
+        year?: number;
+        from_date?: string;
+        to_date?: string;
+        from_month?: number;
+        to_month?: number;
+      }
     >({
-      query: ({employee, month, year}) => ({
+      query: (params) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_target_vs_achievement`,
         method: 'GET',
-        params: {employee, month, year},
+        params,
       }),
     }),
- 
+
     // API 13 — Order Detail Page
     getAsmOrderDetail: builder.query<
       {
@@ -985,14 +1010,14 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {order_id: string}
+      { order_id: string }
     >({
-      query: ({order_id}) => ({
+      query: ({ order_id }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_order_detail?order_id=${order_id}`,
         method: 'GET',
       }),
     }),
- 
+
     // API 14 — Team Detail Page
     getAsmTeamDetail: builder.query<
       {
@@ -1007,7 +1032,7 @@ export const baseApi = createApi({
             check_in_time: string | null;
             check_out_time: string | null;
           };
-          summary: {total_store: number; visited: number; pending: number};
+          summary: { total_store: number; visited: number; pending: number };
           orders_summary: {
             orders: number;
             draft: number;
@@ -1030,15 +1055,15 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; date: string}
+      { employee: string; date: string }
     >({
-      query: ({employee, date}) => ({
+      query: ({ employee, date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_team_detail`,
         method: 'GET',
-        params: {employee, date},
+        params: { employee, date },
       }),
     }),
- 
+
     // API 15 — Store Detail Page
     getAsmStoreDetail: builder.query<
       {
@@ -1077,15 +1102,15 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {store_id: string; date: string; employee?: string}
+      { store_id: string; date: string; employee?: string }
     >({
-      query: ({store_id, date, employee}) => ({
+      query: ({ store_id, date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_detail`,
         method: 'GET',
-        params: {store_id, date, employee},
+        params: { store_id, date, employee },
       }),
     }),
- 
+
     // API 16 — Detail By User Page
     getAsmUserDetail: builder.query<
       {
@@ -1114,7 +1139,7 @@ export const baseApi = createApi({
             delivered: number;
             pending: number;
           };
-          stores_created: {created: number; successful: number};
+          stores_created: { created: number; successful: number };
           orders: {
             order_id: string;
             time: string;
@@ -1136,12 +1161,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; date: string}
+      { employee: string; date: string }
     >({
-      query: ({employee, date}) => ({
+      query: ({ employee, date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_user_detail`,
         method: 'GET',
-        params: {employee, date},
+        params: { employee, date },
       }),
     }),
   }),
@@ -1188,7 +1213,7 @@ export const {
   useCheckStoreNameQuery,
   //Report
   useGetReportQuery,
-   //ASM Dashboard
+  //ASM Dashboard
   useGetAsmDashboardQuery,
   useGetAsmZonesQuery,
   useGetAsmOverviewQuery,
@@ -1310,6 +1335,6 @@ export const pjpSlice = createSlice({
   },
 });
 
-export const {resetPjpState, setSelectedStore, resetLocation} =
+export const { resetPjpState, setSelectedStore, resetLocation } =
   pjpSlice.actions;
 export default pjpSlice.reducer;

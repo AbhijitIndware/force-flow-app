@@ -15,12 +15,13 @@ import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { Fonts } from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Size } from '../../../utils/fontSize';
 import { Divider } from '@rneui/themed';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   ArrowRight,
   BaggageClaim,
@@ -32,12 +33,22 @@ import {
   Package,
   ShoppingCart,
   UsersRound,
+  CheckCircle2,
+  Clock,
+  Target,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
+  Filter,
 } from 'lucide-react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
   resetLocation,
   setSelectedStore,
   useCheckOutMutation,
+  useGetAsmAttendanceTabQuery,
+  useGetAsmPjpTargetVsAchievementQuery,
+  useGetAsmTargetVsAchievementQuery,
   useGetLocationTrackerQuery,
   useGetProdCountQuery,
   useGetSalesRepotsQuery,
@@ -82,7 +93,145 @@ function extractServerMessage(resp: any): string | null {
     return null;
   }
 }
+
+const C = {
+  white: '#FFFFFF',
+  text: '#1A1A2E',
+  textMuted: '#6B7280',
+  accent: '#534AB7',
+  accentDark: '#3C3489',
+  accentSoft: 'rgba(83,74,183,0.1)',
+  background: '#F5F5F7',
+  card: '#FFFFFF',
+  border: '#E5E7EB',
+  green: '#2E7D32',
+  greenSoft: 'rgba(76,175,80,0.12)',
+  heroTop: '#3C3489',
+  heroBot: '#534AB7',
+};
+
 const today = new Date().toISOString().split('T')[0];
+
+const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub }) => (
+  <View style={styles.sectionTitleRow}>
+    <Text style={styles.sectionTitle}>{title}</Text>
+    {sub && <Text style={styles.sectionSub}>{sub}</Text>}
+  </View>
+);
+const MetricBox: React.FC<{ label: string; value: string; rate: string | number }> =
+  ({ label, value, rate }) => (
+    <View style={styles.metricBox}>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <View style={styles.metricRatePill}>
+        <Text style={styles.metricRate}>{rate}%</Text>
+      </View>
+    </View>
+  );
+
+const TargetMetricBox: React.FC<{
+  label: string;
+  achieved: string;    // e.g. "48" or "₹185K"
+  target: string;      // e.g. "120" or "₹500K"
+  rate: number | string;
+  accentColor: string;
+}> = ({ label, achieved, target, rate, accentColor }) => (
+  <View style={targetStyles.card}>
+    {/* Left accent stripe */}
+    <View style={[targetStyles.stripe, { backgroundColor: accentColor }]} />
+
+    <View style={targetStyles.body}>
+      <Text style={targetStyles.label}>{label}</Text>
+
+      {/* Achieved + target */}
+      <View style={targetStyles.numRow}>
+        <Text style={[targetStyles.achieved, { color: accentColor }]}>
+          {achieved}
+        </Text>
+        <Text style={targetStyles.separator}>/</Text>
+        <Text style={targetStyles.target}>{target}</Text>
+      </View>
+
+      {/* Progress bar */}
+      <View style={targetStyles.track}>
+        <View
+          style={[
+            targetStyles.fill,
+            {
+              width: `${Math.min(Number(rate), 100)}%` as `${number}%`,
+              backgroundColor: accentColor,
+            },
+          ]}
+        />
+      </View>
+
+      {/* Rate */}
+      <Text style={[targetStyles.rate, { color: accentColor }]}>
+        {rate}% achieved
+      </Text>
+    </View>
+  </View>
+);
+
+const PerformanceCard: React.FC<{
+  name: string;
+  role: string | number;
+  status: string;
+  checkIn: string | null;
+  pjp: string;
+  pjpRate: number | string;
+  value: string;
+  valueRate: number | string;
+  onPress: () => void;
+}> = ({ name, role, status, checkIn, pjp, pjpRate, value, valueRate, onPress }) => (
+  <TouchableOpacity style={styles.perfCard} onPress={onPress}>
+    <View style={styles.perfTop}>
+      <View style={styles.perfAvatar}>
+        <Text style={styles.perfAvatarText}>{(name || '?').substring(0, 1)}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.perfName} numberOfLines={1}>{name}</Text>
+        <Text style={styles.perfRole} numberOfLines={1}>{role}</Text>
+      </View>
+      <View style={[
+        styles.statusBadge,
+        { backgroundColor: status === 'Present' ? C.greenSoft : '#FEE2E2' }
+      ]}>
+        <Text style={[
+          styles.statusBadgeText,
+          { color: status === 'Present' ? C.green : '#B91C1C' }
+        ]}>{status}</Text>
+      </View>
+    </View>
+
+    {/* <View style={styles.perfMetrics}>
+      <View style={styles.perfMetricCol}>
+        <View style={styles.perfMetricTitleRow}>
+          <Clock size={10} color={C.textMuted} />
+          <Text style={styles.perfMetricLabel}>Check-in</Text>
+        </View>
+        <Text style={styles.perfMetricVal}>{checkIn || '--:--'}</Text>
+      </View>
+      <View style={styles.perfMetricDivider} />
+      <View style={styles.perfMetricCol}>
+        <View style={styles.perfMetricTitleRow}>
+          <Target size={10} color={C.textMuted} />
+          <Text style={styles.perfMetricLabel}>PJP</Text>
+        </View>
+        <Text style={styles.perfMetricVal}>{pjp} ({pjpRate}%)</Text>
+      </View>
+      <View style={styles.perfMetricDivider} />
+      <View style={styles.perfMetricCol}>
+        <View style={styles.perfMetricTitleRow}>
+          <CheckCircle2 size={10} color={C.textMuted} />
+          <Text style={styles.perfMetricLabel}>Sales</Text>
+        </View>
+        <Text style={styles.perfMetricVal}>{value} ({valueRate}%)</Text>
+      </View>
+    </View> */}
+  </TouchableOpacity>
+);
+
 
 const HomeScreen = ({ navigation }: Props) => {
   const [isStartingPjp, setIsStartingPjp] = useState(false);
@@ -96,11 +245,52 @@ const HomeScreen = ({ navigation }: Props) => {
     null,
   );
 
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
   const { data: teamReportData } = useGetSalesRepotsQuery({
     view_type: 'team_include_self',
   });
+  const currentMonth = moment().month() + 1;
+  const currentYear = moment().year();
+
+  // ── Filters State ──────────────────────────────────────────────────────────
+  const [filterMode, setFilterMode] = useState<'month' | 'month_range' | 'date_range'>('month');
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [fromMonth, setFromMonth] = useState(currentMonth > 1 ? currentMonth - 1 : 1);
+  const [toMonth, setToMonth] = useState(currentMonth);
+  const [startDate, setStartDate] = useState(new Date(currentYear, currentMonth - 1, 1));
+  const [endDate, setEndDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [pickingType, setPickingType] = useState<'start' | 'end'>('start');
+
+  const [showMonthModal, setShowMonthModal] = useState(false);
+  const [showYearModal, setShowYearModal] = useState(false);
+  const [monthPickerTarget, setMonthPickerTarget] = useState<'single' | 'from' | 'to'>('single');
+
+  const apiParams = useMemo(() => {
+    const base = { employee: employee?.id as string };
+    if (filterMode === 'month') {
+      return { ...base, month: selectedMonth, year: selectedYear };
+    }
+    if (filterMode === 'month_range') {
+      return { ...base, from_month: fromMonth, to_month: toMonth, year: selectedYear };
+    }
+    return {
+      ...base,
+      from_date: moment(startDate).format('YYYY-MM-DD'),
+      to_date: moment(endDate).format('YYYY-MM-DD')
+    };
+  }, [filterMode, selectedMonth, selectedYear, fromMonth, toMonth, startDate, endDate, employee]);
+
+  const { data: attendanceData, refetch: refetchAttendance } = useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
+  console.log("🚀 ~ HomeScreen ~ attendanceData:", attendanceData)
+  const { data: pjpTargetData, refetch: refetchPjpTarget } = useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
+  const { data: valueTargetData, refetch: refetchValueTarget } = useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -128,9 +318,19 @@ const HomeScreen = ({ navigation }: Props) => {
       setRefreshing(false);
       pjpInitialize();
       refetch();
+      refetchAttendance();
+      refetchPjpTarget();
+      refetchValueTarget();
       refetchLocationTracker();
     }, 2000);
-  }, []);
+  }, [
+    pjpInitialize,
+    refetch,
+    refetchAttendance,
+    refetchPjpTarget,
+    refetchValueTarget,
+    refetchLocationTracker,
+  ]);
 
   const handleCallLocationPermission = async () => {
     let hasPermission = await requestLocationPermission();
@@ -335,6 +535,40 @@ const HomeScreen = ({ navigation }: Props) => {
     isLocationTrackerFetching ||
     locationTrackerData?.message?.data?.enabled === false;
 
+
+  const pjpSummary = pjpTargetData?.message?.summary;
+  const valueSummary = valueTargetData?.message?.summary;
+  const attendanceSummary = attendanceData?.message?.summary;
+
+  // ── Merge Records ───────────────────────────────────────────────────────────
+  const teamRecords = useMemo(() => {
+    const attMap = (attendanceData?.message?.records || []).reduce((acc: any, r) => {
+      acc[r.employee_id] = r;
+      return acc;
+    }, {});
+    const pjpMap = (pjpTargetData?.message?.records || []).reduce((acc: any, r) => {
+      acc[r.employee_id] = r;
+      return acc;
+    }, {});
+    const valMap = (valueTargetData?.message?.records || []).reduce((acc: any, r) => {
+      acc[r.employee_id] = r;
+      return acc;
+    }, {});
+
+    const allIds = Array.from(new Set([
+      ...Object.keys(attMap),
+      ...Object.keys(pjpMap),
+      ...Object.keys(valMap)
+    ]));
+
+    return allIds.map(id => ({
+      id,
+      attendance: attMap[id],
+      pjp: pjpMap[id],
+      value: valMap[id]
+    }));
+  }, [attendanceData, pjpTargetData, valueTargetData]);
+
   return (
     <SafeAreaView
       style={[
@@ -353,7 +587,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{ position: 'relative', marginBottom: -100 }}>
+            <View style={{ position: 'relative', marginBottom: 0 }}>
               <View style={styles.welcomBox}>
                 <Text style={styles.welcomeText}>
                   Hello <Text style={styles.name}>{user?.full_name}</Text>
@@ -529,6 +763,238 @@ const HomeScreen = ({ navigation }: Props) => {
               </View>
             </View>
           </View>
+
+
+          <View style={styles.countBoxSection}>
+            <View style={styles.countBox}>
+              <View
+                style={[
+                  styles.countBoxIcon,
+                  { backgroundColor: Colors.holdLight },
+                ]}>
+                <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
+              </View>
+              <Text style={styles.countBoxDay}>
+                {prodData?.message?.counts?.total_stores}
+              </Text>
+              <Text style={styles.countBoxTitle}>Total call</Text>
+            </View>
+            <View style={styles.countBox}>
+              <View
+                style={[
+                  styles.countBoxIcon,
+                  { backgroundColor: Colors.lightSuccess },
+                ]}>
+                <MapPinCheck strokeWidth={1.4} color={Colors.success} />
+              </View>
+              <Text style={styles.countBoxDay}>
+                {prodData?.message?.counts?.status_counts?.Visited}
+              </Text>
+              <Text style={styles.countBoxTitle}>Productive Call</Text>
+            </View>
+          </View>
+
+          {/* ── Dashboard Filters ── */}
+          <View style={styles.filterSection}>
+            <View style={styles.filterTabRow}>
+              {[
+                { label: 'Monthly', mode: 'month' },
+                { label: 'Range', mode: 'month_range' },
+                { label: 'Custom', mode: 'date_range' }
+              ].map(opt => (
+                <TouchableOpacity
+                  key={opt.mode}
+                  onPress={() => setFilterMode(opt.mode as any)}
+                  style={[
+                    styles.filterChip,
+                    filterMode === opt.mode && styles.filterChipActive
+                  ]}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    filterMode === opt.mode && styles.filterChipTextActive
+                  ]}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.filterPickerRow}>
+              {filterMode === 'month' && (
+                <TouchableOpacity
+                  style={styles.filterValueBtn}
+                  onPress={() => {
+                    setMonthPickerTarget('single');
+                    setShowMonthModal(true);
+                  }}>
+                  <Calendar size={14} color={C.accent} />
+                  <Text style={styles.filterValueText}>
+                    {moment().month(selectedMonth - 1).format('MMMM')}, {selectedYear}
+                  </Text>
+                  <ChevronDown size={14} color={C.textMuted} />
+                </TouchableOpacity>
+              )}
+              {filterMode === 'month_range' && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.filterLabelSmall}>From:</Text>
+                  <TouchableOpacity
+                    style={styles.filterValueBtnSmall}
+                    onPress={() => {
+                      setMonthPickerTarget('from');
+                      setShowMonthModal(true);
+                    }}>
+                    <Text style={styles.filterValueTextSmall}>
+                      {moment().month(fromMonth - 1).format('MMM')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.filterLabelSmall}>To:</Text>
+                  <TouchableOpacity
+                    style={styles.filterValueBtnSmall}
+                    onPress={() => {
+                      setMonthPickerTarget('to');
+                      setShowMonthModal(true);
+                    }}>
+                    <Text style={styles.filterValueTextSmall}>
+                      {moment().month(toMonth - 1).format('MMM')}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.filterValueBtnSmall}
+                    onPress={() => setShowYearModal(true)}>
+                    <Text style={styles.filterValueTextSmall}>{selectedYear}</Text>
+                    <ChevronDown size={10} color={C.textMuted} />
+                  </TouchableOpacity>
+                </View>
+              )}
+              {filterMode === 'date_range' && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TouchableOpacity
+                    style={styles.filterDateBtn}
+                    onPress={() => { setPickingType('start'); setShowDatePicker(true); }}
+                  >
+                    <Text style={styles.filterDateLabel}>From</Text>
+                    <Text style={styles.filterDateVal}>{moment(startDate).format('DD MMM')}</Text>
+                  </TouchableOpacity>
+                  <ChevronRight size={14} color={C.textMuted} />
+                  <TouchableOpacity
+                    style={styles.filterDateBtn}
+                    onPress={() => { setPickingType('end'); setShowDatePicker(true); }}
+                  >
+                    <Text style={styles.filterDateLabel}>To</Text>
+                    <Text style={styles.filterDateVal}>{moment(endDate).format('DD MMM')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {showDatePicker && (
+            <DateTimePicker
+              value={pickingType === 'start' ? startDate : endDate}
+              mode="date"
+              display="default"
+              maximumDate={new Date()}
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) {
+                  if (pickingType === 'start') setStartDate(date);
+                  else setEndDate(date);
+                }
+              }}
+            />
+          )}
+
+          {/* ── Month Picker Modal ── */}
+          <Modal
+            visible={showMonthModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowMonthModal(false)}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setShowMonthModal(false)}>
+              <View style={styles.pickerModalContainer}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>Select Month</Text>
+                  <TouchableOpacity onPress={() => setShowMonthModal(false)}>
+                    <Ionicons name="close" size={24} color={C.text} />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.monthGrid}>
+                  {moment.months().map((month, index) => {
+                    const mValue = index + 1;
+                    const isActive =
+                      monthPickerTarget === 'single' ? selectedMonth === mValue :
+                        monthPickerTarget === 'from' ? fromMonth === mValue :
+                          toMonth === mValue;
+
+                    return (
+                      <TouchableOpacity
+                        key={month}
+                        style={[
+                          styles.monthItem,
+                          isActive && styles.monthItemActive
+                        ]}
+                        onPress={() => {
+                          if (monthPickerTarget === 'single') setSelectedMonth(mValue);
+                          else if (monthPickerTarget === 'from') setFromMonth(mValue);
+                          else setToMonth(mValue);
+                          setShowMonthModal(false);
+                        }}>
+                        <Text style={[
+                          styles.monthTextBlack,
+                          isActive && styles.monthTextActive
+                        ]}>{moment().month(index).format('MMM')}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
+          {/* ── Year Picker Modal ── */}
+          <Modal
+            visible={showYearModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowYearModal(false)}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setShowYearModal(false)}>
+              <View style={styles.pickerModalContainer}>
+                <View style={styles.pickerHeader}>
+                  <Text style={styles.pickerTitle}>Select Year</Text>
+                  <TouchableOpacity onPress={() => setShowYearModal(false)}>
+                    <Ionicons name="close" size={24} color={C.text} />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.yearList}>
+                  {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(year => (
+                    <TouchableOpacity
+                      key={year}
+                      style={[
+                        styles.yearItem,
+                        selectedYear === year && styles.yearItemActive
+                      ]}
+                      onPress={() => {
+                        setSelectedYear(year);
+                        setShowYearModal(false);
+                      }}>
+                      <Text style={[
+                        styles.yearText,
+                        selectedYear === year && styles.yearTextActive
+                      ]}>{year}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
           <Modal
             visible={checkoutModalVisible}
             transparent
@@ -565,73 +1031,122 @@ const HomeScreen = ({ navigation }: Props) => {
             </View>
           </Modal>
 
-          <View style={styles.countBoxSection}>
-            <View style={styles.countBox}>
-              <View
-                style={[
-                  styles.countBoxIcon,
-                  { backgroundColor: Colors.holdLight },
-                ]}>
-                <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
-              </View>
-              <Text style={styles.countBoxDay}>
-                {prodData?.message?.counts?.total_stores}
-              </Text>
-              <Text style={styles.countBoxTitle}>Total call</Text>
-            </View>
-            <View style={styles.countBox}>
-              <View
-                style={[
-                  styles.countBoxIcon,
-                  { backgroundColor: Colors.lightSuccess },
-                ]}>
-                <MapPinCheck strokeWidth={1.4} color={Colors.success} />
-              </View>
-              <Text style={styles.countBoxDay}>
-                {prodData?.message?.counts?.status_counts?.Visited}
-              </Text>
-              <Text style={styles.countBoxTitle}>Productive Call</Text>
+          {/* ── Team Attendance ── */}
+          <View style={styles.section}>
+            <SectionTitle title="Team Attendance" sub="Today's Summary" />
+            <View style={styles.metricRow}>
+              <MetricBox
+                label="Total Team"
+                value={`${attendanceSummary?.total ?? 0}`}
+                rate={attendanceSummary?.attendance_rate ?? 0}
+              />
+              <MetricBox
+                label="Present"
+                value={`${attendanceSummary?.present ?? 0}`}
+                rate={attendanceSummary?.attendance_rate ?? 0}
+              />
+              <MetricBox
+                label="Absent"
+                value={`${attendanceSummary?.absent ?? 0}`}
+                rate={Math.max(0, 100 - (attendanceSummary?.attendance_rate ?? 0)).toFixed(1)}
+              />
             </View>
           </View>
-          <View style={[styles.container, { paddingTop: 35 }]}>
-            <Text style={styles.SectionHeading}>
-              Target vs Achievement{' '}
-              <Text style={{ fontFamily: Fonts.regular }}>(Qty)</Text>
-            </Text>
-            <View style={styles.dataBoxSection}>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>0 / 0</Text>
-                  <Text style={styles.quantitytime}>Daily quantity</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  {/* <MoveUp strokeWidth={2} color={Colors.darkButton} /> */}
-                  <Text style={styles.incressValu}>0%</Text>
-                </View>
-              </View>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>0 / 0</Text>
-                  <Text style={styles.quantitytime}>Monthly quantity</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  {/* <MoveDown strokeWidth={2} color={Colors.darkButton} /> */}
-                  <Text style={styles.incressValu}>0%</Text>
-                </View>
-              </View>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>0 / 0</Text>
-                  <Text style={styles.quantitytime}>Quartely quantity</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  {/* <MoveDown strokeWidth={2} color={Colors.darkButton} /> */}
-                  <Text style={styles.incressValu}>0%</Text>
-                </View>
-              </View>
+
+          {/* ── Target vs Achievement ── */}
+          <View style={styles.section}>
+            <SectionTitle
+              title="Team Performance"
+              sub={
+                filterMode === 'month' ? 'Monthly' :
+                  filterMode === 'month_range' ? `${fromMonth}-${toMonth} Months` :
+                    'Selected Range'
+              }
+            />
+            <View style={styles.metricRow}>
+              <TargetMetricBox
+                label="PJP Visits"
+                achieved={`${pjpSummary?.total_visited ?? 0}`}
+                target={`${pjpSummary?.total_planned ?? 0}`}
+                rate={pjpSummary?.achievement_rate ?? 0}
+                accentColor="#534AB7"
+              />
+              <TargetMetricBox
+                label="Sales Value"
+                achieved={`₹${((valueSummary?.total_so ?? 0) / 1000).toFixed(0)}K`}
+                target={`₹${((valueSummary?.total_target ?? 0) / 1000).toFixed(0)}K`}
+                rate={valueSummary?.achievement_pct ?? 0}
+                accentColor="#0F6E56"
+              />
             </View>
           </View>
-          <View style={[styles.container, { paddingTop: 20 }]}>
+
+          {/* ── Attendance Preview ── */}
+          <View style={{ marginTop: 20, marginHorizontal: 20 }}>
+            <SectionTitle title="Team Attendance" sub="Quick Glance" />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.attendancePreviewScroll}
+            >
+              {(attendanceData?.message?.records || []).map((r: any) => (
+                <TouchableOpacity
+                  key={r.employee_id}
+                  style={styles.attendanceAvatarItem}
+                  onPress={() => navigation.navigate('TeamDetailScreen', {
+                    employee_id: r.employee_id,
+                    date: today
+                  })}
+                >
+                  <View style={[
+                    styles.attendanceAvatar,
+                    { borderColor: r.attendance_status === 'Present' ? C.green : '#EF4444' }
+                  ]}>
+                    <Text style={styles.attendanceInitial}>{r.initials}</Text>
+                    <View style={[
+                      styles.attendanceStatusDot,
+                      { backgroundColor: r.attendance_status === 'Present' ? '#10B981' : '#EF4444' }
+                    ]} />
+                  </View>
+                  <Text style={styles.attendanceShortName} numberOfLines={1}>{r.employee_name.split(' ')[0]}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* ── Team Performance Details ── */}
+          {/* <View style={styles.section}>
+            <SectionTitle title="Team Details" sub="Live Achievement" />
+            {teamRecords.slice(0, 2).map((r: any) => (
+              <PerformanceCard
+                key={r.id}
+                onPress={() => navigation.navigate('TeamDetailScreen', {
+                  employee_id: r.id,
+                  date: today
+                })}
+                name={r.attendance?.employee_name || r.pjp?.employee_name || r.value?.employee_name || 'Unknown'}
+                role={r.attendance?.designation || r.pjp?.designation || r.value?.designation || 'Team Member'}
+                status={r.attendance?.attendance_status || 'Absent'}
+                checkIn={r.attendance?.check_in_time}
+                pjp={`${r.pjp?.total_visited ?? 0}/${r.pjp?.total_planned ?? 0}`}
+                pjpRate={r.pjp?.achievement_rate ?? 0}
+                value={`₹${((r.value?.so_total || 0) / 1000).toFixed(1)}K`}
+                valueRate={r.value?.achievement_pct ?? 0}
+              />
+            ))}
+
+            {teamRecords.length > 2 && (
+              <TouchableOpacity
+                style={styles.viewMoreBtn}
+                onPress={() => navigation.navigate('TeamAttendanceListScreen', { apiParams: apiParams, today: today })}
+              >
+                <Text style={styles.viewMoreText}>Show More</Text>
+                <ChevronRight size={16} color={C.accent} />
+              </TouchableOpacity>
+            )}
+          </View> */}
+
+          {/* <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Team Performance</Text>
             <View
               style={[
@@ -682,7 +1197,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 />
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
           <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Expenses Claim</Text>
             <View
@@ -945,7 +1460,7 @@ const DateBox = () => {
   return (
     <View style={styles.dateBox}>
       <Text style={styles.dateText}>{day}</Text>
-      <Text style={styles.monthText}>{month}</Text>
+      <Text style={styles.monthTextWhite}>{month}</Text>
     </View>
   );
 };
@@ -976,6 +1491,7 @@ const styles = StyleSheet.create({
 
     // Android Shadow
     elevation: 2,
+    marginBottom: 10
   },
   welcomeText: {
     fontFamily: Fonts.light,
@@ -1026,9 +1542,14 @@ const styles = StyleSheet.create({
     margin: 0,
     lineHeight: 18,
   },
-  monthText: {
+  monthTextWhite: {
     fontFamily: Fonts.regular,
     color: Colors.white,
+    fontSize: Size.xs,
+  },
+  monthTextBlack: {
+    fontFamily: Fonts.regular,
+    color: Colors.black,
     fontSize: Size.xs,
   },
 
@@ -1074,7 +1595,7 @@ const styles = StyleSheet.create({
   //countBox-section css start
   countBoxSection: {
     paddingHorizontal: 20,
-    paddingTop: 110,
+    paddingBottom: 10,
     display: 'flex',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -1305,5 +1826,246 @@ const styles = StyleSheet.create({
   confirmText: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+
+  // ── Sections ────────────────────────────────────────────────────────────────
+  section: { paddingHorizontal: 16, paddingTop: 20 },
+
+  sectionTitleRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 10 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: C.text },
+  sectionSub: { fontSize: 12, color: C.textMuted },
+
+
+
+
+  // ── Metric boxes ─────────────────────────────────────────────────────────────
+  metricRow: { flexDirection: 'row', gap: 8 },
+  metricBox: {
+    flex: 1, backgroundColor: C.card, borderRadius: 12,
+    borderWidth: 0.5, borderColor: C.border,
+    padding: 12, alignItems: 'center', gap: 4,
+  },
+  metricValue: { fontSize: 13, fontWeight: '600', color: C.text, textAlign: 'center' },
+  metricLabel: { fontSize: 10, color: C.textMuted, textAlign: 'center' },
+  metricRatePill: {
+    marginTop: 4, backgroundColor: C.accentSoft,
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
+  },
+  metricRate: { fontSize: 11, fontWeight: '600', color: C.accent },
+
+  // ── Performance Cards ────────────────────────────────────────────────────────
+  perfCard: {
+    backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: 12,
+    borderWidth: 0.5, borderColor: C.border,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  perfTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  perfAvatar: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: C.accent,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  perfAvatarText: { color: C.white, fontSize: 16, fontWeight: 'bold' },
+  perfName: { fontSize: 15, fontWeight: '600', color: C.text },
+  perfRole: { fontSize: 12, color: C.textMuted },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  statusBadgeText: { fontSize: 11, fontWeight: '600' },
+
+  perfMetrics: {
+    flexDirection: 'row', alignItems: 'center', borderTopWidth: 0.5,
+    borderTopColor: C.border, paddingTop: 12,
+  },
+  perfMetricCol: { flex: 1, alignItems: 'center' },
+  perfMetricDivider: { width: 1, height: 20, backgroundColor: C.border },
+  perfMetricTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  perfMetricLabel: { fontSize: 10, color: C.textMuted },
+  perfMetricVal: { fontSize: 12, fontWeight: '600', color: C.text },
+
+  // ── Attendance Preview ───────────────────────────────────────────────────────
+  attendancePreviewScroll: { paddingLeft: 16, paddingBottom: 10 },
+  attendanceAvatarItem: { alignItems: 'center', marginRight: 16, gap: 4 },
+  attendanceAvatar: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: C.white,
+    borderWidth: 2, justifyContent: 'center', alignItems: 'center',
+  },
+  attendanceStatusDot: {
+    position: 'absolute', bottom: 0, right: 0, width: 12, height: 12,
+    borderRadius: 6, borderWidth: 2, borderColor: C.white,
+  },
+  attendanceInitial: { fontSize: 14, fontWeight: '600', color: C.text },
+  attendanceShortName: { fontSize: 10, color: C.textMuted, width: 44, textAlign: 'center' },
+
+  // ── Filters ──────────────────────────────────────────────────────────────────
+  filterSection: {
+    backgroundColor: C.white, marginHorizontal: 16, marginTop: 0,
+    borderRadius: 16, padding: 12, borderWidth: 0.5, borderColor: C.border,
+  },
+  filterTabRow: { flexDirection: 'row', gap: 8, },
+  filterChip: {
+    flex: 1, paddingVertical: 6, borderRadius: 8,
+    backgroundColor: C.background, alignItems: 'center',
+  },
+  filterChipActive: { backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.accent },
+  filterChipText: { fontSize: 12, color: '#000', fontWeight: '500' },
+  filterChipTextActive: { color: C.accent, fontWeight: '700' },
+
+  filterPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
+  filterValueBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  filterValueText: { fontSize: 14, fontWeight: '600', color: C.text },
+  filterLabelSmall: { fontSize: 12, color: C.textMuted },
+  filterDateVal: { fontSize: 14, fontWeight: '700', color: C.accent },
+  filterDateBtn: { alignItems: 'center' },
+  filterDateLabel: { fontSize: 9, color: C.textMuted, textTransform: 'uppercase' },
+
+  filterValueBtnSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.background,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    gap: 4
+  },
+  filterValueTextSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.accent
+  },
+
+  pickerModalContainer: {
+    width: '80%',
+    backgroundColor: C.white,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  pickerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: C.text,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'center'
+  },
+  monthItem: {
+    width: '30%',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: C.background,
+  },
+  monthItemActive: {
+    backgroundColor: C.accent,
+  },
+  // monthText: {
+  //   fontSize: 13,
+  //   fontWeight: '600',
+  //   color: C.text,
+  // },
+  monthTextActive: {
+    color: C.white,
+  },
+  yearList: {
+    gap: 10,
+  },
+  yearItem: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+    backgroundColor: C.background,
+  },
+  yearItemActive: {
+    backgroundColor: C.accent,
+  },
+  yearText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: C.text,
+  },
+  yearTextActive: {
+    color: C.white,
+  },
+
+  viewMoreBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    marginTop: 12, paddingVertical: 10, gap: 6,
+    backgroundColor: C.white, borderRadius: 10,
+    borderWidth: 1, borderColor: C.border,
+  },
+  viewMoreText: { fontSize: 13, fontWeight: '700', color: C.accent },
+
+});
+const targetStyles = StyleSheet.create({
+  card: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: C.card,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    overflow: 'hidden',
+  },
+  stripe: {
+    width: 3,
+  },
+  body: {
+    flex: 1,
+    padding: 11,
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: C.textMuted,
+    letterSpacing: 0.3,
+    marginBottom: 6,
+  },
+  numRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 3,
+    marginBottom: 6,
+  },
+  achieved: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  separator: {
+    fontSize: 11,
+    color: C.textMuted,
+  },
+  target: {
+    fontSize: 11,
+    color: C.textMuted,
+  },
+  track: {
+    height: 4,
+    backgroundColor: C.border,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 5,
+  },
+  fill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  rate: {
+    fontSize: 10,
+    fontWeight: '600',
+    textAlign: 'right',
   },
 });

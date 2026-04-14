@@ -51,7 +51,6 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
     { employee: employee_id, date },
     { skip: !employee_id || !date, refetchOnMountOrArgChange: true },
   );
-  console.log("🚀 ~ TeamDetailScreen ~ data:", data)
 
   const msg = data?.message;
   const emp = msg?.employee;
