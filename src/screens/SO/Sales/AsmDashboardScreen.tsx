@@ -421,7 +421,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </View>
         </View>
         <View style={styles.headerIdBox}>
-          <Text style={styles.headerIdLabel}>EMP ID</Text>
+          <Text style={styles.headerIdLabel}>EMP NO</Text>
           <Text style={styles.headerIdVal}>{company_emp_id}</Text>
         </View>
       </View>
