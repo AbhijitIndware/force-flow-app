@@ -56,9 +56,16 @@ export type SoAppStackParamList = {
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
   StoreDetailScreen: {storeId: string};
-  TeamDetailScreen: undefined;
-  DetailByStoreScreen: undefined;
-  DetailByUserScreen: undefined;
+  TeamDetailScreen: {date:string,employee_id:string};
+  DetailByStoreScreen: {
+    store_id: string;
+    date: string;
+    employee_id: string;
+  };
+  DetailByUserScreen: {
+    employee_id: string;
+    date: string;
+  };
 };
 
 export type menuType = {

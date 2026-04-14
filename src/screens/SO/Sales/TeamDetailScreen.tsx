@@ -1,20 +1,19 @@
 import React from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   View,
   SafeAreaView,
-  ScrollView,
-  Dimensions,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { flexCol } from '../../../utils/styles';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
 import {
   User,
   CalendarDays,
@@ -24,8 +23,7 @@ import {
   CheckCircle2,
   ListOrdered,
 } from 'lucide-react-native';
-
-const {width} = Dimensions.get('window');
+import { useGetAsmTeamDetailQuery } from '../../../features/base/base-api';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -37,58 +35,124 @@ type Props = {
   route: any;
 };
 
-// Placeholder Data based on User Request
-const teamDetail = {
-  name: 'Avi Sharma',
-  date: '12-02-2026',
-  total_store: 5,
-  pending_store: 2,
-};
+const TeamDetailScreen = ({ navigation, route }: Props) => {
+  // Expect employee_id and date passed via route.params from the parent screen
+  // Ensure date is always a plain string (guards against Date objects being passed)
+  const { employee_id } = route?.params ?? {};
+  const rawDate = route?.params?.date;
+  const date: string =
+    rawDate instanceof Date
+      ? rawDate.toISOString().split('T')[0]
+      : typeof rawDate === 'string'
+        ? rawDate
+        : new Date().toISOString().split('T')[0];
 
-const stores = [
-  {id: 1, name: 'Store name 1', status: 'Visited'},
-  {id: 2, name: 'Store name 2', status: 'Visited'},
-  {id: 3, name: 'Store name 3', status: 'Visited'},
-  {id: 4, name: 'Store name 4', status: 'Pending'},
-  {id: 5, name: 'Store name 5', status: 'Pending'},
-  {id: 6, name: 'Store name 6', status: 'Pending'},
-  {id: 7, name: 'Store name 7', status: 'Pending'},
-];
+  const { data, isFetching, isError, refetch } = useGetAsmTeamDetailQuery(
+    { employee: employee_id, date },
+    { skip: !employee_id || !date, refetchOnMountOrArgChange: true },
+  );
 
-const TeamDetailScreen = ({navigation, route}: Props) => {
+  const msg = data?.message;
+  const emp = msg?.employee;
+  const summary = msg?.summary;
+  const storeList = msg?.store_list ?? [];
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (isFetching) {
+    return (
+      <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#F0F2F6' }]}>
+        <PageHeader title="Team Detail" navigation={() => navigation.goBack()} />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#FFB302" />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ── Error ────────────────────────────────────────────────────────────────
+  if (isError || !msg?.success) {
+    return (
+      <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#F0F2F6' }]}>
+        <PageHeader title="Team Detail" navigation={() => navigation.goBack()} />
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Failed to load team detail</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={refetch}>
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const initials = emp?.employee_name
+    ? emp.employee_name
+      .split(' ')
+      .slice(0, 2)
+      .map((w: string) => w[0])
+      .join('')
+      .toUpperCase()
+    : '--';
+
   return (
-    <SafeAreaView
-      style={[
-        flexCol,
-        {
-          flex: 1,
-          backgroundColor: '#F0F2F6',
-        },
-      ]}>
-      <PageHeader
-        title={'Team Detail'}
-        navigation={() => navigation.goBack()}
-      />
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#F0F2F6' }]}>
+      <PageHeader title={`${emp?.employee_name || 'Employee'} Activity`} navigation={() => navigation.goBack()} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
-        {/* Profile Card */}
+
+        {/* Profile Card — tap → DetailByUserScreen */}
         <TouchableOpacity
           style={styles.profileCard}
-          onPress={() => navigation.navigate('DetailByUserScreen')}>
+          onPress={() =>
+            navigation.navigate('DetailByUserScreen', {
+              employee_id,
+              date,
+            })
+          }>
           <View style={styles.profileHeader}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>AS</Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{teamDetail.name}</Text>
+              <Text style={styles.profileName}>{emp?.employee_name ?? '—'}</Text>
+              <Text style={styles.profileDesig}>{emp?.designation ?? ''}</Text>
               <View style={styles.dateRow}>
                 <CalendarDays size={14} color="#828282" />
-                <Text style={styles.dateText}>
-                  Store visited: {teamDetail.date}
+                <Text style={styles.dateText}>Date: {String(date)}</Text>
+              </View>
+              {/* Attendance badge */}
+              <View
+                style={[
+                  styles.attBadge,
+                  {
+                    backgroundColor:
+                      emp?.attendance_status === 'Present'
+                        ? '#E7F8EA'
+                        : '#FBE8E8',
+                    borderColor:
+                      emp?.attendance_status === 'Present'
+                        ? '#0AB72A40'
+                        : '#D3101040',
+                  },
+                ]}>
+                <Text
+                  style={[
+                    styles.attBadgeText,
+                    {
+                      color:
+                        emp?.attendance_status === 'Present'
+                          ? '#0AB72A'
+                          : '#D31010',
+                    },
+                  ]}>
+                  {emp?.attendance_status ?? '—'}
                 </Text>
               </View>
+              {emp?.check_in_time && (
+                <Text style={styles.checkInText}>CheckIn: {emp.check_in_time}</Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>
@@ -96,25 +160,68 @@ const TeamDetailScreen = ({navigation, route}: Props) => {
         {/* Metrics Grid */}
         <View style={styles.metricsContainer}>
           <View style={styles.metricCard}>
-            <View style={[styles.metricIconWrap, {backgroundColor: '#E3ECFF'}]}>
+            <View style={[styles.metricIconWrap, { backgroundColor: '#E3ECFF' }]}>
               <Store size={22} color="#367CFF" strokeWidth={2} />
             </View>
-            <Text style={[styles.metricValue, {color: '#367CFF'}]}>
-              {teamDetail.total_store}
+            <Text style={[styles.metricValue, { color: '#367CFF' }]}>
+              {summary?.total_store ?? 0}
             </Text>
             <Text style={styles.metricLabel}>Total Store</Text>
           </View>
 
           <View style={styles.metricCard}>
-            <View style={[styles.metricIconWrap, {backgroundColor: '#FFE9D4'}]}>
+            <View style={[styles.metricIconWrap, { backgroundColor: '#E7F8EA' }]}>
+              <CheckCircle2 size={22} color="#0AB72A" strokeWidth={2} />
+            </View>
+            <Text style={[styles.metricValue, { color: '#0AB72A' }]}>
+              {summary?.visited ?? 0}
+            </Text>
+            <Text style={styles.metricLabel}>Visited</Text>
+          </View>
+
+          <View style={styles.metricCard}>
+            <View style={[styles.metricIconWrap, { backgroundColor: '#FFE9D4' }]}>
               <Clock size={22} color="#FF7B00" strokeWidth={2} />
             </View>
-            <Text style={[styles.metricValue, {color: '#FF7B00'}]}>
-              {teamDetail.pending_store}
+            <Text style={[styles.metricValue, { color: '#FF7B00' }]}>
+              {summary?.pending ?? 0}
             </Text>
-            <Text style={styles.metricLabel}>Pending Store</Text>
+            <Text style={styles.metricLabel}>Pending</Text>
           </View>
         </View>
+
+        {/* Orders Summary Strip */}
+        {msg?.orders_summary && (
+          <View style={styles.orderStrip}>
+            <View style={styles.orderStripItem}>
+              <Text style={styles.orderStripVal}>
+                {msg.orders_summary.orders}
+              </Text>
+              <Text style={styles.orderStripLabel}>Orders</Text>
+            </View>
+            <View style={styles.orderStripDivider} />
+            <View style={styles.orderStripItem}>
+              <Text style={[styles.orderStripVal, { color: '#367CFF' }]}>
+                ₹{msg.orders_summary.order_value}
+              </Text>
+              <Text style={styles.orderStripLabel}>Value</Text>
+            </View>
+            <View style={styles.orderStripDivider} />
+            <View style={styles.orderStripItem}>
+              <Text style={[styles.orderStripVal, { color: '#FF7B00' }]}>
+                {msg.orders_summary.total_items}
+              </Text>
+              <Text style={styles.orderStripLabel}>Total Items</Text>
+            </View>
+            <View style={styles.orderStripDivider} />
+            <View style={styles.orderStripItem}>
+              <Text style={[styles.orderStripVal, { color: '#0AB72A' }]}>
+                {msg.orders_summary.delivered}
+              </Text>
+              <Text style={styles.orderStripLabel}>Delivered</Text>
+            </View>
+          </View>
+        )}
 
         {/* Store List */}
         <View style={styles.listHeaderRow}>
@@ -124,46 +231,65 @@ const TeamDetailScreen = ({navigation, route}: Props) => {
           <Text style={styles.listTitle}>Store List</Text>
         </View>
 
-        {stores.map((store, index) => (
-          <TouchableOpacity
-            key={store.id}
-            style={styles.storeCard}
-            onPress={() => navigation.navigate('DetailByStoreScreen')}>
-            <View style={styles.storeIconWrap}>
-              <MapPin size={18} color="#FFB302" strokeWidth={2.5} />
-            </View>
-            <View style={styles.storeInfo}>
-              <Text style={styles.storeName}>{store.name}</Text>
-              <Text style={styles.storeSub}>ID: #{1000 + store.id}</Text>
-            </View>
-            <View
-              style={[
-                styles.statusBadge,
-                store.status === 'Visited'
-                  ? {backgroundColor: '#E7F8EA', borderColor: '#0AB72A40'}
-                  : {backgroundColor: '#FFE9D4', borderColor: '#FF7B0040'},
-              ]}>
-              {store.status === 'Visited' ? (
-                <CheckCircle2
-                  size={12}
-                  color="#0AB72A"
-                  style={{marginRight: 4}}
-                />
-              ) : (
-                <Clock size={12} color="#FF7B00" style={{marginRight: 4}} />
-              )}
-              <Text
+        {storeList.length === 0 ? (
+          <Text style={styles.emptyText}>No stores found</Text>
+        ) : (
+          storeList.map((store: any) => (
+            <TouchableOpacity
+              key={store.store_id}
+              style={styles.storeCard}
+              onPress={() =>
+                navigation.navigate('DetailByStoreScreen', {
+                  store_id: store.store_id,
+                  date,
+                  employee_id,
+                })
+              }>
+              <View style={styles.storeIconWrap}>
+                <MapPin size={18} color="#FFB302" strokeWidth={2.5} />
+              </View>
+              <View style={styles.storeInfo}>
+                <Text style={styles.storeName}>{store.store_name}</Text>
+                <Text style={styles.storeSub}>
+                  {store.store_type}
+                  {store.city ? ` · ${store.city}` : ''}
+                </Text>
+                {store.check_in_time && (
+                  <Text style={styles.storeTime}>
+                    In: {store.check_in_time}
+                    {store.spent_time ? `  ·  ${store.spent_time}` : ''}
+                  </Text>
+                )}
+              </View>
+              <View
                 style={[
-                  styles.statusText,
+                  styles.statusBadge,
                   store.status === 'Visited'
-                    ? {color: '#0AB72A'}
-                    : {color: '#FF7B00'},
+                    ? { backgroundColor: '#E7F8EA', borderColor: '#0AB72A40' }
+                    : { backgroundColor: '#FFE9D4', borderColor: '#FF7B0040' },
                 ]}>
-                {store.status}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+                {store.status === 'Visited' ? (
+                  <CheckCircle2
+                    size={12}
+                    color="#0AB72A"
+                    style={{ marginRight: 4 }}
+                  />
+                ) : (
+                  <Clock size={12} color="#FF7B00" style={{ marginRight: 4 }} />
+                )}
+                <Text
+                  style={[
+                    styles.statusText,
+                    store.status === 'Visited'
+                      ? { color: '#0AB72A' }
+                      : { color: '#FF7B00' },
+                  ]}>
+                  {store.status}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -172,27 +298,31 @@ const TeamDetailScreen = ({navigation, route}: Props) => {
 export default TeamDetailScreen;
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
+  scrollContent: { padding: 16, paddingBottom: 40 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText: { color: '#828282', fontSize: 13, marginTop: 8 },
+  errorText: { color: '#1A1A1A', fontSize: 14, fontWeight: '600' },
+  retryBtn: {
+    backgroundColor: '#FFB302',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
+  retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   profileCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  profileHeader: { flexDirection: 'row', alignItems: 'flex-start' },
   avatar: {
     width: 60,
     height: 60,
@@ -209,42 +339,45 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: Fonts.semiBold,
   },
-  profileInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
+  profileInfo: { marginLeft: 16, flex: 1, gap: 4 },
   profileName: {
     fontSize: 18,
     color: '#1A1A1A',
     fontWeight: '700',
     fontFamily: Fonts.semiBold,
-    marginBottom: 4,
   },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
+  profileDesig: { fontSize: 12, color: '#828282', fontFamily: Fonts.medium },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   dateText: {
     fontSize: 13,
     color: '#4F4F4F',
     fontWeight: '500',
     fontFamily: Fonts.medium,
   },
+  attBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  attBadgeText: { fontSize: 10, fontWeight: '700' },
+  checkInText: { color: '#828282', fontSize: 10, marginTop: 2 },
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 14,
+    gap: 10,
   },
   metricCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
@@ -257,24 +390,51 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   metricValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     fontFamily: Fonts.bold,
     marginBottom: 4,
   },
   metricLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#828282',
     fontWeight: '600',
     fontFamily: Fonts.medium,
+    textAlign: 'center',
   },
+  orderStrip: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    elevation: 1,
+  },
+  orderStripItem: { alignItems: 'center' },
+  orderStripVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFB302',
+    fontFamily: Fonts.bold,
+  },
+  orderStripLabel: {
+    fontSize: 10,
+    color: '#828282',
+    fontFamily: Fonts.medium,
+    marginTop: 2,
+  },
+  orderStripDivider: { width: 1, height: 30, backgroundColor: '#E0E0E0' },
   listHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
     paddingHorizontal: 4,
   },
   listIconBox: {
@@ -289,6 +449,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: Fonts.semiBold,
   },
+  emptyText: {
+    color: '#828282',
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
   storeCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -299,7 +465,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 3,
     elevation: 1,
@@ -312,10 +478,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  storeInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
+  storeInfo: { flex: 1, marginLeft: 12 },
   storeName: {
     fontSize: 14,
     color: '#1A1A1A',
@@ -323,11 +486,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     marginBottom: 2,
   },
-  storeSub: {
-    fontSize: 11,
-    color: '#828282',
-    fontFamily: Fonts.medium,
-  },
+  storeSub: { fontSize: 11, color: '#828282', fontFamily: Fonts.medium },
+  storeTime: { fontSize: 10, color: '#828282', marginTop: 2 },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,9 +496,5 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
   },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: Fonts.semiBold,
-  },
+  statusText: { fontSize: 11, fontWeight: '700', fontFamily: Fonts.semiBold },
 });

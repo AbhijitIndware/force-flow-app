@@ -422,17 +422,17 @@ export const baseApi = createApi({
     }),
 
     // ─── NEW: GET ASM DASHBOARD ───────────────────────────────────────────────
-    getAsmDashboard: builder.query<AsmDashboardResponse, AsmDashboardParams>({
-      query: ({date, employee}: AsmDashboardParams) => ({
-        url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
-        method: 'GET',
-        params: {
-          date,
-          employee,
-        },
-      }),
-      // providesTags: ['Sales'],
-    }),
+    // getAsmDashboard: builder.query<AsmDashboardResponse, AsmDashboardParams>({
+    //   query: ({date, employee}: AsmDashboardParams) => ({
+    //     url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
+    //     method: 'GET',
+    //     params: {
+    //       date,
+    //       employee,
+    //     },
+    //   }),
+    //   // providesTags: ['Sales'],
+    // }),
 
     //GET ATTENDANCE REPORT
     getAttendance: builder.query<
@@ -554,6 +554,596 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
+
+    // ─── ASM DASHBOARD APIs ───────────────────────────────────────────────────
+ 
+    // Legacy combined dashboard endpoint
+    getAsmDashboard: builder.query<
+      AsmDashboardResponse,
+      AsmDashboardParams & {store_type?: string; zone?: string}
+    >({
+      query: ({date, employee, store_type, zone}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
+        method: 'GET',
+        params: {
+          date,
+          employee,
+          ...(store_type ? {store_type} : {}),
+          ...(zone ? {zone} : {}),
+        },
+      }),
+    }),
+ 
+    // API 1 — Get Zones & Store Types (filter dropdowns)
+    getAsmZones: builder.query<
+      {
+        message: {
+          success: boolean;
+          zones: string[];
+          store_types: {name: string; store_type: string}[];
+        };
+      },
+      {employee: string}
+    >({
+      query: ({employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_zones`,
+        method: 'GET',
+        params: {employee},
+      }),
+    }),
+ 
+    // API 2 — ASM Overview Card
+    getAsmOverview: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          role_code: string;
+          data: {
+            employee_id: string;
+            employee_name: string;
+            designation: string;
+            attendance_status: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+            team_size: number;
+            so_count: number;
+            isr_count: number;
+            outlets_planned: number;
+            outlets_visited: number;
+            outlets_completed: number;
+            outlets_pending: number;
+            completion_rate: number;
+            orders_today: number;
+            order_value: number;
+            orders_delivered: number;
+            orders_pending: number;
+            delivery_rate: number;
+            store_created: number;
+            store_created_success: number;
+          };
+        };
+      },
+      {date: string; employee: string; zone?: string; store_type?: string}
+    >({
+      query: ({date, employee, zone, store_type}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_asm_overview`,
+        method: 'GET',
+        params: {date, employee, zone, store_type},
+      }),
+    }),
+ 
+    // API 3 — Key Metrics Cards
+    getAsmKeyMetrics: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {
+            team_size: number;
+            team_present: number;
+            team_absent: number;
+            attendance_rate: number;
+            outlets_planned: number;
+            outlets_visited: number;
+            outlets_pending: number;
+            visit_rate: number;
+            orders_today: number;
+            order_value: number;
+            orders_delivered: number;
+            delivery_rate: number;
+            store_created: number;
+            store_created_success: number;
+          };
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_key_metrics`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 4 — Store Created Card
+    getAsmStoreCreated: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {created: number; successful: number};
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_store_created`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 5 — Store Planning Section
+    getAsmStorePlanning: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {
+            planned: number;
+            visited: number;
+            completed: number;
+            pending: number;
+            completion_rate: number;
+          };
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_store_planning`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 6 — Business Generated Section
+    getAsmBusinessGenerated: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {
+            total_orders: number;
+            draft_orders: number;
+            order_value: number;
+            orders_delivered: number;
+            orders_pending: number;
+            delivery_rate: number;
+            avg_order_value: number;
+          };
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_business_generated`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 7 — Today's Orders List
+    getAsmOrderStatus: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {
+            order_id: string;
+            time: string;
+            salesperson: string;
+            store: string;
+            order_value: number;
+            items: number;
+            status: string;
+            workflow_state: string;
+            docstatus: number;
+            payment: string;
+            delivery_status: string;
+            delivery_display_status: string;
+          }[];
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_order_status`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 8 — Team Performance List
+    getAsmTeamPerformance: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          data: {
+            employee_id: string;
+            employee_name: string;
+            initials: string;
+            role: string;
+            designation: string;
+            reports_to?: string;
+            attendance_status: string;
+            check_in_time: string | null;
+            check_out_time?: string | null;
+            outlets_planned: number;
+            outlets_visited: number;
+            outlets_completed?: number;
+            outlets_pending: number;
+            completion_rate: number;
+            orders: number;
+            order_value: number;
+            orders_delivered?: number;
+            orders_pending?: number;
+            store_created?: number;
+            store_created_success?: number;
+            avg_order_size?: number;
+            conversion_rate?: number;
+          }[];
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_team_performance`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 9 — Attendance Tab
+    getAsmAttendanceTab: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          summary: {
+            total: number;
+            present: number;
+            absent: number;
+            attendance_rate: number;
+          };
+          records: {
+            employee_id: string;
+            employee_name: string;
+            initials: string;
+            designation: string;
+            role: string;
+            attendance_status: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+          }[];
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_attendance_tab`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 10 — Daily PJP Tab
+    getAsmDailyPjpTab: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          summary: {
+            total_planned: number;
+            total_visited: number;
+            total_completed: number;
+            total_pending: number;
+            completion_rate: number;
+          };
+          records: {
+            employee_id: string;
+            employee_name: string;
+            initials: string;
+            designation: string;
+            role: string;
+            attendance_status: string;
+            planned: number;
+            visited: number;
+            completed: number;
+            pending: number;
+            completion_rate: number;
+            store_visits: {
+              store_id: string;
+              store_name: string;
+              store_type: string;
+              check_in_time: string | null;
+              check_out_time: string | null;
+              spent_time: string | null;
+              visit_status: string;
+            }[];
+          }[];
+        };
+      },
+      {date: string; employee: string}
+    >({
+      query: ({date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_daily_pjp_tab`,
+        method: 'GET',
+        params: {date, employee},
+      }),
+    }),
+ 
+    // API 11 — PJP Target vs Achievement (Monthly)
+    getAsmPjpTargetVsAchievement: builder.query<
+      {
+        message: {
+          success: boolean;
+          period: {month: number; year: number; from: string; to: string};
+          summary: {
+            total_planned: number;
+            total_visited: number;
+            achievement_rate: number;
+          };
+          records: {
+            employee_id: string;
+            employee_name: string;
+            designation: string;
+            role: string;
+            total_planned: number;
+            total_visited: number;
+            total_completed: number;
+            achievement_rate: number;
+          }[];
+        };
+      },
+      {employee: string; month: number; year: number}
+    >({
+      query: ({employee, month, year}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_pjp_target_vs_achievement`,
+        method: 'GET',
+        params: {employee, month, year},
+      }),
+    }),
+ 
+    // API 12 — Target vs Achievement — PO vs SO (Monthly)
+    getAsmTargetVsAchievement: builder.query<
+      {
+        message: {
+          success: boolean;
+          period: {month: number; year: number; from: string; to: string};
+          summary: {
+            total_target: number;
+            total_so: number;
+            achievement_pct: number;
+          };
+          records: {
+            employee_id: string;
+            employee_name: string;
+            designation: string;
+            role: string;
+            target_amount: number;
+            achieved_from_primary: number;
+            so_total: number;
+            achievement_pct: number;
+          }[];
+        };
+      },
+      {employee: string; month: number; year: number}
+    >({
+      query: ({employee, month, year}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_target_vs_achievement`,
+        method: 'GET',
+        params: {employee, month, year},
+      }),
+    }),
+ 
+    // API 13 — Order Detail Page
+    getAsmOrderDetail: builder.query<
+      {
+        message: {
+          success: boolean;
+          order: {
+            order_id: string;
+            date: string;
+            customer: string;
+            store: string;
+            salesperson: string;
+            status: string;
+            workflow_state: string;
+            docstatus: number;
+            delivery_status: string;
+            delivery_display_status: string;
+            billing_status: string;
+            grand_total: number;
+            total_qty: number;
+            delivery_date: string;
+            po_no: string;
+            remarks: string;
+          };
+          items: {
+            item_code: string;
+            item_name: string;
+            qty: number;
+            uom: string;
+            rate: number;
+            amount: number;
+            delivered_qty: number;
+            description: string;
+          }[];
+        };
+      },
+      {order_id: string}
+    >({
+      query: ({order_id}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_order_detail`,
+        method: 'GET',
+        params: {order_id},
+      }),
+    }),
+ 
+    // API 14 — Team Detail Page
+    getAsmTeamDetail: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          employee: {
+            employee_id: string;
+            employee_name: string;
+            designation: string;
+            attendance_status: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+          };
+          summary: {total_store: number; visited: number; pending: number};
+          orders_summary: {
+            orders: number;
+            draft: number;
+            order_value: number;
+            total_items: number;
+            delivered: number;
+            pending: number;
+          };
+          store_list: {
+            store_id: string;
+            store_name: string;
+            store_type: string;
+            zone: string;
+            city: string;
+            status: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+            spent_time: string | null;
+            pjp_store_time: string | null;
+          }[];
+        };
+      },
+      {employee: string; date: string}
+    >({
+      query: ({employee, date}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_team_detail`,
+        method: 'GET',
+        params: {employee, date},
+      }),
+    }),
+ 
+    // API 15 — Store Detail Page
+    getAsmStoreDetail: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          store: {
+            store_id: string;
+            store_name: string;
+            store_type: string;
+            zone: string;
+            city: string;
+            address: string;
+            gst_no: string;
+            pan_no: string;
+            status: string;
+          };
+          visit_info: {
+            employee: string;
+            employee_name: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+            spent_time: string | null;
+            location: string;
+          }[];
+          orders: {
+            order_id: string;
+            time: string;
+            grand_total: number;
+            total_qty: number;
+            item_count: number;
+            status: string;
+            workflow_state: string;
+            docstatus: number;
+            delivery_display_status: string;
+          }[];
+        };
+      },
+      {store_id: string; date: string; employee?: string}
+    >({
+      query: ({store_id, date, employee}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_store_detail`,
+        method: 'GET',
+        params: {store_id, date, employee},
+      }),
+    }),
+ 
+    // API 16 — Detail By User Page
+    getAsmUserDetail: builder.query<
+      {
+        message: {
+          success: boolean;
+          date: string;
+          employee: {
+            employee_id: string;
+            employee_name: string;
+            designation: string;
+            attendance_status: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+          };
+          pjp_summary: {
+            planned: number;
+            visited: number;
+            completed: number;
+            pending: number;
+          };
+          orders_summary: {
+            orders: number;
+            draft: number;
+            order_value: number;
+            total_items: number;
+            delivered: number;
+            pending: number;
+          };
+          stores_created: {created: number; successful: number};
+          orders: {
+            order_id: string;
+            time: string;
+            store: string;
+            grand_total: number;
+            total_qty: number;
+            status: string;
+            delivery_display_status: string;
+            docstatus: number;
+          }[];
+          visits: {
+            store_id: string;
+            store_name: string;
+            store_type: string;
+            zone: string;
+            check_in_time: string | null;
+            check_out_time: string | null;
+            spent_time: string | null;
+          }[];
+        };
+      },
+      {employee: string; date: string}
+    >({
+      query: ({employee, date}) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.api_get_user_detail`,
+        method: 'GET',
+        params: {employee, date},
+      }),
+    }),
   }),
 });
 export const {
@@ -598,7 +1188,24 @@ export const {
   useCheckStoreNameQuery,
   //Report
   useGetReportQuery,
+   //ASM Dashboard
   useGetAsmDashboardQuery,
+  useGetAsmZonesQuery,
+  useGetAsmOverviewQuery,
+  useGetAsmKeyMetricsQuery,
+  useGetAsmStoreCreatedQuery,
+  useGetAsmStorePlanningQuery,
+  useGetAsmBusinessGeneratedQuery,
+  useGetAsmOrderStatusQuery,
+  useGetAsmTeamPerformanceQuery,
+  useGetAsmAttendanceTabQuery,
+  useGetAsmDailyPjpTabQuery,
+  useGetAsmPjpTargetVsAchievementQuery,
+  useGetAsmTargetVsAchievementQuery,
+  useGetAsmOrderDetailQuery,
+  useGetAsmTeamDetailQuery,
+  useGetAsmStoreDetailQuery,
+  useGetAsmUserDetailQuery,
   //Attendance
   useGetAttendanceQuery,
   //Copy PJP

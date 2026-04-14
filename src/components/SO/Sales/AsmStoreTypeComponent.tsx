@@ -1,27 +1,40 @@
-import React, {useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import ReusableDropdownV3 from '../../ui-lib/reusable-dropdown-v3';
+import { useGetAsmZonesQuery } from '../../../features/base/base-api';
+import { useAppSelector } from '../../../store/hook';
 
-const STORE_TYPE_OPTIONS = [
-  {label: 'Super Market', value: 'super_market'},
-  {label: 'Hyper Market', value: 'hyper_market'},
-  {label: 'Convenience Store', value: 'convenience_store'},
-  {label: 'Wholesale', value: 'wholesale'},
-  {label: 'Pharmacy', value: 'pharmacy'},
-  {label: 'General Trade', value: 'general_trade'},
-];
+interface AsmStoreTypeComponentProps {
+  // Controlled: parent owns the value so it can forward it to the dashboard API
+  value: string;
+  onChange: (val: string) => void;
+}
 
-const AsmStoreTypeComponent = () => {
-  const [storeType, setStoreType] = useState<string>('');
+const AsmStoreTypeComponent = ({ value, onChange }: AsmStoreTypeComponentProps) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
+  const { data } = useGetAsmZonesQuery(
+    { employee: employee?.id as string },
+    { skip: !employee?.id },
+  );
+
+  // Map API response { name, store_type } → { label, value }
+  const storeTypeOptions =
+    data?.message?.store_types?.map(item => ({
+      label: item.store_type,
+      value: item.name,
+    })) ?? [];
 
   return (
     <View style={styles.container}>
       <ReusableDropdownV3
         label="Store Type"
         field="store_type"
-        value={storeType}
-        data={STORE_TYPE_OPTIONS}
-        onChange={setStoreType}
+        value={value}
+        data={storeTypeOptions}
+        onChange={onChange}
       />
     </View>
   );
@@ -30,8 +43,5 @@ const AsmStoreTypeComponent = () => {
 export default AsmStoreTypeComponent;
 
 const styles = StyleSheet.create({
-  container: {
-    // paddingHorizontal: 16,
-    // paddingTop: 12,
-  },
+  container: {},
 });

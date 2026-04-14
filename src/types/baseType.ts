@@ -1682,6 +1682,7 @@ export interface AsmKeyMetrics {
   order_value: number;
   orders_delivered: number;
   delivery_rate: number;
+  store_created_success:number
 }
 
 export interface AsmStorePlanning {

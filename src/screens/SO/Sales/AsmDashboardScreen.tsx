@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useCallback, useState} from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -37,16 +37,16 @@ import {
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import {useGetAsmDashboardQuery} from '../../../features/base/base-api';
-import {useAppSelector} from '../../../store/hook';
+import { useGetAsmDashboardQuery } from '../../../features/base/base-api';
+import { useAppSelector } from '../../../store/hook';
 import AsmStoreTypeComponent from '../../../components/SO/Sales/AsmStoreTypeComponent';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const DURATION_OPTIONS = [
-  {label: 'Last week', value: 'A'},
-  {label: 'Last month', value: 'B'},
-  {label: 'Last six months', value: 'C'},
+  { label: 'Last week', value: 'A' },
+  { label: 'Last month', value: 'B' },
+  { label: 'Last three months', value: 'C' },
 ];
 
 // ─── Palette ─────────────────────────────────────────────────────────────────
@@ -122,6 +122,7 @@ export interface AsmKeyMetrics {
   order_value: number;
   orders_delivered: number;
   delivery_rate: number;
+  store_created_success: number
 }
 
 export interface AsmStorePlanning {
@@ -200,7 +201,7 @@ export interface AsmDashboardResponse {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmt = (n: number): string =>
-  `₹${n.toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+  `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
 const getInitials = (name: string): string =>
   name
@@ -297,7 +298,7 @@ const StatPill: React.FC<StatPillProps> = ({
       borderWidth: 1,
       borderColor: `${color}30`,
     }}>
-    <Text style={{color, fontSize: 14, fontWeight: '800'}}>{value}</Text>
+    <Text style={{ color, fontSize: 14, fontWeight: '800' }}>{value}</Text>
     <Text
       style={{
         color: C.textMuted,
@@ -317,14 +318,14 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({
   accent = C.accent,
 }) => (
   <View style={styles.sectionHeader}>
-    <View style={[styles.sectionIcon, {backgroundColor: `${accent}20`}]}>
+    <View style={[styles.sectionIcon, { backgroundColor: `${accent}20` }]}>
       <Icon size={14} color={accent} strokeWidth={2.2} />
     </View>
     <Text style={styles.sectionTitle}>{title}</Text>
   </View>
 );
 
-const ProgressBar: React.FC<ProgressBarProps> = ({value, color = C.accent}) => (
+const ProgressBar: React.FC<ProgressBarProps> = ({ value, color = C.accent }) => (
   <View style={styles.progressTrack}>
     <View
       style={[
@@ -339,7 +340,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({value, color = C.accent}) => (
 );
 
 // ─── Date Selector Bar ────────────────────────────────────────────────────────
-const DateSelectorBar: React.FC<DateSelectorBarProps> = ({label, onPress}) => (
+const DateSelectorBar: React.FC<DateSelectorBarProps> = ({ label, onPress }) => (
   <TouchableOpacity
     style={styles.dateBar}
     onPress={onPress}
@@ -373,7 +374,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     <View style={styles.header}>
       <View style={styles.headerAccentBar} />
       <View style={styles.headerInner}>
-        <View style={{flex: 1, marginRight: 12}}>
+        <View style={{ flex: 1, marginRight: 12 }}>
           <Text style={styles.headerDate}>{formattedDate}</Text>
           <Text style={styles.headerName} numberOfLines={2}>
             {overview.employee_name}
@@ -433,11 +434,11 @@ const KpiCard: React.FC<KpiCardProps> = ({
   bgColor,
   wide,
 }) => (
-  <View style={[styles.kpiCard, wide === true && {width: '100%'}]}>
-    <View style={[styles.kpiIconWrap, {backgroundColor: bgColor}]}>
+  <View style={[styles.kpiCard, wide === true && { width: '100%' }]}>
+    <View style={[styles.kpiIconWrap, { backgroundColor: bgColor }]}>
       <Icon size={18} color={color} strokeWidth={2} />
     </View>
-    <Text style={[styles.kpiValue, {color}]}>{value}</Text>
+    <Text style={[styles.kpiValue, { color }]}>{value}</Text>
     <Text style={styles.kpiLabel}>{label}</Text>
     {sub != null && <Text style={styles.kpiSub}>{sub}</Text>}
   </View>
@@ -446,7 +447,7 @@ const KpiCard: React.FC<KpiCardProps> = ({
 interface KpiGridProps {
   metrics: AsmKeyMetrics;
 }
-const KpiGrid: React.FC<KpiGridProps> = ({metrics: m}) => (
+const KpiGrid: React.FC<KpiGridProps> = ({ metrics: m }) => (
   <View>
     <SectionHeader icon={BarChart2} title="Today's Overview" accent={C.amber} />
     <View style={styles.kpiRow}>
@@ -485,8 +486,8 @@ const KpiGrid: React.FC<KpiGridProps> = ({metrics: m}) => (
       <KpiCard
         icon={Building2}
         label="Store Created"
-        value={`32`}
-        sub={`${32} Successfully`}
+        value={`${m.store_created_success}`}
+        sub={`${m.store_created_success} Successfully`}
         color={C.purple}
         bgColor={C.purpleSoft}
       />
@@ -498,7 +499,7 @@ const KpiGrid: React.FC<KpiGridProps> = ({metrics: m}) => (
 interface StorePlanningProps {
   planning: AsmStorePlanning;
 }
-const StorePlanning: React.FC<StorePlanningProps> = ({planning: p}) => (
+const StorePlanning: React.FC<StorePlanningProps> = ({ planning: p }) => (
   <View style={styles.planCard}>
     <SectionHeader icon={Store} title="Store Planning" accent={C.green} />
     <View style={styles.planRow}>
@@ -514,12 +515,12 @@ const StorePlanning: React.FC<StorePlanningProps> = ({planning: p}) => (
         color={C.purple}
         bgColor={C.purpleSoft}
       />
-      <StatPill
+      {/* <StatPill
         label="Completed"
         value={p.completed}
         color={C.green}
         bgColor={C.greenSoft}
-      />
+      /> */}
       <StatPill
         label="Pending"
         value={p.pending}
@@ -527,19 +528,19 @@ const StorePlanning: React.FC<StorePlanningProps> = ({planning: p}) => (
         bgColor="#F2F2F2"
       />
     </View>
-    <View style={{marginTop: 14}}>
+    <View style={{ marginTop: 14 }}>
       <View style={styles.planLabelRow}>
         <Text style={styles.planLabel}>Completion Rate</Text>
-        <Text style={[styles.planLabel, {color: C.green, fontWeight: '700'}]}>
+        <Text style={[styles.planLabel, { color: C.green, fontWeight: '700' }]}>
           {p.completion_rate.toFixed(0)}%
         </Text>
       </View>
       <ProgressBar value={p.completion_rate} color={C.green} />
     </View>
-    <View style={{marginTop: 10}}>
+    <View style={{ marginTop: 10 }}>
       <View style={styles.planLabelRow}>
         <Text style={styles.planLabel}>Delivery Rate</Text>
-        <Text style={[styles.planLabel, {color: C.red, fontWeight: '700'}]}>
+        <Text style={[styles.planLabel, { color: C.red, fontWeight: '700' }]}>
           0%
         </Text>
       </View>
@@ -552,7 +553,7 @@ const StorePlanning: React.FC<StorePlanningProps> = ({planning: p}) => (
 interface BusinessSummaryProps {
   business: AsmBusinessGenerated;
 }
-const BusinessSummary: React.FC<BusinessSummaryProps> = ({business: b}) => (
+const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
   <View style={styles.bizCard}>
     <SectionHeader
       icon={TrendingUp}
@@ -561,19 +562,19 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({business: b}) => (
     />
     <View style={styles.bizGrid}>
       <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, {color: C.amber}]}>{b.total_orders}</Text>
+        <Text style={[styles.bizVal, { color: C.amber }]}>{b.total_orders}</Text>
         <Text style={styles.bizLabel}>Total Orders</Text>
       </View>
       <View style={styles.bizDivider} />
       <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, {color: C.green}]}>
+        <Text style={[styles.bizVal, { color: C.green }]}>
           {fmt(b.order_value)}
         </Text>
         <Text style={styles.bizLabel}>Order Value</Text>
       </View>
       <View style={styles.bizDivider} />
       <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, {color: C.purple}]}>
+        <Text style={[styles.bizVal, { color: C.purple }]}>
           {fmt(b.avg_order_value)}
         </Text>
         <Text style={styles.bizLabel}>Avg Order</Text>
@@ -583,7 +584,7 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({business: b}) => (
       <Truck size={14} color={C.red} strokeWidth={2} />
       <Text style={styles.deliveryText}>
         Delivery:{' '}
-        <Text style={{color: C.red, fontWeight: '700'}}>
+        <Text style={{ color: C.red, fontWeight: '700' }}>
           {b.orders_pending} pending
         </Text>{' '}
         · {b.orders_delivered} delivered
@@ -593,10 +594,10 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({business: b}) => (
 );
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
-const OrderCard: React.FC<OrderCardProps> = ({order, index}) => (
-  <View style={[styles.orderCard, index > 0 && {marginTop: 10}]}>
+const OrderCard: React.FC<OrderCardProps> = ({ order, index }) => (
+  <View style={[styles.orderCard, index > 0 && { marginTop: 10 }]}>
     <View style={styles.orderStripe} />
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <View style={styles.orderTop}>
         <View style={styles.orderIdRow}>
           <Package size={12} color={C.accent} strokeWidth={2} />
@@ -658,7 +659,7 @@ const OrderCard: React.FC<OrderCardProps> = ({order, index}) => (
 interface OrdersSectionProps {
   orders: AsmOrderStatus[];
 }
-const OrdersSection: React.FC<OrdersSectionProps> = ({orders}) => (
+const OrdersSection: React.FC<OrdersSectionProps> = ({ orders }) => (
   <View>
     <SectionHeader
       icon={ShoppingCart}
@@ -676,77 +677,158 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({orders}) => (
 );
 
 // ─── Team Performance ─────────────────────────────────────────────────────────
-const TeamMemberCard: React.FC<TeamMemberCardProps> = ({member}) => {
+// const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member }) => {
+//   const present = member.attendance_status === 'Present';
+//   const initials = member.initials || getInitials(member.employee_name);
+//   return (
+//     <View style={styles.teamCard}>
+//       <View style={styles.teamCardLeft}>
+//         <AvatarBadge initials={initials} present={present} />
+//         <View style={{ marginLeft: 10, flex: 1 }}>
+//           <View style={styles.teamNameRow}>
+//             <Text style={styles.teamName} numberOfLines={1}>
+//               {member.employee_name}
+//             </Text>
+//             <View
+//               style={[
+//                 styles.roleBadge,
+//                 {
+//                   backgroundColor:
+//                     member.role === 'SO' ? C.purpleSoft : C.accentSoft,
+//                 },
+//               ]}>
+//               <Text
+//                 style={[
+//                   styles.roleText,
+//                   { color: member.role === 'SO' ? C.purple : C.amber },
+//                 ]}>
+//                 {member.role}
+//               </Text>
+//             </View>
+//           </View>
+//           <View style={styles.teamStatusRow}>
+//             {present ? (
+//               <>
+//                 <UserCheck size={11} color={C.green} strokeWidth={2} />
+//                 <Text style={[styles.teamStatus, { color: C.green }]}>
+//                   In · {member.check_in_time}
+//                 </Text>
+//               </>
+//             ) : (
+//               <>
+//                 <UserX size={11} color={C.red} strokeWidth={2} />
+//                 <Text style={[styles.teamStatus, { color: C.red }]}>Absent</Text>
+//               </>
+//             )}
+//           </View>
+//         </View>
+//       </View>
+//       <View style={styles.teamStats}>
+//         <View style={styles.teamStatCol}>
+//           <Text style={[styles.teamStatVal, { color: C.purple }]}>
+//             {member.outlets_visited}
+//           </Text>
+//           <Text style={styles.teamStatLabel}>Visited</Text>
+//         </View>
+//         <View style={styles.teamStatDivider} />
+//         <View style={styles.teamStatCol}>
+//           <Text style={[styles.teamStatVal, { color: C.amber }]}>
+//             {member.orders}
+//           </Text>
+//           <Text style={styles.teamStatLabel}>Orders</Text>
+//         </View>
+//         <View style={styles.teamStatDivider} />
+//         <View style={styles.teamStatCol}>
+//           <Text style={[styles.teamStatVal, { color: C.green }]}>
+//             {member.order_value > 0
+//               ? `₹${(member.order_value / 1000).toFixed(1)}K`
+//               : '—'}
+//           </Text>
+//           <Text style={styles.teamStatLabel}>Value</Text>
+//         </View>
+//       </View>
+//     </View>
+//   );
+// };
+
+interface TeamMemberCardProps {
+  member: AsmTeamMember;
+  onPress: () => void; // ← new prop
+}
+
+const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member, onPress }) => {
   const present = member.attendance_status === 'Present';
   const initials = member.initials || getInitials(member.employee_name);
   return (
-    <View style={styles.teamCard}>
-      <View style={styles.teamCardLeft}>
-        <AvatarBadge initials={initials} present={present} />
-        <View style={{marginLeft: 10, flex: 1}}>
-          <View style={styles.teamNameRow}>
-            <Text style={styles.teamName} numberOfLines={1}>
-              {member.employee_name}
-            </Text>
-            <View
-              style={[
-                styles.roleBadge,
-                {
-                  backgroundColor:
-                    member.role === 'SO' ? C.purpleSoft : C.accentSoft,
-                },
-              ]}>
-              <Text
-                style={[
-                  styles.roleText,
-                  {color: member.role === 'SO' ? C.purple : C.amber},
-                ]}>
-                {member.role}
+    <TouchableOpacity activeOpacity={0.75} onPress={onPress}>
+      <View style={styles.teamCard}>
+        <View style={styles.teamCardLeft}>
+          <AvatarBadge initials={initials} present={present} />
+          <View style={{ marginLeft: 10, flex: 1 }}>
+            <View style={styles.teamNameRow}>
+              <Text style={styles.teamName} numberOfLines={1}>
+                {member.employee_name}
               </Text>
+              <View
+                style={[
+                  styles.roleBadge,
+                  {
+                    backgroundColor:
+                      member.role === 'SO' ? C.purpleSoft : C.accentSoft,
+                  },
+                ]}>
+                <Text
+                  style={[
+                    styles.roleText,
+                    { color: member.role === 'SO' ? C.purple : C.amber },
+                  ]}>
+                  {member.role}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.teamStatusRow}>
+              {present ? (
+                <>
+                  <UserCheck size={11} color={C.green} strokeWidth={2} />
+                  <Text style={[styles.teamStatus, { color: C.green }]}>
+                    In · {member.check_in_time}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <UserX size={11} color={C.red} strokeWidth={2} />
+                  <Text style={[styles.teamStatus, { color: C.red }]}>Absent</Text>
+                </>
+              )}
             </View>
           </View>
-          <View style={styles.teamStatusRow}>
-            {present ? (
-              <>
-                <UserCheck size={11} color={C.green} strokeWidth={2} />
-                <Text style={[styles.teamStatus, {color: C.green}]}>
-                  In · {member.check_in_time}
-                </Text>
-              </>
-            ) : (
-              <>
-                <UserX size={11} color={C.red} strokeWidth={2} />
-                <Text style={[styles.teamStatus, {color: C.red}]}>Absent</Text>
-              </>
-            )}
+        </View>
+        <View style={styles.teamStats}>
+          <View style={styles.teamStatCol}>
+            <Text style={[styles.teamStatVal, { color: C.purple }]}>
+              {member.outlets_visited}
+            </Text>
+            <Text style={styles.teamStatLabel}>Visited</Text>
+          </View>
+          <View style={styles.teamStatDivider} />
+          <View style={styles.teamStatCol}>
+            <Text style={[styles.teamStatVal, { color: C.amber }]}>
+              {member.orders}
+            </Text>
+            <Text style={styles.teamStatLabel}>Orders</Text>
+          </View>
+          <View style={styles.teamStatDivider} />
+          <View style={styles.teamStatCol}>
+            <Text style={[styles.teamStatVal, { color: C.green }]}>
+              {member.order_value > 0
+                ? `₹${(member.order_value / 1000).toFixed(1)}K`
+                : '—'}
+            </Text>
+            <Text style={styles.teamStatLabel}>Value</Text>
           </View>
         </View>
       </View>
-      <View style={styles.teamStats}>
-        <View style={styles.teamStatCol}>
-          <Text style={[styles.teamStatVal, {color: C.purple}]}>
-            {member.outlets_visited}
-          </Text>
-          <Text style={styles.teamStatLabel}>Visited</Text>
-        </View>
-        <View style={styles.teamStatDivider} />
-        <View style={styles.teamStatCol}>
-          <Text style={[styles.teamStatVal, {color: C.amber}]}>
-            {member.orders}
-          </Text>
-          <Text style={styles.teamStatLabel}>Orders</Text>
-        </View>
-        <View style={styles.teamStatDivider} />
-        <View style={styles.teamStatCol}>
-          <Text style={[styles.teamStatVal, {color: C.green}]}>
-            {member.order_value > 0
-              ? `₹${(member.order_value / 1000).toFixed(1)}K`
-              : '—'}
-          </Text>
-          <Text style={styles.teamStatLabel}>Value</Text>
-        </View>
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -754,27 +836,37 @@ interface TeamSectionProps {
   team: AsmTeamMember[];
   metrics: AsmKeyMetrics;
   navigation: any;
+  // Pass the currently selected dashboard date as a YYYY-MM-DD string
+  selectedDateStr: string;
 }
+
+interface TeamSectionProps {
+  team: AsmTeamMember[];
+  metrics: AsmKeyMetrics;
+  navigation: any;
+  // Pass the currently selected dashboard date as a YYYY-MM-DD string
+  selectedDateStr: string;
+}
+
 const TeamSection: React.FC<TeamSectionProps> = ({
   team,
   metrics,
   navigation,
+  selectedDateStr,
 }) => (
-  <TouchableOpacity
-    style={{marginBottom: 30}}
-    onPress={() => navigation?.navigate('TeamDetailScreen')}>
+  <View style={{ marginBottom: 30 }}>
     <View style={styles.teamSectionHeader}>
       <SectionHeader icon={Users} title="Team Performance" accent={C.amber} />
       <View style={styles.teamSummaryBadges}>
         <View style={styles.presentCount}>
           <CheckCircle size={10} color={C.green} strokeWidth={2.5} />
-          <Text style={[styles.countText, {color: C.green}]}>
+          <Text style={[styles.countText, { color: C.green }]}>
             {metrics.team_present}
           </Text>
         </View>
         <View style={styles.absentCount}>
           <AlertCircle size={10} color={C.red} strokeWidth={2.5} />
-          <Text style={[styles.countText, {color: C.red}]}>
+          <Text style={[styles.countText, { color: C.red }]}>
             {metrics.team_absent}
           </Text>
         </View>
@@ -805,9 +897,19 @@ const TeamSection: React.FC<TeamSectionProps> = ({
       {metrics.attendance_rate}% attendance today
     </Text>
     {team.map(member => (
-      <TeamMemberCard key={member.employee_id} member={member} />
+      <TeamMemberCard
+        key={member.employee_id}
+        member={member}
+        // ← Pass employee_id and the dashboard date (already a YYYY-MM-DD string)
+        onPress={() =>
+          navigation?.navigate('TeamDetailScreen', {
+            employee_id: member.employee_id,
+            date: selectedDateStr, // string, never a Date object
+          })
+        }
+      />
     ))}
-  </TouchableOpacity>
+  </View>
 );
 
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
@@ -815,7 +917,7 @@ interface AsmDashboardProps {
   navigation: any;
 }
 
-const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
+const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   // ── Auth ──────────────────────────────────────────────────────────────────
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -827,15 +929,24 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
   const [iosTempDate, setIosTempDate] = useState<Date>(new Date());
 
   const [category1, setCategory1] = useState<string>('');
-  const [category2, setCategory2] = useState<string>('');
+
+  // ── Store type filter (from AsmStoreTypeComponent) ────────────────────────
+  const [selectedStoreType, setSelectedStoreType] = useState<string>('');
 
   const [refreshing, setRefreshing] = useState(false);
 
   // ── API ───────────────────────────────────────────────────────────────────
-  const {data, isFetching, isError, refetch} = useGetAsmDashboardQuery(
-    {date: toApiDate(selectedDate), employee: employee?.id as string},
-    {refetchOnMountOrArgChange: true, skip: !employee?.id},
+  const { data, isFetching, isError, error, refetch } = useGetAsmDashboardQuery(
+    {
+      date: toApiDate(selectedDate),
+      employee: employee?.id as string,
+      // Optional filter — only sent when user picks a store type
+      ...(selectedStoreType ? { store_type: selectedStoreType } : {}),
+    },
+    { refetchOnMountOrArgChange: true, skip: !employee?.id },
   );
+  console.log("🚀 ~ AsmDashboard ~ isError:", isError, error)
+  console.log("🚀 ~ AsmDashboard ~ data:", data)
 
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
@@ -849,7 +960,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
     setShowPicker(true);
   };
 
-  /** Android: fires once on confirm/dismiss */
   const onAndroidChange = (event: DateTimePickerEvent, date?: Date) => {
     setShowPicker(false);
     if (event.type === 'set' && date) {
@@ -857,7 +967,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
     }
   };
 
-  /** iOS: fires on every scroll → only update temp */
   const onIosChange = (_event: DateTimePickerEvent, date?: Date) => {
     if (date) {
       setIosTempDate(date);
@@ -885,7 +994,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
         />
       );
     }
-    // iOS bottom-sheet modal
     return (
       <Modal
         transparent
@@ -948,7 +1056,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
             borderBottomWidth: 1,
             borderBottomColor: C.border,
           }}
-          contentContainerStyle={{paddingHorizontal: 16, paddingVertical: 12}}>
+          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
           {DURATION_OPTIONS.map(opt => (
             <TouchableOpacity
               key={opt.value}
@@ -962,8 +1070,8 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
                   marginRight: 8,
                 },
                 category1 === opt.value
-                  ? {backgroundColor: C.accent, borderColor: C.accent}
-                  : {backgroundColor: C.bg, borderColor: C.border},
+                  ? { backgroundColor: C.accent, borderColor: C.accent }
+                  : { backgroundColor: C.bg, borderColor: C.border },
               ]}>
               <Text
                 style={{
@@ -1000,7 +1108,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
 
       <ScrollView
         style={styles.scroll}
-        // contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -1010,7 +1117,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
             tintColor={C.accent}
           />
         }>
-        {/* ── Date selector bar ── */}
+        {/* ── Duration filter chips ── */}
         <View
           style={{
             backgroundColor: C.surface,
@@ -1037,8 +1144,8 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
                     marginRight: 8,
                   },
                   category1 === opt.value
-                    ? {backgroundColor: C.accent, borderColor: C.accent}
-                    : {backgroundColor: C.bg, borderColor: C.border},
+                    ? { backgroundColor: C.accent, borderColor: C.accent }
+                    : { backgroundColor: C.bg, borderColor: C.border },
                 ]}>
                 <Text
                   style={{
@@ -1052,6 +1159,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
             ))}
           </ScrollView>
         </View>
+
         <DateSelectorBar
           label={toDisplayDate(selectedDate)}
           onPress={openPicker}
@@ -1061,8 +1169,14 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
           formattedDate={msg.formatted_date}
           overview={msg.asm_overview}
         />
+
         <View style={styles.body}>
-          <AsmStoreTypeComponent />
+          {/* Store type filter — selection re-triggers the dashboard API */}
+          <AsmStoreTypeComponent
+            value={selectedStoreType}
+            onChange={setSelectedStoreType}
+          />
+
           <KpiGrid metrics={msg.key_metrics} />
           <View style={styles.divider} />
           <StorePlanning planning={msg.store_planning} />
@@ -1075,11 +1189,12 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({navigation}) => {
             team={msg.team_performance}
             metrics={msg.key_metrics}
             navigation={navigation}
+            // ✅ Always a YYYY-MM-DD string — never a Date object
+            selectedDateStr={toApiDate(selectedDate)}
           />
         </View>
       </ScrollView>
 
-      {/* Picker floats outside ScrollView */}
       {renderPicker()}
     </View>
   );
@@ -1089,12 +1204,12 @@ export default AsmDashboard;
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: {flex: 1, backgroundColor: C.bg},
-  scroll: {flex: 1},
+  root: { flex: 1, backgroundColor: C.bg },
+  scroll: { flex: 1 },
   // scrollContent: {paddingBottom: 40},
 
   // Loading / Error
-  centeredOuter: {flex: 1, backgroundColor: C.bg},
+  centeredOuter: { flex: 1, backgroundColor: C.bg },
   centered: {
     flex: 1,
     justifyContent: 'center',
@@ -1102,8 +1217,8 @@ const styles = StyleSheet.create({
     backgroundColor: C.bg,
     gap: 12,
   },
-  loadingText: {color: C.textMuted, fontSize: 13, marginTop: 8},
-  errorText: {color: C.text, fontSize: 14, fontWeight: '600'},
+  loadingText: { color: C.textMuted, fontSize: 13, marginTop: 8 },
+  errorText: { color: C.text, fontSize: 14, fontWeight: '600' },
   retryBtn: {
     backgroundColor: C.accent,
     paddingHorizontal: 24,
@@ -1111,7 +1226,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 4,
   },
-  retryBtnText: {color: '#fff', fontWeight: '700', fontSize: 13},
+  retryBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 
   // ── Date selector bar ──────────────────────────────────────────────────────
   dateBar: {
@@ -1126,12 +1241,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: C.accent,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 2,
   },
-  dateBarLeft: {flexDirection: 'row', alignItems: 'center', gap: 10},
+  dateBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   dateBarIcon: {
     width: 32,
     height: 32,
@@ -1146,7 +1261,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     letterSpacing: 0.4,
   },
-  dateBarLabel: {color: C.text, fontSize: 14, fontWeight: '700', marginTop: 1},
+  dateBarLabel: { color: C.text, fontSize: 14, fontWeight: '700', marginTop: 1 },
   dateBarChevron: {
     width: 28,
     height: 28,
@@ -1164,12 +1279,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.border,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 3,
   },
-  headerAccentBar: {height: 4, backgroundColor: C.accent},
+  headerAccentBar: { height: 4, backgroundColor: C.accent },
   headerInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1198,15 +1313,15 @@ const styles = StyleSheet.create({
     gap: 8,
     flexWrap: 'wrap',
   },
-  headerDesig: {color: C.textSub, fontSize: 11, fontWeight: '500'},
+  headerDesig: { color: C.textSub, fontSize: 11, fontWeight: '500' },
   attendanceBadge: {
     borderRadius: 5,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderWidth: 1,
   },
-  attendanceBadgeText: {fontSize: 10, fontWeight: '700'},
-  checkInText: {color: C.textMuted, fontSize: 10},
+  attendanceBadgeText: { fontSize: 10, fontWeight: '700' },
+  checkInText: { color: C.textMuted, fontSize: 10 },
   headerIdBox: {
     backgroundColor: C.accentSoft,
     borderRadius: 12,
@@ -1221,11 +1336,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 1,
   },
-  headerIdVal: {color: C.amber, fontSize: 16, fontWeight: '800', marginTop: 2},
+  headerIdVal: { color: C.amber, fontSize: 16, fontWeight: '800', marginTop: 2 },
 
   // Body
-  body: {paddingHorizontal: 16, paddingTop: 16},
-  divider: {height: 1, backgroundColor: C.border, marginVertical: 20},
+  body: { paddingHorizontal: 16, paddingTop: 16 },
+  divider: { height: 1, backgroundColor: C.border, marginVertical: 20 },
 
   // Section header
   sectionHeader: {
@@ -1249,7 +1364,7 @@ const styles = StyleSheet.create({
   },
 
   // KPI
-  kpiRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 10},
+  kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   kpiCard: {
     width: (width - 32 - 10) / 2,
     backgroundColor: C.card,
@@ -1258,7 +1373,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -1271,9 +1386,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  kpiValue: {fontSize: 22, fontWeight: '800', letterSpacing: -0.5},
-  kpiLabel: {color: C.textSub, fontSize: 11, fontWeight: '500', marginTop: 2},
-  kpiSub: {color: C.textMuted, fontSize: 10, marginTop: 3},
+  kpiValue: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  kpiLabel: { color: C.textSub, fontSize: 11, fontWeight: '500', marginTop: 2 },
+  kpiSub: { color: C.textMuted, fontSize: 10, marginTop: 3 },
 
   // Plan
   planCard: {
@@ -1283,7 +1398,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -1298,14 +1413,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-  planLabel: {color: C.textSub, fontSize: 11, fontWeight: '500'},
+  planLabel: { color: C.textSub, fontSize: 11, fontWeight: '500' },
   progressTrack: {
     height: 7,
     backgroundColor: '#F0F2F6',
     borderRadius: 4,
     overflow: 'hidden',
   },
-  progressFill: {height: '100%', borderRadius: 4},
+  progressFill: { height: '100%', borderRadius: 4 },
 
   // Business
   bizCard: {
@@ -1315,7 +1430,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -1326,10 +1441,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 14,
   },
-  bizItem: {alignItems: 'center', flex: 1},
-  bizVal: {fontSize: 16, fontWeight: '800'},
-  bizLabel: {color: C.textMuted, fontSize: 10, marginTop: 3},
-  bizDivider: {width: 1, height: 36, backgroundColor: C.border},
+  bizItem: { alignItems: 'center', flex: 1 },
+  bizVal: { fontSize: 16, fontWeight: '800' },
+  bizLabel: { color: C.textMuted, fontSize: 10, marginTop: 3 },
+  bizDivider: { width: 1, height: 36, backgroundColor: C.border },
   deliveryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1341,7 +1456,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${C.red}20`,
   },
-  deliveryText: {color: C.textSub, fontSize: 11},
+  deliveryText: { color: C.textSub, fontSize: 11 },
 
   // Orders
   orderCard: {
@@ -1354,7 +1469,7 @@ const styles = StyleSheet.create({
     paddingRight: 14,
     paddingVertical: 14,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
@@ -1371,7 +1486,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 5,
   },
-  orderIdRow: {flexDirection: 'row', alignItems: 'center', gap: 5},
+  orderIdRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   orderId: {
     color: C.amber,
     fontSize: 10,
@@ -1384,16 +1499,16 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderWidth: 1,
   },
-  statusTagText: {fontSize: 9, fontWeight: '700'},
-  orderStore: {color: C.text, fontSize: 13, fontWeight: '700', marginBottom: 8},
+  statusTagText: { fontSize: 9, fontWeight: '700' },
+  orderStore: { color: C.text, fontSize: 13, fontWeight: '700', marginBottom: 8 },
   orderMeta: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 10,
     flexWrap: 'wrap',
   },
-  orderMetaItem: {flexDirection: 'row', alignItems: 'center', gap: 4},
-  orderMetaText: {color: C.textMuted, fontSize: 10},
+  orderMetaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  orderMetaText: { color: C.textMuted, fontSize: 10 },
   orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1402,7 +1517,7 @@ const styles = StyleSheet.create({
     borderTopColor: C.border,
     paddingTop: 10,
   },
-  orderValue: {color: C.text, fontSize: 16, fontWeight: '800'},
+  orderValue: { color: C.text, fontSize: 16, fontWeight: '800' },
   creditTag: {
     backgroundColor: C.purpleSoft,
     borderRadius: 6,
@@ -1411,7 +1526,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${C.purple}30`,
   },
-  creditTagText: {color: C.purple, fontSize: 10, fontWeight: '700'},
+  creditTagText: { color: C.purple, fontSize: 10, fontWeight: '700' },
   emptyText: {
     color: C.textMuted,
     fontSize: 13,
@@ -1425,7 +1540,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  teamSummaryBadges: {flexDirection: 'row', gap: 8},
+  teamSummaryBadges: { flexDirection: 'row', gap: 8 },
   presentCount: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1448,7 +1563,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${C.red}25`,
   },
-  countText: {fontSize: 11, fontWeight: '700'},
+  countText: { fontSize: 11, fontWeight: '700' },
   attendanceBar: {
     flexDirection: 'row',
     height: 6,
@@ -1458,7 +1573,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     backgroundColor: C.border,
   },
-  attendanceBarFill: {height: '100%'},
+  attendanceBarFill: { height: '100%' },
   attendanceLabel: {
     color: C.textMuted,
     fontSize: 10,
@@ -1473,28 +1588,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
   },
-  teamCardLeft: {flexDirection: 'row', alignItems: 'center', marginBottom: 12},
-  teamNameRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
+  teamCardLeft: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  teamNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   teamName: {
     color: C.text,
     fontSize: 13,
     fontWeight: '700',
     maxWidth: width * 0.5,
   },
-  roleBadge: {borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2},
-  roleText: {fontSize: 9, fontWeight: '800', letterSpacing: 0.5},
+  roleBadge: { borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2 },
+  roleText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   teamStatusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     marginTop: 3,
   },
-  teamStatus: {fontSize: 10, fontWeight: '500'},
+  teamStatus: { fontSize: 10, fontWeight: '500' },
   teamStats: {
     flexDirection: 'row',
     backgroundColor: '#F0F2F6',
@@ -1503,15 +1618,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  teamStatCol: {alignItems: 'center'},
-  teamStatVal: {color: C.text, fontSize: 15, fontWeight: '800'},
+  teamStatCol: { alignItems: 'center' },
+  teamStatVal: { color: C.text, fontSize: 15, fontWeight: '800' },
   teamStatLabel: {
     color: C.textMuted,
     fontSize: 9,
     marginTop: 2,
     fontWeight: '500',
   },
-  teamStatDivider: {width: 1, height: 28, backgroundColor: C.border},
+  teamStatDivider: { width: 1, height: 28, backgroundColor: C.border },
 
   // ── iOS date picker modal ──────────────────────────────────────────────────
   modalOverlay: {
@@ -1536,9 +1651,9 @@ const styles = StyleSheet.create({
     borderBottomColor: C.border,
     marginBottom: 4,
   },
-  modalTitle: {color: C.text, fontSize: 15, fontWeight: '700'},
-  iosPicker: {width: '100%'},
-  modalActions: {flexDirection: 'row', gap: 10, marginTop: 14},
+  modalTitle: { color: C.text, fontSize: 15, fontWeight: '700' },
+  iosPicker: { width: '100%' },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   modalCancel: {
     flex: 1,
     paddingVertical: 13,
@@ -1548,7 +1663,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
   },
-  modalCancelText: {color: C.textSub, fontWeight: '600', fontSize: 14},
+  modalCancelText: { color: C.textSub, fontWeight: '600', fontSize: 14 },
   modalConfirm: {
     flex: 1,
     paddingVertical: 13,
@@ -1556,5 +1671,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: C.accent,
   },
-  modalConfirmText: {color: '#fff', fontWeight: '700', fontSize: 14},
+  modalConfirmText: { color: '#fff', fontWeight: '700', fontSize: 14 },
 });
