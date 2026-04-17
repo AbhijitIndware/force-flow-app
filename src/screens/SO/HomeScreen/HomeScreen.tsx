@@ -317,11 +317,8 @@ const HomeScreen = ({ navigation }: Props) => {
   }, [filterMode, selectedMonth, selectedYear, fromMonth, toMonth, startDate, endDate, employee]);
 
   const { data: attendanceData, refetch: refetchAttendance } = useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
-  console.log("🚀 ~ HomeScreen ~ attendanceData:", attendanceData)
   const { data: pjpTargetData, refetch: refetchPjpTarget } = useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  console.log("🚀 ~ HomeScreen ~ pjpTargetData:", pjpTargetData)
   const { data: valueTargetData, refetch: refetchValueTarget } = useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  console.log("🚀 ~ HomeScreen ~ valueTargetData:", valueTargetData)
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
