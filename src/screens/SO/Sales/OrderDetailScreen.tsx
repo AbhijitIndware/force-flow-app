@@ -136,11 +136,11 @@ export const OrderDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                             <Text style={styles.summaryValue}>{totalQty}</Text>
                             <Text style={styles.summaryLabel}>Total qty</Text>
                         </View>
-                        <View style={styles.summaryDivider} />
+                        {/* <View style={styles.summaryDivider} />
                         <View style={styles.summaryItem}>
                             <Text style={styles.summaryValue}>{deliveredQty}</Text>
                             <Text style={styles.summaryLabel}>Delivered</Text>
-                        </View>
+                        </View> */}
                     </View>
 
                     {/* ── Order info ── */}

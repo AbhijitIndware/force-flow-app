@@ -149,7 +149,7 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
                 </Text>
               </View>
               {emp?.check_in_time && (
-                <Text style={styles.checkInText}>CheckIn: {emp.check_in_time}</Text>
+                <Text style={styles.checkInText}>Check-In: {emp.check_in_time}</Text>
               )}
             </View>
           </View>
@@ -247,7 +247,7 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
                 </Text>
                 {store.check_in_time && (
                   <Text style={styles.storeTime}>
-                    In: {store.check_in_time}
+                    Check-In: {store.check_in_time}
                     {store.spent_time ? `  ·  ${store.spent_time}` : ''}
                   </Text>
                 )}
