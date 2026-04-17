@@ -69,6 +69,7 @@ export type SoAppStackParamList = {
   AllOrdersScreen:{ date:string, employee:string};
   OrderDetailScreen: {order_id: string};
   TeamAttendanceListScreen: { apiParams: any; today: string };
+  TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
 };
 
 export type menuType = {

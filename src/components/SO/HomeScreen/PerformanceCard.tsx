@@ -61,31 +61,37 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({
       </View>
     </View>
 
-    {/* <View style={styles.perfMetrics}>
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <Clock size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>Check-in</Text>
+    {(pjp !== '-' || value !== '-') && (
+      <View style={styles.perfMetrics}>
+        <View style={styles.perfMetricCol}>
+          <View style={styles.perfMetricTitleRow}>
+            <Clock size={10} color={C.textMuted} />
+            <Text style={styles.perfMetricLabel}>Check-in</Text>
+          </View>
+          <Text style={styles.perfMetricVal}>{checkIn || '--:--'}</Text>
         </View>
-        <Text style={styles.perfMetricVal}>{checkIn || '--:--'}</Text>
+        <View style={styles.perfMetricDivider} />
+        {pjp !== '-' && (
+          <View style={styles.perfMetricCol}>
+            <View style={styles.perfMetricTitleRow}>
+              <Target size={10} color={C.textMuted} />
+              <Text style={styles.perfMetricLabel}>PJP</Text>
+            </View>
+            <Text style={styles.perfMetricVal}>{pjp} ({pjpRate}%)</Text>
+          </View>
+        )}
+        {pjp !== '-' && value !== '-' && <View style={styles.perfMetricDivider} />}
+        {value !== '-' && (
+          <View style={styles.perfMetricCol}>
+            <View style={styles.perfMetricTitleRow}>
+              <CheckCircle2 size={10} color={C.textMuted} />
+              <Text style={styles.perfMetricLabel}>Sales</Text>
+            </View>
+            <Text style={styles.perfMetricVal}>{value} ({valueRate}%)</Text>
+          </View>
+        )}
       </View>
-      <View style={styles.perfMetricDivider} />
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <Target size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>PJP</Text>
-        </View>
-        <Text style={styles.perfMetricVal}>{pjp} ({pjpRate}%)</Text>
-      </View>
-      <View style={styles.perfMetricDivider} />
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <CheckCircle2 size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>Sales</Text>
-        </View>
-        <Text style={styles.perfMetricVal}>{value} ({valueRate}%)</Text>
-      </View>
-    </View> */}
+    )}
   </TouchableOpacity>
 );
 

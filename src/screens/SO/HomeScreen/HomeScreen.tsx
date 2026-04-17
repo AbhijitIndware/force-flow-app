@@ -118,16 +118,23 @@ const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub })
     {sub && <Text style={styles.sectionSub}>{sub}</Text>}
   </View>
 );
-const MetricBox: React.FC<{ label: string; value: string; rate: string | number }> =
-  ({ label, value, rate }) => (
-    <View style={styles.metricBox}>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <View style={styles.metricRatePill}>
-        <Text style={styles.metricRate}>{rate}%</Text>
-      </View>
+const MetricBox: React.FC<{
+  label: string;
+  value: string;
+  rate: string | number;
+  onPress?: () => void;
+}> = ({ label, value, rate, onPress }) => (
+  <TouchableOpacity
+    activeOpacity={onPress ? 0.7 : 1}
+    onPress={onPress}
+    style={styles.metricBox}>
+    <Text style={styles.metricValue}>{value}</Text>
+    <Text style={styles.metricLabel}>{label}</Text>
+    <View style={styles.metricRatePill}>
+      <Text style={styles.metricRate}>{rate}%</Text>
     </View>
-  );
+  </TouchableOpacity>
+);
 
 const TargetMetricBox: React.FC<{
   label: string;
@@ -135,8 +142,12 @@ const TargetMetricBox: React.FC<{
   target?: string;      // Optional
   rate?: number | string; // Optional
   accentColor: string;
-}> = ({ label, achieved, target, rate, accentColor }) => (
-  <View style={targetStyles.card}>
+  onPress?: () => void;
+}> = ({ label, achieved, target, rate, accentColor, onPress }) => (
+  <TouchableOpacity
+    activeOpacity={onPress ? 0.7 : 1}
+    onPress={onPress}
+    style={targetStyles.card}>
     {/* Left accent stripe */}
     <View style={[targetStyles.stripe, { backgroundColor: accentColor }]} />
 
@@ -188,7 +199,7 @@ const TargetMetricBox: React.FC<{
         </Text>
       )}
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 const PerformanceCard: React.FC<{
@@ -1090,11 +1101,13 @@ const HomeScreen = ({ navigation }: Props) => {
                 target={`${pjpSummary?.total_planned ?? 0}`}
                 rate={pjpSummary?.achievement_rate ?? 0}
                 accentColor="#534AB7"
+                onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'pjp' })}
               />
               <TargetMetricBox
                 label="Sales Value"
                 achieved={`₹${valueSummary?.total_so}`}
                 accentColor="#0F6E56"
+                onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'value' })}
               />
             </View>
           </View>

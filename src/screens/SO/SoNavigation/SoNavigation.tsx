@@ -36,6 +36,7 @@ import DetailByUserScreen from '../Sales/DetailByUserScreen';
 import { OrderDetailScreen } from '../Sales/OrderDetailScreen';
 import { AllOrdersScreen } from '../Sales/AllOrderScreen';
 import TeamAttendanceListScreen from '../HomeScreen/TeamAttendanceListScreen';
+import TeamPerformanceListScreen from '../HomeScreen/TeamPerformanceListScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -217,6 +218,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="TeamAttendanceListScreen"
         component={TeamAttendanceListScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TeamPerformanceListScreen"
+        component={TeamPerformanceListScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
