@@ -36,8 +36,6 @@ type Props = {
 };
 
 const TeamDetailScreen = ({ navigation, route }: Props) => {
-  // Expect employee_id and date passed via route.params from the parent screen
-  // Ensure date is always a plain string (guards against Date objects being passed)
   const { employee_id } = route?.params ?? {};
   const rawDate = route?.params?.date;
   const date: string =
@@ -211,14 +209,7 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
               <Text style={[styles.orderStripVal, { color: '#FF7B00' }]}>
                 {msg.orders_summary.total_items}
               </Text>
-              <Text style={styles.orderStripLabel}>Total Items</Text>
-            </View>
-            <View style={styles.orderStripDivider} />
-            <View style={styles.orderStripItem}>
-              <Text style={[styles.orderStripVal, { color: '#0AB72A' }]}>
-                {msg.orders_summary.delivered}
-              </Text>
-              <Text style={styles.orderStripLabel}>Delivered</Text>
+              <Text style={styles.orderStripLabel}>Total Items qty</Text>
             </View>
           </View>
         )}

@@ -137,12 +137,10 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
     (sum: number, o: any) => sum + (o.grand_total ?? 0),
     0,
   );
-  const deliveredOrders = orders.filter(
-    (o: any) => o.delivery_display_status !== 'Pending',
-  ).length;
-  const pendingOrders = orders.filter(
-    (o: any) => o.delivery_display_status === 'Pending',
-  ).length;
+  const totalOrderItems = orders.reduce(
+    (sum: number, o: any) => sum + (o.total_qty ?? 0),
+    0,
+  );
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
@@ -191,7 +189,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
             </>
           ) : null}
 
-          <View style={styles.divider} />
+          {/* <View style={styles.divider} />
 
           <View style={styles.row}>
             <View style={[styles.iconWrap, { backgroundColor: C.greenSoft }]}>
@@ -203,7 +201,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
                 <Text style={[styles.pillText, { color: C.green }]}>{store.status}</Text>
               </View>
             </View>
-          </View>
+          </View> */}
         </View>
 
         {/* ── Order Summary ────────────────────────────────────────── */}
@@ -212,18 +210,25 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryVal, { color: C.amber }]}>{orders.length}</Text>
-              <Text style={styles.summaryLabel}>Total</Text>
+              <Text style={styles.summaryLabel}>Orders</Text>
             </View>
-            <View style={styles.summaryDivider} />
+            {/* <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryVal, { color: C.green }]}>{deliveredOrders}</Text>
               <Text style={styles.summaryLabel}>Delivered</Text>
-            </View>
+            </View> */}
             <View style={styles.summaryDivider} />
-            <View style={styles.summaryItem}>
+            {/* <View style={styles.summaryItem}>
               <Text style={[styles.summaryVal, { color: C.accent }]}>{pendingOrders}</Text>
               <Text style={styles.summaryLabel}>Pending</Text>
+            </View> */}
+            <View style={styles.summaryItem}>
+              <Text style={[styles.summaryVal, { color: '#FF7B00' }]}>
+                {totalOrderItems}
+              </Text>
+              <Text style={styles.summaryLabel}>Total Items qty</Text>
             </View>
+
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={[styles.summaryVal, { color: C.purple }]}>
@@ -255,11 +260,11 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
                       styles.pill,
                       {
                         backgroundColor:
-                          order.delivery_display_status === 'Pending'
+                          order.workflow_state === 'Pending'
                             ? C.amberSoft
                             : C.greenSoft,
                         borderColor:
-                          order.delivery_display_status === 'Pending'
+                          order.workflow_state === 'Pending'
                             ? `${C.amber}40`
                             : `${C.green}40`,
                       },
@@ -269,18 +274,18 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
                         styles.pillText,
                         {
                           color:
-                            order.delivery_display_status === 'Pending'
+                            order.workflow_state === 'Pending'
                               ? C.amber
                               : C.green,
                         },
                       ]}>
-                      {order.delivery_display_status}
+                      {order.workflow_state}
                     </Text>
                   </View>
                 </View>
 
                 {/* Workflow state + order status */}
-                <View style={styles.workflowRow}>
+                {/* <View style={styles.workflowRow}>
                   <View style={[styles.workflowBadge, { backgroundColor: C.purpleSoft, borderColor: `${C.purple}30` }]}>
                     <Text style={[styles.workflowText, { color: C.purple }]}>
                       {order.workflow_state}
@@ -289,7 +294,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.orderStatusText} numberOfLines={1}>
                     {order.status}
                   </Text>
-                </View>
+                </View> */}
 
                 {/* Time · Items · Value */}
                 <View style={styles.orderMetaRow}>

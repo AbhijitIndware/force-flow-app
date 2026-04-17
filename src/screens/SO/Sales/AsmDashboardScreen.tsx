@@ -542,15 +542,6 @@ const StorePlanning: React.FC<StorePlanningProps> = ({ planning: p }) => (
       </View>
       <ProgressBar value={p.completion_rate ?? 0} color={C.green} />
     </View>
-    <View style={{ marginTop: 10 }}>
-      <View style={styles.planLabelRow}>
-        <Text style={styles.planLabel}>Delivery Rate</Text>
-        <Text style={[styles.planLabel, { color: C.red, fontWeight: '700' }]}>
-          0%
-        </Text>
-      </View>
-      <ProgressBar value={0} color={C.red} />
-    </View>
   </View>
 );
 
@@ -585,7 +576,7 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
         <Text style={styles.bizLabel}>Avg Order</Text>
       </View>
     </View>
-    <View style={styles.deliveryRow}>
+    {/* <View style={styles.deliveryRow}>
       <Truck size={14} color={C.red} strokeWidth={2} />
       <Text style={styles.deliveryText}>
         Delivery:{' '}
@@ -594,7 +585,7 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
         </Text>{' '}
         · {b.orders_delivered} delivered
       </Text>
-    </View>
+    </View> */}
   </View>
 );
 
@@ -630,7 +621,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }
             styles.statusTag,
             {
               backgroundColor:
-                order.delivery_display_status === 'Pending'
+                order.workflow_state === 'Pending'
                   ? C.amberSoft
                   : C.greenSoft,
             },
@@ -640,12 +631,12 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }
               styles.statusTagText,
               {
                 color:
-                  order.delivery_display_status === 'Pending'
+                  order.workflow_state === 'Pending'
                     ? C.amber
                     : C.green,
               },
             ]}>
-            {order.delivery_display_status}
+            {order.workflow_state}
           </Text>
         </View>
       </View>
@@ -939,8 +930,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  console.log("🚀 ~ AsmDashboard ~ employee:", employee)
-
   // ── Date state ────────────────────────────────────────────────────────────
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
@@ -964,6 +953,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     },
     { refetchOnMountOrArgChange: true, skip: !employee?.id },
   );
+  console.log("🚀 ~ AsmDashboard ~ data:", data)
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
     setRefreshing(true);

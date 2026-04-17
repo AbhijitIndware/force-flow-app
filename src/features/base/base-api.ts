@@ -997,6 +997,7 @@ export const baseApi = createApi({
             delivery_date: string;
             po_no: string;
             remarks: string;
+            distributor_name: string
           };
           items: {
             item_code: string;

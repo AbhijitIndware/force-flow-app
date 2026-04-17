@@ -17,7 +17,6 @@ import {
     Store,
     Clock,
     Truck,
-    CreditCard,
     FileText,
     Hash,
     MessageSquare,
@@ -111,7 +110,7 @@ export const OrderDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                         </Text>
                     )}
                 </View>
-                {detail && <StatusBadge status={detail.order.delivery_display_status} />}
+                {detail && <StatusBadge status={detail.order.workflow_state} />}
             </View>
 
             {isLoading ? (
@@ -147,12 +146,12 @@ export const OrderDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                     {/* ── Order info ── */}
                     <View style={styles.card}>
                         <CardHeader icon={FileText} title="Order info" />
-                        <InfoRow icon={User} label="Customer" value={detail.order.customer} />
+                        <InfoRow icon={User} label="Distributor" value={detail.order.distributor_name} />
                         <InfoRow icon={Store} label="Store" value={detail.order.store} />
                         <InfoRow icon={User} label="Salesperson" value={detail.order.salesperson} />
                         <InfoRow icon={Clock} label="Order date" value={detail.order.date} />
                         <InfoRow icon={Truck} label="Delivery date" value={detail.order.delivery_date} />
-                        <InfoRow icon={CreditCard} label="Payment" value={detail.order.billing_status} />
+                        {/* <InfoRow icon={CreditCard} label="Payment" value={detail.order.billing_status} /> */}
                         {detail.order.po_no && (
                             <InfoRow icon={Hash} label="PO No." value={detail.order.po_no} />
                         )}
@@ -173,42 +172,65 @@ export const OrderDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                             <View
                                 key={item.item_code}
                                 style={[styles.itemRow, i > 0 && styles.itemRowBorder]}>
-                                {/* Left — index pill */}
-                                <View style={styles.itemIndex}>
-                                    <Text style={styles.itemIndexText}>{i + 1}</Text>
-                                </View>
-                                {/* Middle — name + meta */}
-                                <View style={{ flex: 1, marginRight: 10 }}>
-                                    <Text style={styles.itemName} numberOfLines={2}>
-                                        {item.item_name}
-                                    </Text>
-                                    <View style={styles.itemMeta}>
-                                        <Text style={styles.itemMetaText}>{item.item_code}</Text>
-                                        <View style={styles.itemMetaDot} />
-                                        <Text style={styles.itemMetaText}>
-                                            {item.qty} {item.uom}
-                                        </Text>
-                                        <View style={styles.itemMetaDot} />
-                                        <Text style={styles.itemMetaText}>{fmt(item.rate)}/unit</Text>
-                                    </View>
-                                    {item.delivered_qty > 0 && (
-                                        <View style={styles.deliveredBadge}>
-                                            <CheckCircle2 size={9} color={C.green} strokeWidth={2.5} />
-                                            <Text style={styles.deliveredText}>
-                                                {item.delivered_qty} delivered
+                                <View style={{ flex: 1 }}>
+                                    {/* Item Header: Index, Name, and Amount */}
+                                    <View style={styles.itemHeader}>
+                                        <View style={styles.itemTitleGroup}>
+                                            <Text style={styles.itemIndexText}>{String(i + 1).padStart(2, '0')}</Text>
+                                            <Text style={styles.itemName} numberOfLines={2}>
+                                                {item.item_name}
                                             </Text>
+                                        </View>
+                                        <Text style={styles.itemAmount}>{fmt(item.amount)}</Text>
+                                    </View>
+
+                                    {/* Item Body: Code and Metrics (Qty, Rate) */}
+                                    <View style={styles.itemBody}>
+                                        <View style={styles.itemCodeWrap}>
+                                            <Text style={styles.itemCodeText} numberOfLines={1}>
+                                                {item.item_code}
+                                            </Text>
+                                        </View>
+
+                                        <View style={styles.itemMetrics}>
+                                            <View style={styles.metricItem}>
+                                                <Text style={styles.metricLabel}>Qty</Text>
+                                                <Text style={styles.metricValue}>
+                                                    {item.qty} <Text style={styles.metricUom}>{item.uom}</Text>
+                                                </Text>
+                                            </View>
+                                            <View style={styles.metricDivider} />
+                                            <View style={styles.metricItem}>
+                                                <Text style={styles.metricLabel}>Rate</Text>
+                                                <Text style={styles.metricValue}>{fmt(item.rate)}</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+
+                                    {/* Delivery Status */}
+                                    {item.delivered_qty > 0 && (
+                                        <View style={styles.deliveryStatusRow}>
+                                            <View style={styles.deliveryBadge}>
+                                                <CheckCircle2 size={10} color={C.green} strokeWidth={2.5} />
+                                                <Text style={styles.deliveryStatusText}>
+                                                    {item.delivered_qty} of {item.qty} {item.uom} delivered
+                                                </Text>
+                                            </View>
                                         </View>
                                     )}
                                 </View>
-                                {/* Right — amount */}
-                                <Text style={styles.itemAmount}>{fmt(item.amount)}</Text>
                             </View>
                         ))}
 
-                        {/* Total */}
-                        <View style={styles.totalRow}>
-                            <Text style={styles.totalLabel}>Grand total</Text>
-                            <Text style={styles.totalValue}>{fmt(detail.order.grand_total)}</Text>
+                        {/* Summary / Total section */}
+                        <View style={styles.totalSection}>
+                            <View style={styles.totalRow}>
+                                <View>
+                                    <Text style={styles.totalLabel}>Grand total</Text>
+                                    {/* <Text style={styles.totalSubtext}>Inc. of all taxes & charges</Text> */}
+                                </View>
+                                <Text style={styles.totalValue}>{fmt(detail.order.grand_total)}</Text>
+                            </View>
                         </View>
                     </View>
 
@@ -397,96 +419,148 @@ const styles = StyleSheet.create({
 
     // ── Items ────────────────────────────────────────────────────────────────
     itemRow: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
         paddingHorizontal: 14,
-        paddingVertical: 12,
+        paddingVertical: 14,
     },
     itemRowBorder: {
         borderTopWidth: 0.5,
         borderTopColor: C.border,
     },
-    itemIndex: {
-        width: 22,
-        height: 22,
-        borderRadius: 6,
-        backgroundColor: C.accentSoft,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 10,
-        marginTop: 1,
+    itemHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    itemTitleGroup: {
+        flexDirection: 'row',
+        flex: 1,
+        marginRight: 12,
     },
     itemIndexText: {
-        fontSize: 10,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: '700',
         color: C.accent,
+        marginRight: 8,
+        marginTop: 3,
+        fontFamily: 'monospace',
     },
     itemName: {
-        fontSize: 13,
-        fontWeight: '500',
-        color: C.text,
-        marginBottom: 3,
-        lineHeight: 18,
-    },
-    itemMeta: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 4,
-    },
-    itemMetaText: {
-        fontSize: 11,
-        color: C.textMuted,
-    },
-    itemMetaDot: {
-        width: 2,
-        height: 2,
-        borderRadius: 1,
-        backgroundColor: C.textMuted,
-    },
-    deliveredBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3,
-        marginTop: 5,
-        alignSelf: 'flex-start',
-        backgroundColor: C.greenSoft,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 4,
-    },
-    deliveredText: {
-        fontSize: 10,
-        color: C.green,
-        fontWeight: '500',
-    },
-    itemAmount: {
-        fontSize: 13,
+        fontSize: 14,
         fontWeight: '600',
         color: C.text,
-        marginTop: 1,
+        flex: 1,
+        lineHeight: 20,
+    },
+    itemAmount: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: C.text,
+    },
+    itemBody: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+    },
+    itemCodeWrap: {
+        backgroundColor: C.background,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 4,
+        borderWidth: 0.5,
+        borderColor: C.border,
+        flexShrink: 1,
+        marginRight: 12,
+    },
+    itemCodeText: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: C.textMuted,
+        letterSpacing: 0.5,
+    },
+    itemMetrics: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    metricItem: {
+        alignItems: 'flex-end',
+    },
+    metricLabel: {
+        fontSize: 9,
+        color: C.textMuted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 1,
+    },
+    metricValue: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: C.text,
+    },
+    metricUom: {
+        fontSize: 10,
+        color: C.textMuted,
+        fontWeight: '400',
+    },
+    metricDivider: {
+        width: 1,
+        height: 14,
+        backgroundColor: C.border,
+    },
+    deliveryStatusRow: {
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 0.5,
+        borderTopColor: C.border,
+        borderStyle: 'dashed',
+    },
+    deliveryBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: C.greenSoft,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+        alignSelf: 'flex-start',
+    },
+    deliveryStatusText: {
+        fontSize: 11,
+        color: C.green,
+        fontWeight: '600',
     },
 
     // ── Total ────────────────────────────────────────────────────────────────
+    totalSection: {
+        backgroundColor: C.background,
+        borderTopWidth: 1,
+        borderTopColor: C.border,
+        paddingTop: 4,
+    },
     totalRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderTopWidth: 0.5,
-        borderTopColor: C.border,
-        backgroundColor: C.background,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        backgroundColor: C.card,
     },
     totalLabel: {
-        fontSize: 13,
-        fontWeight: '500',
+        fontSize: 16,
+        fontWeight: '600',
+        color: C.text,
+        marginBottom: 2,
+    },
+    totalSubtext: {
+        fontSize: 11,
         color: C.textMuted,
+        fontWeight: '400',
     },
     totalValue: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: C.text,
+        fontSize: 20,
+        fontWeight: '800',
+        color: C.accent,
     },
 
     // ── Error ────────────────────────────────────────────────────────────────
