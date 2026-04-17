@@ -1745,6 +1745,8 @@ export interface AsmTeamMember {
 export interface AsmDashboardMessage {
   success: boolean;
   date: string;
+  to_date?: string;
+  is_range?: boolean;
   formatted_date: string;
   current_time: string;
   role_code: string;
@@ -1761,6 +1763,8 @@ export interface AsmDashboardResponse {
 }
 
 export interface AsmDashboardParams {
-  date: string; // format: 'YYYY-MM-DD'
+  date?: string; // format: 'YYYY-MM-DD'
+  from_date?: string; // format: 'YYYY-MM-DD'
+  to_date?: string; // format: 'YYYY-MM-DD'
   employee: string; // format: 'HR-EMP-XXXXX'
 }

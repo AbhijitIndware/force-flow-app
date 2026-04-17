@@ -253,8 +253,10 @@ interface TeamMemberCardProps {
   member: AsmTeamMember;
 }
 interface DateSelectorBarProps {
-  label: string;
-  onPress: () => void;
+  fromLabel: string;
+  toLabel: string;
+  onPressFrom: () => void;
+  onPressTo: () => void;
 }
 
 // ─── Shared UI Components ─────────────────────────────────────────────────────
@@ -344,24 +346,51 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ value, color = C.accent }) =>
 );
 
 // ─── Date Selector Bar ────────────────────────────────────────────────────────
-const DateSelectorBar: React.FC<DateSelectorBarProps> = ({ label, onPress }) => (
-  <TouchableOpacity
-    style={styles.dateBar}
-    onPress={onPress}
-    activeOpacity={0.75}>
-    <View style={styles.dateBarLeft}>
+const DateSelectorBar: React.FC<DateSelectorBarProps> = ({
+  fromLabel,
+  toLabel,
+  onPressFrom,
+  onPressTo,
+}) => (
+  <View style={styles.dateBar}>
+    {/* From Date */}
+    <TouchableOpacity
+      style={styles.dateBox}
+      onPress={onPressFrom}
+      activeOpacity={0.75}>
       <View style={styles.dateBarIcon}>
-        <Calendar size={15} color={C.amber} strokeWidth={2} />
+        <Calendar size={14} color={C.amber} strokeWidth={2} />
       </View>
-      <View>
-        <Text style={styles.dateBarHint}>Dashboard Date</Text>
-        <Text style={styles.dateBarLabel}>{label}</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.dateBarHint}>From</Text>
+        <Text style={styles.dateBarLabel} numberOfLines={1}>
+          {fromLabel}
+        </Text>
       </View>
+      <ChevronDown size={14} color={C.textMuted} strokeWidth={2} />
+    </TouchableOpacity>
+
+    <View style={styles.dateGap}>
+      <View style={styles.dateGapLine} />
     </View>
-    <View style={styles.dateBarChevron}>
-      <ChevronDown size={16} color={C.amber} strokeWidth={2.5} />
-    </View>
-  </TouchableOpacity>
+
+    {/* To Date */}
+    <TouchableOpacity
+      style={styles.dateBox}
+      onPress={onPressTo}
+      activeOpacity={0.75}>
+      <View style={styles.dateBarIcon}>
+        <Calendar size={14} color={C.amber} strokeWidth={2} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.dateBarHint}>To</Text>
+        <Text style={styles.dateBarLabel} numberOfLines={1}>
+          {toLabel}
+        </Text>
+      </View>
+      <ChevronDown size={14} color={C.textMuted} strokeWidth={2} />
+    </TouchableOpacity>
+  </View>
 );
 
 // ─── Dashboard Header ─────────────────────────────────────────────────────────
@@ -862,7 +891,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
   navigation,
   selectedDateStr,
 }) => (
-  <View style={{ marginBottom: 30 }}>
+  <View style={{ marginBottom: 0 }}>
     <View style={styles.teamSectionHeader}>
       <SectionHeader icon={Users} title="Team Performance" accent={C.amber} />
       <View style={styles.teamSummaryBadges}>
@@ -931,8 +960,10 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
   // ── Date state ────────────────────────────────────────────────────────────
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [fromDate, setFromDate] = useState<Date>(new Date());
+  const [toDate, setToDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  const [pickingType, setPickingType] = useState<'from' | 'to'>('from');
   const [iosTempDate, setIosTempDate] = useState<Date>(new Date());
 
   const [category1, setCategory1] = useState<string>('');
@@ -943,17 +974,21 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   // ── API ───────────────────────────────────────────────────────────────────
+  const isRange = toApiDate(fromDate) !== toApiDate(toDate);
   const { data, isFetching, isError, error, refetch } = useGetAsmDashboardQuery(
     {
-      date: toApiDate(selectedDate),
       employee: employee?.id as string,
+      // If same date, send 'date'. if different, send 'from_date' and 'to_date'
+      ...(isRange
+        ? { from_date: toApiDate(fromDate), to_date: toApiDate(toDate) }
+        : { date: toApiDate(fromDate) }),
       // Optional filters
       ...(selectedStoreType ? { store_type: selectedStoreType } : {}),
       ...(category1 ? { view_type: category1 } : {}),
     },
     { refetchOnMountOrArgChange: true, skip: !employee?.id },
   );
-  console.log("🚀 ~ AsmDashboard ~ data:", data)
+  console.log('🚀 ~ AsmDashboard ~ data:', data);
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -961,15 +996,28 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   }, [refetch]);
 
   // ── Date picker handlers ──────────────────────────────────────────────────
-  const openPicker = () => {
-    setIosTempDate(selectedDate);
+  const openPicker = (type: 'from' | 'to') => {
+    setPickingType(type);
+    setIosTempDate(type === 'from' ? fromDate : toDate);
     setShowPicker(true);
   };
 
   const onAndroidChange = (event: DateTimePickerEvent, date?: Date) => {
     setShowPicker(false);
     if (event.type === 'set' && date) {
-      setSelectedDate(date);
+      if (pickingType === 'from') {
+        setFromDate(date);
+        // Sync toDate if it's now before fromDate
+        if (date > toDate) {
+          setToDate(date);
+        }
+      } else {
+        if (date < fromDate) {
+          setFromDate(date);
+        }
+        setToDate(date);
+      }
+      setCategory1(''); // Clear preset highlight
     }
   };
 
@@ -980,8 +1028,42 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
   };
 
   const confirmIos = () => {
-    setSelectedDate(iosTempDate);
+    if (pickingType === 'from') {
+      setFromDate(iosTempDate);
+      if (iosTempDate > toDate) {
+        setToDate(iosTempDate);
+      }
+    } else {
+      if (iosTempDate < fromDate) {
+        setFromDate(iosTempDate);
+      }
+      setToDate(iosTempDate);
+    }
+    setCategory1(''); // Clear preset highlight
     setShowPicker(false);
+  };
+
+  const handleApplyPreset = (value: string) => {
+    if (category1 === value) {
+      // Toggle off if clicking the same one
+      setCategory1('');
+      return;
+    }
+
+    setCategory1(value);
+    const end = new Date();
+    let start = new Date();
+
+    if (value === 'A') {
+      start.setDate(end.getDate() - 7);
+    } else if (value === 'B') {
+      start.setMonth(end.getMonth() - 1);
+    } else if (value === 'C') {
+      start.setMonth(end.getMonth() - 3);
+    }
+
+    setFromDate(start);
+    setToDate(end);
   };
 
   // ── Picker renderer ───────────────────────────────────────────────────────
@@ -989,10 +1071,11 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     if (!showPicker) {
       return null;
     }
+    const currentVal = pickingType === 'from' ? fromDate : toDate;
     if (Platform.OS === 'android') {
       return (
         <DateTimePicker
-          value={selectedDate}
+          value={currentVal}
           mode="date"
           display="default"
           maximumDate={new Date()}
@@ -1009,7 +1092,9 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Date</Text>
+              <Text style={styles.modalTitle}>
+                Select {pickingType === 'from' ? 'Start' : 'End'} Date
+              </Text>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
                 <X size={20} color={C.textSub} strokeWidth={2} />
               </TouchableOpacity>
@@ -1028,9 +1113,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
                 onPress={() => setShowPicker(false)}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalConfirm}
-                onPress={confirmIos}>
+              <TouchableOpacity style={styles.modalConfirm} onPress={confirmIos}>
                 <Text style={styles.modalConfirmText}>Confirm</Text>
               </TouchableOpacity>
             </View>
@@ -1055,47 +1138,40 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     return (
       <View style={styles.root}>
         <StatusBar barStyle="dark-content" backgroundColor={C.surface} />
-        <View
-          style={{
-            backgroundColor: C.surface,
-            borderBottomWidth: 1,
-            borderBottomColor: C.border,
-          }}>
+        {/* Preset Chips */}
+        <View style={styles.chipContainer}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12 }}>
-            {DURATION_OPTIONS.map(opt => (
-              <TouchableOpacity
-                key={opt.value}
-                onPress={() => setCategory1(opt.value)}
-                style={[
-                  {
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    marginRight: 8,
-                  },
-                  category1 === opt.value
-                    ? { backgroundColor: C.accent, borderColor: C.accent }
-                    : { backgroundColor: C.bg, borderColor: C.border },
-                ]}>
-                <Text
-                  style={{
-                    color: category1 === opt.value ? C.surface : C.text,
-                    fontSize: 14,
-                    fontWeight: category1 === opt.value ? '600' : '400',
-                  }}>
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            contentContainerStyle={styles.chipScroll}>
+            {DURATION_OPTIONS.map(opt => {
+              const isActive = category1 === opt.value;
+              return (
+                <TouchableOpacity
+                  key={opt.value}
+                  onPress={() => handleApplyPreset(opt.value)}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.chip,
+                    isActive ? styles.chipActive : styles.chipInactive,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.chipText,
+                      isActive ? styles.chipTextActive : styles.chipTextInactive,
+                    ]}>
+                    {opt.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
         <DateSelectorBar
-          label={toDisplayDate(selectedDate)}
-          onPress={openPicker}
+          fromLabel={toDisplayDate(fromDate)}
+          toLabel={toDisplayDate(toDate)}
+          onPressFrom={() => openPicker('from')}
+          onPressTo={() => openPicker('to')}
         />
         <View style={styles.centered}>
           <Text style={styles.errorText}>
@@ -1117,9 +1193,46 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     <View style={styles.root}>
       <StatusBar barStyle="dark-content" backgroundColor={C.surface} />
 
+      {/* Preset Chips */}
+      <View style={styles.chipContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipScroll}>
+          {DURATION_OPTIONS.map(opt => {
+            const isActive = category1 === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => handleApplyPreset(opt.value)}
+                activeOpacity={0.8}
+                style={[
+                  styles.chip,
+                  isActive ? styles.chipActive : styles.chipInactive,
+                ]}>
+                <Text
+                  style={[
+                    styles.chipText,
+                    isActive ? styles.chipTextActive : styles.chipTextInactive,
+                  ]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      <DateSelectorBar
+        fromLabel={toDisplayDate(fromDate)}
+        toLabel={toDisplayDate(toDate)}
+        onPressFrom={() => openPicker('from')}
+        onPressTo={() => openPicker('to')}
+      />
+
       <ScrollView
         style={styles.scroll}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -1128,81 +1241,46 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
             tintColor={C.accent}
           />
         }>
-        {/* ── Duration filter chips ── */}
-        <View
-          style={{
-            backgroundColor: C.surface,
-            borderBottomWidth: 1,
-            borderBottomColor: C.border,
-          }}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-            }}>
-            {DURATION_OPTIONS.map(opt => (
-              <TouchableOpacity
-                key={opt.value}
-                onPress={() => setCategory1(opt.value)}
-                style={[
-                  {
-                    paddingHorizontal: 16,
-                    paddingVertical: 8,
-                    borderRadius: 20,
-                    borderWidth: 1,
-                    marginRight: 8,
-                  },
-                  category1 === opt.value
-                    ? { backgroundColor: C.accent, borderColor: C.accent }
-                    : { backgroundColor: C.bg, borderColor: C.border },
-                ]}>
-                <Text
-                  style={{
-                    color: category1 === opt.value ? C.surface : C.text,
-                    fontSize: 14,
-                    fontWeight: category1 === opt.value ? '600' : '400',
-                  }}>
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        <DateSelectorBar
-          label={toDisplayDate(selectedDate)}
-          onPress={openPicker}
-        />
-
         <DashboardHeader
           formattedDate={msg.formatted_date}
           overview={msg.asm_overview}
-          company_emp_id={employee?.company_emp_id as string}
+          company_emp_id={
+            (employee as any)?.company_emp_id || employee?.id || '--'
+          }
         />
 
         <View style={styles.body}>
-          {/* Store type filter — selection re-triggers the dashboard API */}
+          {/* Store type filter */}
           <AsmStoreTypeComponent
             value={selectedStoreType}
             onChange={setSelectedStoreType}
           />
 
           <KpiGrid metrics={msg.key_metrics} />
+
           <View style={styles.divider} />
+
           <StorePlanning planning={msg.store_planning} />
+
           <View style={styles.divider} />
+
           <BusinessSummary business={msg.business_generated} />
+
           <View style={styles.divider} />
-          <OrdersSection orders={msg.order_status} navigation={navigation} date={toApiDate(selectedDate)} />
+
+          <OrdersSection
+            orders={msg.order_status}
+            navigation={navigation}
+            date={msg.date || toApiDate(fromDate)}
+          />
+
           <View style={styles.divider} />
+
           <TeamSection
             team={msg.team_performance}
             metrics={msg.key_metrics}
             navigation={navigation}
-            // ✅ Always a YYYY-MM-DD string — never a Date object
-            selectedDateStr={toApiDate(selectedDate)}
+            selectedDateStr={msg.date || toApiDate(fromDate)}
           />
         </View>
       </ScrollView>
@@ -1218,7 +1296,6 @@ export default AsmDashboard;
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   scroll: { flex: 1 },
-  // scrollContent: {paddingBottom: 40},
 
   // Loading / Error
   centeredOuter: { flex: 1, backgroundColor: C.bg },
@@ -1244,45 +1321,60 @@ const styles = StyleSheet.create({
   dateBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: C.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: C.border,
-    borderLeftWidth: 3,
-    borderLeftColor: C.accent,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
   },
-  dateBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dateBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.bg,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: C.border,
+    gap: 8,
+  },
+  dateGap: {
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dateGapLine: {
+    width: 8,
+    height: 2,
+    backgroundColor: C.textMuted,
+    borderRadius: 1,
+  },
   dateBarIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     backgroundColor: C.accentSoft,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dateBarHint: {
     color: C.textMuted,
-    fontSize: 10,
-    fontWeight: '500',
-    letterSpacing: 0.4,
+    fontSize: 9,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  dateBarLabel: { color: C.text, fontSize: 14, fontWeight: '700', marginTop: 1 },
-  dateBarChevron: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: C.accentSoft,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: `${C.accent}40`,
+  dateBarLabel: {
+    color: C.text,
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: -1,
   },
 
   // Header
@@ -1304,6 +1396,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 18,
+  },
+
+  // ── Chips ──────────────────────────────────────────────────────────────────
+  chipContainer: {
+    backgroundColor: C.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+  },
+  chipScroll: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chipActive: {
+    backgroundColor: C.accent,
+    borderColor: C.accent,
+  },
+  chipInactive: {
+    backgroundColor: C.bg,
+    borderColor: C.border,
+  },
+  chipText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  chipTextActive: {
+    color: C.surface,
+  },
+  chipTextInactive: {
+    color: C.textSub,
   },
   headerDate: {
     color: C.textMuted,

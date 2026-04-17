@@ -560,14 +560,28 @@ export const baseApi = createApi({
     // Legacy combined dashboard endpoint
     getAsmDashboard: builder.query<
       AsmDashboardResponse,
-      AsmDashboardParams & { store_type?: string; zone?: string; view_type?: string }
+      AsmDashboardParams & {
+        store_type?: string;
+        zone?: string;
+        view_type?: string;
+      }
     >({
-      query: ({ date, employee, store_type, zone, view_type }) => ({
+      query: ({
+        date,
+        employee,
+        store_type,
+        zone,
+        view_type,
+        from_date,
+        to_date,
+      }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
         method: 'GET',
         params: {
-          date,
+          ...(date ? { date } : {}),
           employee,
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
           ...(store_type ? { store_type } : {}),
           ...(zone ? { zone } : {}),
           ...(view_type ? { view_type } : {}),

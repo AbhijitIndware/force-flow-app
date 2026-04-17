@@ -132,8 +132,8 @@ const MetricBox: React.FC<{ label: string; value: string; rate: string | number 
 const TargetMetricBox: React.FC<{
   label: string;
   achieved: string;    // e.g. "48" or "₹185K"
-  target: string;      // e.g. "120" or "₹500K"
-  rate: number | string;
+  target?: string;      // Optional
+  rate?: number | string; // Optional
   accentColor: string;
 }> = ({ label, achieved, target, rate, accentColor }) => (
   <View style={targetStyles.card}>
@@ -145,30 +145,48 @@ const TargetMetricBox: React.FC<{
 
       {/* Achieved + target */}
       <View style={targetStyles.numRow}>
-        <Text style={[targetStyles.achieved, { color: accentColor }]}>
+        <Text
+          style={[targetStyles.achieved, { color: accentColor }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}>
           {achieved}
         </Text>
-        <Text style={targetStyles.separator}>/</Text>
-        <Text style={targetStyles.target}>{target}</Text>
+        {target ? (
+          <>
+            <Text style={targetStyles.separator}>/</Text>
+            <Text
+              style={targetStyles.target}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}>
+              {target}
+            </Text>
+          </>
+        ) : null}
       </View>
 
       {/* Progress bar */}
-      <View style={targetStyles.track}>
-        <View
-          style={[
-            targetStyles.fill,
-            {
-              width: `${Math.min(Number(rate), 100)}%` as `${number}%`,
-              backgroundColor: accentColor,
-            },
-          ]}
-        />
-      </View>
+      {rate !== undefined && (
+        <View style={targetStyles.track}>
+          <View
+            style={[
+              targetStyles.fill,
+              {
+                width: `${Math.min(Number(rate), 100)}%` as `${number}%`,
+                backgroundColor: accentColor,
+              },
+            ]}
+          />
+        </View>
+      )}
 
       {/* Rate */}
-      <Text style={[targetStyles.rate, { color: accentColor }]}>
-        {rate}% achieved
-      </Text>
+      {rate !== undefined && (
+        <Text style={[targetStyles.rate, { color: accentColor }]}>
+          {rate}% achieved
+        </Text>
+      )}
     </View>
   </View>
 );
@@ -290,7 +308,9 @@ const HomeScreen = ({ navigation }: Props) => {
   const { data: attendanceData, refetch: refetchAttendance } = useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
   console.log("🚀 ~ HomeScreen ~ attendanceData:", attendanceData)
   const { data: pjpTargetData, refetch: refetchPjpTarget } = useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
+  console.log("🚀 ~ HomeScreen ~ pjpTargetData:", pjpTargetData)
   const { data: valueTargetData, refetch: refetchValueTarget } = useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
+  console.log("🚀 ~ HomeScreen ~ valueTargetData:", valueTargetData)
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -1073,9 +1093,7 @@ const HomeScreen = ({ navigation }: Props) => {
               />
               <TargetMetricBox
                 label="Sales Value"
-                achieved={`₹${((valueSummary?.total_so ?? 0) / 1000).toFixed(0)}K`}
-                target={`₹${((valueSummary?.total_target ?? 0) / 1000).toFixed(0)}K`}
-                rate={valueSummary?.achievement_pct ?? 0}
+                achieved={`₹${valueSummary?.total_so}`}
                 accentColor="#0F6E56"
               />
             </View>
@@ -1845,7 +1863,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5, borderColor: C.border,
     padding: 12, alignItems: 'center', gap: 4,
   },
-  metricValue: { fontSize: 13, fontWeight: '600', color: C.text, textAlign: 'center' },
+  metricValue: { fontSize: 15, fontWeight: '600', color: C.text, textAlign: 'center' },
   metricLabel: { fontSize: 10, color: C.textMuted, textAlign: 'center' },
   metricRatePill: {
     marginTop: 4, backgroundColor: C.accentSoft,
