@@ -118,6 +118,7 @@ const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub })
     {sub && <Text style={styles.sectionSub}>{sub}</Text>}
   </View>
 );
+
 const MetricBox: React.FC<{
   label: string;
   value: string;
@@ -201,66 +202,6 @@ const TargetMetricBox: React.FC<{
     </View>
   </TouchableOpacity>
 );
-
-const PerformanceCard: React.FC<{
-  name: string;
-  role: string | number;
-  status: string;
-  checkIn: string | null;
-  pjp: string;
-  pjpRate: number | string;
-  value: string;
-  valueRate: number | string;
-  onPress: () => void;
-}> = ({ name, role, status, checkIn, pjp, pjpRate, value, valueRate, onPress }) => (
-  <TouchableOpacity style={styles.perfCard} onPress={onPress}>
-    <View style={styles.perfTop}>
-      <View style={styles.perfAvatar}>
-        <Text style={styles.perfAvatarText}>{(name || '?').substring(0, 1)}</Text>
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.perfName} numberOfLines={1}>{name}</Text>
-        <Text style={styles.perfRole} numberOfLines={1}>{role}</Text>
-      </View>
-      <View style={[
-        styles.statusBadge,
-        { backgroundColor: status === 'Present' ? C.greenSoft : '#FEE2E2' }
-      ]}>
-        <Text style={[
-          styles.statusBadgeText,
-          { color: status === 'Present' ? C.green : '#B91C1C' }
-        ]}>{status}</Text>
-      </View>
-    </View>
-
-    {/* <View style={styles.perfMetrics}>
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <Clock size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>Check-in</Text>
-        </View>
-        <Text style={styles.perfMetricVal}>{checkIn || '--:--'}</Text>
-      </View>
-      <View style={styles.perfMetricDivider} />
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <Target size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>PJP</Text>
-        </View>
-        <Text style={styles.perfMetricVal}>{pjp} ({pjpRate}%)</Text>
-      </View>
-      <View style={styles.perfMetricDivider} />
-      <View style={styles.perfMetricCol}>
-        <View style={styles.perfMetricTitleRow}>
-          <CheckCircle2 size={10} color={C.textMuted} />
-          <Text style={styles.perfMetricLabel}>Sales</Text>
-        </View>
-        <Text style={styles.perfMetricVal}>{value} ({valueRate}%)</Text>
-      </View>
-    </View> */}
-  </TouchableOpacity>
-);
-
 
 const HomeScreen = ({ navigation }: Props) => {
   const [isStartingPjp, setIsStartingPjp] = useState(false);
@@ -795,6 +736,12 @@ const HomeScreen = ({ navigation }: Props) => {
 
           <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
+              <View style={[flexCol]}>
+                <Text style={styles.countBoxDay}>
+                  {prodData?.message?.counts?.total_stores}
+                </Text>
+                <Text style={styles.countBoxTitle}>Total call</Text>
+              </View>
               <View
                 style={[
                   styles.countBoxIcon,
@@ -802,12 +749,14 @@ const HomeScreen = ({ navigation }: Props) => {
                 ]}>
                 <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
               </View>
-              <Text style={styles.countBoxDay}>
-                {prodData?.message?.counts?.total_stores}
-              </Text>
-              <Text style={styles.countBoxTitle}>Total call</Text>
             </View>
             <View style={styles.countBox}>
+              <View style={[flexCol]}>
+                <Text style={styles.countBoxDay}>
+                  {prodData?.message?.counts?.status_counts?.Visited}
+                </Text>
+                <Text style={styles.countBoxTitle}>Productive Call</Text>
+              </View>
               <View
                 style={[
                   styles.countBoxIcon,
@@ -815,10 +764,6 @@ const HomeScreen = ({ navigation }: Props) => {
                 ]}>
                 <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
-              <Text style={styles.countBoxDay}>
-                {prodData?.message?.counts?.status_counts?.Visited}
-              </Text>
-              <Text style={styles.countBoxTitle}>Productive Call</Text>
             </View>
           </View>
 
@@ -1226,7 +1171,7 @@ const HomeScreen = ({ navigation }: Props) => {
               </TouchableOpacity>
             </View>
           </View> */}
-          <View style={[styles.container, { paddingTop: 20 }]}>
+          <View style={[styles.container, { paddingTop: 10 }]}>
             <Text style={styles.SectionHeading}>Expenses Claim</Text>
             <View
               style={[
@@ -1246,7 +1191,7 @@ const HomeScreen = ({ navigation }: Props) => {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     marginTop: 0,
-                    height: 35,
+                    height: 20,
                     borderRadius: 8,
                     width: '100%',
                   },
@@ -1275,7 +1220,7 @@ const HomeScreen = ({ navigation }: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.container, { paddingTop: 20 }]}>
+          <View style={[styles.container, { paddingTop: 10 }]}>
             <Text style={styles.SectionHeading}>Visibility Claim</Text>
             <View
               style={[
@@ -1295,7 +1240,7 @@ const HomeScreen = ({ navigation }: Props) => {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     marginTop: 0,
-                    height: 35,
+                    height: 20,
                     borderRadius: 8,
                     width: '100%',
                   },
@@ -1325,7 +1270,7 @@ const HomeScreen = ({ navigation }: Props) => {
             </View>
           </View>
           <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 20 }]}>
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
             <Text
               style={[
                 styles.SectionHeading,
@@ -1593,7 +1538,7 @@ const styles = StyleSheet.create({
 
   planLink: {
     backgroundColor: Colors.white,
-    padding: 20,
+    padding: 15,
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
@@ -1624,43 +1569,38 @@ const styles = StyleSheet.create({
   countBoxSection: {
     paddingHorizontal: 20,
     paddingBottom: 10,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 17,
     flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   countBox: {
     backgroundColor: Colors.white,
-    width: width * 0.43,
-    borderRadius: 15,
-    padding: 15,
-    minHeight: 107,
+    width: width * 0.44,
+    borderRadius: 12,
+    padding: 12,
+    height: 80,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between'
   },
   countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
+    width: 34,
+    height: 34,
     alignItems: 'center',
-    flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
+    borderRadius: 10,
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.sm,
+    color: Colors.black,
+    fontSize: 14,
+    marginTop: 2,
   },
   countBoxDay: {
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
-    fontSize: Size.xslg,
-    lineHeight: 20,
-    position: 'relative',
-    marginTop: -25,
+    fontSize: 20,
   },
   //countBox-section css end
 

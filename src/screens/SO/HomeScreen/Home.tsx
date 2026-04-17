@@ -17,11 +17,11 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import HomeScreen from './HomeScreen';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ChartNoAxesCombined,
   Handshake,
@@ -33,10 +33,10 @@ import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
-import {useAppSelector} from '../../../store/hook';
-import {getInitials} from '../../../utils/utils';
+import { useAppSelector } from '../../../store/hook';
+import { getInitials } from '../../../utils/utils';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
 
 type Props = {
@@ -46,20 +46,20 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({state, descriptors, navigation}: any) {
+function MyTabBar({ state, descriptors, navigation }: any) {
   return (
     <View
       style={{
         flexDirection: 'row',
       }}>
       {state.routes.map((route: any, index: any) => {
-        const {options} = descriptors[route.key];
+        const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-            ? options.title
-            : route.name;
+              ? options.title
+              : route.name;
 
         const isFocused = state.index === index;
 
@@ -93,7 +93,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? {selected: true} : {}}
+            accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -138,7 +138,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 
   const profileImageSource = employee?.image_base64
-    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
     : null;
 
   return (
@@ -156,7 +156,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           <View style={styles.notificationBatch}>
             <Text style={styles.notificationCount}>0</Text>
           </View>
-          <Feather name="bell" size={24} color={Colors.greyDark} />
+          <Feather name="bell" size={20} color={Colors.greyDark} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -181,7 +181,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const Home = ({navigation, route}: Props) => {
+const Home = ({ navigation, route }: Props) => {
   // const [routeName, setRouteName] = useState('HomeScreen');
 
   // useEffect(() => {
@@ -217,7 +217,7 @@ const Home = ({navigation, route}: Props) => {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <House
                   strokeWidth={2}
@@ -234,7 +234,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Partners',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <Handshake
                   strokeWidth={2}
@@ -251,7 +251,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Sales',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <ChartNoAxesCombined
                   strokeWidth={2}
@@ -268,7 +268,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Activity',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <Lightbulb
                   strokeWidth={2}
@@ -285,7 +285,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Orders',
             headerShown: false,
-            tabBarIcon: ({focused}) => (
+            tabBarIcon: ({ focused }) => (
               <ShoppingCart
                 strokeWidth={2}
                 color={focused ? Colors.white : Colors.white}
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
 
-  notification: {position: 'relative', top: 6},
+  notification: { position: 'relative', top: 6 },
   notificationBatch: {
     width: 26,
     height: 26,
@@ -341,12 +341,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: {color: Colors.white},
+  notificationCount: { color: Colors.white },
 
-  userInfo: {overflow: 'hidden', borderRadius: '50%'},
+  userInfo: { overflow: 'hidden', borderRadius: '50%' },
   avtarImage: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     objectFit: 'cover',
   },
 
@@ -370,8 +370,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initialsCircle: {
-    height: 40,
-    width: 40,
+    height: 35,
+    width: 35,
     borderRadius: 20,
     backgroundColor: Colors.orange,
     alignItems: 'center',
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     fontFamily: Fonts.medium,
-    fontSize: 20,
+    fontSize: 18,
     color: Colors.white,
     lineHeight: 12,
   },
