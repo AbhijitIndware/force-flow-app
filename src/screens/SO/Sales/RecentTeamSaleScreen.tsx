@@ -7,14 +7,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Colors} from '../../../utils/colors';
-import React, {useCallback, useEffect, useState} from 'react';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {Funnel, Search} from 'lucide-react-native';
+import { Colors } from '../../../utils/colors';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { Funnel, Search } from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
-import {windowHeight} from '../../../utils/utils';
-import {EmployeeData} from '../../../types/baseType';
+import { windowHeight } from '../../../utils/utils';
+import { EmployeeData } from '../../../types/baseType';
 
 type Props = {
   navigation: any;
@@ -33,15 +33,15 @@ const getInitials = (name?: string) => {
 
 // Cycle through a few warm/neutral avatar palette pairs
 const AVATAR_PALETTE = [
-  {bg: '#FFF4EC', border: '#FDDBB8', text: '#C2540A'},
-  {bg: '#F0FDF4', border: '#BBF7D0', text: '#166534'},
-  {bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF'},
-  {bg: '#FDF4FF', border: '#E9D5FF', text: '#6B21A8'},
-  {bg: '#FFF7ED', border: '#FED7AA', text: '#C2410C'},
+  { bg: '#FFF4EC', border: '#FDDBB8', text: '#C2540A' },
+  { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534' },
+  { bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF' },
+  { bg: '#FDF4FF', border: '#E9D5FF', text: '#6B21A8' },
+  { bg: '#FFF7ED', border: '#FED7AA', text: '#C2410C' },
 ];
 
 // ── Card component ────────────────────────────────────────────────────────────
-const SaleCard = ({item, index}: {item: EmployeeData; index: number}) => {
+const SaleCard = ({ item, index }: { item: EmployeeData; index: number }) => {
   const palette = AVATAR_PALETTE[index % AVATAR_PALETTE.length];
   const initials = getInitials(item?.employee_name);
 
@@ -52,13 +52,13 @@ const SaleCard = ({item, index}: {item: EmployeeData; index: number}) => {
         <View
           style={[
             styles.avatar,
-            {backgroundColor: palette.bg, borderColor: palette.border},
+            { backgroundColor: palette.bg, borderColor: palette.border },
           ]}>
-          <Text style={[styles.avatarText, {color: palette.text}]}>
+          <Text style={[styles.avatarText, { color: palette.text }]}>
             {initials}
           </Text>
         </View>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <Text style={styles.empName} numberOfLines={1}>
             {item?.employee_name || 'Unknown'}
           </Text>
@@ -73,10 +73,17 @@ const SaleCard = ({item, index}: {item: EmployeeData; index: number}) => {
 
       {/* Stats row */}
       <View style={styles.statsRow}>
-        <View style={styles.stat}>
+        {/* <View style={styles.stat}>
           <Text style={styles.statLabel}>Employee ID</Text>
-          <Text style={[styles.statValue, {fontSize: 12}]} numberOfLines={1}>
+          <Text style={[styles.statValue, { fontSize: 12 }]} numberOfLines={1}>
             {item?.employee_id || 'N/A'}
+          </Text>
+        </View> */}
+        <View style={styles.statSep} />
+        <View style={styles.stat}>
+          <Text style={styles.statLabel}>Total Orders</Text>
+          <Text style={[styles.statValue, styles.orangeText]}>
+            {item?.total_orders ?? 0}
           </Text>
         </View>
         <View style={styles.statSep} />
@@ -134,7 +141,7 @@ const RecentTeamSaleScreen = ({
             visible={isModalVisible}
             onClose={() => setModalVisible(false)}
             onApply={() => setModalVisible(false)}>
-            <Text onPress={() => {}} style={{paddingVertical: 10}}>
+            <Text onPress={() => { }} style={{ paddingVertical: 10 }}>
               All
             </Text>
           </FilterModal>
@@ -159,7 +166,7 @@ const RecentTeamSaleScreen = ({
         <FlatList
           data={sale}
           nestedScrollEnabled={true}
-          contentContainerStyle={{paddingBottom: 30, paddingTop: 4}}
+          contentContainerStyle={{ paddingBottom: 30, paddingTop: 4 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -168,7 +175,7 @@ const RecentTeamSaleScreen = ({
               tintColor={Colors.orange}
             />
           }
-          renderItem={({item, index}) => <SaleCard item={item} index={index} />}
+          renderItem={({ item, index }) => <SaleCard item={item} index={index} />}
           keyExtractor={(item, index) =>
             `${item.employee_id}-${index}-${item?.designation}`
           }
@@ -304,8 +311,8 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     textAlign: 'center',
   },
-  orangeText: {color: Colors.orange},
-  greenText: {color: Colors.sucess},
+  orangeText: { color: Colors.orange },
+  greenText: { color: Colors.sucess },
 
   // ── States ──
   centered: {

@@ -16,8 +16,6 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import PageHeader from '../../../components/ui/PageHeader';
 import {
-  User,
-  Store,
   ShoppingCart,
   IndianRupee,
   Clock,
@@ -26,10 +24,10 @@ import {
   CheckCircle,
   UserCheck,
   UserX,
-  TrendingUp,
   ListOrdered,
 } from 'lucide-react-native';
 import { useGetAsmUserDetailQuery } from '../../../features/base/base-api';
+import { FlatList } from 'react-native';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -220,12 +218,12 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
           {/* ── Stats row: PJP + Orders + Stores ── */}
           <View style={styles.heroStatsRow}>
             {/* PJP block */}
-            <View style={[styles.heroStatBlock, { borderRightWidth: 1, borderRightColor: C.border }]}>
+            <View style={[styles.heroStatBlock, { borderRightWidth: 1, borderRightColor: C.border, flex: 1.5 }]}>
               <Text style={styles.heroStatTitle}>PJP</Text>
               <View style={styles.heroStatInner}>
                 <StatBox label="Planned" value={pjp?.planned ?? 0} color={C.textSub} />
                 <StatBox label="Visited" value={pjp?.visited ?? 0} color={C.purple} />
-                <StatBox label="Done" value={pjp?.completed ?? 0} color={C.green} />
+                {/* <StatBox label="Done" value={pjp?.completed ?? 0} color={C.green} /> */}
                 <StatBox label="Pending" value={pjp?.pending ?? 0} color={C.accent} />
               </View>
             </View>
@@ -233,9 +231,9 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
             {/* Stores block */}
             <View style={styles.heroStatBlock}>
               <Text style={styles.heroStatTitle}>Stores Created</Text>
-              <View style={styles.heroStatInner}>
+              <View style={[styles.heroStatInner, { justifyContent: 'flex-start' }]}>
                 <StatBox label="Created" value={storesCreated?.created ?? 0} color={C.amber} />
-                <StatBox label="Success" value={storesCreated?.successful ?? 0} color={C.green} />
+                {/* <StatBox label="Success" value={storesCreated?.successful ?? 0} color={C.green} /> */}
               </View>
             </View>
           </View>
@@ -263,13 +261,6 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
             <View style={styles.orderSummaryDivider} />
             <View style={styles.orderSummaryItem}>
               <Text style={[styles.orderSummaryVal, { color: C.green }]}>
-                {ordersSummary?.delivered ?? 0}
-              </Text>
-              <Text style={styles.orderSummaryLabel}>Delivered</Text>
-            </View>
-            <View style={styles.orderSummaryDivider} />
-            <View style={styles.orderSummaryItem}>
-              <Text style={[styles.orderSummaryVal, { color: C.green }]}>
                 {ordersSummary?.order_value > 0
                   ? `₹${(ordersSummary.order_value / 1000).toFixed(1)}K`
                   : '—'}
@@ -282,79 +273,83 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
           {orders.length === 0 ? (
             <Text style={styles.emptyText}>No orders for this date</Text>
           ) : (
-            orders.map((order: any, idx: number) => (
-              <View key={order.order_id}>
-                {idx > 0 && <View style={styles.divider} />}
-
-                {/* Order ID + status badge */}
-                <View style={styles.orderTopRow}>
-                  <View style={styles.orderIdRow}>
-                    <Package size={13} color={C.amber} strokeWidth={2} />
-                    <Text style={styles.orderId}>{order.order_id}</Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.pill,
-                      {
-                        backgroundColor:
-                          order.delivery_display_status === 'Pending'
-                            ? C.amberSoft
-                            : C.greenSoft,
-                        borderColor:
-                          order.delivery_display_status === 'Pending'
-                            ? `${C.amber}40`
-                            : `${C.green}40`,
-                      },
-                    ]}>
-                    <Text
+            <FlatList
+              data={orders}
+              keyExtractor={(item: any) => String(item.order_id)}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={styles.divider} />}
+              renderItem={({ item: order }: { item: any }) => (
+                <View>
+                  {/* Order ID + status badge */}
+                  <View style={styles.orderTopRow}>
+                    <View style={styles.orderIdRow}>
+                      <Package size={13} color={C.amber} strokeWidth={2} />
+                      <Text style={styles.orderId}>{order.order_id}</Text>
+                    </View>
+                    <View
                       style={[
-                        styles.pillText,
+                        styles.pill,
                         {
-                          color:
+                          backgroundColor:
                             order.delivery_display_status === 'Pending'
-                              ? C.amber
-                              : C.green,
+                              ? C.amberSoft
+                              : C.greenSoft,
+                          borderColor:
+                            order.delivery_display_status === 'Pending'
+                              ? `${C.amber}40`
+                              : `${C.green}40`,
                         },
                       ]}>
-                      {order.delivery_display_status}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.pillText,
+                          {
+                            color:
+                              order.delivery_display_status === 'Pending'
+                                ? C.amber
+                                : C.green,
+                          },
+                        ]}>
+                        {order.delivery_display_status}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Store name */}
+                  <Text style={styles.orderStore}>{order.store}</Text>
+
+                  {/* Meta: time · value · qty */}
+                  <View style={styles.orderMeta}>
+                    <View style={styles.orderMetaItem}>
+                      <Clock size={11} color={C.textMuted} strokeWidth={2} />
+                      <Text style={styles.orderMetaText}>{toReadableTime(order.time)}</Text>
+                    </View>
+                    <Text style={styles.orderMetaDot}>·</Text>
+                    <View style={styles.orderMetaItem}>
+                      <IndianRupee size={11} color={C.purple} strokeWidth={2} />
+                      <Text style={[styles.orderMetaText, { color: C.purple, fontWeight: '700' }]}>
+                        {order.grand_total?.toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                    <Text style={styles.orderMetaDot}>·</Text>
+                    <View style={styles.orderMetaItem}>
+                      <ShoppingCart size={11} color={C.textMuted} strokeWidth={2} />
+                      <Text style={styles.orderMetaText}>{order.total_qty} qty</Text>
+                    </View>
                   </View>
                 </View>
-
-                {/* Store name */}
-                <Text style={styles.orderStore}>{order.store}</Text>
-
-                {/* Meta: time · value · qty */}
-                <View style={styles.orderMeta}>
-                  <View style={styles.orderMetaItem}>
-                    <Clock size={11} color={C.textMuted} strokeWidth={2} />
-                    <Text style={styles.orderMetaText}>{toReadableTime(order.time)}</Text>
-                  </View>
-                  <Text style={styles.orderMetaDot}>·</Text>
-                  <View style={styles.orderMetaItem}>
-                    <IndianRupee size={11} color={C.purple} strokeWidth={2} />
-                    <Text style={[styles.orderMetaText, { color: C.purple, fontWeight: '700' }]}>
-                      {order.grand_total?.toLocaleString('en-IN')}
-                    </Text>
-                  </View>
-                  <Text style={styles.orderMetaDot}>·</Text>
-                  <View style={styles.orderMetaItem}>
-                    <ShoppingCart size={11} color={C.textMuted} strokeWidth={2} />
-                    <Text style={styles.orderMetaText}>{order.total_qty} qty</Text>
-                  </View>
-                </View>
-              </View>
-            ))
+              )}
+            />
           )}
         </View>
 
         {/* ── Store Visits Section ─────────────────────────────────── */}
         {visits.length > 0 && (
           <View style={[styles.card, { marginTop: 14 }]}>
-            <SectionHeader icon={ListOrdered} title="Store Visits" accent={C.amber} />
+            <SectionHeader icon={ListOrdered} title="Visited Store" accent={C.amber} />
 
             {/* Visit summary strip */}
-            <View style={styles.visitSummaryStrip}>
+            {/* <View style={styles.visitSummaryStrip}>
               <View style={styles.visitSummaryItem}>
                 <Text style={[styles.visitSummaryVal, { color: C.purple }]}>{visits.length}</Text>
                 <Text style={styles.visitSummaryLabel}>Total</Text>
@@ -373,7 +368,7 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
                 </Text>
                 <Text style={styles.visitSummaryLabel}>Pending</Text>
               </View>
-            </View>
+            </View> */}
 
             {/* Visit list */}
             {visits.map((v: any, idx: number) => {

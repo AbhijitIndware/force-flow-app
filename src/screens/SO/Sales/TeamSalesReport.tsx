@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,26 +10,26 @@ import {
   Easing,
   Modal,
 } from 'react-native';
-import {Button, Card} from '@rneui/base';
-import {BarChart} from 'react-native-gifted-charts';
+import { Button, Card } from '@rneui/base';
+import { BarChart } from 'react-native-gifted-charts';
 import moment from 'moment';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   useGetReportQuery,
   useGetStoreListQuery,
 } from '../../../features/base/base-api';
-import {ReportMessage} from '../../../types/baseType';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { ReportMessage } from '../../../types/baseType';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import {FileText, RotateCw} from 'lucide-react-native';
+import { FileText, RotateCw } from 'lucide-react-native';
 import DateTimePicker from 'react-native-ui-datepicker';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
-import {uniqueByValue} from '../../../utils/utils';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
+import { uniqueByValue } from '../../../utils/utils';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -41,7 +41,7 @@ type Props = {
   route: any;
 };
 // 🏬 Unique by Store Name (or code)
-export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
+export const uniqueByStoreName = <T extends { name: string }>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(store => {
     if (seen.has(store.name)) return false;
@@ -49,8 +49,8 @@ export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
     return true;
   });
 };
-const TeamsSalesReport = ({navigation, route}: Props) => {
-  const {reportName} = route.params;
+const TeamsSalesReport = ({ navigation, route }: Props) => {
+  const { reportName } = route.params;
   // 🗓️ State for date filters
   const [startDate, setStartDate] = useState(moment().subtract(7, 'days'));
   const [endDate, setEndDate] = useState(moment());
@@ -65,21 +65,22 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
   /** ─── Store State ─────────────────────────────────── */
   const [storePage, setStorePage] = useState(1);
   const [storeListData, setStoreListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [storeSearch, setStoreSearch] = useState('');
   const [loadingStoreMore, setLoadingStoreMore] = useState(false);
   const [selectedStores, setSelectedStores] = useState<string[]>([]);
 
-  const {data: storeData, isFetching: fetchingStore} = useGetStoreListQuery({
+  const { data: storeData, isFetching: fetchingStore } = useGetStoreListQuery({
     page: String(storePage),
     page_size: '100',
     search: storeSearch,
     include_subordinates: '1',
     include_direct_subordinates: '1',
   });
+
   const transformToDropdownList = (arr: any[] = []) =>
-    arr.map(item => ({label: item.store_name, value: item.name}));
+    arr.map(item => ({ label: item.store_name, value: item.name }));
 
   // 🧾 Filters — converted to JSON string
   const filters = JSON.stringify({
@@ -94,7 +95,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
   });
 
   // 🚀 Call the RTK Query hook with parameters
-  const {data, isLoading, isFetching, isError, error, refetch} =
+  const { data, isLoading, isFetching, isError, error, refetch } =
     useGetReportQuery({
       report_name: reportName,
       filters,
@@ -103,11 +104,10 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
     });
 
   const reportData = data?.message ?? {};
-  console.log('🚀 ~ StockReport ~ reportData:', data, reportData);
   const {
     result = [],
     columns = [],
-    chart = {data: {labels: [], datasets: [{values: []}]}},
+    chart = { data: { labels: [], datasets: [{ values: [] }] } },
   } = reportData as ReportMessage;
 
   // Remove total row (last array)
@@ -201,14 +201,14 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
       />
 
       {/* 🗓️ Date Range */}
-      <View style={[styles.dateRow, {alignItems: 'center'}]}>
+      <View style={[styles.dateRow, { alignItems: 'center' }]}>
         {/* From Date */}
         <View style={styles.dateColumn}>
           <Text style={styles.dateLabel}>Date:</Text>
           <TouchableOpacity
             onPress={() => setShowFromPicker(true)}
             style={styles.outlinedButton}>
-            <Text style={{color: '#333'}}>
+            <Text style={{ color: '#333' }}>
               {startDate.format('DD-MM-YYYY')}
             </Text>
           </TouchableOpacity>
@@ -220,7 +220,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
           <TouchableOpacity
             onPress={() => setShowToPicker(true)}
             style={styles.outlinedButton}>
-            <Text style={{color: '#333'}}>{endDate.format('DD-MM-YYYY')}</Text>
+            <Text style={{ color: '#333' }}>{endDate.format('DD-MM-YYYY')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -242,7 +242,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
             shadowRadius: 3,
             elevation: 3,
           }}>
-          <Animated.View style={{transform: [{rotate}]}}>
+          <Animated.View style={{ transform: [{ rotate }] }}>
             <RotateCw color="#333" size={18} />
           </Animated.View>
         </TouchableOpacity>
@@ -264,9 +264,9 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
                 }}
                 styles={{
                   // ...defaultStyles,
-                  today: {borderColor: 'blue', borderWidth: 1}, // Add a border to today's date
-                  selected: {backgroundColor: 'blue'}, // Highlight the selected day
-                  selected_label: {color: 'white'}, // Highlight the selected day label
+                  today: { borderColor: 'blue', borderWidth: 1 }, // Add a border to today's date
+                  selected: { backgroundColor: 'blue' }, // Highlight the selected day
+                  selected_label: { color: 'white' }, // Highlight the selected day label
                 }}
               />
               <TouchableOpacity
@@ -291,9 +291,9 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
                 date={endDate.toDate()}
                 styles={{
                   // ...defaultStyles,
-                  today: {borderColor: 'blue', borderWidth: 1}, // Add a border to today's date
-                  selected: {backgroundColor: 'blue'}, // Highlight the selected day
-                  selected_label: {color: 'white'}, // Highlight the selected day label
+                  today: { borderColor: 'blue', borderWidth: 1 }, // Add a border to today's date
+                  selected: { backgroundColor: 'blue' }, // Highlight the selected day
+                  selected_label: { color: 'white' }, // Highlight the selected day label
                 }}
                 onChange={(params: any) => {
                   const newDate = moment(params.date);
@@ -376,13 +376,13 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
                   barWidth={getDynamicBarWidth(chartData.length)}
                   spacing={20}
                   noOfSections={4}
-                  yAxisTextStyle={{color: '#777'}}
-                  xAxisLabelTextStyle={{color: '#444', fontSize: 10}}
+                  yAxisTextStyle={{ color: '#777' }}
+                  xAxisLabelTextStyle={{ color: '#444', fontSize: 10 }}
                   hideRules
                   initialSpacing={20}
                   height={220}
                   frontColor="#FF6B8A"
-                  //   width={chartData.length * 80}
+                //   width={chartData.length * 80}
                 />
               </ScrollView>
             </Card>
@@ -449,7 +449,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
                             <Text
                               style={[
                                 styles.tableHeaderText,
-                                {textAlign: 'center', fontWeight: 'bold'},
+                                { textAlign: 'center', fontWeight: 'bold' },
                               ]}
                               numberOfLines={1}
                               ellipsizeMode="tail">
@@ -493,7 +493,7 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
 
                       {/* Total Row */}
                       {totalRow && (
-                        <View style={[styles.tableTotal, {borderTopWidth: 1}]}>
+                        <View style={[styles.tableTotal, { borderTopWidth: 1 }]}>
                           {visibleColumns.map(col => {
                             // find the original index of this column in the unfiltered list
                             const originalIndex = columns.findIndex(
@@ -550,9 +550,9 @@ const TeamsSalesReport = ({navigation, route}: Props) => {
 export default TeamsSalesReport;
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: '#f9f9f9'},
-  content: {padding: 16},
-  title: {fontSize: 20, fontWeight: '700', marginBottom: 12},
+  container: { flex: 1, backgroundColor: '#f9f9f9' },
+  content: { padding: 16 },
+  title: { fontSize: 20, fontWeight: '700', marginBottom: 12 },
   dateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -589,8 +589,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
   },
-  chartTitle: {fontWeight: '600', marginBottom: 8},
-  tableHeader: {flexDirection: 'row', backgroundColor: '#f0f0f0', padding: 8},
+  chartTitle: { fontWeight: '600', marginBottom: 8 },
+  tableHeader: { flexDirection: 'row', backgroundColor: '#f0f0f0', padding: 8 },
   tableHeaderText: {
     flex: 1,
     fontWeight: '600',
@@ -603,9 +603,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
   },
-  tableCell: {flex: 1, fontSize: 12},
-  center: {textAlign: 'center'},
-  tableTotal: {flexDirection: 'row', backgroundColor: '#fafafa', padding: 8},
+  tableCell: { flex: 1, fontSize: 12 },
+  center: { textAlign: 'center' },
+  tableTotal: { flexDirection: 'row', backgroundColor: '#fafafa', padding: 8 },
   footer: {
     marginTop: 12,
     color: '#999',
