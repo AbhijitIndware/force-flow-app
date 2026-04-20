@@ -1055,7 +1055,7 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           {/* ── Attendance Preview ── */}
-          <View style={{ marginTop: 20, marginHorizontal: 20 }}>
+          {attendanceData?.message?.records?.length !== 0 && <View style={{ marginTop: 20, marginHorizontal: 20 }}>
             <SectionTitle title="Team Attendance" sub="Quick Glance" />
             <ScrollView
               horizontal
@@ -1085,7 +1085,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </View>}
 
           {/* ── Team Performance Details ── */}
           {/* <View style={styles.section}>
