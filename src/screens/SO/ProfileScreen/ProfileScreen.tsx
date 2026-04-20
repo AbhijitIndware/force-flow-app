@@ -50,7 +50,6 @@ const ProfileScreen = ({ navigation }: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
-  console.log("🚀 ~ ProfileScreen ~ user:", user)
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
@@ -104,7 +103,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 ) : (
                   <View style={styles.initialsCircle}>
                     <Text style={styles.initialsText}>
-                      {getInitials(user?.full_name)}
+                      {getInitials(employee?.full_name)}
                     </Text>
                   </View>
                 )}
@@ -117,7 +116,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                   lineHeight: 16,
                   marginTop: 15,
                 }}>
-                {user?.email}
+                {employee?.company_email}
               </Text>
             </View>
           </View>
@@ -147,7 +146,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {user?.full_name}
+                  {employee?.full_name}
                 </Text>
               </View>
               <Divider

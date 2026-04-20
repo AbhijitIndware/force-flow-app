@@ -59,7 +59,7 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
   if (isFetching) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#F0F2F6' }]}>
-        <PageHeader title="Team Detail" navigation={() => navigation.goBack()} />
+        <PageHeader title="Employee Activity" navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#FFB302" />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -72,7 +72,7 @@ const TeamDetailScreen = ({ navigation, route }: Props) => {
   if (isError || !msg?.success) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#F0F2F6' }]}>
-        <PageHeader title="Team Detail" navigation={() => navigation.goBack()} />
+        <PageHeader title="Employee Activity" navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Text style={styles.errorText}>Failed to load team detail</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={refetch}>

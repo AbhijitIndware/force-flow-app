@@ -48,6 +48,7 @@ import {
   GetStoreResponse,
   AsmDashboardParams,
   AsmDashboardResponse,
+  AsmAttendanceResponse,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -824,26 +825,7 @@ export const baseApi = createApi({
     // API 9 — Attendance Tab
     getAsmAttendanceTab: builder.query<
       {
-        message: {
-          success: boolean;
-          date: string;
-          summary: {
-            total: number;
-            present: number;
-            absent: number;
-            attendance_rate: number;
-          };
-          records: {
-            employee_id: string;
-            employee_name: string;
-            initials: string;
-            designation: string;
-            role: string;
-            attendance_status: string;
-            check_in_time: string | null;
-            check_out_time: string | null;
-          }[];
-        };
+        message: AsmAttendanceResponse
       },
       {
         employee: string;

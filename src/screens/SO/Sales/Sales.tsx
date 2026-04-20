@@ -112,7 +112,7 @@ const SalesScreen = ({ navigation, route }: Props) => {
                   fontSize: Size.md,
                   color: Colors.darkButton,
                 }}>
-                ₹ {data?.message?.summary?.total_value || 0}
+                ₹ {Number(data?.message?.summary?.total_value || 0).toFixed(2)}
               </Text>
               <Text
                 style={{
@@ -122,7 +122,7 @@ const SalesScreen = ({ navigation, route }: Props) => {
                   lineHeight: 16,
                   marginTop: 5,
                 }}>
-                ₹ {data?.message?.mtd_summary?.total_value || 0} MTD{' '}
+                ₹ {Number(data?.message?.mtd_summary?.total_value || 0).toFixed(2)} MTD{' '}
               </Text>
               {/* <Text
                 style={{

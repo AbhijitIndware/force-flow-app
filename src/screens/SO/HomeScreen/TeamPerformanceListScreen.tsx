@@ -159,15 +159,15 @@ const ValueCard = ({ item, onPress }: { item: any; onPress: () => void }) => {
 const PjpSummary = ({ s }: { s: any }) => (
     <View style={summaryStyles.row}>
         <View style={summaryStyles.chip}>
-            <Text style={summaryStyles.chipLabel}>Planned</Text>
+            <Text style={summaryStyles.chipLabel}>Total Planned</Text>
             <Text style={[summaryStyles.chipVal, { color: C.textSub }]}>{s.total_planned ?? 0}</Text>
         </View>
         <View style={summaryStyles.chip}>
-            <Text style={summaryStyles.chipLabel}>Visited</Text>
+            <Text style={summaryStyles.chipLabel}>Total Visited</Text>
             <Text style={[summaryStyles.chipVal, { color: C.purple }]}>{s.total_visited ?? 0}</Text>
         </View>
         <View style={[summaryStyles.chip, { backgroundColor: C.amberSoft, borderColor: C.amber + '30' }]}>
-            <Text style={summaryStyles.chipLabel}>Achievement</Text>
+            <Text style={summaryStyles.chipLabel}>Total Achievement</Text>
             <Text style={[summaryStyles.chipVal, { color: C.amber }]}>{s.achievement_rate ?? 0}%</Text>
         </View>
     </View>
@@ -198,7 +198,7 @@ const TeamPerformanceListScreen = ({ navigation, route }: Props) => {
 
     const getTitle = () => {
         switch (mode) {
-            case 'pjp': return 'Team PJP Compliance';
+            case 'pjp': return 'Team PJP Detail';
             case 'value': return 'Team Sales Achievement';
             default: return 'Team Attendance';
         }

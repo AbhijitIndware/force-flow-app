@@ -509,35 +509,6 @@ const HomeScreen = ({ navigation }: Props) => {
   const valueSummary = valueTargetData?.message?.summary;
   const attendanceSummary = attendanceData?.message?.summary;
 
-  // ── Merge Records ───────────────────────────────────────────────────────────
-  const teamRecords = useMemo(() => {
-    const attMap = (attendanceData?.message?.records || []).reduce((acc: any, r) => {
-      acc[r.employee_id] = r;
-      return acc;
-    }, {});
-    const pjpMap = (pjpTargetData?.message?.records || []).reduce((acc: any, r) => {
-      acc[r.employee_id] = r;
-      return acc;
-    }, {});
-    const valMap = (valueTargetData?.message?.records || []).reduce((acc: any, r) => {
-      acc[r.employee_id] = r;
-      return acc;
-    }, {});
-
-    const allIds = Array.from(new Set([
-      ...Object.keys(attMap),
-      ...Object.keys(pjpMap),
-      ...Object.keys(valMap)
-    ]));
-
-    return allIds.map(id => ({
-      id,
-      attendance: attMap[id],
-      pjp: pjpMap[id],
-      value: valMap[id]
-    }));
-  }, [attendanceData, pjpTargetData, valueTargetData]);
-
   return (
     <SafeAreaView
       style={[
@@ -772,8 +743,8 @@ const HomeScreen = ({ navigation }: Props) => {
             <View style={styles.filterTabRow}>
               {[
                 { label: 'Monthly', mode: 'month' },
-                { label: 'Range', mode: 'month_range' },
-                { label: 'Custom', mode: 'date_range' }
+                // { label: 'Range', mode: 'month_range' },
+                { label: 'Range', mode: 'date_range' }
               ].map(opt => (
                 <TouchableOpacity
                   key={opt.mode}
@@ -1005,7 +976,7 @@ const HomeScreen = ({ navigation }: Props) => {
           </Modal>
 
           {/* ── Team Attendance ── */}
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <SectionTitle title="Team Attendance" sub="Today's Summary" />
             <View style={styles.metricRow}>
               <MetricBox
@@ -1024,10 +995,149 @@ const HomeScreen = ({ navigation }: Props) => {
                 rate={Math.max(0, 100 - (attendanceSummary?.attendance_rate ?? 0)).toFixed(1)}
               />
             </View>
+          </View> */}
+
+          {/* ── Team Attendance ── */}
+          <View style={styles.section}>
+            <SectionTitle
+              title="Team Attendance"
+              sub={
+                filterMode === 'month'
+                  ? `${moment().month(selectedMonth - 1).format('MMMM')} Summary`
+                  : filterMode === 'date_range'
+                    ? `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
+                    : 'Summary'
+              }
+            />
+
+            {/* Summary Pills */}
+            {/* <View style={styles.metricRow}>
+              <MetricBox
+                label="Team Members"
+                value={`${attendanceSummary?.unique_employees ?? attendanceSummary?.total ?? 0}`}
+                rate={attendanceSummary?.attendance_rate ?? 0}
+              />
+              <MetricBox
+                label="Present"
+                value={`${attendanceSummary?.present ?? 0}`}
+                rate={attendanceSummary?.attendance_rate ?? 0}
+              />
+              <MetricBox
+                label="Absent"
+                value={`${attendanceSummary?.absent ?? 0}`}
+                rate={Math.max(0, 100 - (attendanceSummary?.attendance_rate ?? 0)).toFixed(1)}
+              />
+            </View> */}
+
+            {/* Horizontal per-user scroll */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingVertical: 5, paddingHorizontal: 2 }}
+            >
+              {attendanceData?.message?.records?.map((r) => {
+                const rate = r.attendance_rate;
+                const color = rate >= 75 ? '#2E7D32' : rate >= 50 ? '#F59E0B' : '#EF4444';
+                const bgColor = rate >= 75 ? '#DCFCE7' : rate >= 50 ? '#FEF3C7' : '#FEE2E2';
+
+                return (
+                  <TouchableOpacity
+                    key={r.employee_id}
+                    onPress={() => navigation.navigate('TeamDetailScreen', {
+                      employee_id: r.employee_id,
+                      date: today
+                    })}
+                    style={{
+                      width: 130,
+                      backgroundColor: C.card,
+                      borderRadius: 14,
+                      borderWidth: 0.5,
+                      borderColor: C.border,
+                      padding: 12,
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    {/* Avatar */}
+                    <View style={{
+                      width: 40, height: 40, borderRadius: 20,
+                      backgroundColor: C.accentSoft,
+                      justifyContent: 'center', alignItems: 'center',
+                    }}>
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: C.accent }}>
+                        {r.initials || r.employee_name.charAt(0).toUpperCase()}
+                      </Text>
+                    </View>
+
+                    {/* Name */}
+                    <Text
+                      numberOfLines={1}
+                      style={{ fontSize: 12, fontWeight: '600', color: C.text, textAlign: 'center' }}
+                    >
+                      {r.employee_name}
+                    </Text>
+
+                    {/* Rate badge */}
+                    <View style={{
+                      paddingHorizontal: 8, paddingVertical: 2,
+                      borderRadius: 20, backgroundColor: bgColor,
+                    }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color }}>
+                        {rate}%
+                      </Text>
+                    </View>
+
+                    {/* Progress bar */}
+                    <View style={{
+                      width: '100%', height: 4,
+                      backgroundColor: C.border, borderRadius: 2, overflow: 'hidden',
+                    }}>
+                      <View style={{
+                        width: `${Math.min(rate, 100)}%` as `${number}%`,
+                        height: '100%', backgroundColor: color, borderRadius: 2,
+                      }} />
+                    </View>
+
+                    {/* Stats row */}
+                    <View style={{
+                      flexDirection: 'row', justifyContent: 'space-between',
+                      width: '100%', marginTop: 2,
+                    }}>
+
+
+                      <View style={{ alignItems: 'center', flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: C.text }}>
+                          {r.total_working_days}
+                        </Text>
+                        <Text style={{ fontSize: 9, color: C.textMuted }}>Days</Text>
+                      </View>
+
+                      <View style={{ width: 1, backgroundColor: C.border, marginVertical: 2 }} />
+
+                      <View style={{ alignItems: 'center', flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#2E7D32' }}>
+                          {r.days_present}
+                        </Text>
+                        <Text style={{ fontSize: 9, color: C.textMuted }}>Present</Text>
+                      </View>
+
+                      <View style={{ width: 1, backgroundColor: C.border, marginVertical: 2 }} />
+
+                      <View style={{ alignItems: 'center', flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#EF4444' }}>
+                          {r.days_absent}
+                        </Text>
+                        <Text style={{ fontSize: 9, color: C.textMuted }}>Absent</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
 
           {/* ── Target vs Achievement ── */}
-          <View style={styles.section}>
+          <View style={[styles.section, { marginBottom: 10 }]}>
             <SectionTitle
               title="Team Performance"
               sub={
@@ -1047,7 +1157,11 @@ const HomeScreen = ({ navigation }: Props) => {
               />
               <TargetMetricBox
                 label="Sales Value"
-                achieved={`₹${valueSummary?.total_so}`}
+                achieved={`₹${typeof valueSummary?.total_so === 'number'
+                  ? valueSummary.total_so % 1 !== 0
+                    ? valueSummary.total_so.toFixed(2)
+                    : valueSummary.total_so
+                  : valueSummary?.total_so ?? 0}`}
                 accentColor="#0F6E56"
                 onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'value' })}
               />
@@ -1055,7 +1169,7 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           {/* ── Attendance Preview ── */}
-          {attendanceData?.message?.records?.length !== 0 && <View style={{ marginTop: 20, marginHorizontal: 20 }}>
+          {/* {attendanceData?.message?.records?.length !== 0 && <View style={{ marginTop: 20, marginHorizontal: 20 }}>
             <SectionTitle title="Team Attendance" sub="Quick Glance" />
             <ScrollView
               horizontal
@@ -1085,7 +1199,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>}
+          </View>} */}
 
           {/* ── Team Performance Details ── */}
           {/* <View style={styles.section}>
@@ -1279,6 +1393,35 @@ const HomeScreen = ({ navigation }: Props) => {
               Quick links
             </Text>
             <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('AddPjpScreen')}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Add PJP</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+            />
+            <TouchableOpacity
               onPress={() => navigation.navigate('AddStoreScreen')}
               style={styles.IconlinkBox}>
               <View
@@ -1294,6 +1437,35 @@ const HomeScreen = ({ navigation }: Props) => {
                 <Hotel strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add Store</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+            />
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('OrdersScreen', { index: 0 })}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Orders</Text>
               <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -1331,41 +1503,12 @@ const HomeScreen = ({ navigation }: Props) => {
                 />
               </View>
             </TouchableOpacity>
-            <Divider
+            {/* <Divider
               width={1}
               color={Colors.lightGray}
               style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            />
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('OrdersScreen', { index: 1 })}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
-                    borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Sales Order</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            />
-            <TouchableOpacity
+            /> */}
+            {/* <TouchableOpacity
               style={styles.IconlinkBox}
               onPress={() => navigation.navigate('OrdersScreen', { index: 0 })}>
               <View
@@ -1393,31 +1536,7 @@ const HomeScreen = ({ navigation }: Props) => {
               width={1}
               color={Colors.lightGray}
               style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            />
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('AddPjpScreen')}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
-                    borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Add PJP</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
+            /> */}
           </View>
         </ScrollView>
       )}
@@ -1797,7 +1916,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Sections ────────────────────────────────────────────────────────────────
-  section: { paddingHorizontal: 16, paddingTop: 20 },
+  section: { paddingHorizontal: 16, paddingTop: 10 },
 
   sectionTitleRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 10 },
   sectionTitle: { fontSize: 14, fontWeight: '600', color: C.text },

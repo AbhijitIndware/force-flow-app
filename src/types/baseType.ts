@@ -1,4 +1,4 @@
-import {ApiResponse, Filters, PaginationInfo} from './Navigation';
+import { ApiResponse, Filters, PaginationInfo } from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -271,7 +271,7 @@ export type ICheckOut = {
 };
 export type IMarkActivity = {
   store: string;
-  activity_type: {activity_type: string}[];
+  activity_type: { activity_type: string }[];
 };
 
 export interface IAddDistributorResponse extends ApiResponse {
@@ -1070,7 +1070,7 @@ export interface EmployeeData {
 
 //Expense
 export type RExpenseClaimType = {
-  data: {name: string}[];
+  data: { name: string }[];
 };
 
 export type ClaimData = {
@@ -1081,7 +1081,7 @@ export type ClaimData = {
   sanctioned: number;
 };
 export type RExpenseClaimByEmp = {
-  message: {data: ClaimData[]};
+  message: { data: ClaimData[] };
 };
 
 export interface IExpenseItem {
@@ -1233,7 +1233,7 @@ export type PromoterAttendanceData = {
 
   assigned_store: any;
   attendance_date: string;
-  checkin_records: {check_in: null; check_out: null};
+  checkin_records: { check_in: null; check_out: null };
   employee: string;
   employee_name: string;
   message: string;
@@ -1682,7 +1682,7 @@ export interface AsmKeyMetrics {
   order_value: number;
   orders_delivered: number;
   delivery_rate: number;
-  store_created_success:number;
+  store_created_success: number;
   store_created: number
 }
 
@@ -1768,3 +1768,38 @@ export interface AsmDashboardParams {
   to_date?: string; // format: 'YYYY-MM-DD'
   employee: string; // format: 'HR-EMP-XXXXX'
 }
+
+
+type AsmAttendanceRecord = {
+  employee_id: string;
+  employee_name: string;
+  initials: string;
+  designation: string;
+  role: string;
+  total_working_days: number;
+  days_present: number;
+  days_absent: number;
+  attendance_rate: number;
+};
+
+type AttendanceSummary = {
+  total: number;
+  present: number;
+  absent: number;
+  attendance_rate: number;
+};
+
+type AttendancePeriod = {
+  filter_type: 'month' | 'month_range' | 'date_range';
+  month?: number;
+  year?: number;
+  from: string;
+  to: string;
+};
+
+export type AsmAttendanceResponse = {
+  success: boolean;
+  period: AttendancePeriod;
+  summary: AttendanceSummary;
+  records: AsmAttendanceRecord[];
+};
