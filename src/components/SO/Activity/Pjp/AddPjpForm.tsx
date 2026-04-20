@@ -1,22 +1,22 @@
 /* eslint-disable react-native/no-inline-styles */
 // AddDistributorForm.tsx
 import React from 'react';
-import {Animated, Text, TouchableOpacity, View} from 'react-native';
+import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
-import {Colors} from '../../../../utils/colors';
-import {useNavigation} from '@react-navigation/native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../../types/Navigation';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
+import { Colors } from '../../../../utils/colors';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../../types/Navigation';
 import StoreDropdownField from './StoreDropdownField';
 
 interface FormValues {
   employee: string;
   date: string;
-  stores: {store: string}[];
+  stores: { store: string }[];
 }
 
 type NavigationProp = NativeStackNavigationProp<
@@ -43,12 +43,13 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
 
-  employeeList: {label: string; value: string}[];
+  employeeList: { label: string; value: string }[];
   employeeOgData: any[];
   employeeSearch: string;
   setEmployeeSearch: (val: string) => void;
   onLoadMoreEmployees: () => void;
   loadingMoreEmployees: boolean;
+  isPjpStarted: boolean;
 
   // storeList: {label: string; value: string}[];
   // storeOgData: any[];
@@ -75,6 +76,7 @@ const AddPjpForm: React.FC<Props> = ({
   loadingMoreEmployees,
   employeeSearch,
   setEmployeeSearch,
+  isPjpStarted,
   // storeSearch,
   // setStoreSearch,
 }) => {
@@ -91,11 +93,11 @@ const AddPjpForm: React.FC<Props> = ({
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
+      contentContainerStyle={{ padding: 16, paddingHorizontal: 21 }}>
       <ReusableDatePicker
         label="Date"
         value={values.date}
@@ -121,8 +123,8 @@ const AddPjpForm: React.FC<Props> = ({
           employeeOgData.find(emp => emp.name === values.employee)
             ?.employee_number || ''
         }
-        onChangeText={() => {}}
-        onBlur={() => {}}
+        onChangeText={() => { }}
+        onBlur={() => { }}
         disabled={true}
       />
       {/* Warning message */}
@@ -174,7 +176,7 @@ const AddPjpForm: React.FC<Props> = ({
         </View>
       ))} */}
       {values.stores.map((storeItem, index) => (
-        <View key={index} style={{marginBottom: 12, position: 'relative'}}>
+        <View key={index} style={{ marginBottom: 12, position: 'relative' }}>
           <StoreDropdownField
             label={`Store ${index + 1}`}
             field={`stores[${index}].store`}
@@ -190,15 +192,15 @@ const AddPjpForm: React.FC<Props> = ({
             navigation={navigation}
           />
 
-          {values.stores.length > 1 && index !== 0 && (
+          {values.stores.length > 1 && index !== 0 && !(isPjpStarted && storeItem.store) && (
             <TouchableOpacity
               onPress={() => {
                 const updated = [...values.stores];
                 updated.splice(index, 1);
                 setFieldValue('stores', updated);
               }}
-              style={{position: 'absolute', right: 10, top: 80}}>
-              <Text style={{color: 'red'}}>Remove</Text>
+              style={{ position: 'absolute', right: 10, top: 80 }}>
+              <Text style={{ color: 'red' }}>Remove</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -206,7 +208,7 @@ const AddPjpForm: React.FC<Props> = ({
 
       {/* ➕ Add Store Button */}
       <TouchableOpacity
-        onPress={() => setFieldValue('stores', [...values.stores, {store: ''}])}
+        onPress={() => setFieldValue('stores', [...values.stores, { store: '' }])}
         style={{
           marginBottom: 16,
           alignSelf: 'flex-start',

@@ -1,6 +1,6 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {View} from 'react-native';
-import {useGetStoreListQuery} from '../../../../features/base/base-api';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View } from 'react-native';
+import { useGetStoreListQuery } from '../../../../features/base/base-api';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 
 interface StoreItem {
@@ -58,8 +58,9 @@ const StoreDropdownField = ({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [storeList, setStoreList] = useState<DropdownOption[]>([]);
+  const [seededOption, setSeededOption] = useState<DropdownOption | null>(null);
 
-  const {data: exactMatchData} = useGetStoreListQuery(
+  const { data: exactMatchData } = useGetStoreListQuery(
     {
       page: '1',
       page_size: '1',
@@ -67,14 +68,20 @@ const StoreDropdownField = ({
       include_subordinates: '1',
       include_direct_subordinates: '1',
     },
-    {skip: !value},
+    { skip: !value },
   );
 
   // ✅ Seed with full label in edit mode
   useEffect(() => {
     const stores = (exactMatchData as StoreApiResponse)?.message?.data?.stores;
     if (stores?.length) {
-      setStoreList(transformStores(stores));
+      const newItems = transformStores(stores);
+      setSeededOption(newItems[0]);
+      setStoreList(prev => {
+        // Merge without overwriting the full list
+        const combined = [...newItems, ...prev];
+        return Array.from(new Map(combined.map(i => [i.value, i])).values());
+      });
     }
   }, [exactMatchData]);
 
@@ -88,13 +95,14 @@ const StoreDropdownField = ({
     setStoreList([]);
   }, [debouncedSearch]);
 
-  const {data, isFetching} = useGetStoreListQuery({
+  const { data, isFetching } = useGetStoreListQuery({
     page: String(page),
     page_size: PAGE_SIZE,
     search: debouncedSearch,
     include_subordinates: '1',
     include_direct_subordinates: '1',
   });
+  console.log("🚀 ~ StoreDropdownField ~ data:", data)
 
   useEffect(() => {
     const stores = (data as StoreApiResponse)?.message?.data?.stores;
@@ -104,20 +112,27 @@ const StoreDropdownField = ({
 
     setStoreList(prev => {
       if (page === 1) {
+        let finalData = newData;
         if (value) {
           const existsInNewData = newData.some(i => i.value === value);
           if (!existsInNewData) {
-            const seeded = prev.find(i => i.value === value);
-            if (seeded) return [seeded, ...newData];
+            const seeded =
+              seededOption?.value === value
+                ? seededOption
+                : prev.find(i => i.value === value);
+
+            if (seeded) {
+              finalData = [seeded, ...newData];
+            }
           }
         }
-        return newData;
+        return finalData;
       }
 
       const merged = [...prev, ...newData];
       return Array.from(new Map(merged.map(i => [i.value, i])).values());
     });
-  }, [data]);
+  }, [data, value, seededOption]);
 
   const handleLoadMore = useCallback(() => {
     if (isFetching) return;
@@ -127,6 +142,17 @@ const StoreDropdownField = ({
     if (current >= total) return;
     setPage(prev => prev + 1);
   }, [isFetching, data]);
+
+  const handleSelect = useCallback(
+    (val: string) => {
+      const selected = storeList.find(i => i.value === val);
+      if (selected) {
+        setSeededOption(selected);
+      }
+      onChange(val);
+    },
+    [storeList, onChange],
+  );
 
   const handleAddStore = useCallback(() => {
     navigation.navigate('AddStoreScreen');
@@ -140,7 +166,7 @@ const StoreDropdownField = ({
         value={value}
         data={storeList}
         error={error}
-        onChange={onChange}
+        onChange={handleSelect}
         onLoadMore={handleLoadMore}
         loadingMore={isFetching && page > 1}
         searchText={search}

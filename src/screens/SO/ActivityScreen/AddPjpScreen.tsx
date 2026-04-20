@@ -114,6 +114,8 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   const { data: pjpDetails } = useGetDailyPjpByIdQuery(id, {
     skip: id === null || id === undefined,
   });
+  const pjpStatus = pjpDetails?.message?.data?.running_status;
+  const isRunning = pjpStatus === 'Running';
 
   const [addDailyPjp] = useAddDailyPjpMutation();
   const [updateDailyPjp] = useUpdateDailyPjpMutation();
@@ -323,6 +325,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         setEmployeeSearch={setEmployeeSearch}
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
+        isPjpStarted={isRunning}
       /** 👇 Store-related props */
       // storeList={storeListData}
       // storeOgData={storeOgData}
