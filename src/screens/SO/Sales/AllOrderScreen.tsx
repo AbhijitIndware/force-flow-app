@@ -10,21 +10,32 @@ import { AsmOrderStatus } from './AsmDashboardScreen';
 
 type Props = NativeStackScreenProps<SoAppStackParamList, 'AllOrdersScreen'>;
 
-const FILTERS = ['All', 'Pending', 'Delivered'] as const;
+const FILTERS = ['All', 'Pending', 'Approved'] as const;
 type Filter = (typeof FILTERS)[number];
 
 export const AllOrdersScreen: React.FC<Props> = ({ route, navigation }) => {
-    const { date, employee } = route.params;
-    console.log("🚀 ~ AllOrdersScreen ~ route:", route)
-    console.log("🚀 ~ AllOrdersScreen ~ date:", date)
+    const { date, employee, from_date, to_date } = route.params;
     const [filter, setFilter] = useState<Filter>('All');
 
-    const { data, isLoading, isError } = useGetAsmOrderStatusQuery({ date, employee });
-    console.log("🚀 ~ AllOrdersScreen ~ data:", data)
-    const orders = data?.message?.data ?? [];
+    const isRange = from_date && to_date && from_date !== to_date;
 
+    const { data, isLoading, isError } = useGetAsmOrderStatusQuery({
+        employee,
+        ...(isRange
+            ? { from_date, to_date }
+            : { date }),
+    });
+    console.log("🚀 ~ AllOrdersScreen ~ data:", data)
+
+    const orders = data?.message?.data ?? [];
     const filtered =
-        filter === 'All' ? orders : orders.filter(o => o.delivery_display_status === filter);
+        filter === 'All' ? orders : orders.filter(o => o.workflow_state === filter);
+
+    const pageTitle = isRange
+        ? `Orders · ${from_date} – ${to_date}`
+        : date === new Date().toISOString().split('T')[0]
+            ? "Today's Orders"
+            : `Orders · ${date}`;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -34,7 +45,7 @@ export const AllOrdersScreen: React.FC<Props> = ({ route, navigation }) => {
                     <ChevronLeft size={16} color={C.text} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.pageTitle}>Today's Orders</Text>
+                    <Text style={styles.pageTitle}>{pageTitle}</Text>
                     <Text style={styles.pageSubtitle}> {orders.length} orders</Text>
                 </View>
             </View>
@@ -88,69 +99,73 @@ const fmt = (n?: number): string => {
     return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 };
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }) => (
-    <TouchableOpacity
-        onPress={() => navigation.navigate('OrderDetailScreen', { order_id: order.order_id })}
-        style={[styles.orderCard, index > 0 && { marginTop: 10 }]}>
-        <View style={styles.orderStripe} />
-        <View style={{ flex: 1 }}>
-            <View style={styles.orderTop}>
-                <View style={styles.orderIdRow}>
-                    <Package size={12} color={C.accent} strokeWidth={2} />
-                    <Text style={styles.orderId}>{order.order_id}</Text>
-                </View>
-                <View
-                    style={[
+const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }) => {
+    const isPending = order.workflow_state === 'Pending';
+    const stripeColor = isPending ? C.amber : C.green;
+
+    return (
+        <TouchableOpacity
+            onPress={() => navigation.navigate('OrderDetailScreen', { order_id: order.order_id })}
+            style={[styles.orderCard, index > 0 && { marginTop: 10 }]}>
+
+            {/* Status stripe */}
+            <View style={[styles.orderStripe, { backgroundColor: stripeColor }]} />
+
+            <View style={{ flex: 1 }}>
+                {/* Top row: order ID + status badge */}
+                <View style={styles.orderTop}>
+                    <View style={styles.orderIdRow}>
+                        <Package size={12} color={C.accent} strokeWidth={2} />
+                        <Text style={styles.orderId}>{order.order_id}</Text>
+                    </View>
+                    <View style={[
                         styles.statusTag,
                         {
-                            backgroundColor:
-                                order.delivery_display_status === 'Pending'
-                                    ? C.amberSoft
-                                    : C.greenSoft,
-                            borderColor:
-                                order.delivery_display_status === 'Pending'
-                                    ? `${C.amber}40`
-                                    : `${C.green}40`,
+                            backgroundColor: isPending ? C.amberSoft : C.greenSoft,
+                            borderColor: isPending ? `${C.amber}40` : `${C.green}40`,
                         },
                     ]}>
-                    <Text
-                        style={[
+                        <Text style={[
                             styles.statusTagText,
-                            {
-                                color:
-                                    order.delivery_display_status === 'Pending'
-                                        ? C.amber
-                                        : C.green,
-                            },
+                            { color: isPending ? C.amber : C.green },
                         ]}>
-                        {order.delivery_display_status}
-                    </Text>
+                            {order.workflow_state}
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Store name */}
+                <Text style={styles.orderStore}>{order.store}</Text>
+
+                {/* Meta row */}
+                <View style={styles.orderMeta}>
+                    <View style={styles.orderMetaItem}>
+                        <Clock size={11} color={C.textMuted} strokeWidth={2} />
+                        <Text style={styles.orderMetaText}>{order.time}</Text>
+                    </View>
+                    <View style={styles.orderMetaItem}>
+                        <Users size={11} color={C.textMuted} strokeWidth={2} />
+                        <Text style={styles.orderMetaText}>{order.salesperson}</Text>
+                    </View>
+                    <View style={styles.orderMetaItem}>
+                        <ShoppingCart size={11} color={C.textMuted} strokeWidth={2} />
+                        <Text style={styles.orderMetaText}>{order.items} items</Text>
+                    </View>
+                </View>
+
+                {/* Footer: value + payment badge */}
+                <View style={styles.orderFooter}>
+                    <Text style={styles.orderValue}>{fmt(order.order_value)}</Text>
+                    {/* {order.payment ? (
+                        <View style={styles.creditTag}>
+                            <Text style={styles.creditTagText}>{order.payment}</Text>
+                        </View>
+                    ) : null} */}
                 </View>
             </View>
-            <Text style={styles.orderStore}>{order.store}</Text>
-            <View style={styles.orderMeta}>
-                <View style={styles.orderMetaItem}>
-                    <Clock size={11} color={C.textMuted} strokeWidth={2} />
-                    <Text style={styles.orderMetaText}>{order.time}</Text>
-                </View>
-                <View style={styles.orderMetaItem}>
-                    <Users size={11} color={C.textMuted} strokeWidth={2} />
-                    <Text style={styles.orderMetaText}>{order.salesperson}</Text>
-                </View>
-                <View style={styles.orderMetaItem}>
-                    <ShoppingCart size={11} color={C.textMuted} strokeWidth={2} />
-                    <Text style={styles.orderMetaText}>{order.items} items</Text>
-                </View>
-            </View>
-            <View style={styles.orderFooter}>
-                <Text style={styles.orderValue}>{fmt(order.order_value)}</Text>
-                <View style={styles.creditTag}>
-                    <Text style={styles.creditTagText}>{order.payment}</Text>
-                </View>
-            </View>
-        </View>
-    </TouchableOpacity>
-);
+        </TouchableOpacity>
+    );
+};
 
 
 const C = {
@@ -236,6 +251,8 @@ const styles = StyleSheet.create({
         borderWidth: 0.5,
         borderColor: C.border,
         marginRight: 8,
+
+        height: 28,
         backgroundColor: 'transparent',
     },
     filterChipActive: {

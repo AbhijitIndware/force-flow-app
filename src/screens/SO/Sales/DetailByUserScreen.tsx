@@ -110,7 +110,7 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
   if (isFetching) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-        <PageHeader title="Detail By User" navigation={() => navigation.goBack()} />
+        <PageHeader title={data?.message?.employee?.employee_name ?? 'Employee Detail'} navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={C.amber} />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -123,7 +123,7 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
   if (isError || !data?.message?.success) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-        <PageHeader title="Detail By User" navigation={() => navigation.goBack()} />
+        <PageHeader title={data?.message?.employee?.employee_name ?? 'Employee Detail'} navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Text style={styles.errorText}>Failed to load user detail</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={refetch}>
@@ -154,7 +154,7 @@ const DetailByUserScreen = ({ navigation, route }: Props) => {
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-      <PageHeader title="Detail By User" navigation={() => navigation.goBack()} />
+      <PageHeader title={data?.message?.employee?.employee_name ?? 'Employee Detail'} navigation={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 

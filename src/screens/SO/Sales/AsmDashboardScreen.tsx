@@ -480,10 +480,11 @@ const KpiCard: React.FC<KpiCardProps> = ({
 
 interface KpiGridProps {
   metrics: AsmKeyMetrics;
+  subtitle: string;
 }
-const KpiGrid: React.FC<KpiGridProps> = ({ metrics: m }) => (
+const KpiGrid: React.FC<KpiGridProps> = ({ metrics: m, subtitle }) => (
   <View>
-    <SectionHeader icon={BarChart2} title="Today's Overview" accent={C.amber} />
+    <SectionHeader icon={BarChart2} title={subtitle} accent={C.amber} />
     <View style={styles.kpiRow}>
       <KpiCard
         icon={Users}
@@ -577,35 +578,51 @@ const StorePlanning: React.FC<StorePlanningProps> = ({ planning: p }) => (
 // ─── Business Summary ─────────────────────────────────────────────────────────
 interface BusinessSummaryProps {
   business: AsmBusinessGenerated;
+  navigation: any;
+  date: string;
+  from_date: string;  // ← add
+  to_date: string;
 }
-const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
-  <View style={styles.bizCard}>
-    <SectionHeader
-      icon={TrendingUp}
-      title="Business Generated"
-      accent={C.accent}
-    />
-    <View style={styles.bizGrid}>
-      <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, { color: C.amber }]}>{b.total_orders}</Text>
-        <Text style={styles.bizLabel}>Total Orders</Text>
+const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b, navigation, date, from_date, to_date }) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  return (
+    <TouchableOpacity onPress={() =>
+      navigation.navigate('AllOrdersScreen', {
+        date,
+        employee: employee?.id,
+        from_date,   // ← pass
+        to_date,     // ← pass
+      })
+    }
+      style={styles.bizCard}>
+      <SectionHeader
+        icon={TrendingUp}
+        title="Business Generated"
+        accent={C.accent}
+      />
+      <View style={styles.bizGrid}>
+        <View style={styles.bizItem}>
+          <Text style={[styles.bizVal, { color: C.amber }]}>{b.total_orders}</Text>
+          <Text style={styles.bizLabel}>Total Orders</Text>
+        </View>
+        <View style={styles.bizDivider} />
+        <View style={styles.bizItem}>
+          <Text style={[styles.bizVal, { color: C.green }]}>
+            {fmt(b.order_value)}
+          </Text>
+          <Text style={styles.bizLabel}>Order Value</Text>
+        </View>
+        <View style={styles.bizDivider} />
+        <View style={styles.bizItem}>
+          <Text style={[styles.bizVal, { color: C.purple }]}>
+            {fmt(b.avg_order_value)}
+          </Text>
+          <Text style={styles.bizLabel}>Avg Order</Text>
+        </View>
       </View>
-      <View style={styles.bizDivider} />
-      <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, { color: C.green }]}>
-          {fmt(b.order_value)}
-        </Text>
-        <Text style={styles.bizLabel}>Order Value</Text>
-      </View>
-      <View style={styles.bizDivider} />
-      <View style={styles.bizItem}>
-        <Text style={[styles.bizVal, { color: C.purple }]}>
-          {fmt(b.avg_order_value)}
-        </Text>
-        <Text style={styles.bizLabel}>Avg Order</Text>
-      </View>
-    </View>
-    {/* <View style={styles.deliveryRow}>
+      {/* <View style={styles.deliveryRow}>
       <Truck size={14} color={C.red} strokeWidth={2} />
       <Text style={styles.deliveryText}>
         Delivery:{' '}
@@ -615,8 +632,9 @@ const BusinessSummary: React.FC<BusinessSummaryProps> = ({ business: b }) => (
         · {b.orders_delivered} delivered
       </Text>
     </View> */}
-  </View>
-);
+    </TouchableOpacity>
+  )
+}
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 interface OrderCardProps {
@@ -684,10 +702,14 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, index, navigation }
 interface OrdersSectionProps {
   orders: AsmOrderStatus[];
   navigation: any;
-  date: any
+  date: string;
+  from_date: string;  // ← add
+  to_date: string;    // ← add
+  subtitle: string;
 }
+
 // OrdersSection.tsx
-const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, navigation }) => {
+const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, from_date, to_date, navigation, subtitle }) => {
   const preview = orders.slice(0, 3);
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -695,7 +717,7 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, navigation 
 
   return (
     <View>
-      <SectionHeader icon={ShoppingCart} title="Today's Orders" accent={C.purple} />
+      <SectionHeader icon={ShoppingCart} title={subtitle} accent={C.purple} />
       {orders.length === 0 ? (
         <Text style={styles.emptyText}>No orders today</Text>
       ) : (
@@ -707,7 +729,12 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, navigation 
             <TouchableOpacity
               style={styles.viewAllBtn}
               onPress={() =>
-                navigation.navigate('AllOrdersScreen', { date: date, employee: employee?.id })
+                navigation.navigate('AllOrdersScreen', {
+                  date,
+                  employee: employee?.id,
+                  from_date,   // ← pass
+                  to_date,     // ← pass
+                })
               }>
               <Text style={styles.viewAllText}>
                 View all {orders.length} orders
@@ -720,81 +747,6 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({ orders, date, navigation 
     </View>
   );
 };
-
-// ─── Team Performance ─────────────────────────────────────────────────────────
-// const TeamMemberCard: React.FC<TeamMemberCardProps> = ({ member }) => {
-//   const present = member.attendance_status === 'Present';
-//   const initials = member.initials || getInitials(member.employee_name);
-//   return (
-//     <View style={styles.teamCard}>
-//       <View style={styles.teamCardLeft}>
-//         <AvatarBadge initials={initials} present={present} />
-//         <View style={{ marginLeft: 10, flex: 1 }}>
-//           <View style={styles.teamNameRow}>
-//             <Text style={styles.teamName} numberOfLines={1}>
-//               {member.employee_name}
-//             </Text>
-//             <View
-//               style={[
-//                 styles.roleBadge,
-//                 {
-//                   backgroundColor:
-//                     member.role === 'SO' ? C.purpleSoft : C.accentSoft,
-//                 },
-//               ]}>
-//               <Text
-//                 style={[
-//                   styles.roleText,
-//                   { color: member.role === 'SO' ? C.purple : C.amber },
-//                 ]}>
-//                 {member.role}
-//               </Text>
-//             </View>
-//           </View>
-//           <View style={styles.teamStatusRow}>
-//             {present ? (
-//               <>
-//                 <UserCheck size={11} color={C.green} strokeWidth={2} />
-//                 <Text style={[styles.teamStatus, { color: C.green }]}>
-//                   In · {member.check_in_time}
-//                 </Text>
-//               </>
-//             ) : (
-//               <>
-//                 <UserX size={11} color={C.red} strokeWidth={2} />
-//                 <Text style={[styles.teamStatus, { color: C.red }]}>Absent</Text>
-//               </>
-//             )}
-//           </View>
-//         </View>
-//       </View>
-//       <View style={styles.teamStats}>
-//         <View style={styles.teamStatCol}>
-//           <Text style={[styles.teamStatVal, { color: C.purple }]}>
-//             {member.outlets_visited}
-//           </Text>
-//           <Text style={styles.teamStatLabel}>Visited</Text>
-//         </View>
-//         <View style={styles.teamStatDivider} />
-//         <View style={styles.teamStatCol}>
-//           <Text style={[styles.teamStatVal, { color: C.amber }]}>
-//             {member.orders}
-//           </Text>
-//           <Text style={styles.teamStatLabel}>Orders</Text>
-//         </View>
-//         <View style={styles.teamStatDivider} />
-//         <View style={styles.teamStatCol}>
-//           <Text style={[styles.teamStatVal, { color: C.green }]}>
-//             {member.order_value > 0
-//               ? `₹${(member.order_value / 1000).toFixed(1)}K`
-//               : '—'}
-//           </Text>
-//           <Text style={styles.teamStatLabel}>Value</Text>
-//         </View>
-//       </View>
-//     </View>
-//   );
-// };
 
 interface TeamMemberCardProps {
   member: AsmTeamMember;
@@ -988,7 +940,6 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
     },
     { refetchOnMountOrArgChange: true, skip: !employee?.id },
   );
-  console.log('🚀 ~ AsmDashboard ~ data:', data);
   // ── Pull-to-refresh ───────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -1188,6 +1139,21 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
 
   const msg = data.message;
 
+  // Inside AsmDashboard, before the return:
+  const overviewTitle = (() => {
+    if (isRange) {
+      return `${toDisplayDate(fromDate)} – ${toDisplayDate(toDate)}`;
+    }
+    const todayStr = toApiDate(new Date());
+    if (toApiDate(fromDate) === todayStr) return "Today's Overview";
+    return `Overview · ${toDisplayDate(fromDate)}`;
+  })();
+  const ordersTitle = (() => {
+    if (isRange) return `Orders · ${toDisplayDate(fromDate)} – ${toDisplayDate(toDate)}`;
+    const todayStr = toApiDate(new Date());
+    if (toApiDate(fromDate) === todayStr) return "Today's Orders";
+    return `Orders · ${toDisplayDate(fromDate)}`;
+  })();
   // ── Main render ───────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
@@ -1256,7 +1222,7 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
             onChange={setSelectedStoreType}
           />
 
-          <KpiGrid metrics={msg.key_metrics} />
+          <KpiGrid metrics={msg.key_metrics} subtitle={overviewTitle} />
 
           <View style={styles.divider} />
 
@@ -1264,7 +1230,11 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
 
           <View style={styles.divider} />
 
-          <BusinessSummary business={msg.business_generated} />
+          <BusinessSummary business={msg.business_generated}
+            navigation={navigation}
+            date={msg.date || toApiDate(fromDate)}
+            from_date={toApiDate(fromDate)}   // ← add
+            to_date={toApiDate(toDate)} />
 
           <View style={styles.divider} />
 
@@ -1272,6 +1242,9 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
             orders={msg.order_status}
             navigation={navigation}
             date={msg.date || toApiDate(fromDate)}
+            from_date={toApiDate(fromDate)}   // ← add
+            to_date={toApiDate(toDate)}       // ← add
+            subtitle={ordersTitle}
           />
 
           <View style={styles.divider} />
@@ -1393,9 +1366,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
   },
 
   // ── Chips ──────────────────────────────────────────────────────────────────

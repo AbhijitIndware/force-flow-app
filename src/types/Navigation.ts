@@ -1,4 +1,4 @@
-import {PjpDailyStore} from './baseType';
+import { PjpDailyStore } from './baseType';
 
 //Stack ParamList Type
 export type MainNavigationStackParamList = {
@@ -12,7 +12,7 @@ export type PromoterAppStackParamList = {
   HomeScreen: undefined;
   AttendanceScreen: undefined;
   SalesScreen: undefined;
-  PromoterSaleDetailScreen: {id: string};
+  PromoterSaleDetailScreen: { id: string };
   AddSalesScreen: undefined;
   StockScreen: undefined;
   IncentiveScreen: undefined;
@@ -27,36 +27,36 @@ export type SoAppStackParamList = {
   Home: undefined;
   HomeScreen: undefined;
   AttendanceScreen: undefined;
-  SalesScreen: {index?: number} | undefined;
+  SalesScreen: { index?: number } | undefined;
   ActivityScreen: undefined;
-  OrdersScreen: {index?: number} | undefined;
+  OrdersScreen: { index?: number } | undefined;
   PartnersScreen: undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: undefined;
-  AddStoreScreen: {storeId?: string} | undefined;
+  AddStoreScreen: { storeId?: string } | undefined;
   AddMarketVisitScreen: undefined;
-  AddPjpScreen: {id?: string} | undefined;
-  AddSaleScreen: {orderId?: string} | undefined;
+  AddPjpScreen: { id?: string } | undefined;
+  AddSaleScreen: { orderId?: string } | undefined;
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
-  SaleDetailScreen: {id: string};
-  PurchaseDetailScreen: {id: string};
-  PjpDetailScreen: {details: PjpDailyStore};
-  StockReport: {reportName: string};
-  TeamsSalesReport: {reportName: string};
+  SaleDetailScreen: { id: string };
+  PurchaseDetailScreen: { id: string };
+  PjpDetailScreen: { details: PjpDailyStore };
+  StockReport: { reportName: string };
+  TeamsSalesReport: { reportName: string };
   AsmDashboard: undefined;
 
   ExpenseScreen: undefined;
   AddExpenseScreen: undefined;
   AddExpenseItemScreen: undefined;
-  ExpenseClaimScreen: {id: string; name: string};
-  ExpenseListScreen: {id: string; name: string};
+  ExpenseClaimScreen: { id: string; name: string };
+  ExpenseListScreen: { id: string; name: string };
 
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
-  StoreDetailScreen: {storeId: string};
-  TeamDetailScreen: {date:string,employee_id:string};
+  StoreDetailScreen: { storeId: string };
+  TeamDetailScreen: { date: string, employee_id: string };
   DetailByStoreScreen: {
     store_id: string;
     date: string;
@@ -66,8 +66,8 @@ export type SoAppStackParamList = {
     employee_id: string;
     date: string;
   };
-  AllOrdersScreen:{ date:string, employee:string};
-  OrderDetailScreen: {order_id: string};
+  AllOrdersScreen: { date: string, employee: string, from_date?: string, to_date?: string };
+  OrderDetailScreen: { order_id: string };
   TeamAttendanceListScreen: { apiParams: any; today: string };
   TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
 };

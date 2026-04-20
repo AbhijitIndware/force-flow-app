@@ -772,12 +772,22 @@ export const baseApi = createApi({
           }[];
         };
       },
-      { date: string; employee: string }
+      {
+        employee: string;
+        date?: string;
+        from_date?: string;
+        to_date?: string;
+      }
     >({
-      query: ({ date, employee }) => ({
+      query: ({ date, employee, from_date, to_date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_order_status`,
         method: 'GET',
-        params: { date, employee },
+        params: {
+          employee,
+          ...(from_date && to_date && from_date !== to_date
+            ? { from_date, to_date }
+            : { date: date ?? from_date }),
+        },
       }),
     }),
 

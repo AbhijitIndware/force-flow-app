@@ -104,7 +104,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
   if (isFetching) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-        <PageHeader title="Detail By Store" navigation={() => navigation.goBack()} />
+        <PageHeader title={data?.message?.store?.store_name ?? 'Store Detail'} navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={C.amber} />
           <Text style={styles.loadingText}>Loading...</Text>
@@ -117,7 +117,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
   if (isError || !data?.message?.success) {
     return (
       <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-        <PageHeader title="Detail By Store" navigation={() => navigation.goBack()} />
+        <PageHeader title="Store Detail" navigation={() => navigation.goBack()} />
         <View style={styles.centered}>
           <Text style={styles.errorText}>Failed to load store detail</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={refetch}>
@@ -144,7 +144,7 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: C.bg }]}>
-      <PageHeader title="Detail By Store" navigation={() => navigation.goBack()} />
+      <PageHeader title={store.store_name ?? 'Store Detail'} navigation={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 

@@ -1141,9 +1141,11 @@ const HomeScreen = ({ navigation }: Props) => {
             <SectionTitle
               title="Team Performance"
               sub={
-                filterMode === 'month' ? 'Monthly' :
-                  filterMode === 'month_range' ? `${fromMonth}-${toMonth} Months` :
-                    'Selected Range'
+                filterMode === 'month'
+                  ? `${moment().month(selectedMonth - 1).format('MMMM')} Performance`
+                  : filterMode === 'date_range'
+                    ? `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
+                    : 'Performance'
               }
             />
             <View style={styles.metricRow}>
