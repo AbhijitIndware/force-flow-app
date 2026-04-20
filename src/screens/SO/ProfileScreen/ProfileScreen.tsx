@@ -9,24 +9,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import React, { useCallback, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
-import {CirclePower} from 'lucide-react-native';
-import {Divider} from '@rneui/themed';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
-import {logout} from '../../../features/auth/auth';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { CirclePower } from 'lucide-react-native';
+import { Divider } from '@rneui/themed';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
+import { logout } from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
-import {persistor} from '../../../store/store';
-import {baseApi} from '../../../features/base/base-api';
-import {dropdownApi} from '../../../features/dropdown/dropdown-api';
-import {getInitials} from '../../../utils/utils';
+import { persistor } from '../../../store/store';
+import { baseApi } from '../../../features/base/base-api';
+import { dropdownApi } from '../../../features/dropdown/dropdown-api';
+import { getInitials, APP_VERSION } from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,7 +38,7 @@ type Props = {
   route: any;
 };
 
-const ProfileScreen = ({navigation}: Props) => {
+const ProfileScreen = ({ navigation }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -50,9 +50,11 @@ const ProfileScreen = ({navigation}: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+  console.log("🚀 ~ ProfileScreen ~ user:", user)
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  console.log("🚀 ~ ProfileScreen ~ employee:", employee)
 
   const dispatch = useAppDispatch();
 
@@ -69,7 +71,7 @@ const ProfileScreen = ({navigation}: Props) => {
   };
 
   const profileImageSource = employee?.image_base64
-    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
     : null;
 
   return (
@@ -127,7 +129,7 @@ const ProfileScreen = ({navigation}: Props) => {
                 borderRadius: 15,
                 paddingVertical: 20,
               }}>
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -151,9 +153,57 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.regular,
+                    fontSize: Size.sm,
+                    color: '#514E4E',
+                    lineHeight: 16,
+                  }}>
+                  Employee No.
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: Fonts.semiBold,
+                    fontSize: Size.xsmd,
+                    color: '#514E4E',
+                    lineHeight: 20,
+                    marginTop: 3,
+                  }}>
+                  {employee?.company_emp_id || 'N/A'}
+                </Text>
+              </View>
+              <Divider
+                width={1}
+                color="#B9BFCB"
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+              />
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.regular,
+                    fontSize: Size.sm,
+                    color: '#514E4E',
+                    lineHeight: 16,
+                  }}>
+                  Reporting To
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: Fonts.semiBold,
+                    fontSize: Size.xsmd,
+                    color: '#514E4E',
+                    lineHeight: 20,
+                    marginTop: 3,
+                  }}>
+                  {employee?.reporting_to || 'N/A'}
+                </Text>
+              </View>
+              {/* <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -170,16 +220,15 @@ const ProfileScreen = ({navigation}: Props) => {
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
-                  }}>
-                  {/* 1223 Days */}N/A
+                  }}>N/A
                 </Text>
-              </View>
+              </View> */}
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -203,9 +252,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -229,9 +278,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -248,16 +297,15 @@ const ProfileScreen = ({navigation}: Props) => {
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
-                  }}>
-                  {/* 9748133185 */}N/A
+                  }}>{employee?.mobile_no || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -275,15 +323,15 @@ const ProfileScreen = ({navigation}: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {/* 09/11/2025 */}N/A
+                  {employee?.date_of_joining || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -300,8 +348,7 @@ const ProfileScreen = ({navigation}: Props) => {
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
-                  }}>
-                  {/* 10/12/1985 */}N/A
+                  }}>{employee?.birth_date || 'N/A'}
                 </Text>
               </View>
             </View>
@@ -311,6 +358,16 @@ const ProfileScreen = ({navigation}: Props) => {
               <CirclePower strokeWidth={1.4} color={Colors.white} />
               <Text style={styles.checkinButtonText}>Logout</Text>
             </TouchableOpacity>
+            <Text
+              style={{
+                fontFamily: Fonts.regular,
+                fontSize: Size.sm,
+                color: Colors.darkGray,
+                textAlign: 'center',
+                marginTop: 20,
+              }}>
+              App Version: {APP_VERSION}
+            </Text>
           </View>
         </ScrollView>
       )}
@@ -361,7 +418,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 

@@ -45,8 +45,12 @@ export interface Employee {
   department: string | null;
   branch: string | null;
   image: string;
+  mobile_no: string;
   image_base64: string;
   full_name?: string;
+  reporting_to?: string;
+  birth_date?: string;
+  date_of_joining?: string;
 }
 
 export interface EmployeeProfileResponse {

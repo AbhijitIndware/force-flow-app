@@ -1,11 +1,11 @@
-import {PermissionsAndroid, Platform} from 'react-native';
-import {Dimensions} from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
+import { Dimensions } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
-export {windowHeight, windowWidth};
+export { windowHeight, windowWidth };
 
 export const soStatusColors: Record<string, string> = {
   Draft: '#FACC15', // yellow
@@ -41,13 +41,13 @@ export async function requestLocationPermission(): Promise<boolean> {
 
 const getPositionWithRetry = async (
   retries = 1,
-): Promise<{latitude: number; longitude: number}> => {
+): Promise<{ latitude: number; longitude: number }> => {
   try {
     return await new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
         position => {
-          const {latitude, longitude} = position.coords;
-          resolve({latitude, longitude});
+          const { latitude, longitude } = position.coords;
+          resolve({ latitude, longitude });
         },
         error => reject(error),
         {
@@ -75,7 +75,7 @@ export const getCurrentLocation = async (): Promise<string> => {
   }
 
   try {
-    const {latitude, longitude} = await getPositionWithRetry();
+    const { latitude, longitude } = await getPositionWithRetry();
     return `${latitude},${longitude}`;
   } catch (error: any) {
     if (error?.code === 3) {
@@ -132,7 +132,7 @@ export const getAddressFromCoordinates = async (
   }
 };
 
-export const uniqueByValue = <T extends {value: string}>(arr: T[]) => {
+export const uniqueByValue = <T extends { value: string }>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(i => {
     if (seen.has(i.value)) return false;
@@ -147,3 +147,5 @@ export const getInitials = (name?: string) => {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
+
+export const APP_VERSION = '1.1.0';

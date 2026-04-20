@@ -9,20 +9,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
+import React, { useCallback, useState } from 'react';
+import { PromoterAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
-import {CirclePower} from 'lucide-react-native';
-import {Divider} from '@rneui/themed';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { CirclePower } from 'lucide-react-native';
+import { Divider } from '@rneui/themed';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import Toast from 'react-native-toast-message';
-import {logout} from '../../../features/auth/auth';
+import { logout } from '../../../features/auth/auth';
+import { APP_VERSION } from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -34,7 +35,7 @@ type Props = {
   route: any;
 };
 
-const ProfileScreen = ({navigation}: Props) => {
+const ProfileScreen = ({ navigation }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -107,7 +108,7 @@ const ProfileScreen = ({navigation}: Props) => {
                 borderRadius: 15,
                 paddingVertical: 20,
               }}>
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -131,9 +132,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -157,9 +158,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -183,9 +184,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -209,9 +210,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -235,9 +236,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -261,9 +262,9 @@ const ProfileScreen = ({navigation}: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{marginBottom: 10, borderStyle: 'dashed'}}
+                style={{ marginBottom: 10, borderStyle: 'dashed' }}
               />
-              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
@@ -291,6 +292,16 @@ const ProfileScreen = ({navigation}: Props) => {
               <CirclePower strokeWidth={1.4} color={Colors.white} />
               <Text style={styles.checkinButtonText}>Logout</Text>
             </TouchableOpacity>
+            <Text
+              style={{
+                fontFamily: Fonts.regular,
+                fontSize: Size.sm,
+                color: Colors.darkGray,
+                textAlign: 'center',
+                marginTop: 20,
+              }}>
+              App Version: {APP_VERSION}
+            </Text>
           </View>
         </ScrollView>
       )}
@@ -341,7 +352,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
