@@ -8,15 +8,15 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useEffect, useRef, useState} from 'react';
-import {useFormik} from 'formik';
+import { useEffect, useRef, useState } from 'react';
+import { useFormik } from 'formik';
 import Toast from 'react-native-toast-message';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {storeSchema} from '../../../types/schema';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { storeSchema } from '../../../types/schema';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   useGetBeatQuery,
   useGetCityQuery,
@@ -35,16 +35,16 @@ import {
 } from '../../../features/base/base-api';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import {useAppSelector} from '../../../store/hook';
-import {Animated} from 'react-native';
+import { useAppSelector } from '../../../store/hook';
+import { Animated } from 'react-native';
 import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {uniqueByValue} from '../../../utils/utils';
-import {ICity, Store, StoreDataById} from '../../../types/baseType';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { uniqueByValue } from '../../../utils/utils';
+import { ICity, Store, StoreDataById } from '../../../types/baseType';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const initial = {
   store_name: '',
   store_type: '',
@@ -68,13 +68,13 @@ const initial = {
 };
 
 const weekOffList = [
-  {label: 'Monday', value: 'Monday'},
-  {label: 'Tuesday', value: 'Tuesday'},
-  {label: 'Wednesday', value: 'Wednesday'},
-  {label: 'Thursday', value: 'Thursday'},
-  {label: 'Friday', value: 'Friday'},
-  {label: 'Saturday', value: 'Saturday'},
-  {label: 'Sunday', value: 'Sunday'},
+  { label: 'Monday', value: 'Monday' },
+  { label: 'Tuesday', value: 'Tuesday' },
+  { label: 'Wednesday', value: 'Wednesday' },
+  { label: 'Thursday', value: 'Thursday' },
+  { label: 'Friday', value: 'Friday' },
+  { label: 'Saturday', value: 'Saturday' },
+  { label: 'Sunday', value: 'Sunday' },
 ];
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -110,9 +110,9 @@ const mapStoreDetailToForm = (detail: StoreDataById): any => {
   };
 };
 
-const AddStoreScreen = ({navigation, route}: Props) => {
-  const {storeId} = route?.params ?? {};
-  const {data: storeData, isFetching} = useGetStoreByIdQuery(storeId, {
+const AddStoreScreen = ({ navigation, route }: Props) => {
+  const { storeId } = route?.params ?? {};
+  const { data: storeData, isFetching } = useGetStoreByIdQuery(storeId, {
     skip: storeId === null || storeId === undefined,
   });
   const [initialValues, setInitialValues] = useState<any>(initial);
@@ -130,37 +130,37 @@ const AddStoreScreen = ({navigation, route}: Props) => {
   );
 
   const [listConfig, setListConfig] = useState({
-    zone: {page: 1, search: ''},
-    state: {page: 1, search: ''},
-    city: {page: 1, search: ''},
-    distributor: {page: 1, search: ''},
-    type: {page: 1, search: ''},
-    category: {page: 1, search: ''},
-    beat: {page: 1, search: ''},
+    zone: { page: 1, search: '' },
+    state: { page: 1, search: '' },
+    city: { page: 1, search: '' },
+    distributor: { page: 1, search: '' },
+    type: { page: 1, search: '' },
+    category: { page: 1, search: '' },
+    beat: { page: 1, search: '' },
   });
   const [useCityDropdown, setUseCityDropdown] = useState(true);
   const [isNewCity, setIsNewCity] = useState(false);
 
   const [zoneListData, setZoneListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [stateListData, setStateListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [cityListData, setCityListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [distributorListData, setDistributorListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [storeTypeListData, setStoreTypeListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [storeCategoryListData, setStoreCategoryListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [beatListData, setBeatListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
 
   const [loadingMoreState, setLoadingMoreState] = useState(false);
@@ -214,7 +214,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
           created_by_employee_designation: employee?.designation as string, // Replace with actual designation
         };
 
-        const payload = {data: value};
+        const payload = { data: value };
         let res;
 
         if (storeId) {
@@ -261,95 +261,95 @@ const AddStoreScreen = ({navigation, route}: Props) => {
   });
 
   const [addStore] = useAddStoreMutation();
-  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery(
+  const { data: zoneData, isFetching: zoneFetching } = useGetZoneQuery(
     {
       page_size: '20',
       page: String(listConfig.zone.page),
       search: listConfig.zone.search as string,
     },
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
-  const {data: stateData, isFetching: stateFetching} = useGetStateQuery(
+  const { data: stateData, isFetching: stateFetching } = useGetStateQuery(
     {
       zone: values.zone,
       page_size: '20',
       page: String(listConfig.state.page),
       search: listConfig.state.search,
     },
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
-  const {data: cityData, isFetching: cityFetching} = useGetCityQuery(
+  const { data: cityData, isFetching: cityFetching } = useGetCityQuery(
     {
       state: values.state,
       page_size: '20',
       page: String(listConfig.city.page),
       search: listConfig.city.search,
     },
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
-  const {data: distributorData, isFetching: distributorFetching} =
+  const { data: distributorData, isFetching: distributorFetching } =
     useGetDistributorQuery(
       {
         page_size: '20',
         page: String(listConfig.distributor.page),
         search: listConfig.distributor.search,
       },
-      {refetchOnFocus: true},
+      { refetchOnFocus: true },
     );
 
-  const {data: typeData, isFetching: typeFetching} = useGetStoreTypeQuery(
+  const { data: typeData, isFetching: typeFetching } = useGetStoreTypeQuery(
     {
       page_size: '20',
       page: String(listConfig.type.page),
       search: listConfig.type.search,
     },
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
-  const {data: categoryData, isFetching: categoryFetching} =
+  const { data: categoryData, isFetching: categoryFetching } =
     useGetStoreCategoryQuery(
       {
         page_size: '20',
         page: String(listConfig.category.page),
         search: listConfig.category.search,
-        filters: JSON.stringify({store_type: values.store_type}),
+        filters: JSON.stringify({ store_type: values.store_type }),
       },
-      {refetchOnFocus: true},
+      { refetchOnFocus: true },
     );
 
-  const {data: beatData, isFetching: beatFetching} = useGetBeatQuery(
+  const { data: beatData, isFetching: beatFetching } = useGetBeatQuery(
     {
       page_size: '20',
       page: String(listConfig.beat.page),
       search: listConfig.beat.search,
     },
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
   // Assuming values.map_location is a string like "22.5643,88.3693"
   const [latitude, longitude] = values?.map_location?.split(',');
 
-  const {data: locationData} = useGetLocationByLatLongQuery(
+  const { data: locationData } = useGetLocationByLatLongQuery(
     {
       latitude,
       longitude,
     },
-    {skip: !values.map_location || values.map_location === ''},
+    { skip: !values.map_location || values.map_location === '' },
   );
 
-  const transformList = (arr: {name: string}[] = []) => {
+  const transformList = (arr: { name: string }[] = []) => {
     const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
-    return unique.map(i => ({label: i.name, value: i.name}));
+    return unique.map(i => ({ label: i.name, value: i.name }));
   };
 
   const disTransformList = (
-    arr: {name: string; distributor_name: string}[] = [],
+    arr: { name: string; distributor_name: string }[] = [],
   ) => {
     const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
-    return unique.map(i => ({label: i.distributor_name, value: i.name}));
+    return unique.map(i => ({ label: i.distributor_name, value: i.name }));
   };
 
   // const distributorList = disTransformList(distributorData?.message?.data);
@@ -377,8 +377,8 @@ const AddStoreScreen = ({navigation, route}: Props) => {
 
       setListConfig(prev => ({
         ...prev,
-        state: {page: 1, search: locationData?.message?.state}, // reset state pagination & search
-        zone: {page: 1, search: locationData?.message?.zone}, // also reset city (because state depends on zone)
+        state: { page: 1, search: locationData?.message?.state }, // reset state pagination & search
+        zone: { page: 1, search: locationData?.message?.zone }, // also reset city (because state depends on zone)
       }));
 
       const cities = locationData?.message?.cities ?? [];
@@ -466,8 +466,8 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       // setStateListData([]);
       setListConfig(prev => ({
         ...prev,
-        state: {page: 1, search: ''}, // reset state pagination & search
-        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
+        state: { page: 1, search: '' }, // reset state pagination & search
+        city: { page: 1, search: '' }, // also reset city (because state depends on zone)
       }));
     }
   }, [values.zone]);
@@ -477,7 +477,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       // setCityListData([]);
       setListConfig(prev => ({
         ...prev,
-        city: {page: 1, search: ''}, // reset city pagination & search
+        city: { page: 1, search: '' }, // reset city pagination & search
       }));
     }
   }, [values.state]);
@@ -559,7 +559,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreZone(true);
       setListConfig(prev => ({
         ...prev,
-        zone: {page: prev.zone.page + 1, search: prev.zone.search},
+        zone: { page: prev.zone.page + 1, search: prev.zone.search },
       }));
       setLoadingMoreZone(false);
     }
@@ -575,7 +575,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreState(true);
       setListConfig(prev => ({
         ...prev,
-        state: {page: prev.state.page + 1, search: prev.state.search},
+        state: { page: prev.state.page + 1, search: prev.state.search },
       }));
       setLoadingMoreState(false);
     }
@@ -591,7 +591,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreCity(true);
       setListConfig(prev => ({
         ...prev,
-        city: {page: prev.city.page + 1, search: prev.city.search},
+        city: { page: prev.city.page + 1, search: prev.city.search },
       }));
       setLoadingMoreCity(false);
     }
@@ -624,7 +624,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreType(true);
       setListConfig(prev => ({
         ...prev,
-        type: {...prev.type, page: prev.type.page + 1},
+        type: { ...prev.type, page: prev.type.page + 1 },
       }));
       setLoadingMoreType(false);
     }
@@ -639,7 +639,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreCategory(true);
       setListConfig(prev => ({
         ...prev,
-        category: {...prev.category, page: prev.category.page + 1},
+        category: { ...prev.category, page: prev.category.page + 1 },
       }));
       setLoadingMoreCategory(false);
     }
@@ -654,7 +654,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       setLoadingMoreBeat(true);
       setListConfig(prev => ({
         ...prev,
-        beat: {...prev.beat, page: prev.beat.page + 1},
+        beat: { ...prev.beat, page: prev.beat.page + 1 },
       }));
       setLoadingMoreBeat(false);
     }
@@ -668,7 +668,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
     // Reset pagination & trigger new search query
     setListConfig(prev => ({
       ...prev,
-      [type]: {page: 1, search: text},
+      [type]: { page: 1, search: text },
     }));
   };
 
@@ -680,19 +680,19 @@ const AddStoreScreen = ({navigation, route}: Props) => {
       // 👉 set dropdown search values (optional but useful for prefilled dropdowns)
       setListConfig(prev => ({
         ...prev,
-        zone: {...prev.zone, search: store.zone || ''},
-        state: {...prev.state, search: store.state || ''},
-        city: {...prev.city, search: store.city || ''},
+        zone: { ...prev.zone, search: store.zone || '' },
+        state: { ...prev.state, search: store.state || '' },
+        city: { ...prev.city, search: store.city || '' },
         distributor: {
           ...prev.distributor,
           search: store.distributor || '',
         },
-        type: {...prev.type, search: store.store_type || ''},
+        type: { ...prev.type, search: store.store_type || '' },
         category: {
           ...prev.category,
           search: store.store_category || '',
         },
-        beat: {...prev.beat, search: store.beat || ''},
+        beat: { ...prev.beat, search: store.beat || '' },
       }));
 
       // 👉 set form values
@@ -704,7 +704,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
   }, [storeData, storeId, storeCategoryListData]);
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title={storeId ? 'Edit Store' : 'Add Store'}
         navigation={() => navigation.goBack()}
@@ -807,7 +807,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
               height: 80,
             }}>
             <TouchableOpacity
-              style={[styles.submitBtn, loading && {opacity: 0.7}]}
+              style={[styles.submitBtn, loading && { opacity: 0.7 }]}
               onPress={() => handleSubmit()}
               disabled={loading}>
               {loading ? (

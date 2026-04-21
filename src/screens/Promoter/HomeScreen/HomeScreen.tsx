@@ -9,16 +9,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
+import React, { useCallback, useState } from 'react';
+import { PromoterAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Size} from '../../../utils/fontSize';
-import {Divider} from '@rneui/themed';
+import { Size } from '../../../utils/fontSize';
+import { Divider } from '@rneui/themed';
 import {
   Banknote,
   CalendarCheck,
@@ -32,12 +32,12 @@ import {
   Package,
   UserRoundCog,
 } from 'lucide-react-native';
-import {usePromoterStatusQuery} from '../../../features/base/promoter-base-api';
-import {useAppSelector} from '../../../store/hook';
-import {AttendanceData} from '../../../types/baseType';
+import { usePromoterStatusQuery } from '../../../features/base/promoter-base-api';
+import { useAppSelector } from '../../../store/hook';
+import { AttendanceData } from '../../../types/baseType';
 import moment from 'moment';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -50,7 +50,7 @@ type Props = {
 };
 
 const getLastCheckMessage = (data: AttendanceData) => {
-  const {actions, checked_in, checked_out, checkin_time, checkout_time} = data;
+  const { actions, checked_in, checked_out, checkin_time, checkout_time } = data;
 
   const checkInTime = checkin_time
     ? moment(checkin_time, 'HH:mm:ss.SSSSSS').format('hh:mm A')
@@ -77,15 +77,15 @@ const getLastCheckMessage = (data: AttendanceData) => {
 const formatDay = (date: string) => moment(date).format('DD');
 const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
 
-const HomeScreen = ({navigation, route}: Props) => {
+const HomeScreen = ({ navigation, route }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data, refetch} = usePromoterStatusQuery(undefined, {
+  const { data, refetch } = usePromoterStatusQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
-  console.log('🚀 ~ HomeScreen ~ data:', data);
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
+
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
   );
 
   const onRefresh = useCallback(() => {
@@ -116,7 +116,7 @@ const HomeScreen = ({navigation, route}: Props) => {
           <View style={styles.headerSec}>
             <View style={styles.welcomBox}>
               <Text style={styles.welcomeText}>
-                Hello <Text style={styles.name}>{user?.full_name}</Text>
+                Hello <Text style={styles.name}>{employee?.full_name}</Text>
               </Text>
               <TouchableOpacity
                 style={styles.linkBox}
@@ -186,12 +186,12 @@ const HomeScreen = ({navigation, route}: Props) => {
           <View
             style={[
               styles.container,
-              {backgroundColor: Colors.transparent, paddingTop: 10},
+              { backgroundColor: Colors.transparent, paddingTop: 10 },
             ]}>
             <TouchableOpacity
               style={[
                 styles.linkBox,
-                {backgroundColor: Colors.orange, padding: 7, borderRadius: 18},
+                { backgroundColor: Colors.orange, padding: 7, borderRadius: 18 },
               ]}
               onPress={() => navigation.navigate('StockScreen')}>
               <View
@@ -223,7 +223,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                         lineHeight: 20,
                       },
                     ]}>
-                    <Text style={{fontFamily: Fonts.customefont}}>₹</Text>0
+                    <Text style={{ fontFamily: Fonts.customefont }}>₹</Text>0
                   </Text>
                 </View>
                 <Ionicons
@@ -235,10 +235,10 @@ const HomeScreen = ({navigation, route}: Props) => {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
-              <Text style={{fontFamily: Fonts.regular}}>(Qty)</Text>
+              <Text style={{ fontFamily: Fonts.regular }}>(Qty)</Text>
             </Text>
             <View style={styles.dataBoxSection}>
               <View style={styles.dataBox}>
@@ -274,7 +274,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             </View>
           </View>
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Incentive Status</Text>
             <View
               style={[
@@ -322,7 +322,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               </View>
             </View>
           </View>
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
             <View
               style={{
@@ -346,7 +346,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               <Divider
                 width={1}
                 color={Colors.lightGray}
-                style={{borderStyle: 'dashed'}}
+                style={{ borderStyle: 'dashed' }}
               />
               <TouchableOpacity style={styles.listLink}>
                 <Text style={styles.listLinkText}>Check the user manual </Text>
@@ -360,11 +360,11 @@ const HomeScreen = ({navigation, route}: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.LinkSection, {paddingVertical: 15}]}>
+          <View style={[styles.LinkSection, { paddingVertical: 15 }]}>
             <Text
               style={[
                 styles.SectionHeading,
-                {marginBottom: 10, paddingHorizontal: 20},
+                { marginBottom: 10, paddingHorizontal: 20 },
               ]}>
               Quick links
             </Text>
@@ -372,12 +372,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={[styles.linkTitle]}>Register Sales</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -388,18 +388,18 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <View style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>New Stock Entry</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -410,18 +410,18 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <View style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <FilePenLine strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Stock Requisition</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -432,13 +432,13 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <View style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <ChartCandlestick
                   strokeWidth={2}
@@ -447,7 +447,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Stock Taking</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -458,13 +458,13 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <View style={styles.IconlinkBox}>
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <MessageSquareQuote
                   strokeWidth={2}
@@ -473,7 +473,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Feedback</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
+  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     width: '80%',
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: {paddingTop: 15},
+  dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
+  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: {backgroundColor: Colors.white},
+  LinkSection: { backgroundColor: Colors.white },
 
   IconlinkBox: {
     display: 'flex',

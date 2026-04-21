@@ -232,7 +232,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
         )}
       </Animated.ScrollView>
 
-      {index !== 1 && (
+      {index !== 0 && (
         <View
           style={{
             position: 'absolute',
@@ -246,7 +246,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
           <TouchableOpacity
             style={styles.checkinButton}
             onPress={() =>
-              index === 0
+              index === 1
                 ? navigation.navigate('AddPurchaseScreen')
                 : navigation.navigate('AddSaleScreen', {
                   orderId: undefined,
@@ -254,7 +254,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
             }>
             <CirclePlus strokeWidth={1.4} color={Colors.white} />
             <Text style={styles.checkinButtonText}>
-              {`Add ${index === 0 ? 'Purchase' : 'Sales'} Orders`}
+              {`Add ${index === 1 ? 'Purchase' : 'Sales'} Orders`}
             </Text>
           </TouchableOpacity>
         </View>

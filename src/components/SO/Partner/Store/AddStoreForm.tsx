@@ -1,13 +1,14 @@
 // AddDistributorForm.tsx
-import React, {useEffect, useRef, useState} from 'react';
-import {Animated, StyleSheet} from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
-import {Colors} from '../../../../utils/colors';
+import { Colors } from '../../../../utils/colors';
 import MapReusableInput from '../../../ui-lib/map-input';
-import {Size} from '../../../../utils/fontSize';
-import {Fonts} from '../../../../constants';
-import {useCheckStoreNameQuery} from '../../../../features/base/base-api';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
+import { useCheckStoreNameQuery } from '../../../../features/base/base-api';
+import StoreNameField from './StoreNameField';
 
 interface Props {
   values: Record<string, string>;
@@ -28,14 +29,14 @@ interface Props {
   useCityDropdown: boolean;
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  storeTypeList: {label: string; value: string}[];
-  storeCategoryList: {label: string; value: string}[];
-  zoneList: {label: string; value: string}[];
-  stateList: {label: string; value: string}[];
-  cityList: {label: string; value: string}[];
-  beatList: {label: string; value: string}[];
-  distributorList: {label: string; value: string}[];
-  weekOffList: {label: string; value: string}[];
+  storeTypeList: { label: string; value: string }[];
+  storeCategoryList: { label: string; value: string }[];
+  zoneList: { label: string; value: string }[];
+  stateList: { label: string; value: string }[];
+  cityList: { label: string; value: string }[];
+  beatList: { label: string; value: string }[];
+  distributorList: { label: string; value: string }[];
+  weekOffList: { label: string; value: string }[];
   onTimeSelect: (field: 'start_time' | 'end_time') => void;
 
   onLoadMoreState?: () => void;
@@ -142,7 +143,7 @@ const AddStoreForm: React.FC<Props> = ({
     return () => clearTimeout(timer);
   }, [values.store_name]);
 
-  const {data: nameCheckData, isFetching: isCheckingName} =
+  const { data: nameCheckData, isFetching: isCheckingName } =
     useCheckStoreNameQuery(debouncedStoreName, {
       skip: debouncedStoreName.trim().length < 3,
     });
@@ -178,11 +179,11 @@ const AddStoreForm: React.FC<Props> = ({
     <Animated.ScrollView
       ref={scrollViewRef}
       keyboardShouldPersistTaps="handled"
-      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
+      contentContainerStyle={{ padding: 16, paddingHorizontal: 21 }}>
       {/* <ReusableInput
         label="Store Name"
         value={values.store_name}
@@ -191,7 +192,29 @@ const AddStoreForm: React.FC<Props> = ({
         error={touched.store_name && errors.store_name}
       /> */}
       {/* ── Store Name with live duplicate check ── */}
-      <ReusableInput
+
+      <MapReusableInput
+        label="Map Location"
+        value={values.map_location}
+        onChangeText={handleChange('map_location')}
+        onBlur={() => handleBlur('map_location')}
+        error={touched.map_location && errors.map_location}
+      />
+      <StoreNameField
+        mapLocation={values.map_location}
+        value={values.store_name}
+        isEdit={isEdit}
+        isTyping={isTyping}
+        isCheckingName={isCheckingName}
+        storeNameTaken={storeNameTaken}
+        nameCheckData={nameCheckData}
+        touched={touched}
+        errors={errors}
+        onChangeText={handleChange('store_name')}
+        onBlur={() => handleBlur('store_name')}
+        setFieldValue={setFieldValue}
+      />
+      {/* <ReusableInput
         label="Store Name"
         value={values.store_name}
         onChangeText={handleChange('store_name')}
@@ -202,12 +225,12 @@ const AddStoreForm: React.FC<Props> = ({
             ? isTyping || isCheckingName
               ? 'Checking availability...'
               : storeNameTaken
-              ? nameCheckData?.message?.message ??
+                ? nameCheckData?.message?.message ??
                 'This store name is already taken.'
-              : undefined
+                : undefined
             : undefined)
         }
-      />
+      /> */}
       <ReusableDropdown
         label="Store Type"
         field="store_type"
@@ -234,13 +257,6 @@ const AddStoreForm: React.FC<Props> = ({
         loadingMore={loadingMoreCategory}
         searchText={categorySearchText}
         setSearchText={setCategorySearchText}
-      />
-      <MapReusableInput
-        label="Map Location"
-        value={values.map_location}
-        onChangeText={handleChange('map_location')}
-        onBlur={() => handleBlur('map_location')}
-        error={touched.map_location && errors.map_location}
       />
       <ReusableDropdown
         label="Zone"

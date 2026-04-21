@@ -1176,6 +1176,47 @@ export const baseApi = createApi({
         params: { employee, date },
       }),
     }),
+
+    getStoresByLocation: builder.query<
+
+      {
+        message: {
+          status: string;
+          radius_meters: number;
+          total: number;
+          stores: {
+            name: string;           // store ID e.g. "22000-9410"
+            store_name: string;
+            store_type: string;
+            store_category: string;
+            zone: string;
+            state: string;
+            city: string;
+            pin_code: string;
+            address: string;
+            distributor: string;
+            beat: string;
+            status: string;
+            pan_no: string | null;
+            gst_no: string;
+            store_street_address: string | null;
+            start_time: string;
+            end_time: string;
+            weekly_off: string;
+            latitude: number;
+            longitude: number;
+            distance_meters: number;
+          }[];
+        };
+      },
+      { latitude: number; longitude: number; radius?: number }
+    >({
+      query: ({ latitude, longitude, radius = 500 }) => ({
+        url: `/method/salesforce_management.mobile_app_apis.dms_apis.store.get_nearby_stores`,
+        method: 'GET',
+        params: { latitude, longitude, radius },
+      }),
+    }),
   }),
 });
 export const {
@@ -1261,6 +1302,7 @@ export const {
   useGetLocationTrackerQuery,
   useStartPjpMutation,
   useEndPjpMutation,
+  useGetStoresByLocationQuery
 } = baseApi;
 
 interface PjpState {

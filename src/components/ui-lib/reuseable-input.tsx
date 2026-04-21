@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TextInput, View, StyleSheet, TextInputProps } from 'react-native';
 import { Colors } from '../../utils/colors';
-import {Fonts} from '../../constants';
+import { Fonts } from '../../constants';
 import { Size } from '../../utils/fontSize';
 
 interface DistributorInputProps {
@@ -12,6 +12,7 @@ interface DistributorInputProps {
   error?: string | false;
   keyboardType?: TextInputProps['keyboardType'];
   disabled?: boolean;
+  placeholder?: string;
 }
 
 const ReusableInput: React.FC<DistributorInputProps> = ({
@@ -22,12 +23,13 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
   error,
   keyboardType = 'default',
   disabled = false,
+  placeholder
 }) => (
   <View style={styles.inputWrapper}>
     <Text style={styles.label}>{label}</Text>
     <TextInput
       style={styles.input}
-      placeholder={`Enter ${label}`}
+      placeholder={placeholder ? placeholder : `Enter ${label}`}
       value={value}
       onChangeText={onChangeText}
       onBlur={onBlur}
@@ -42,7 +44,7 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
 
 const styles = StyleSheet.create({
   inputWrapper: { marginBottom: 16 },
-  label: { fontSize:Size.xs,  marginBottom: 4, color: Colors.black, fontFamily:Fonts.regular },
+  label: { fontSize: Size.xs, marginBottom: 4, color: Colors.black, fontFamily: Fonts.regular },
   input: {
     backgroundColor: Colors.white,
     borderRadius: 10,
@@ -51,11 +53,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ecececff',
     color: Colors.black,
-    fontFamily:Fonts.regular,
-    height:50,
-    fontSize:Size.sm,
+    fontFamily: Fonts.regular,
+    height: 50,
+    fontSize: Size.sm,
   },
-  error: { fontSize:Size.xs, color: 'red', marginTop: 4 },
+  error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
 });
 
 export default ReusableInput;

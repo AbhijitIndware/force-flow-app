@@ -530,7 +530,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <View style={{ position: 'relative', marginBottom: 0 }}>
               <View style={styles.welcomBox}>
                 <Text style={styles.welcomeText}>
-                  Hello <Text style={styles.name}>{user?.full_name}</Text>
+                  Hello <Text style={styles.name}>{employee?.full_name}</Text>
                 </Text>
                 <View style={styles.linkBox}>
                   <DateBox />
