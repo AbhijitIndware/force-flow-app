@@ -1803,3 +1803,104 @@ export type AsmAttendanceResponse = {
   summary: AttendanceSummary;
   records: AsmAttendanceRecord[];
 };
+
+
+
+// ─── Target vs Achievement — Types ───────────────────────────────────────────
+
+export type TargetSource = 'personal' | 'global';
+
+// ── API 1: GET — Fetch Employee Targets ─────────────────────────────────────
+
+export interface IGetEmployeeTargetsParams {
+  month: number;  // 1–12
+  year: number;   // e.g. 2026
+}
+
+export interface RGetEmployeeTargets {
+  message: {
+    sales_target: number;
+    ddn_target: number;
+    source: TargetSource;
+    record: string | null;
+    period: string;       // "YYYY-MM"
+  };
+}
+
+// ── API 2: POST — Save / Update Targets ─────────────────────────────────────
+
+export interface ISetEmployeeTargets {
+  sales_target: number;
+  ddn_target: number;
+  month: number;  // 1–12
+  year: number;   // e.g. 2026
+}
+
+export interface RSetEmployeeTargets {
+  message: {
+    status: 'ok';
+    year: number;
+    month: number;
+  };
+}
+
+// ── API 3: POST — SO Stats ───────────────────────────────────────────────────
+
+export interface ISoStatsParams {
+  from_date: string;  // "YYYY-MM-DD"
+  to_date: string;    // "YYYY-MM-DD"
+}
+
+export interface SoByStatus {
+  state: string;  // e.g. "Approved"
+  count: number;
+  value: number;
+}
+
+export interface RGetSoStats {
+  message: {
+    count: number;
+    value: number;         // total SO value (₹)
+    unique_stores: number;
+    by_status: SoByStatus[];
+  };
+}
+
+// ── API 4: POST — DDN Stats ──────────────────────────────────────────────────
+
+export interface IDdnStatsParams {
+  from_date: string;
+  to_date: string;
+  zone?: string;
+  store?: string;
+}
+
+export interface DdnByStatus {
+  state: string;  // e.g. "Delivered", "Approved"
+  count: number;
+  value: number;
+}
+
+export interface RGetDdnStats {
+  message: {
+    count: number;
+    value: number;               // total DDN value (₹)
+    unique_stores: number;
+    unique_distributors: number;
+    fill_rate: number;           // (del_qty / ord_qty) × 100
+    by_status: DdnByStatus[];
+  };
+}
+
+// ── Computed summary (use in components) ────────────────────────────────────
+
+export interface TargetAchievementSummary {
+  sales_target: number;
+  ddn_target: number;
+  so_achievement: number;
+  ddn_achievement: number;
+  so_pct: number;       // (so_achievement / sales_target) × 100
+  ddn_pct: number;      // (ddn_achievement / ddn_target) × 100
+  so_variance: number;  // +ve = on track, -ve = lagging
+  ddn_variance: number;
+}

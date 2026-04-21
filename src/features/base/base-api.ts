@@ -49,6 +49,14 @@ import {
   AsmDashboardParams,
   AsmDashboardResponse,
   AsmAttendanceResponse,
+  RGetEmployeeTargets,
+  ISetEmployeeTargets,
+  RSetEmployeeTargets,
+  IDdnStatsParams,
+  RGetDdnStats,
+  RGetSoStats,
+  ISoStatsParams,
+  IGetEmployeeTargetsParams,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1217,6 +1225,50 @@ export const baseApi = createApi({
         params: { latitude, longitude, radius },
       }),
     }),
+    //TARGET VS achievement
+    getEmployeeTargets: builder.query<RGetEmployeeTargets, IGetEmployeeTargetsParams>({
+      query: ({ month, year }) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.get_employee_targets`,
+        method: 'POST',
+        body: { month, year },
+      }),
+    }),
+
+    // API 2 — Save / update targets for a specific month/year (upsert)
+    setEmployeeTargets: builder.mutation<RSetEmployeeTargets, ISetEmployeeTargets>({
+      query: body => ({
+        url: `/method/salesforce_management.api.asm_dashboard.set_employee_targets`,
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // API 3 — Fetch SO stats for a date range
+    // Use data.message.value for total SO achievement (₹)
+    getSoStats: builder.query<RGetSoStats, ISoStatsParams>({
+      query: ({ from_date, to_date }) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.get_so_stats`,
+        method: 'POST',
+        body: { from_date, to_date },
+      }),
+      providesTags: ['SO'],
+    }),
+
+    // API 4 — Fetch DDN stats for a date range
+    // Use data.message.value for total DDN achievement (₹)
+    // fill_rate = (del_qty / ord_qty) × 100
+    getDdnStats: builder.query<RGetDdnStats, IDdnStatsParams>({
+      query: ({ from_date, to_date, zone, store }) => ({
+        url: `/method/salesforce_management.api.asm_dashboard.get_ddn_stats`,
+        method: 'POST',
+        body: {
+          from_date,
+          to_date,
+          ...(zone ? { zone } : {}),
+          ...(store ? { store } : {}),
+        },
+      }),
+    }),
   }),
 });
 export const {
@@ -1302,7 +1354,13 @@ export const {
   useGetLocationTrackerQuery,
   useStartPjpMutation,
   useEndPjpMutation,
-  useGetStoresByLocationQuery
+  useGetStoresByLocationQuery,
+
+  // TARGETVSACHIEVMENT
+  useGetEmployeeTargetsQuery,
+  useSetEmployeeTargetsMutation,
+  useGetSoStatsQuery,
+  useGetDdnStatsQuery,
 } = baseApi;
 
 interface PjpState {

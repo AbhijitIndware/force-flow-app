@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -54,6 +55,9 @@ import {
   useGetSalesRepotsQuery,
   usePjpInitializeMutation,
   useStartPjpMutation,
+  useGetEmployeeTargetsQuery,
+  useSetEmployeeTargetsMutation,
+  useGetSoStatsQuery, useGetDdnStatsQuery,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import { ICheckOut, LocationPayload, StoreData } from '../../../types/baseType';
@@ -63,6 +67,7 @@ import {
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../utils/utils';
+import { TextInput } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -117,24 +122,6 @@ const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub })
     <Text style={styles.sectionTitle}>{title}</Text>
     {sub && <Text style={styles.sectionSub}>{sub}</Text>}
   </View>
-);
-
-const MetricBox: React.FC<{
-  label: string;
-  value: string;
-  rate: string | number;
-  onPress?: () => void;
-}> = ({ label, value, rate, onPress }) => (
-  <TouchableOpacity
-    activeOpacity={onPress ? 0.7 : 1}
-    onPress={onPress}
-    style={styles.metricBox}>
-    <Text style={styles.metricValue}>{value}</Text>
-    <Text style={styles.metricLabel}>{label}</Text>
-    <View style={styles.metricRatePill}>
-      <Text style={styles.metricRate}>{rate}%</Text>
-    </View>
-  </TouchableOpacity>
 );
 
 const TargetMetricBox: React.FC<{
@@ -241,6 +228,9 @@ const HomeScreen = ({ navigation }: Props) => {
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
   const [monthPickerTarget, setMonthPickerTarget] = useState<'single' | 'from' | 'to'>('single');
+  const [targetModalVisible, setTargetModalVisible] = useState(false);
+  const [editSalesTarget, setEditSalesTarget] = useState('');
+  const [editDdnTarget, setEditDdnTarget] = useState('');
 
   const apiParams = useMemo(() => {
     const base = { employee: employee?.id as string };
@@ -257,10 +247,55 @@ const HomeScreen = ({ navigation }: Props) => {
     };
   }, [filterMode, selectedMonth, selectedYear, fromMonth, toMonth, startDate, endDate, employee]);
 
+  const ddnDateParams = useMemo(() => {
+    if (filterMode === 'month') {
+      const from = moment({ year: selectedYear, month: selectedMonth - 1, day: 1 }).format('YYYY-MM-DD');
+      const to = moment({ year: selectedYear, month: selectedMonth - 1 }).endOf('month').format('YYYY-MM-DD');
+      return { from_date: from, to_date: to };
+    }
+    if (filterMode === 'date_range') {
+      return {
+        from_date: moment(startDate).format('YYYY-MM-DD'),
+        to_date: moment(endDate).format('YYYY-MM-DD'),
+      };
+    }
+    return {
+      from_date: moment(startDate).format('YYYY-MM-DD'),
+      to_date: moment(endDate).format('YYYY-MM-DD'),
+    };
+  }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
+
+  const soDateParams = useMemo(() => {
+    if (filterMode === 'month') {
+      return {
+        from_date: moment({ year: selectedYear, month: selectedMonth - 1, day: 1 }).format('YYYY-MM-DD'),
+        to_date: moment({ year: selectedYear, month: selectedMonth - 1 }).endOf('month').format('YYYY-MM-DD'),
+      };
+    }
+    return {
+      from_date: moment(startDate).format('YYYY-MM-DD'),
+      to_date: moment(endDate).format('YYYY-MM-DD'),
+    };
+  }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
+
   const { data: attendanceData, refetch: refetchAttendance } = useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
   const { data: pjpTargetData, refetch: refetchPjpTarget } = useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
   const { data: valueTargetData, refetch: refetchValueTarget } = useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
+  const { data: ddnData, refetch: refetchDdnStats } = useGetDdnStatsQuery(
+    ddnDateParams,
+    { skip: !employee?.id }
+  );
+  const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
+    useGetEmployeeTargetsQuery(
+      { month: selectedMonth, year: selectedYear },  // ← was: undefined
+      { skip: !employee?.id }
+    );
 
+  const { data: soStatsData, refetch: refetchSoAchievement } =
+    useGetSoStatsQuery(soDateParams, { skip: !employee?.id });
+
+  const [setEmployeeTargets, { isLoading: isSavingTargets }] =
+    useSetEmployeeTargetsMutation();
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
@@ -291,6 +326,9 @@ const HomeScreen = ({ navigation }: Props) => {
       refetchPjpTarget();
       refetchValueTarget();
       refetchLocationTracker();
+      refetchDdnStats();
+      refetchSoAchievement();       // ← add
+      refetchEmployeeTargets();
     }, 2000);
   }, [
     pjpInitialize,
@@ -299,6 +337,9 @@ const HomeScreen = ({ navigation }: Props) => {
     refetchPjpTarget,
     refetchValueTarget,
     refetchLocationTracker,
+    refetchDdnStats,
+    refetchSoAchievement,           // ← add
+    refetchEmployeeTargets,
   ]);
 
   const handleCallLocationPermission = async () => {
@@ -508,6 +549,38 @@ const HomeScreen = ({ navigation }: Props) => {
   const pjpSummary = pjpTargetData?.message?.summary;
   const valueSummary = valueTargetData?.message?.summary;
   const attendanceSummary = attendanceData?.message?.summary;
+  const ddnStats = ddnData?.message;
+
+  // ── Target vs Achievement ──
+  const employeeTargets = employeeTargetsData?.message;
+  const salesTarget = employeeTargets?.sales_target ?? 0;
+  const ddnTarget = employeeTargets?.ddn_target ?? 0;
+  const soAchievement = soStatsData?.message?.value ?? 0;
+  // ✅ Keep 2 decimal places → 0.10
+  const ddnPct = ddnTarget > 0 ? parseFloat(((ddnStats?.value ?? 0) / ddnTarget * 100).toFixed(2)) : 0;
+  const soPct = salesTarget > 0 ? parseFloat((soAchievement / salesTarget * 100).toFixed(2)) : 0;
+
+  const handleSaveTargets = async () => {
+    try {
+      await setEmployeeTargets({
+        sales_target: Number(editSalesTarget),
+        ddn_target: Number(editDdnTarget),
+        month: selectedMonth,
+        year: selectedYear,
+      }).unwrap();
+      Toast.show({ type: 'success', text1: '✅ Targets saved successfully' });
+      setTargetModalVisible(false);
+      refetchEmployeeTargets();
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: `❌ ${err?.message || 'Failed to save targets'}` });
+    }
+  };
+
+  const handleOpenTargetModal = () => {
+    setEditSalesTarget(String(salesTarget));
+    setEditDdnTarget(String(ddnTarget));
+    setTargetModalVisible(true);
+  };
 
   return (
     <SafeAreaView
@@ -737,6 +810,7 @@ const HomeScreen = ({ navigation }: Props) => {
               </View>
             </View>
           </View>
+
 
           {/* ── Dashboard Filters ── */}
           <View style={styles.filterSection}>
@@ -976,29 +1050,7 @@ const HomeScreen = ({ navigation }: Props) => {
           </Modal>
 
           {/* ── Team Attendance ── */}
-          {/* <View style={styles.section}>
-            <SectionTitle title="Team Attendance" sub="Today's Summary" />
-            <View style={styles.metricRow}>
-              <MetricBox
-                label="Total Team"
-                value={`${attendanceSummary?.total ?? 0}`}
-                rate={attendanceSummary?.attendance_rate ?? 0}
-              />
-              <MetricBox
-                label="Present"
-                value={`${attendanceSummary?.present ?? 0}`}
-                rate={attendanceSummary?.attendance_rate ?? 0}
-              />
-              <MetricBox
-                label="Absent"
-                value={`${attendanceSummary?.absent ?? 0}`}
-                rate={Math.max(0, 100 - (attendanceSummary?.attendance_rate ?? 0)).toFixed(1)}
-              />
-            </View>
-          </View> */}
-
-          {/* ── Team Attendance ── */}
-          <View style={styles.section}>
+          {attendanceData?.message && attendanceData?.message?.records?.length > 0 && <View style={styles.section}>
             <SectionTitle
               title="Team Attendance"
               sub={
@@ -1010,24 +1062,7 @@ const HomeScreen = ({ navigation }: Props) => {
               }
             />
 
-            {/* Summary Pills */}
-            {/* <View style={styles.metricRow}>
-              <MetricBox
-                label="Team Members"
-                value={`${attendanceSummary?.unique_employees ?? attendanceSummary?.total ?? 0}`}
-                rate={attendanceSummary?.attendance_rate ?? 0}
-              />
-              <MetricBox
-                label="Present"
-                value={`${attendanceSummary?.present ?? 0}`}
-                rate={attendanceSummary?.attendance_rate ?? 0}
-              />
-              <MetricBox
-                label="Absent"
-                value={`${attendanceSummary?.absent ?? 0}`}
-                rate={Math.max(0, 100 - (attendanceSummary?.attendance_rate ?? 0)).toFixed(1)}
-              />
-            </View> */}
+
 
             {/* Horizontal per-user scroll */}
             <ScrollView
@@ -1134,20 +1169,47 @@ const HomeScreen = ({ navigation }: Props) => {
                 );
               })}
             </ScrollView>
-          </View>
+          </View>}
 
           {/* ── Target vs Achievement ── */}
           <View style={[styles.section, { marginBottom: 10 }]}>
-            <SectionTitle
-              title="Team Performance"
-              sub={
-                filterMode === 'month'
-                  ? `${moment().month(selectedMonth - 1).format('MMMM')} Performance`
-                  : filterMode === 'date_range'
-                    ? `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
-                    : 'Performance'
-              }
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <SectionTitle
+                title="Team Performance"
+                sub={
+                  filterMode === 'month'
+                    ? `${moment().month(selectedMonth - 1).format('MMMM')} Performance`
+                    : `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
+                }
+              />
+              {/* Edit targets button */}
+              <TouchableOpacity
+                onPress={handleOpenTargetModal}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 4,
+                  paddingHorizontal: 10, paddingVertical: 5,
+                  borderRadius: 20, borderWidth: 0.5, borderColor: '#534AB7',
+                  backgroundColor: 'rgba(83,74,183,0.07)',
+                }}>
+                <Text style={{ fontSize: 11, color: '#534AB7', fontFamily: Fonts.medium }}>
+                  Set Targets
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Source hint — shown only when using global defaults */}
+            {/* {employeeTargets?.source === 'global' && (
+              <View style={{
+                flexDirection: 'row', alignItems: 'center', gap: 6,
+                backgroundColor: '#FEF3C7', borderRadius: 8,
+                paddingHorizontal: 10, paddingVertical: 6, marginBottom: 8,
+              }}>
+                <Text style={{ fontSize: 11, color: '#92400E', fontFamily: Fonts.medium }}>
+                  Using system default targets. Tap "Set Targets" to personalise.
+                </Text>
+              </View>
+            )} */}
+
             <View style={styles.metricRow}>
               <TargetMetricBox
                 label="PJP Visits"
@@ -1157,18 +1219,99 @@ const HomeScreen = ({ navigation }: Props) => {
                 accentColor="#534AB7"
                 onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'pjp' })}
               />
+
               <TargetMetricBox
-                label="Sales Value"
-                achieved={`₹${typeof valueSummary?.total_so === 'number'
-                  ? valueSummary.total_so % 1 !== 0
-                    ? valueSummary.total_so.toFixed(2)
-                    : valueSummary.total_so
-                  : valueSummary?.total_so ?? 0}`}
+                label="Sales Order"
+                achieved={`₹${soAchievement % 1 !== 0 ? soAchievement.toFixed(2) : soAchievement}`}
+                target={`₹${salesTarget}`}
+                rate={soPct}
                 accentColor="#0F6E56"
-                onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'value' })}
+              // onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'value' })}
+              />
+            </View>            <View style={[styles.metricRow, { marginTop: 10 }]}>
+              <TargetMetricBox
+                label="DDN Value"
+                achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0 ? (ddnStats?.value ?? 0).toFixed(2) : (ddnStats?.value ?? 0)}`}
+                target={`₹${ddnTarget}`}
+                rate={ddnPct}
+                accentColor="#185FA5"
+              // onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'ddn' })}
               />
             </View>
           </View>
+
+          {/* ── Set Targets Modal ── */}
+          <Modal
+            visible={targetModalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setTargetModalVisible(false)}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setTargetModalVisible(false)}>
+              <View style={[styles.modalContainer, { gap: 14 }]}>
+                <Text style={styles.modalTitle}>Set Monthly Targets</Text>
+
+                {/* Period info */}
+                <Text style={{ fontSize: 12, color: '#828282', fontFamily: Fonts.regular, marginTop: -8 }}>
+                  {moment().format('MMMM YYYY')} — targets apply to current month only
+                </Text>
+
+                {/* Sales Target */}
+                <View>
+                  <Text style={styles.modalLabel}>Sales Order Target (₹)</Text>
+                  <TextInput
+                    value={editSalesTarget}
+                    onChangeText={setEditSalesTarget}
+                    keyboardType="numeric"
+                    placeholder="e.g. 5000000"
+                    style={{
+                      borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10,
+                      paddingHorizontal: 14, paddingVertical: 12,
+                      fontSize: 14, fontFamily: Fonts.medium, color: '#1A1A1A',
+                      backgroundColor: '#FAFAFA', marginTop: 4,
+                    }}
+                  />
+                </View>
+
+                {/* DDN Target */}
+                <View>
+                  <Text style={styles.modalLabel}>DDN Delivery Target (₹)</Text>
+                  <TextInput
+                    value={editDdnTarget}
+                    onChangeText={setEditDdnTarget}
+                    keyboardType="numeric"
+                    placeholder="e.g. 4000000"
+                    style={{
+                      borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10,
+                      paddingHorizontal: 14, paddingVertical: 12,
+                      fontSize: 14, fontFamily: Fonts.medium, color: '#1A1A1A',
+                      backgroundColor: '#FAFAFA', marginTop: 4,
+                    }}
+                  />
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setTargetModalVisible(false)}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.confirmButton, isSavingTargets && { opacity: 0.6 }]}
+                    disabled={isSavingTargets}
+                    onPress={handleSaveTargets}>
+                    {isSavingTargets
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.confirmText}>Save</Text>
+                    }
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Modal>
 
           {/* ── Attendance Preview ── */}
           {/* {attendanceData?.message?.records?.length !== 0 && <View style={{ marginTop: 20, marginHorizontal: 20 }}>
@@ -1928,7 +2071,7 @@ const styles = StyleSheet.create({
 
 
   // ── Metric boxes ─────────────────────────────────────────────────────────────
-  metricRow: { flexDirection: 'row', gap: 8 },
+  metricRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   metricBox: {
     flex: 1, backgroundColor: C.card, borderRadius: 12,
     borderWidth: 0.5, borderColor: C.border,
