@@ -57,6 +57,8 @@ import {
   RGetSoStats,
   ISoStatsParams,
   IGetEmployeeTargetsParams,
+  RDistributorDeliveryNoteList,
+  RDeliveryNoteDetails,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1269,6 +1271,43 @@ export const baseApi = createApi({
         },
       }),
     }),
+    
+    //Distributor Delivery Note
+    getDeliveryNotesList: builder.query<
+      RDistributorDeliveryNoteList,
+      {
+        page: number;
+        page_size: number;
+        status?: string;
+        from_date?: string;
+        to_date?: string;
+        search?: string;
+      }
+    >({
+      query: ({page, page_size, status, from_date, to_date, search}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_notes_list',
+        method: 'GET',
+        params: {
+          page,
+          page_size,
+          ...(status ? {status} : {}),
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+          ...(search ? {search} : {}),
+        },
+      }),
+      providesTags: ['SO'],
+    }),
+    getDeliveryNoteById: builder.query<RDeliveryNoteDetails, string>({
+      query: id => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_note_details',
+        method: 'GET',
+        params: {
+          delivery_note_id: id,
+        },
+      }),
+      providesTags: ['SO'],
+    }),
   }),
 });
 export const {
@@ -1361,6 +1400,10 @@ export const {
   useSetEmployeeTargetsMutation,
   useGetSoStatsQuery,
   useGetDdnStatsQuery,
+
+  //Distributor Delivery Note
+  useGetDeliveryNotesListQuery,
+  useGetDeliveryNoteByIdQuery,
 } = baseApi;
 
 interface PjpState {

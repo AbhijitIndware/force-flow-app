@@ -68,6 +68,7 @@ export type SoAppStackParamList = {
   };
   AllOrdersScreen: { date: string, employee: string, from_date?: string, to_date?: string };
   OrderDetailScreen: { order_id: string };
+  DeliveryNoteDetailScreen: { id: string };
   TeamAttendanceListScreen: { apiParams: any; today: string };
   TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
 };

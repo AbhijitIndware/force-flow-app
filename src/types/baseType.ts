@@ -1904,3 +1904,59 @@ export interface TargetAchievementSummary {
   so_variance: number;  // +ve = on track, -ve = lagging
   ddn_variance: number;
 }
+
+// ── Distributor Delivery Note (DDN) Types ──────────────────────────────────────
+
+export interface IDistributorDeliveryNote {
+  delivery_note_id: string;
+  distributor: string;
+  distributor_name: string;
+  posting_date: string;
+  grand_total: number;
+  ordered_qty: number;
+  delivered_qty: number;
+  status: string;
+  workflow_state: string;
+  store_warehouse: string;
+  store_name: string;
+  invoice_no: string | null;
+  purchase_order: string | null;
+  item_count: number;
+  docstatus: number;
+}
+
+export interface RDistributorDeliveryNoteList {
+  message: {
+    success: boolean;
+    data: {
+      delivery_notes: IDistributorDeliveryNote[];
+      pagination: PaginationInfo;
+    };
+  };
+}
+
+export interface IDeliveryNoteDetailItem {
+  item_code: string;
+  item_name: string;
+  description: string;
+  qty: number;
+  rate: number;
+  amount: number;
+  uom: string;
+  warehouse: string;
+}
+
+export interface RDeliveryNoteDetails {
+  message: {
+    success: boolean;
+    data: {
+      delivery_note: IDistributorDeliveryNote;
+      items: IDeliveryNoteDetailItem[];
+      totals: {
+        total: number;
+        taxes_and_charges: number;
+        grand_total: number;
+      };
+    };
+  };
+}

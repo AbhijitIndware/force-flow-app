@@ -17,6 +17,7 @@ import CheckInForm from '../HomeScreen/CheckInForm';
 import MarkActivityScreen from '../HomeScreen/MarkActivityScreen';
 import AddSaleScreen from '../OrdersScreen/AddSaleScreen';
 import SaleDetailScreen from '../OrdersScreen/SaleDetailScreen';
+import DeliveryNoteDetailScreen from '../OrdersScreen/DeliveryNoteDetailScreen';
 import PurchaseDetailScreen from '../OrdersScreen/PurchaseDetailScreen';
 import PjpDetailScreen from '../ActivityScreen/PjpDetailScreen';
 import StockReport from '../ActivityScreen/StockReport';
@@ -208,6 +209,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="OrderDetailScreen"
         component={OrderDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="DeliveryNoteDetailScreen"
+        component={DeliveryNoteDetailScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

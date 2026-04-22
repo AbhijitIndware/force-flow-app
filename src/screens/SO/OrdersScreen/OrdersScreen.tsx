@@ -23,6 +23,7 @@ import { Animated } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import PurchaseOrder from '../../../components/SO/Order/Purchase/PurchaseOrder';
 import SalesOrder from '../../../components/SO/Order/Sale/SalesOrder';
+import DeliveryNoteComponent from '../../../components/SO/Order/DeliveryNote/DeliveryNoteComponent';
 import { useGetSalesPurchaseCountQuery } from '../../../features/base/base-api';
 
 const { width } = Dimensions.get('window');
@@ -75,6 +76,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
         <View style={styles.headerSec}>
           {index === 0 ? (
             <View style={styles.salesHeaderData}>
+              {/* Sales Order Counts (Store) */}
               <View style={styles.countBoxSection}>
                 <View style={styles.countBox}>
                   <View
@@ -85,7 +87,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.purchase_orders?.total}
+                    {countData?.message?.data?.sales_orders?.total || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Total Order</Text>
                 </View>
@@ -98,7 +100,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <PackageOpen strokeWidth={1.4} color={Colors.success} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.purchase_orders?.submitted}
+                    {countData?.message?.data?.sales_orders?.submitted || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Delivered Order</Text>
                 </View>
@@ -111,7 +113,52 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.purchase_orders?.draft}
+                    {countData?.message?.data?.sales_orders?.draft || 0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Pending Order</Text>
+                </View>
+              </View>
+            </View>
+          ) : index === 1 ? (
+            <View style={styles.salesHeaderData}>
+              {/* Purchase Order Counts (Distributor) */}
+              <View style={styles.countBoxSection}>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.lightBlue },
+                    ]}>
+                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.total || 0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Total Order</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.lightSuccess },
+                    ]}>
+                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.submitted || 0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.holdLight },
+                    ]}>
+                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {countData?.message?.data?.purchase_orders?.draft || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Pending Order</Text>
                 </View>
@@ -119,47 +166,11 @@ const OrdersScreen = ({ navigation, route }: Props) => {
             </View>
           ) : (
             <View style={styles.salesHeaderData}>
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightBlue },
-                    ]}>
-                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.sales_orders?.total}
-                  </Text>
-                  <Text style={styles.countBoxTitle}>Total Order</Text>
-                </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightSuccess },
-                    ]}>
-                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.sales_orders?.submitted}
-                  </Text>
-                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
-                </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.holdLight },
-                    ]}>
-                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
-                    {countData?.message?.data?.sales_orders?.draft}
-                  </Text>
-                  <Text style={styles.countBoxTitle}>Pending Order</Text>
-                </View>
-              </View>
+               <View style={styles.countBoxSection}>
+                 <View style={[styles.countBox, {width: width - 40, minHeight: 80, justifyContent: 'center'}]}>
+                    <Text style={[styles.countBoxTitle, {textAlign: 'center', fontSize: 16, fontFamily: Fonts.semiBold}]}>Distributor Delivery Notes</Text>
+                 </View>
+               </View>
             </View>
           )}
         </View>
@@ -222,17 +233,36 @@ const OrdersScreen = ({ navigation, route }: Props) => {
               })}
               buttonStyle={{ paddingHorizontal: 0 }}
             />
+            <Tab.Item
+              title="Delivery Note"
+              titleStyle={{
+                fontSize: Size.xs,
+                fontFamily: Fonts.medium,
+                lineHeight: 9,
+              }}
+              containerStyle={active => ({
+                backgroundColor: active ? Colors.Orangelight : undefined,
+                borderRadius: active ? 10 : undefined,
+                borderColor: active ? '#FFBF83' : undefined,
+                borderTopWidth: active ? 1 : undefined,
+                borderLeftWidth: active ? 1 : undefined,
+                borderRightWidth: active ? 1 : undefined,
+              })}
+              buttonStyle={{ paddingHorizontal: 0 }}
+            />
           </Tab>
         </View>
         {/* Conditionally rendered tab content */}
-        {index === 1 ? (
+        {index === 0 ? (
+          <SalesOrder navigation={navigation} />
+        ) : index === 1 ? (
           <PurchaseOrder navigation={navigation} />
         ) : (
-          <SalesOrder navigation={navigation} />
+          <DeliveryNoteComponent navigation={navigation} />
         )}
       </Animated.ScrollView>
 
-      {index !== 0 && (
+      {index < 2 && (
         <View
           style={{
             position: 'absolute',
