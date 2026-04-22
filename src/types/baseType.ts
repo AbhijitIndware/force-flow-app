@@ -566,6 +566,17 @@ export interface RPOSOCount {
         cancelled: number;
         status_wise: Record<string, number>; // e.g., "Draft": 7
       };
+      delivery_notes: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: {
+          Draft: number;
+          Submitted: number;
+          Cancelled: number;
+        };
+      };
       filters_applied: {
         from_date: string | null;
         to_date: string | null;
@@ -1935,28 +1946,52 @@ export interface RDistributorDeliveryNoteList {
   };
 }
 
-export interface IDeliveryNoteDetailItem {
-  item_code: string;
-  item_name: string;
-  description: string;
-  qty: number;
-  rate: number;
-  amount: number;
-  uom: string;
-  warehouse: string;
-}
-
-export interface RDeliveryNoteDetails {
+export type DeliveryNoteResponse = {
   message: {
     success: boolean;
     data: {
-      delivery_note: IDistributorDeliveryNote;
-      items: IDeliveryNoteDetailItem[];
-      totals: {
-        total: number;
-        taxes_and_charges: number;
-        grand_total: number;
-      };
+      order_details: OrderDetails;
+      items: Item[];
+      totals: DDNTotals;
     };
-  };
-}
+  }
+};
+
+export type OrderDetails = {
+  delivery_note_id: string;
+  distributor: string;
+  distributor_name: string;
+  posting_date: string;
+  grand_total: number;
+  ordered_qty: number;
+  delivered_qty: number;
+  status: string;
+  workflow_state: string;
+  store_warehouse: string;
+  store_name: string;
+  invoice_no: string;
+  purchase_order: string;
+  docstatus: number;
+  item_count: number;
+};
+
+export type Item = {
+  item_code: string;
+  item_name: string;
+  description: string;
+  ordered_qty: number;
+  delivered_qty: number;
+  rate: number;
+  amount: number;
+  uom: string;
+  stock_uom: string;
+  received_qty: number;
+  returned_qty: number;
+  billed_amt: number;
+  warehouse?: string;
+};
+
+export type DDNTotals = {
+  total: number;
+  grand_total: number;
+};

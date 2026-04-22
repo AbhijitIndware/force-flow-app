@@ -120,7 +120,7 @@ const today = new Date().toISOString().split('T')[0];
 const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub }) => (
   <View style={styles.sectionTitleRow}>
     <Text style={styles.sectionTitle}>{title}</Text>
-    {sub && <Text style={styles.sectionSub}>{sub}</Text>}
+    {sub ? <Text style={styles.sectionSub}>{sub}</Text> : null}
   </View>
 );
 
@@ -1226,16 +1226,15 @@ const HomeScreen = ({ navigation }: Props) => {
                 target={`₹${salesTarget}`}
                 rate={soPct}
                 accentColor="#0F6E56"
-              // onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'value' })}
               />
-            </View>            <View style={[styles.metricRow, { marginTop: 10 }]}>
+            </View>
+            <View style={[styles.metricRow, { marginTop: 10 }]}>
               <TargetMetricBox
                 label="DDN Value"
                 achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0 ? (ddnStats?.value ?? 0).toFixed(2) : (ddnStats?.value ?? 0)}`}
                 target={`₹${ddnTarget}`}
                 rate={ddnPct}
                 accentColor="#185FA5"
-              // onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'ddn' })}
               />
             </View>
           </View>

@@ -177,7 +177,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {0}
+                    {countData?.message?.data?.delivery_notes?.total || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Total DDN</Text>
                 </View>
@@ -190,7 +190,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <PackageOpen strokeWidth={1.4} color={Colors.success} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {0}
+                    {countData?.message?.data?.delivery_notes?.submitted || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Approved DDN</Text>
                 </View>
@@ -203,7 +203,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                     <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
                   </View>
                   <Text style={styles.countBoxDay}>
-                    {0}
+                    {countData?.message?.data?.delivery_notes?.draft || 0}
                   </Text>
                   <Text style={styles.countBoxTitle}>Pending DDN</Text>
                 </View>

@@ -38,14 +38,9 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
       const newList = data.message.data.delivery_notes;
 
       setDeliveryNotes(prev => {
-        if (page === 1) {
-          const map = new Map();
-          newList.forEach(item => map.set(item.delivery_note_id, item));
-          return Array.from(map.values());
-        }
-
+        const sourceData = page === 1 ? newList : [...prev, ...newList];
         const map = new Map();
-        [...prev, ...newList].forEach(item => map.set(item.delivery_note_id, item));
+        sourceData.forEach(item => map.set(item.delivery_note_id, item));
         return Array.from(map.values());
       });
     }
@@ -87,17 +82,26 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
               justifyContent: 'flex-end',
             },
           ]}>
-          <Text
-            style={[
-              styles.present,
-              {
-                backgroundColor:
-                  `${soStatusColors[item.status]}30` || Colors.lightSuccess,
-                color: soStatusColors[item.status] || '#fff',
-              },
-            ]}>
-            {item.status}
-          </Text>
+          {(() => {
+            const statusColor =
+              item.workflow_state === 'Approved' || item.workflow_state === 'Submitted'
+                ? '#049a3bff'
+                : item.workflow_state === 'Cancelled'
+                  ? '#EF4444'
+                  : '#FACC15';
+            return (
+              <Text
+                style={[
+                  styles.present,
+                  {
+                    backgroundColor: `${statusColor}20`,
+                    color: statusColor,
+                  },
+                ]}>
+                {item.workflow_state}
+              </Text>
+            );
+          })()}
         </View>
       </View>
       <TouchableOpacity

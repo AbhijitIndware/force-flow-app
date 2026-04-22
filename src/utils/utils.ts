@@ -11,11 +11,12 @@ export const soStatusColors: Record<string, string> = {
   Draft: '#FACC15', // yellow
   Pending: '#FACC15', // same as Draft
   Approve: '#22C55E', // green
+  Approved: '#22C55E', // green
   Reject: '#EF4444', // red
   Cancelled: '#EF4444', // same as Reject
   'To Deliver and Bill': '#22C55E',
   'To Receive and Bill': '#22C55E',
-  Delivered: '#22C55E', // green
+  Delivered: '#049a3bff', // green
 };
 
 export async function requestLocationPermission(): Promise<boolean> {

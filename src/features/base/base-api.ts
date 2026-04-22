@@ -58,7 +58,7 @@ import {
   ISoStatsParams,
   IGetEmployeeTargetsParams,
   RDistributorDeliveryNoteList,
-  RDeliveryNoteDetails,
+  DeliveryNoteResponse,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1271,7 +1271,7 @@ export const baseApi = createApi({
         },
       }),
     }),
-    
+
     //Distributor Delivery Note
     getDeliveryNotesList: builder.query<
       RDistributorDeliveryNoteList,
@@ -1284,21 +1284,21 @@ export const baseApi = createApi({
         search?: string;
       }
     >({
-      query: ({page, page_size, status, from_date, to_date, search}) => ({
+      query: ({ page, page_size, status, from_date, to_date, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_notes_list',
         method: 'GET',
         params: {
           page,
           page_size,
-          ...(status ? {status} : {}),
-          ...(from_date ? {from_date} : {}),
-          ...(to_date ? {to_date} : {}),
-          ...(search ? {search} : {}),
+          ...(status ? { status } : {}),
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
+          ...(search ? { search } : {}),
         },
       }),
       providesTags: ['SO'],
     }),
-    getDeliveryNoteById: builder.query<RDeliveryNoteDetails, string>({
+    getDeliveryNoteById: builder.query<DeliveryNoteResponse, string>({
       query: id => ({
         url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_note_details',
         method: 'GET',
