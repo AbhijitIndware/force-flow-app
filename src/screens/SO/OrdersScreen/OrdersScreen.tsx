@@ -166,11 +166,48 @@ const OrdersScreen = ({ navigation, route }: Props) => {
             </View>
           ) : (
             <View style={styles.salesHeaderData}>
-               <View style={styles.countBoxSection}>
-                 <View style={[styles.countBox, {width: width - 40, minHeight: 80, justifyContent: 'center'}]}>
-                    <Text style={[styles.countBoxTitle, {textAlign: 'center', fontSize: 16, fontFamily: Fonts.semiBold}]}>Distributor Delivery Notes</Text>
-                 </View>
-               </View>
+              {/* Delivery Note Counts */}
+              <View style={styles.countBoxSection}>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.lightBlue },
+                    ]}>
+                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Total DDN</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.lightSuccess },
+                    ]}>
+                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Approved DDN</Text>
+                </View>
+                <View style={styles.countBox}>
+                  <View
+                    style={[
+                      styles.countBoxIcon,
+                      { backgroundColor: Colors.holdLight },
+                    ]}>
+                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
+                  </View>
+                  <Text style={styles.countBoxDay}>
+                    {0}
+                  </Text>
+                  <Text style={styles.countBoxTitle}>Pending DDN</Text>
+                </View>
+              </View>
             </View>
           )}
         </View>

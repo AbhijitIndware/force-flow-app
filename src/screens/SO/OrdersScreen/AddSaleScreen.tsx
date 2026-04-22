@@ -9,19 +9,19 @@ import {
   View,
   Dimensions,
 } from 'react-native';
-import {useEffect, useRef, useState} from 'react';
-import {useFormik} from 'formik';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { useEffect, useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import Toast from 'react-native-toast-message';
 import AddSaleForm from '../../../components/SO/Order/Sale/AddSaleForm';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import {addSalesOrderSchema} from '../../../types/schema'; // ✅ create schema for sales order
-import {IAddSalesOrder, RSoDetailData} from '../../../types/baseType';
+import { addSalesOrderSchema } from '../../../types/schema'; // ✅ create schema for sales order
+import { IAddSalesOrder, RSoDetailData } from '../../../types/baseType';
 import {
   useAddSaleOrderMutation,
   useGetSalesOrderByIdQuery,
@@ -32,13 +32,13 @@ import {
   useGetItemsQuery,
   useLazyGetDailyStoreQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {Item, SoItem, SoStore} from '../../../types/dropdownType';
-import {useAppSelector} from '../../../store/hook';
-import {Search} from 'lucide-react-native';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {uniqueByValue} from '../../../utils/utils';
-const {width} = Dimensions.get('window');
+import { Item, SoItem, SoStore } from '../../../types/dropdownType';
+import { useAppSelector } from '../../../store/hook';
+import { Search } from 'lucide-react-native';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { uniqueByValue } from '../../../utils/utils';
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'AddSaleScreen'
@@ -83,7 +83,7 @@ const initial: IAddSalesOrder = {
   submit_order: false,
 };
 // For original item data (API objects)
-const uniqueByItemCode = <T extends {item_code: string}>(arr: T[]) => {
+const uniqueByItemCode = <T extends { item_code: string }>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(item => {
     if (seen.has(item.item_code)) return false;
@@ -92,14 +92,14 @@ const uniqueByItemCode = <T extends {item_code: string}>(arr: T[]) => {
   });
 };
 
-const AddSaleScreen = ({navigation, route}: Props) => {
+const AddSaleScreen = ({ navigation, route }: Props) => {
   const [loading, setLoading] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [activeField, setActiveField] = useState<
     null | 'transaction_date' | 'delivery_date'
   >(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const {orderId} = route.params;
+  const { orderId } = route.params;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
   // const [searchItem, setSearchItem] = useState('');
   // const [itemListData, setItemListData] = useState<
@@ -115,9 +115,10 @@ const AddSaleScreen = ({navigation, route}: Props) => {
 
   const [addSalesOrder] = useAddSaleOrderMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
-  const [triggerStoreFetch, {data: storeData, error}] =
+  const [triggerStoreFetch, { data: storeData, error }] =
     useLazyGetDailyStoreQuery();
-  const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
+  console.log("🚀 ~ AddSaleScreen ~ storeData:", storeData)
+  const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
 
@@ -165,7 +166,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
             position: 'top',
           });
           actions.resetForm();
-          navigation.navigate('OrdersScreen', {index: 1});
+          navigation.navigate('OrdersScreen', { index: 1 });
         } else {
           Toast.show({
             type: 'error',
@@ -199,7 +200,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       <SafeAreaView
         style={[
           flexCol,
-          {flex: 1, justifyContent: 'center', alignItems: 'center'},
+          { flex: 1, justifyContent: 'center', alignItems: 'center' },
         ]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
@@ -223,11 +224,11 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   }, [user?.email, values?.transaction_date]);
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Add Sales Order"
         navigation={
-          () => navigation.navigate('OrdersScreen', {index: 1})
+          () => navigation.navigate('OrdersScreen', { index: 1 })
           //  navigation.navigate('Home')
         }
       />
@@ -277,7 +278,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           height: 80,
         }}>
         <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
+          style={[styles.submitBtn, loading && { opacity: 0.7 }]}
           onPress={() => handleSubmit()}
           disabled={loading}>
           {loading ? (

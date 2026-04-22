@@ -32,7 +32,6 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
       page,
       page_size: PAGE_SIZE,
     });
-  console.log("🚀 ~ DeliveryNoteComponent ~ data:", data)
 
   useEffect(() => {
     if (data?.message?.data?.delivery_notes) {
