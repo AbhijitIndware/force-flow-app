@@ -1,12 +1,12 @@
 // AddSaleForm.tsx
-import React, {Dispatch, useState} from 'react';
-import {Animated, StyleSheet, TouchableOpacity, View, Text} from 'react-native';
+import React, { Dispatch, useState } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import moment from 'moment';
-import {Colors} from '../../../../utils/colors';
-import {IAddSalesOrder} from '../../../../types/baseType';
-import {Size} from '../../../../utils/fontSize';
-import {Fonts} from '../../../../constants';
+import { Colors } from '../../../../utils/colors';
+import { IAddSalesOrder } from '../../../../types/baseType';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
 import SaleItemField from './SaleItemField';
 
 interface Props {
@@ -27,7 +27,7 @@ interface Props {
   };
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  warehouseList: {label: string; value: string}[];
+  warehouseList: { label: string; value: string }[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
 }
 
@@ -69,17 +69,17 @@ const AddSaleForm: React.FC<Props> = ({
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
+      contentContainerStyle={{ padding: 16, paddingHorizontal: 21 }}>
       {/* Transaction Date */}
       <View style={styles.inputWrapper}>
         <Text style={styles.label}>Transaction Date</Text>
         <TouchableOpacity
           style={styles.timeInput}
-          // onPress={() => onDateSelect('transaction_date')}
+        // onPress={() => onDateSelect('transaction_date')}
         >
           <Text style={styles.timeText}>
             {values.transaction_date
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   addMoreText: {
     color: Colors.white,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
   },
   removeButton: {
     marginTop: 0,
@@ -308,5 +308,5 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
-  error: {fontSize: 12, color: 'red', marginTop: 4},
+  error: { fontSize: 12, color: 'red', marginTop: 4 },
 });
