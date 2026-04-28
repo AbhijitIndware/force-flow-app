@@ -1,16 +1,17 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, Platform} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {Colors} from '../../utils/colors';
-import {Size} from '../../utils/fontSize';
-import {Fonts} from '../../constants';
+import { Colors } from '../../utils/colors';
+import { Size } from '../../utils/fontSize';
+import { Fonts } from '../../constants';
 
 interface Props {
   label: string;
   value: string;
   onChange: (dateStr: string) => void;
   error?: string | false;
+  marginBottom?: any
 }
 
 const ReusableDatePicker: React.FC<Props> = ({
@@ -18,6 +19,7 @@ const ReusableDatePicker: React.FC<Props> = ({
   value,
   onChange,
   error,
+  marginBottom
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -30,8 +32,8 @@ const ReusableDatePicker: React.FC<Props> = ({
   };
 
   return (
-    <View style={{marginBottom: 16}}>
-      <Text style={{marginBottom: 4, fontSize: 14}}>{label}</Text>
+    <View style={{ marginBottom: marginBottom || 16 }}>
+      <Text style={{ marginBottom: 4, fontSize: 14 }}>{label}</Text>
       <TouchableOpacity
         onPress={() => setShowPicker(true)}
         style={{
@@ -42,11 +44,11 @@ const ReusableDatePicker: React.FC<Props> = ({
           backgroundColor: Colors.white,
           height: 50,
         }}>
-        <Text style={{fontSize: Size.sm, fontFamily: Fonts.regular}}>
+        <Text style={{ fontSize: Size.sm, fontFamily: Fonts.regular }}>
           {value || 'Select date'}
         </Text>
       </TouchableOpacity>
-      {error && <Text style={{color: 'red', marginTop: 4}}>{error}</Text>}
+      {error && <Text style={{ color: 'red', marginTop: 4 }}>{error}</Text>}
       {showPicker && (
         <DateTimePicker
           value={value ? new Date(value) : new Date()}

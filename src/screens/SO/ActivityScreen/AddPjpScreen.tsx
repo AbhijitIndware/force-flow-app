@@ -169,7 +169,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
             position: 'top',
           });
           resetForm();
-          navigation.navigate('ActivityScreen');
+          navigation.navigate('Home');
         } else {
           Toast.show({
             type: 'error',
@@ -178,7 +178,6 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
           });
         }
       } catch (error: any) {
-        console.error('PJP API Error:', error);
         if (
           error?.data?.message?.message ===
           'PJP Daily Stores with the same Employee and Date already exists.'
@@ -276,7 +275,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title={id ? 'Edit PJP' : 'Add PJP'}
+        title={id ? 'Edit PJP' : 'Create PJP'}
         navigation={() => navigation.goBack()}
       />
       {showDuplicatePjp && (
@@ -326,13 +325,6 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
         isPjpStarted={isRunning}
-      /** 👇 Store-related props */
-      // storeList={storeListData}
-      // storeOgData={storeOgData}
-      // storeSearch={storeSearch}
-      // setStoreSearch={setStoreSearch}
-      // onLoadMoreStores={handleLoadMoreStores}
-      // loadingMoreStores={loadingStoreMore}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}
@@ -365,7 +357,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>{id ? 'Modify' : 'Submit'}</Text>
+            <Text style={styles.submitText}>{id ? 'Modify' : 'Create'}</Text>
           )}
         </TouchableOpacity>
       </View>

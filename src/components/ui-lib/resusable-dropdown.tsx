@@ -1,8 +1,8 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import {Colors} from '../../utils/colors';
-import {Fonts} from '../../constants';
-import {Size} from '../../utils/fontSize';
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '../../utils/colors';
+import { Fonts } from '../../constants';
+import { Size } from '../../utils/fontSize';
 import DropdownComponent from '../ui/CustomDropDown';
 
 interface DropdownOption {
@@ -78,14 +78,14 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
 };
 
 const styles = StyleSheet.create({
-  inputWrapper: {marginBottom: 16},
+  inputWrapper: { marginBottom: 16 },
   label: {
     fontSize: Size.xs,
-    marginBottom: 4,
+    // marginBottom: 4,
     color: Colors.black,
     fontFamily: Fonts.regular,
   },
-  error: {fontSize: Size.xs, color: 'red', marginTop: 4},
+  error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
 });
 
 export default ReusableDropdown;

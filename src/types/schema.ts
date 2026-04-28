@@ -46,7 +46,7 @@ export const storeSchema = Yup.object().shape({
 
 export const dailyPjpSchema = Yup.object().shape({
   date: Yup.string().required('Date is required'),
-  employee: Yup.string().required('Employee is required'),
+  employee: Yup.string().optional(),
   stores: Yup.array().of(
     Yup.object().shape({
       store: Yup.string().required('Store is required'),

@@ -102,7 +102,6 @@ const StoreDropdownField = ({
     include_subordinates: '1',
     include_direct_subordinates: '1',
   });
-  console.log("🚀 ~ StoreDropdownField ~ data:", data)
 
   useEffect(() => {
     const stores = (data as StoreApiResponse)?.message?.data?.stores;
