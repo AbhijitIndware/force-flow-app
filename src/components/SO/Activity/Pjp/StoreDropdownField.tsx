@@ -8,6 +8,7 @@ interface StoreItem {
   name: string;
   created_by_employee_name: string;
   store_type: string;
+  pin_code: string; // ✅ add this
 }
 
 interface DropdownOption {
@@ -42,7 +43,7 @@ const PAGE_SIZE = '20';
 
 const transformStores = (arr: StoreItem[] = []): DropdownOption[] =>
   arr.map(item => ({
-    label: `${item.store_name} · By: ${item.created_by_employee_name} · Type: ${item.store_type}`,
+    label: `${item.store_name} (${item.pin_code}) — ${item.store_type} | ${item.created_by_employee_name}`,
     value: item.name,
   }));
 
@@ -102,6 +103,7 @@ const StoreDropdownField = ({
     include_subordinates: '1',
     include_direct_subordinates: '1',
   });
+  console.log("🚀 ~ StoreDropdownField ~ data:", data)
 
   useEffect(() => {
     const stores = (data as StoreApiResponse)?.message?.data?.stores;

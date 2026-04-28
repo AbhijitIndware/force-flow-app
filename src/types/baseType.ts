@@ -722,6 +722,31 @@ export interface Counts {
   missed_stores: number;
 }
 
+export interface LastPjpStore {
+  doctype: string;
+  store: string;
+  store_name: string;
+  store_owner_name: string | null;
+  store_category: string;
+  city: string;
+  state: string;
+  pin_code: string;
+  created_by_employee: string;
+  created_by_employee_name: string;
+  warehouse_id: string;
+  is_unplanned: number;
+}
+
+export interface RLastPjpStores {
+  message: {
+    status: string;
+    message: string;
+    data: LastPjpStore[];
+    last_pjp_name: string;
+  };
+}
+
+
 //Partner
 export interface Store {
   id: string;

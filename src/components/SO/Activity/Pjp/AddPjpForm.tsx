@@ -1,6 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
-import React from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Animated, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
@@ -10,6 +10,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../../types/Navigation';
 import StoreDropdownField from './StoreDropdownField';
 import { useAppSelector } from '../../../../store/hook';
+import { useLazyGetLastPjpStoresQuery } from '../../../../features/base/base-api';
+import { Square, CheckSquare } from 'lucide-react-native';
+import Toast from 'react-native-toast-message';
 
 interface FormValues {
   employee: string;
@@ -61,6 +64,48 @@ const AddPjpForm: React.FC<Props> = ({
   const employeeName = employee?.full_name || '—';
   const employeeId = employee?.company_emp_id || '—';
   const totalStores = values.stores.length;
+
+  const [useLastPjp, setUseLastPjp] = useState(false);
+  const [getLastPjpStores, { isFetching: isFetchingLastPjp }] =
+    useLazyGetLastPjpStoresQuery();
+
+  const handleToggleLastPjp = async () => {
+    const newValue = !useLastPjp;
+    setUseLastPjp(newValue);
+
+    if (newValue) {
+      try {
+        const response = await getLastPjpStores().unwrap();
+        if (
+          response?.message?.status === 'success' &&
+          response?.message?.data?.length > 0
+        ) {
+          const previousStores = response.message.data.map(item => ({
+            store: item.store,
+          }));
+          setFieldValue('stores', previousStores);
+          Toast.show({
+            type: 'success',
+            text1: 'Previous PJP stores loaded successfully',
+          });
+        } else {
+          setUseLastPjp(false);
+          Toast.show({
+            type: 'info',
+            text1: 'No previous PJP data found',
+          });
+        }
+      } catch (error) {
+        setUseLastPjp(false);
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to fetch previous PJP data',
+        });
+      }
+    } else {
+      setFieldValue('stores', [{ store: '' }]);
+    }
+  };
 
   return (
     <Animated.ScrollView
@@ -114,6 +159,34 @@ const AddPjpForm: React.FC<Props> = ({
         error={touched.date && errors.date}
         marginBottom={5}
       />
+
+      {/* ── Use Previous PJP Checkbox ── */}
+      <TouchableOpacity
+        onPress={handleToggleLastPjp}
+        disabled={isFetchingLastPjp}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 12,
+          marginTop: 4,
+          gap: 8,
+        }}>
+        {isFetchingLastPjp ? (
+          <ActivityIndicator size="small" color={Colors.Orangelight} />
+        ) : useLastPjp ? (
+          <CheckSquare size={18} color={Colors.Orangelight} />
+        ) : (
+          <Square size={18} color={Colors.Orangelight} />
+        )}
+        <Text
+          style={{
+            fontSize: 13,
+            fontFamily: Fonts.medium,
+            color: '#444',
+          }}>
+          Get previous PJP store data
+        </Text>
+      </TouchableOpacity>
 
       {/* ── Stores Section Header ── */}
       <View style={{

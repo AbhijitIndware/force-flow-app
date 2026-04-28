@@ -59,6 +59,7 @@ import {
   IGetEmployeeTargetsParams,
   RDistributorDeliveryNoteList,
   DeliveryNoteResponse,
+  RLastPjpStores,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -281,6 +282,13 @@ export const baseApi = createApi({
         params: {
           pjp_doc_name: id,
         },
+      }),
+      providesTags: ['PJP'],
+    }),
+    getLastPjpStores: builder.query<RLastPjpStores, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.get_last_pjp_stores',
+        method: 'GET',
       }),
       providesTags: ['PJP'],
     }),
@@ -1337,10 +1345,12 @@ export const {
   useGetDailyPjpListQuery,
   useLazyGetDailyPjpListQuery,
   useGetDailyPjpByIdQuery,
+  useGetLastPjpStoresQuery,
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
   useGetProdCountQuery,
   useUpdatePjpRouteMutation,
+  useLazyGetLastPjpStoresQuery,
 
   //Partner
   useGetStoreListQuery,
