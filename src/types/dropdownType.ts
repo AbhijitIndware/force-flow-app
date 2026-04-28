@@ -104,6 +104,10 @@ export type DailyStoreType = {
     store_name: string;
     store_category: string;
     warehouse_id: string;
+    pin_code: string;
+    store_type: string;
+    created_by_employee_name: string;
+    store_owner_name: string;
   }[];
   pjp_daily_store_doc: string;
 };

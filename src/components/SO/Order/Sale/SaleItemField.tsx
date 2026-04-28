@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
-import {useGetItemsQuery} from '../../../../features/dropdown/dropdown-api';
+import { useGetItemsQuery } from '../../../../features/dropdown/dropdown-api';
 
 interface Props {
   index: number;
@@ -35,7 +35,7 @@ const SaleItemField: React.FC<Props> = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
 
-  const {data, isFetching} = useGetItemsQuery({
+  const { data, isFetching } = useGetItemsQuery({
     page: String(page),
     page_size: '20',
     search,
@@ -170,7 +170,7 @@ const SaleItemField: React.FC<Props> = ({
         <Text>{item.qty > 0 ? item.qty * item.rate : 'Total Amount'}</Text>
       </View>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.dateBtn}
         onPress={() => setTimePickerVisible(true)}>
         <Text>
@@ -178,7 +178,7 @@ const SaleItemField: React.FC<Props> = ({
             ? moment(item.delivery_date).format('YYYY-MM-DD')
             : 'Select Date'}
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

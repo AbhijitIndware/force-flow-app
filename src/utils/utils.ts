@@ -149,4 +149,15 @@ export const getInitials = (name?: string) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+export const getStoreLabel = (item: any) => {
+  if (!item) return '';
+  let label = item.store_name || '';
+  if (item.pin_code) label += ` (${item.pin_code})`;
+  if (item.store_type) label += ` — ${item.store_type}`;
+  if (item.created_by_employee_name)
+    label += ` | ${item.created_by_employee_name}`;
+  if (item.store_owner_name) label += ` (${item.store_owner_name})`;
+  return label;
+};
+
 export const APP_VERSION = '1.1.0';

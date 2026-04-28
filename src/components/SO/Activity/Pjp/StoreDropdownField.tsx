@@ -2,13 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View } from 'react-native';
 import { useGetStoreListQuery } from '../../../../features/base/base-api';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
+import { getStoreLabel } from '../../../../utils/utils';
 
 interface StoreItem {
   store_name: string;
   name: string;
   created_by_employee_name: string;
   store_type: string;
-  pin_code: string; // ✅ add this
+  pin_code: string;
+  store_owner_name?: string;
 }
 
 interface DropdownOption {
@@ -43,7 +45,7 @@ const PAGE_SIZE = '20';
 
 const transformStores = (arr: StoreItem[] = []): DropdownOption[] =>
   arr.map(item => ({
-    label: `${item.store_name} (${item.pin_code}) — ${item.store_type} | ${item.created_by_employee_name}`,
+    label: getStoreLabel(item),
     value: item.name,
   }));
 

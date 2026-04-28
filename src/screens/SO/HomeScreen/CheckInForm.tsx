@@ -27,6 +27,7 @@ import AddCheckInForm from '../../../components/SO/Home/check-in-form';
 import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
   getCurrentLocation,
+  getStoreLabel,
   requestLocationPermission,
   windowWidth,
 } from '../../../utils/utils';
@@ -79,7 +80,6 @@ const CheckInForm = ({ navigation }: Props) => {
   const [addCheckIn] = useAddCheckInMutation();
   const [triggerStoreFetch, { data: storeData, isFetching, error }] =
     useLazyGetDailyStoreQuery();
-  console.log("🚀 ~ CheckInForm ~ storeData:", storeData)
 
   const onSelect = (field: string, val: string) => {
     dispatch(setSelectedStore(val));
@@ -166,7 +166,7 @@ const CheckInForm = ({ navigation }: Props) => {
   };
 
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
-    label: i.store_name,
+    label: getStoreLabel(i),
     value: i.store,
   }));
 

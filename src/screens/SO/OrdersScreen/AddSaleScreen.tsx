@@ -37,7 +37,7 @@ import { useAppSelector } from '../../../store/hook';
 import { Search } from 'lucide-react-native';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { uniqueByValue } from '../../../utils/utils';
+import { getStoreLabel, uniqueByValue } from '../../../utils/utils';
 const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -192,7 +192,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   // ✅ Transform Stores/Warehouses for dropdown
   const warehouseList = storeData?.message?.stores?.map(store => ({
     value: store.warehouse_id, // what will be stored
-    label: `${store.store_name} | ${store.store_category}`,
+    label: getStoreLabel(store),
   }));
 
   if (orderId && isFetching) {
@@ -226,7 +226,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title="Add Sales Order"
+        title="Create Sales Order"
         navigation={
           () => navigation.navigate('OrdersScreen', { index: 1 })
           //  navigation.navigate('Home')
@@ -284,7 +284,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>Submit</Text>
+            <Text style={styles.submitText}>Create Order</Text>
           )}
         </TouchableOpacity>
       </View>

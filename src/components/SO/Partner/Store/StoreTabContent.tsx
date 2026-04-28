@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState, useRef} from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -14,19 +14,19 @@ import {
   TouchableWithoutFeedback,
   Animated,
 } from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {Colors} from '../../../../utils/colors';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
+import { FlashList } from '@shopify/flash-list';
+import { Colors } from '../../../../utils/colors';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 import moment from 'moment';
-import {useGetStoreListQuery} from '../../../../features/base/base-api';
-import {Store} from '../../../../types/baseType';
-import {Clock2, Funnel, Search, X} from 'lucide-react-native';
-import {windowHeight} from '../../../../utils/utils';
+import { useGetStoreListQuery } from '../../../../features/base/base-api';
+import { Store } from '../../../../types/baseType';
+import { Clock2, Funnel, MapPin, Search, X } from 'lucide-react-native';
+import { windowHeight } from '../../../../utils/utils';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const StoreTabContent = ({navigation, setTotalCount}: any) => {
+const StoreTabContent = ({ navigation, setTotalCount }: any) => {
   const [page, setPage] = useState(1);
   const [orders, setOrders] = useState<Store[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,12 +38,12 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
 
   const slideAnim = useRef(new Animated.Value(300)).current;
 
-  const {data, isFetching, isLoading, refetch} = useGetStoreListQuery({
+  const { data, isFetching, isLoading, refetch } = useGetStoreListQuery({
     page: String(page),
     page_size: '20',
     include_subordinates: '1',
     include_direct_subordinates: '1',
-    ...(appliedSearch ? {search: appliedSearch} : {}),
+    ...(appliedSearch ? { search: appliedSearch } : {}),
   });
 
   const stores = data?.message?.data?.stores ?? [];
@@ -54,18 +54,32 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
     stores.length > 0;
 
   useEffect(() => {
-    if (stores.length > 0) {
-      setOrders(prev => (page === 1 ? stores : [...prev, ...stores]));
-    }
-    if (pagination) {
-      setTotalCount(pagination.total_count);
-    }
-  }, [data]);
+    if (data?.message?.data) {
+      const fetchedStores = data.message.data.stores ?? [];
+      const paginationData = data.message.data.pagination;
 
-  // Reset list when search changes
+      if (page === 1) {
+        setOrders(fetchedStores);
+      } else if (fetchedStores.length > 0) {
+        setOrders(prev => {
+          // Prevent duplicates if RTK Query returns cached data
+          const existingIds = new Set(prev.map(s => s.name));
+          const uniqueNew = fetchedStores.filter(s => !existingIds.has(s.name));
+          return [...prev, ...uniqueNew];
+        });
+      }
+
+      if (paginationData) {
+        setTotalCount(paginationData.total_count);
+      }
+    }
+  }, [data, page]);
+
+  // Reset page when search changes
   useEffect(() => {
     setPage(1);
-    setOrders([]);
+    // Note: Do not manually clear orders here to avoid race conditions with RTK Query cache.
+    // The data effect above handles the page 1 reset correctly.
   }, [appliedSearch]);
 
   const openModal = () => {
@@ -113,47 +127,69 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
     }
   };
 
-  const renderItem = ({item}: {item: Store}) => {
-    const date = moment(item.creation, 'YYYY-MM-DD HH:mm:ss.SSSSSS');
-    const day = date.format('DD');
-    const month = date.format('MMM');
+  const renderItem = ({ item }: { item: Store }) => {
+    const creationDate = item.creation
+      ? moment(item.creation).format('DD MMM YYYY')
+      : 'N/A';
+    const statusColor = item.status === 'Active' ? '#22C55E' : '#EF4444';
+    const statusBg = item.status === 'Active' ? '#F0FDF4' : '#FEF2F2';
 
     return (
       <TouchableOpacity
         onPress={() =>
-          navigation.navigate('StoreDetailScreen', {storeId: item?.name})
+          navigation.navigate('StoreDetailScreen', { storeId: item?.name })
         }
-        style={styles.atteddanceCard}>
+        activeOpacity={0.7}
+        style={styles.card}>
+        {/* Header: Name & Status */}
         <View style={styles.cardHeader}>
-          <View style={styles.timeSection}>
-            <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-            <Text style={styles.time}>
-              {' '}
-              {item?.creation
-                ? moment(item?.creation, 'YYYY-MM-DD HH:mm:ss.SSSSSS').format(
-                    'hh:mm:ss A',
-                  )
-                : 'N/A'}
-            </Text>
-          </View>
-          <Text style={[styles.present, {marginLeft: 'auto'}]}>
-            {item?.status}
+          <Text style={styles.storeName} numberOfLines={1}>
+            {item.store_name}
           </Text>
-        </View>
-        <View style={styles.cardbody}>
-          <View style={styles.dateBox}>
-            <Text style={styles.dateText}>{item.creation ? day : 'N/A'}</Text>
-            <Text style={styles.monthText}>
-              {item.creation ? month : 'N/A'}
+          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {item.status}
             </Text>
           </View>
-          <View style={{width: '80%'}}>
-            <View style={{marginBottom: 0}}>
-              <Text style={styles.contentText}>ID: {item?.name}</Text>
-              <Text style={styles.contentText}>Name: {item?.store_name}</Text>
-              <Text style={styles.contentText}>Zone: {item?.zone}</Text>
+        </View>
+
+        {/* Content: ID & Location */}
+        <View style={styles.cardContent}>
+          <View style={styles.infoRow}>
+            <Text style={styles.idLabel}>ID: </Text>
+            <Text style={styles.idValue}>{item.name}</Text>
+          </View>
+
+          <View style={styles.detailsRow}>
+            <View style={styles.detailItem}>
+              <View style={styles.iconCircle}>
+                <MapPin size={14} color={Colors.primary} />
+              </View>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {item.city || 'N/A'}
+              </Text>
             </View>
-            <Text style={styles.contentText}>City: {item?.city}</Text>
+            <View style={styles.detailItem}>
+              <View style={styles.iconCircle}>
+                <Funnel size={14} color={Colors.primary} />
+              </View>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {item.zone || 'N/A'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer: Date & Time */}
+        <View style={styles.cardFooter}>
+          <Text style={styles.dateText}>{creationDate}</Text>
+          <View style={styles.footerDivider} />
+          <View style={styles.timeSection}>
+            <Clock2 size={12} color="#94A3B8" />
+            <Text style={styles.timeText}>
+              {item.creation ? moment(item.creation).format('hh:mm A') : '--:--'}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -171,7 +207,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
       <View
         style={[
           styles.bodyContent,
-          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
+          { paddingHorizontal: 15, paddingTop: 10, paddingBottom: 70 },
         ]}>
         <View style={styles.bodyHeader}>
           <Text style={styles.bodyHeaderTitle}>All Store</Text>
@@ -199,7 +235,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
           </View>
         ) : null}
 
-        <View style={{flex: 1, backgroundColor: Colors.lightBg}}>
+        <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
           {isLoading ? (
             <View
               style={{
@@ -216,13 +252,13 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
               keyExtractor={(item, index) => index.toString()}
               onEndReached={loadMore}
               onEndReachedThreshold={0.2}
-              contentContainerStyle={{padding: 12}}
+              contentContainerStyle={{ paddingVertical: 5 }}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               ListFooterComponent={
                 isFetching ? (
-                  <View style={{paddingVertical: 20}}>
+                  <View style={{ paddingVertical: 20 }}>
                     <ActivityIndicator size="small" />
                   </View>
                 ) : null
@@ -235,7 +271,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
                     alignItems: 'center',
                   }}>
                   {!isFetching && (
-                    <Text style={{color: 'gray', fontSize: 16}}>
+                    <Text style={{ color: 'gray', fontSize: 16 }}>
                       No Store Found
                     </Text>
                   )}
@@ -261,7 +297,7 @@ const StoreTabContent = ({navigation, setTotalCount}: any) => {
           style={styles.modalWrapper}
           pointerEvents="box-none">
           <Animated.View
-            style={[styles.modalSheet, {transform: [{translateY: slideAnim}]}]}>
+            style={[styles.modalSheet, { transform: [{ translateY: slideAnim }] }]}>
             {/* Handle bar */}
             <View style={styles.handleBar} />
 
@@ -319,20 +355,122 @@ export default StoreTabContent;
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 15,
-    marginVertical: 8,
-    marginHorizontal: 12,
+    borderRadius: 16,
+    padding: 12,
+    paddingVertical: 5,
+    marginVertical: 5,
+    width: '95%',
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  status: {
-    fontFamily: Fonts.regular,
-    color: Colors.sucess,
-    backgroundColor: Colors.lightSuccess,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  storeName: {
+    fontSize: 15,
+    fontFamily: Fonts.semiBold,
+    color: '#1E293B',
+    flex: 1,
+    marginRight: 8,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 20,
+    gap: 4,
   },
-  bodyContent: {flex: 1},
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: Fonts.medium,
+    textTransform: 'capitalize',
+  },
+  cardContent: {
+    marginBottom: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  idLabel: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    color: '#64748B',
+  },
+  idValue: {
+    fontSize: 11,
+    fontFamily: Fonts.semiBold,
+    color: Colors.primary,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  iconCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  detailValue: {
+    fontSize: 12,
+    fontFamily: Fonts.regular,
+    color: '#475569',
+    flex: 1,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F8FAFC',
+  },
+  footerDivider: {
+    width: 1,
+    height: 10,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 8,
+  },
+  dateText: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    color: '#94A3B8',
+  },
+  timeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timeText: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    color: '#94A3B8',
+  },
+  bodyContent: { flex: 1 },
   bodyHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -378,81 +516,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: Colors.darkButton,
   },
-  atteddanceCard: {
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timeSection: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  time: {
-    color: Colors.darkButton,
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    lineHeight: 18,
-  },
-  present: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-  cardbody: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    gap: 10,
-    paddingTop: 0,
-  },
-  dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.darkButton,
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
-  },
-  monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
-  },
-  contentText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    lineHeight: 20,
-  },
-
-  // ── Modal styles ──
+  // Modal styles 
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
@@ -469,7 +533,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     paddingTop: 12,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: -4},
+    shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 10,

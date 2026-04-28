@@ -60,8 +60,8 @@ const StoreDetailComponent = ({store, navigation}: Props) => {
         </TouchableOpacity>
       </View>
 
-      {/* -------- Basic Info -------- */}
       <Section title="Basic Info" icon="store">
+        <InfoRow label="Owner Name" value={store.store_owner_name} />
         <InfoRow label="Type" value={store.store_type} />
         <InfoRow label="Category" value={store.store_category} />
         {/* <InfoRow label="Beat" value={store.beat} /> */}
