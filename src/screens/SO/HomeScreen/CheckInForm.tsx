@@ -8,23 +8,23 @@ import {
   View,
   Modal,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {useFormik} from 'formik';
+import React, { useEffect, useRef, useState } from 'react';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { useFormik } from 'formik';
 import {
   setSelectedStore,
   useAddCheckInMutation,
   useLocationVerificationMutation,
 } from '../../../features/base/base-api';
-import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
-import {checkInSchema} from '../../../types/schema';
+import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
+import { checkInSchema } from '../../../types/schema';
 import Toast from 'react-native-toast-message';
-import {flexCol} from '../../../utils/styles';
+import { flexCol } from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
 import AddCheckInForm from '../../../components/SO/Home/check-in-form';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
   getCurrentLocation,
   requestLocationPermission,
@@ -55,7 +55,7 @@ const initial = {
   bypass_store_category: 'True',
 };
 
-const CheckInForm = ({navigation}: Props) => {
+const CheckInForm = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const [locationVerified, setLocationVerified] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -74,11 +74,12 @@ const CheckInForm = ({navigation}: Props) => {
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
 
-  const [verifyLocation, {isLoading: verifying}] =
+  const [verifyLocation, { isLoading: verifying }] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
-  const [triggerStoreFetch, {data: storeData, isFetching, error}] =
+  const [triggerStoreFetch, { data: storeData, isFetching, error }] =
     useLazyGetDailyStoreQuery();
+  console.log("🚀 ~ CheckInForm ~ storeData:", storeData)
 
   const onSelect = (field: string, val: string) => {
     dispatch(setSelectedStore(val));
@@ -146,7 +147,7 @@ const CheckInForm = ({navigation}: Props) => {
         setConfirmModalVisible(false);
         setPendingPayload(null);
         setLocationVerified(false);
-        navigation.navigate('Home');
+        navigation.navigate('AddSaleScreen');
       } else {
         Toast.show({
           type: 'error',
@@ -194,7 +195,7 @@ const CheckInForm = ({navigation}: Props) => {
     }
   };
 
-  const handleVerifyLocation = async ({showToast}: {showToast: boolean}) => {
+  const handleVerifyLocation = async ({ showToast }: { showToast: boolean }) => {
     try {
       if (!selectedStore) {
         if (showToast) {
@@ -290,7 +291,7 @@ const CheckInForm = ({navigation}: Props) => {
   }, [user?.email, pjpInitializedData?.message?.data?.date]);
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
       {isFetching ? (
         <LoadingScreen />
@@ -366,7 +367,7 @@ const CheckInForm = ({navigation}: Props) => {
             </View>
           ) : (
             <>
-              <View style={{padding: 20}}>
+              <View style={{ padding: 20 }}>
                 <ReusableDropdown
                   label="Store"
                   field="value"
@@ -441,9 +442,9 @@ const CheckInForm = ({navigation}: Props) => {
 
               {!locationVerified ? (
                 <TouchableOpacity
-                  style={[styles.submitBtn, verifying && {opacity: 0.7}]}
+                  style={[styles.submitBtn, verifying && { opacity: 0.7 }]}
                   onPress={() => {
-                    handleVerifyLocation({showToast: true});
+                    handleVerifyLocation({ showToast: true });
                   }}
                   disabled={verifying}>
                   {verifying ? (
@@ -475,7 +476,7 @@ const CheckInForm = ({navigation}: Props) => {
                       height: 80,
                     }}>
                     <TouchableOpacity
-                      style={[styles.submitBtn, loading && {opacity: 0.7}]}
+                      style={[styles.submitBtn, loading && { opacity: 0.7 }]}
                       onPress={() => handleSubmit()}
                       disabled={loading}>
                       {loading ? (
@@ -534,7 +535,7 @@ const modalStyles = StyleSheet.create({
     padding: 20,
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
   },

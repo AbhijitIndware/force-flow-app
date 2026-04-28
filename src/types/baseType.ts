@@ -20,6 +20,7 @@ export interface IAddDistributorPayload {
 export interface IAddStorePayload {
   data: {
     store_name: string;
+    store_owner_name: string;
     store_type: string;
     store_category: string;
     zone: string;
@@ -43,6 +44,7 @@ export interface IUpdateStorePayload {
   data: {
     name: string;
     store_name: string;
+    store_owner_name: string;
     store_type: string;
     store_category: string;
     zone: string;
@@ -88,6 +90,7 @@ export interface StoreDataById {
   status: string;
 
   store_name: string;
+  store_owner_name: string;
   store_type: string;
   store_category: string;
   map_location: string;

@@ -47,6 +47,7 @@ import { ICity, Store, StoreDataById } from '../../../types/baseType';
 const { width } = Dimensions.get('window');
 const initial = {
   store_name: '',
+  store_owner_name: '',
   store_type: '',
   store_category: '',
   zone: '',
@@ -90,6 +91,7 @@ type Props = {
 const mapStoreDetailToForm = (detail: StoreDataById): any => {
   return {
     store_name: detail.store_name ?? '',
+    store_owner_name: detail.store_owner_name ?? '',
     store_type: detail.store_type ?? '',
     store_category: detail.store_category ?? '',
     zone: detail.zone ?? '',

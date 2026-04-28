@@ -99,7 +99,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     null | 'transaction_date' | 'delivery_date'
   >(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const { orderId } = route.params;
+  const orderId = route.params?.orderId;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
   // const [searchItem, setSearchItem] = useState('');
   // const [itemListData, setItemListData] = useState<

@@ -214,6 +214,13 @@ const AddStoreForm: React.FC<Props> = ({
         onBlur={() => handleBlur('store_name')}
         setFieldValue={setFieldValue}
       />
+      <ReusableInput
+        label="Store Owner Name"
+        value={values.store_owner_name}
+        onChangeText={handleChange('store_owner_name')}
+        onBlur={() => handleBlur('store_owner_name')}
+        error={touched.store_owner_name && errors.store_owner_name}
+      />
       {/* <ReusableInput
         label="Store Name"
         value={values.store_name}
@@ -258,68 +265,30 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={categorySearchText}
         setSearchText={setCategorySearchText}
       />
-      <ReusableDropdown
+      <ReusableInput
         label="Zone"
-        field="zone"
         value={values.zone}
-        data={zoneList}
+        disabled={true}
+        onChangeText={handleChange('zone')}
+        onBlur={() => handleBlur('zone')}
         error={touched.zone && errors.zone}
-        onChange={(val: string) => onSelect('zone', val)}
-        onLoadMore={onLoadMoreZone}
-        loadingMore={loadingMoreZone}
-        searchText={zoneSearchText}
-        setSearchText={setZoneSearchText}
       />
-      <ReusableDropdown
+      <ReusableInput
         label="State"
-        field="state"
         value={values.state}
-        data={stateList}
+        disabled={true}
+        onChangeText={handleChange('state')}
+        onBlur={() => handleBlur('state')}
         error={touched.state && errors.state}
-        onChange={(val: string) => onSelect('state', val)}
-        onLoadMore={onLoadMoreState}
-        loadingMore={loadingMoreState}
-        searchText={stateSearchText}
-        setSearchText={setStateSearchText}
+      />
+      <ReusableInput
+        label="City"
+        value={values.city}
+        onChangeText={handleChange('city')}
+        onBlur={() => handleBlur('city')}
+        error={touched.city && errors.city}
       />
 
-      {/* <ReusableDropdown
-        label="City"
-        field="city"
-        value={values.city}
-        data={cityList}
-        error={touched.city && errors.city}
-        onChange={(val: string) => onSelect('city', val)}
-        onLoadMore={onLoadMoreCity}
-        loadingMore={loadingMoreCity}
-        searchText={citySearchText}
-        setSearchText={setCitySearchText}
-        onOpen={() => scrollUpOnFocus(400)}
-      /> */}
-      {useCityDropdown ? (
-        <ReusableDropdown
-          label="City"
-          field="city"
-          value={values.city}
-          data={cityList}
-          error={touched.city && errors.city}
-          onChange={(val: string) => onSelect('city', val)}
-          onLoadMore={onLoadMoreCity}
-          loadingMore={loadingMoreCity}
-          searchText={citySearchText}
-          setSearchText={setCitySearchText}
-          onOpen={() => scrollUpOnFocus(400)}
-        />
-      ) : (
-        <ReusableInput
-          label="City"
-          value={values.city}
-          disabled={isNewCity === false}
-          onChangeText={handleChange('city')}
-          onBlur={() => handleBlur('city')}
-          error={touched.city && errors.city}
-        />
-      )}
 
       {/* <ReusableDropdown
         label="Beat"

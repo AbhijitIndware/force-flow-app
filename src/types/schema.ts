@@ -24,6 +24,7 @@ export const distributorSchema = Yup.object().shape({
 
 export const storeSchema = Yup.object().shape({
   store_name: Yup.string().required('Store name is required'),
+  store_owner_name: Yup.string().required('Store owner name is required'),
   store_type: Yup.string().required('Store type is required'),
   store_category: Yup.string().required('Store category is required'),
   zone: Yup.string().required('Zone is required'),
