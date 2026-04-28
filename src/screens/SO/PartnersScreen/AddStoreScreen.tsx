@@ -8,7 +8,7 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useFormik } from 'formik';
 import Toast from 'react-native-toast-message';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -45,6 +45,18 @@ import { uniqueByValue } from '../../../utils/utils';
 import { ICity, Store, StoreDataById } from '../../../types/baseType';
 
 const { width } = Dimensions.get('window');
+const transformList = (arr: { name: string }[] = []) => {
+  const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
+  return unique.map(i => ({ label: i.name, value: i.name }));
+};
+
+const disTransformList = (
+  arr: { name: string; distributor_name: string }[] = [],
+) => {
+  const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
+  return unique.map(i => ({ label: i.distributor_name, value: i.name }));
+};
+
 const initial = {
   store_name: '',
   store_owner_name: '',
@@ -186,6 +198,7 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
     handleBlur,
     handleSubmit,
     setFieldValue,
+    setValues,
   } = useFormik({
     initialValues: initialValues,
     validationSchema: storeSchema,
@@ -263,14 +276,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
   });
 
   const [addStore] = useAddStoreMutation();
-  const { data: zoneData, isFetching: zoneFetching } = useGetZoneQuery(
-    {
-      page_size: '20',
-      page: String(listConfig.zone.page),
-      search: listConfig.zone.search as string,
-    },
-    { refetchOnFocus: true },
-  );
+  // 🔄 Optimized Queries
+  const { data: zoneData, isFetching: zoneFetching } = useGetZoneQuery({
+    page_size: '20',
+    page: String(listConfig.zone.page),
+    search: listConfig.zone.search as string,
+  });
 
   const { data: stateData, isFetching: stateFetching } = useGetStateQuery(
     {
@@ -279,7 +290,7 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       page: String(listConfig.state.page),
       search: listConfig.state.search,
     },
-    { refetchOnFocus: true },
+    { skip: !values.zone },
   );
 
   const { data: cityData, isFetching: cityFetching } = useGetCityQuery(
@@ -289,27 +300,21 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       page: String(listConfig.city.page),
       search: listConfig.city.search,
     },
-    { refetchOnFocus: true },
+    { skip: !values.state || useCityDropdown === false },
   );
 
   const { data: distributorData, isFetching: distributorFetching } =
-    useGetDistributorQuery(
-      {
-        page_size: '20',
-        page: String(listConfig.distributor.page),
-        search: listConfig.distributor.search,
-      },
-      { refetchOnFocus: true },
-    );
-
-  const { data: typeData, isFetching: typeFetching } = useGetStoreTypeQuery(
-    {
+    useGetDistributorQuery({
       page_size: '20',
-      page: String(listConfig.type.page),
-      search: listConfig.type.search,
-    },
-    { refetchOnFocus: true },
-  );
+      page: String(listConfig.distributor.page),
+      search: listConfig.distributor.search,
+    });
+
+  const { data: typeData, isFetching: typeFetching } = useGetStoreTypeQuery({
+    page_size: '20',
+    page: String(listConfig.type.page),
+    search: listConfig.type.search,
+  });
 
   const { data: categoryData, isFetching: categoryFetching } =
     useGetStoreCategoryQuery(
@@ -319,40 +324,27 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
         search: listConfig.category.search,
         filters: JSON.stringify({ store_type: values.store_type }),
       },
-      { refetchOnFocus: true },
+      { skip: !values.store_type },
     );
 
-  const { data: beatData, isFetching: beatFetching } = useGetBeatQuery(
-    {
-      page_size: '20',
-      page: String(listConfig.beat.page),
-      search: listConfig.beat.search,
-    },
-    { refetchOnFocus: true },
-  );
+  const { data: beatData, isFetching: beatFetching } = useGetBeatQuery({
+    page_size: '20',
+    page: String(listConfig.beat.page),
+    search: listConfig.beat.search,
+  });
 
   // Assuming values.map_location is a string like "22.5643,88.3693"
-  const [latitude, longitude] = values?.map_location?.split(',');
+  const [latitude, longitude] = values?.map_location?.split(',') || [null, null];
 
   const { data: locationData } = useGetLocationByLatLongQuery(
     {
-      latitude,
-      longitude,
+      latitude: latitude as string,
+      longitude: longitude as string,
     },
     { skip: !values.map_location || values.map_location === '' },
   );
 
-  const transformList = (arr: { name: string }[] = []) => {
-    const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
-    return unique.map(i => ({ label: i.name, value: i.name }));
-  };
-
-  const disTransformList = (
-    arr: { name: string; distributor_name: string }[] = [],
-  ) => {
-    const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
-    return unique.map(i => ({ label: i.distributor_name, value: i.name }));
-  };
+  // Moved transform functions outside component
 
   // const distributorList = disTransformList(distributorData?.message?.data);
   // const storeTypeList = transformList(typeData?.message?.data);
@@ -367,52 +359,41 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
 
   useEffect(() => {
     if (locationData?.message?.raw) {
-      setFieldValue('address', locationData?.message?.raw?.display_name || '');
-      setFieldValue(
-        'pin_code',
-        locationData?.message?.raw?.address?.postcode || '',
-      );
+      const cities = locationData?.message?.cities ?? [];
+      const singleCity = locationData?.message?.city ?? null;
+      let cityVal = '';
+      let isNewCityVal = false;
+      let useCityDropdownVal = false;
 
-      // setFieldValue('county', locationData?.message?.county || '');
-      setFieldValue('zone', locationData?.message?.zone || '');
-      setFieldValue('state', locationData?.message?.state || '');
+      if (cities.length > 1) {
+        const cityOptions = cities.map(city => ({ label: city, value: city }));
+        setCityListData(cityOptions);
+        useCityDropdownVal = true;
+      } else if (cities.length === 1 || singleCity) {
+        cityVal = cities[0] || singleCity || '';
+        setCityListData([]);
+      } else {
+        isNewCityVal = true;
+        setCityListData([]);
+      }
+
+      setValues({
+        ...values,
+        address: locationData?.message?.raw?.display_name || '',
+        pin_code: locationData?.message?.raw?.address?.postcode || '',
+        zone: locationData?.message?.zone || '',
+        state: locationData?.message?.state || '',
+        city: cityVal,
+      });
+
+      setIsNewCity(isNewCityVal);
+      setUseCityDropdown(useCityDropdownVal);
 
       setListConfig(prev => ({
         ...prev,
-        state: { page: 1, search: locationData?.message?.state }, // reset state pagination & search
-        zone: { page: 1, search: locationData?.message?.zone }, // also reset city (because state depends on zone)
+        state: { page: 1, search: locationData?.message?.state },
+        zone: { page: 1, search: locationData?.message?.zone },
       }));
-
-      const cities = locationData?.message?.cities ?? [];
-      const singleCity = locationData?.message?.city ?? null;
-
-      // 🏙 CITY HANDLING
-      if (cities.length > 1) {
-        // Multiple cities → dropdown
-        const cityOptions = cities.map(city => ({
-          label: city,
-          value: city,
-        }));
-
-        setCityListData(cityOptions);
-        setUseCityDropdown(true);
-        setIsNewCity(false);
-        setFieldValue('city', '');
-      } else if (cities.length === 1 || singleCity) {
-        // Single city → text input
-        const cityName = cities[0] || singleCity || '';
-
-        setUseCityDropdown(false);
-        setIsNewCity(false);
-        setCityListData([]);
-        setFieldValue('city', cityName);
-      } else {
-        // ❗ No city found at all
-        setUseCityDropdown(false);
-        setIsNewCity(true);
-        setCityListData([]);
-        setFieldValue('city', '');
-      }
     }
   }, [locationData]);
 
@@ -551,13 +532,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
     }
   }, [beatData]);
 
-  const handleLoadMoreZones = () => {
+  // 🔄 Memoized Handlers
+  const handleLoadMoreZones = useCallback(() => {
     if (!zoneFetching) {
       const currentPage = zoneData?.message?.pagination?.page ?? 1;
       const totalPages = zoneData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
-
       setLoadingMoreZone(true);
       setListConfig(prev => ({
         ...prev,
@@ -565,15 +545,13 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreZone(false);
     }
-  };
+  }, [zoneFetching, zoneData]);
 
-  const handleLoadMoreStates = () => {
+  const handleLoadMoreStates = useCallback(() => {
     if (!stateFetching) {
       const currentPage = stateData?.message?.pagination?.page ?? 1;
       const totalPages = stateData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
-
       setLoadingMoreState(true);
       setListConfig(prev => ({
         ...prev,
@@ -581,15 +559,13 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreState(false);
     }
-  };
+  }, [stateFetching, stateData]);
 
-  const handleLoadMoreCity = () => {
+  const handleLoadMoreCity = useCallback(() => {
     if (!cityFetching) {
       const currentPage = cityData?.message?.pagination?.page ?? 1;
       const totalPages = cityData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
-
       setLoadingMoreCity(true);
       setListConfig(prev => ({
         ...prev,
@@ -597,13 +573,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreCity(false);
     }
-  };
+  }, [cityFetching, cityData]);
 
-  const handleLoadMoreDistributor = () => {
+  const handleLoadMoreDistributor = useCallback(() => {
     if (!distributorFetching) {
       const currentPage = distributorData?.message?.pagination?.page ?? 1;
       const totalPages = distributorData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
       setLoadingMoreDistributor(true);
       setListConfig(prev => ({
@@ -615,13 +590,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreDistributor(false);
     }
-  };
+  }, [distributorFetching, distributorData]);
 
-  const handleLoadMoreType = () => {
+  const handleLoadMoreType = useCallback(() => {
     if (!typeFetching) {
       const currentPage = typeData?.message?.pagination?.page ?? 1;
       const totalPages = typeData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
       setLoadingMoreType(true);
       setListConfig(prev => ({
@@ -630,13 +604,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreType(false);
     }
-  };
+  }, [typeFetching, typeData]);
 
-  const handleLoadMoreCategory = () => {
+  const handleLoadMoreCategory = useCallback(() => {
     if (!categoryFetching) {
       const currentPage = categoryData?.message?.pagination?.page ?? 1;
       const totalPages = categoryData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
       setLoadingMoreCategory(true);
       setListConfig(prev => ({
@@ -645,13 +618,12 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreCategory(false);
     }
-  };
+  }, [categoryFetching, categoryData]);
 
-  const handleLoadMoreBeat = () => {
+  const handleLoadMoreBeat = useCallback(() => {
     if (!beatFetching) {
       const currentPage = beatData?.message?.pagination?.page ?? 1;
       const totalPages = beatData?.message?.pagination?.total_pages ?? 1;
-
       if (currentPage >= totalPages) return;
       setLoadingMoreBeat(true);
       setListConfig(prev => ({
@@ -660,19 +632,17 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       }));
       setLoadingMoreBeat(false);
     }
-  };
+  }, [beatFetching, beatData]);
 
-  const handleSearchChange = (
-    // type: 'zone' | 'state' | 'city',
+  const handleSearchChange = useCallback((
     type: keyof typeof listConfig,
     text: string,
   ) => {
-    // Reset pagination & trigger new search query
     setListConfig(prev => ({
       ...prev,
       [type]: { page: 1, search: text },
     }));
-  };
+  }, []);
 
   useEffect(() => {
     if (storeData?.message?.data && storeId) {

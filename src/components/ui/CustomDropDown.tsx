@@ -41,7 +41,7 @@ const DropdownComponent = ({
   data,
   selectedId,
   setSelectedId,
-  height = 50,
+  height = 45,
   onLoadMore,
   loadingMore = false,
   searchText,

@@ -13,6 +13,7 @@ interface DistributorInputProps {
   keyboardType?: TextInputProps['keyboardType'];
   disabled?: boolean;
   placeholder?: string;
+  marginBottom?: number;
 }
 
 const ReusableInput: React.FC<DistributorInputProps> = ({
@@ -23,9 +24,10 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
   error,
   keyboardType = 'default',
   disabled = false,
-  placeholder
+  placeholder,
+  marginBottom = 16,
 }) => (
-  <View style={styles.inputWrapper}>
+  <View style={[styles.inputWrapper, { marginBottom }]}>
     <Text style={styles.label}>{label}</Text>
     <TextInput
       style={styles.input}
@@ -54,8 +56,8 @@ const styles = StyleSheet.create({
     borderColor: '#ecececff',
     color: Colors.black,
     fontFamily: Fonts.regular,
-    height: 50,
-    fontSize: Size.sm,
+    height: 45,
+    fontSize: Size.xs,
   },
   error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
 });

@@ -1,5 +1,5 @@
 // AddDistributorForm.tsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
@@ -75,7 +75,7 @@ interface Props {
   isEdit?: boolean;
 }
 
-const AddStoreForm: React.FC<Props> = ({
+const AddStoreForm: React.FC<Props> = memo(({
   isEdit,
   values,
   errors,
@@ -199,6 +199,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('map_location')}
         onBlur={() => handleBlur('map_location')}
         error={touched.map_location && errors.map_location}
+        marginBottom={5}
       />
       <StoreNameField
         mapLocation={values.map_location}
@@ -213,6 +214,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('store_name')}
         onBlur={() => handleBlur('store_name')}
         setFieldValue={setFieldValue}
+        marginBottom={5}
       />
       <ReusableInput
         label="Store Owner Name"
@@ -220,6 +222,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('store_owner_name')}
         onBlur={() => handleBlur('store_owner_name')}
         error={touched.store_owner_name && errors.store_owner_name}
+        marginBottom={5}
       />
       {/* <ReusableInput
         label="Store Name"
@@ -252,6 +255,7 @@ const AddStoreForm: React.FC<Props> = ({
         loadingMore={loadingMoreType}
         searchText={typeSearchText}
         setSearchText={setTypeSearchText}
+        marginBottom={5}
       />
       <ReusableDropdown
         label="Store Category"
@@ -264,6 +268,7 @@ const AddStoreForm: React.FC<Props> = ({
         loadingMore={loadingMoreCategory}
         searchText={categorySearchText}
         setSearchText={setCategorySearchText}
+        marginBottom={5}
       />
       <ReusableInput
         label="Zone"
@@ -272,6 +277,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('zone')}
         onBlur={() => handleBlur('zone')}
         error={touched.zone && errors.zone}
+        marginBottom={12}
       />
       <ReusableInput
         label="State"
@@ -280,6 +286,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('state')}
         onBlur={() => handleBlur('state')}
         error={touched.state && errors.state}
+        marginBottom={5}
       />
       <ReusableInput
         label="City"
@@ -287,6 +294,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('city')}
         onBlur={() => handleBlur('city')}
         error={touched.city && errors.city}
+        marginBottom={5}
       />
 
 
@@ -318,6 +326,7 @@ const AddStoreForm: React.FC<Props> = ({
         searchText={distributorSearchText}
         setSearchText={setDistributorSearchText}
         onOpen={() => scrollUpOnFocus(400)}
+        marginBottom={5}
       />
 
       {/* <View style={styles.inputWrapper}>
@@ -350,6 +359,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('pan_no')}
         onBlur={() => handleBlur('pan_no')}
         error={touched.pan_no && errors.pan_no}
+        marginBottom={5}
       />
       <ReusableInput
         label="GST No"
@@ -357,6 +367,7 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('gst_no')}
         onBlur={() => handleBlur('gst_no')}
         error={touched.gst_no && errors.gst_no}
+        marginBottom={5}
       />
       <ReusableInput
         label="PIN Code"
@@ -365,6 +376,7 @@ const AddStoreForm: React.FC<Props> = ({
         onBlur={() => handleBlur('pin_code')}
         error={touched.pin_code && errors.pin_code}
         keyboardType="numeric"
+        marginBottom={5}
       />
       <ReusableInput
         label="Address"
@@ -372,10 +384,11 @@ const AddStoreForm: React.FC<Props> = ({
         onChangeText={handleChange('address')}
         onBlur={() => handleBlur('address')}
         error={touched.address && errors.address}
+        marginBottom={5}
       />
     </Animated.ScrollView>
   );
-};
+});
 
 export default AddStoreForm;
 

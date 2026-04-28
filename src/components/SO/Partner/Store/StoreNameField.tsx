@@ -19,6 +19,7 @@ interface StoreNameFieldProps {
     onChangeText: (text: string) => void;
     onBlur: () => void;
     setFieldValue: (field: string, value: any) => void;
+    marginBottom?: number;
 }
 
 const StoreNameField: React.FC<StoreNameFieldProps> = ({
@@ -34,6 +35,7 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
     onChangeText,
     onBlur,
     setFieldValue,
+    marginBottom,
 }) => {
     const [mode, setMode] = useState<'suggest' | 'manual'>('suggest');
     const [showDropdown, setShowDropdown] = useState(false);
@@ -86,6 +88,7 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
                 onBlur={onBlur}
                 error={nameError}
                 disabled={!hasLocation}
+                marginBottom={marginBottom}
             />
         );
     }
@@ -213,18 +216,8 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
                             error={inputEnabled ? nameError : undefined} disabled={!hasLocation}       // ← try this
                             // disabled={!inputEnabled}       // ← or this, whichever your component uses
                             placeholder={inputEnabled ? 'Enter store name' : 'Tap to enter store name'}
+                            marginBottom={marginBottom}
                         />
-
-                        {/* Transparent overlay blocks ALL touches when disabled */}
-                        {!inputEnabled && (
-                            <TouchableOpacity
-                                style={sfStyles.disabledOverlay}
-                                activeOpacity={0.7}
-                                onPress={() => setInputEnabled(true)}
-                            >
-                                <Text style={sfStyles.disabledHintText}>Tap to type a new name</Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
                 </View>
             )}
@@ -341,7 +334,7 @@ const sfStyles = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 12,
         paddingVertical: 8,
-        // marginBottom: 10,
+        marginBottom: -25,
     },
     noStoresText: {
         fontSize: 12,
