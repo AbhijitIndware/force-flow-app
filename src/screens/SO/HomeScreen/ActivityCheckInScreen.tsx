@@ -11,14 +11,15 @@ import {
     Platform,
     Image,
     Alert,
+    Modal,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { 
-    useGetActivityLocationsQuery, 
-    useActivityCheckInMutation 
+import {
+    useGetActivityLocationsQuery,
+    useActivityCheckInMutation
 } from '../../../features/base/base-api';
 import { getCurrentLocation, requestLocationPermission } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
@@ -34,14 +35,31 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
     const [selectedLocation, setSelectedLocation] = useState('');
     const [image, setImage] = useState<{ mime: string; data: string } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [currentLocation, setCurrentLocation] = useState('');
 
     const { data: locationsData, isLoading: isLocationsLoading } = useGetActivityLocationsQuery();
     const [checkIn] = useActivityCheckInMutation();
 
     const locations = locationsData?.message?.data?.map(loc => ({
         label: loc.location_name,
-        value: loc.location_name, // Using name as ID per API requirement
+        value: loc.location_name,
     })) || [];
+
+    const fetchLatestLocation = async () => {
+        try {
+            const hasPermission = await requestLocationPermission();
+            if (!hasPermission) return;
+            const loc = await getCurrentLocation();
+            setCurrentLocation(loc);
+        } catch (error) {
+            console.log('Location fetch error:', error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchLatestLocation();
+    }, []);
 
     const handleTakeSelfie = async () => {
         launchCamera(
@@ -71,7 +89,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
         );
     };
 
-    const handleCheckIn = async () => {
+    const handleConfirmCheckIn = async () => {
         if (!selectedLocation) {
             Toast.show({ type: 'error', text1: 'Please select a location' });
             return;
@@ -80,16 +98,17 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
             Toast.show({ type: 'error', text1: 'Please take a selfie' });
             return;
         }
+        setConfirmModalVisible(true);
+    };
 
+    const handleFinalSubmit = async () => {
         try {
             setIsSubmitting(true);
-            const hasPermission = await requestLocationPermission();
-            if (!hasPermission) {
-                Toast.show({ type: 'error', text1: 'Location permission required' });
-                return;
-            }
 
+            // 🔥 Force fresh location
             const locationStr = await getCurrentLocation();
+            setCurrentLocation(locationStr);
+
             if (!locationStr) {
                 Toast.show({ type: 'error', text1: 'Unable to fetch location' });
                 return;
@@ -98,29 +117,31 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
             const res = await checkIn({
                 activity_location: selectedLocation,
                 current_location: locationStr,
-                image: image,
+                image: image as { mime: string; data: string },
             }).unwrap();
 
             if (res.message.success) {
                 Toast.show({ type: 'success', text1: 'Checked in successfully' });
+                setConfirmModalVisible(false);
                 navigation.goBack();
             } else {
                 Alert.alert('Check-In Failed', res.message.message);
             }
         } catch (error: any) {
-            Toast.show({ 
-                type: 'error', 
-                text1: error?.data?.message || 'Failed to check in' 
+            Toast.show({
+                type: 'error',
+                text1: error?.data?.message || 'Failed to check in'
             });
         } finally {
             setIsSubmitting(false);
+            setConfirmModalVisible(false);
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <PageHeader title="Activity Check-In" navigation={() => navigation.goBack()} />
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
@@ -143,12 +164,12 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>Required Selfie</Text>
                             <Text style={styles.sectionSubtitle}>Please take a photo at the location</Text>
-                            
+
                             <TouchableOpacity style={styles.cameraBtn} onPress={handleTakeSelfie}>
                                 {image ? (
-                                    <Image 
-                                        source={{ uri: `data:${image.mime};base64,${image.data}` }} 
-                                        style={styles.previewImage} 
+                                    <Image
+                                        source={{ uri: `data:${image.mime};base64,${image.data}` }}
+                                        style={styles.previewImage}
                                     />
                                 ) : (
                                     <View style={styles.cameraPlaceholder}>
@@ -161,10 +182,57 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                     </View>
                 </ScrollView>
 
+                <Modal
+                    visible={confirmModalVisible}
+                    transparent
+                    animationType="fade">
+                    <View style={modalStyles.overlay}>
+                        <View style={modalStyles.container}>
+                            <Text style={modalStyles.title}>Confirm Activity</Text>
+                            <Text style={modalStyles.subtitle}>
+                                Please verify your activity location
+                            </Text>
+
+                            <View style={modalStyles.divider} />
+
+                            <View style={modalStyles.row}>
+                                <Text style={modalStyles.label}>Activity Location</Text>
+                                <Text style={modalStyles.value}>{selectedLocation}</Text>
+                            </View>
+
+                            <View style={modalStyles.row}>
+                                <Text style={modalStyles.label}>Current Location</Text>
+                                <Text style={modalStyles.locationText}>{currentLocation || 'Fetching...'}</Text>
+                            </View>
+
+                            <View style={modalStyles.divider} />
+
+                            <View style={modalStyles.actions}>
+                                <TouchableOpacity
+                                    style={modalStyles.cancelBtn}
+                                    onPress={() => setConfirmModalVisible(false)}>
+                                    <Text style={modalStyles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={modalStyles.confirmBtn}
+                                    onPress={handleFinalSubmit}
+                                    disabled={isSubmitting}>
+                                    {isSubmitting ? (
+                                        <ActivityIndicator color={Colors.white} />
+                                    ) : (
+                                        <Text style={modalStyles.confirmText}>Check-In Now</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+
                 <View style={styles.footer}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[styles.submitBtn, (isSubmitting || isLocationsLoading) && { opacity: 0.7 }]}
-                        onPress={handleCheckIn}
+                        onPress={handleConfirmCheckIn}
                         disabled={isSubmitting || isLocationsLoading}
                     >
                         {isSubmitting ? (
@@ -258,5 +326,87 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.semiBold,
         fontSize: Size.sm,
         color: Colors.white,
+    },
+});
+
+const modalStyles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    container: {
+        width: '88%',
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 20,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.2,
+        shadowRadius: 12,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#111827',
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 13,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#E5E7EB',
+        marginVertical: 14,
+    },
+    row: {
+        marginBottom: 12,
+    },
+    label: {
+        fontSize: 12,
+        color: '#6B7280',
+        marginBottom: 4,
+    },
+    value: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#111827',
+    },
+    locationText: {
+        fontSize: 12,
+        color: '#374151',
+    },
+    actions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
+    },
+    cancelBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: '#F3F4F6',
+        marginRight: 10,
+        alignItems: 'center',
+    },
+    cancelText: {
+        color: '#374151',
+        fontWeight: '600',
+    },
+    confirmBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: '#16A34A',
+        alignItems: 'center',
+    },
+    confirmText: {
+        color: Colors.white,
+        fontWeight: '700',
     },
 });

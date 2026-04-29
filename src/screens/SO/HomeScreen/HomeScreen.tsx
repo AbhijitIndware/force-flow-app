@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { flexCol } from '../../../utils/styles';
+import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
@@ -43,6 +43,7 @@ import {
   Filter,
   Eye,
   Boxes,
+  MapPin,
 } from 'lucide-react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
@@ -318,9 +319,9 @@ const HomeScreen = ({ navigation }: Props) => {
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
   } = useGetLocationTrackerQuery(undefined, { refetchOnMountOrArgChange: true });
-  const { 
-    data: activityStatusData, 
-    refetch: refetchActivityStatus 
+  const {
+    data: activityStatusData,
+    refetch: refetchActivityStatus
   } = useGetActivityCheckInStatusQuery(undefined, { refetchOnMountOrArgChange: true });
 
   const [activityCheckOut, { isLoading: isActivityCheckingOut }] = useActivityCheckOutMutation();
@@ -609,15 +610,16 @@ const HomeScreen = ({ navigation }: Props) => {
         log_id: logId,
         current_location: location,
       }).unwrap();
+      console.log("🚀 ~ handleActivityCheckOut ~ res:", res)
 
       if (res.message.success) {
         Toast.show({ type: 'success', text1: 'Activity Checked Out' });
         refetchActivityStatus();
       }
     } catch (error: any) {
-      Toast.show({ 
-        type: 'error', 
-        text1: error?.data?.message || 'Failed to check out' 
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message || 'Failed to check out'
       });
     }
   };
@@ -794,59 +796,6 @@ const HomeScreen = ({ navigation }: Props) => {
                     )}
                   </>
                 )}
-
-                <Divider width={1} color="rgba(255,255,255,0.2)" style={{ marginVertical: 12 }} />
-
-                <View style={{ gap: 8 }}>
-                    <Text style={{ 
-                        fontFamily: Fonts.medium, 
-                        fontSize: 12, 
-                        color: 'rgba(255,255,255,0.8)' 
-                    }}>
-                        ACTIVITY CHECK-IN (NON-PJP)
-                    </Text>
-                    
-                    {activityStatusData?.message?.is_checked_in ? (
-                        <View style={{ gap: 8 }}>
-                            <View style={{ 
-                                backgroundColor: 'rgba(255,255,255,0.15)', 
-                                padding: 8, 
-                                borderRadius: 8,
-                                borderLeftWidth: 3,
-                                borderLeftColor: '#4ADE80'
-                            }}>
-                                <Text style={{ color: Colors.white, fontSize: 13, fontFamily: Fonts.semiBold }}>
-                                    Active: {activityStatusData.message.activity_location}
-                                </Text>
-                                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontFamily: Fonts.regular }}>
-                                    Started: {moment(activityStatusData.message.check_in_time, "HH:mm:ss").format("hh:mm A")}
-                                </Text>
-                            </View>
-                            <TouchableOpacity
-                                style={[styles.checkinButton, { backgroundColor: '#F87171' }]} // Soft Red for Checkout
-                                onPress={handleActivityCheckOut}
-                                disabled={isActivityCheckingOut}
-                            >
-                                <Text style={styles.checkinButtonText}>
-                                    {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
-                                </Text>
-                                {isActivityCheckingOut ? (
-                                    <ActivityIndicator size="small" color={Colors.white} />
-                                ) : (
-                                    <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    ) : (
-                        <TouchableOpacity
-                            style={[styles.checkinButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
-                            onPress={() => navigation.navigate('ActivityCheckInScreen')}
-                        >
-                            <Text style={styles.checkinButtonText}>Activity Check-In</Text>
-                            <Ionicons name="location-outline" size={20} color={Colors.white} />
-                        </TouchableOpacity>
-                    )}
-                </View>
               </View>
               <View style={styles.planLink}>
                 <TouchableOpacity
@@ -869,7 +818,6 @@ const HomeScreen = ({ navigation }: Props) => {
               </View>
             </View>
           </View>
-
 
           <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
@@ -1524,109 +1472,73 @@ const HomeScreen = ({ navigation }: Props) => {
           </View> */}
 
 
-          <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
-            <Text
-              style={[
-                styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
-              ]}>
-              Claims
+          <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text style={[styles.SectionHeading, { marginBottom: 10, paddingHorizontal: 20 }]}>
+              Activity Check-In
             </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('ExpenseScreen')}
-              style={styles.IconlinkBox}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
-                    borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <BanknoteArrowDown
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={20}
-                />
-              </View>
-              <Text style={styles.linkTitle}>Expense Claim</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            />
-            <TouchableOpacity
-              onPress={() => navigation.navigate('VisibilityScreen')}
-              style={styles.IconlinkBox}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
-                    borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <Eye strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Visibility Claim</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-          </View>
 
-          <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
-            <Text
-              style={[
-                styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
-              ]}>
-              Stock
-            </Text>
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('StockManagementScreen')
-              }
-              style={styles.IconlinkBox}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
+            <View style={{ paddingHorizontal: 20 }}>
+              {activityStatusData?.message?.is_checked_in ? (
+                <View style={{ gap: 10 }}>
+                  <View style={{
+                    backgroundColor: '#F8FAFC',
+                    padding: 12,
                     borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <Boxes strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Stock Management</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
+                    borderLeftWidth: 4,
+                    borderLeftColor: '#4ADE80',
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                  }}>
+                    <View style={[flexRow, itemsCenter, { gap: 8 }]}>
+                      <Ionicons name="location-sharp" size={16} color={Colors.orange} />
+                      <Text style={{
+                        color: Colors.darkButton,
+                        fontSize: 15,
+                        fontFamily: Fonts.semiBold
+                      }}>
+                        {activityStatusData.message.activity_location}
+                      </Text>
+                    </View>
+
+                    <View style={[flexRow, itemsCenter, { marginTop: 6, gap: 6 }]}>
+                      <Clock size={14} color={Colors.gray} />
+                      <Text style={{
+                        color: Colors.gray,
+                        fontSize: 12,
+                        fontFamily: Fonts.regular
+                      }}>
+                        Check-in at: {moment(activityStatusData.message.check_in_time, "HH:mm:ss").format("hh:mm A")}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.checkinButton, { backgroundColor: '#F87171', marginTop: 5 }]}
+                    onPress={handleActivityCheckOut}
+                    disabled={isActivityCheckingOut}
+                  >
+                    <Text style={styles.checkinButtonText}>
+                      {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
+                    </Text>
+                    {isActivityCheckingOut ? (
+                      <ActivityIndicator size="small" color={Colors.white} />
+                    ) : (
+                      <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.checkinButton, { backgroundColor: Colors.darkButton, marginTop: 5 }]}
+                  onPress={() => navigation.navigate('ActivityCheckInScreen')}
+                >
+                  <View style={[flexRow, itemsCenter]}>
+                    <Text style={styles.checkinButtonText}>Activity Check-In</Text>
+                    <Ionicons name="chevron-forward-circle-sharp" size={20} color={Colors.white} style={{ marginLeft: 8 }} />
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           <View
@@ -1750,6 +1662,149 @@ const HomeScreen = ({ navigation }: Props) => {
               </View>
             </TouchableOpacity>
           </View>
+
+          <View
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.SectionHeading,
+                { marginBottom: 10, paddingHorizontal: 20 },
+              ]}>
+              Claims
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ExpenseScreen')}
+              style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <BanknoteArrowDown
+                  strokeWidth={2}
+                  color={Colors.white}
+                  size={20}
+                />
+              </View>
+              <Text style={styles.linkTitle}>Expense Claim</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+            />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('VisibilityScreen')}
+              style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <Eye strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Visibility Claim</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.SectionHeading,
+                { marginBottom: 10, paddingHorizontal: 20 },
+              ]}>
+              Stock
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('StockManagementScreen')
+              }
+              style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <Boxes strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Stock Management</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.SectionHeading,
+                { marginBottom: 10, paddingHorizontal: 20 },
+              ]}>
+              Activity
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('ActivityLocationScreen')
+              }
+              style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <MapPin strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Activity Location</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
         </ScrollView>
       )}
     </SafeAreaView>

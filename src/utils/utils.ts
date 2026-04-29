@@ -42,6 +42,13 @@ export async function requestLocationPermission(): Promise<boolean> {
 
 const getPositionWithRetry = async (
   retries = 1,
+  options: Geolocation.GeoOptions = {
+    enableHighAccuracy: true,
+    timeout: 20000,
+    maximumAge: 0, // 🔥 Force fresh fetch
+    forceRequestLocation: true,
+    showLocationDialog: true,
+  },
 ): Promise<{ latitude: number; longitude: number }> => {
   try {
     return await new Promise((resolve, reject) => {
@@ -51,13 +58,7 @@ const getPositionWithRetry = async (
           resolve({ latitude, longitude });
         },
         error => reject(error),
-        {
-          enableHighAccuracy: true,
-          timeout: 20000, // ⏱️ increased
-          maximumAge: 10000,
-          forceRequestLocation: true,
-          showLocationDialog: true,
-        },
+        options,
       );
     });
   } catch (error: any) {

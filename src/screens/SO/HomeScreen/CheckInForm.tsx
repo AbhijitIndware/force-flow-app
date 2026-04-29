@@ -171,11 +171,6 @@ const CheckInForm = ({ navigation }: Props) => {
   }));
 
   const ensureCurrentLocation = async (): Promise<string | null> => {
-    if (values?.current_location) {
-      setFieldValue('current_location', values.current_location);
-      return values.current_location;
-    }
-
     try {
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
@@ -289,6 +284,12 @@ const CheckInForm = ({ navigation }: Props) => {
       });
     }
   }, [user?.email, pjpInitializedData?.message?.data?.date]);
+
+  useEffect(() => {
+    if (selectedStore) {
+      setFieldValue('store', selectedStore)
+    }
+  }, [selectedStore])
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>

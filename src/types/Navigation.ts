@@ -74,6 +74,7 @@ export type SoAppStackParamList = {
   StockManagementScreen: undefined;
   StockManagementFormScreen: { store: string; storeName: string };
   AddActivityLocationScreen: undefined;
+  ActivityLocationScreen: undefined;
   ActivityCheckInScreen: undefined;
 };
 

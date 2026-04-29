@@ -115,7 +115,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 style={styles.input}
                 placeholder="e.g. Regional Office, City Event"
                 value={locationName}
-                placeholderTextColor={'#000'}
+                placeholderTextColor={Colors.gray}
                 onChangeText={setLocationName}
               />
             </View>
@@ -163,7 +163,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Enter address details"
-                placeholderTextColor={'#000'}
+                placeholderTextColor={Colors.gray}
                 value={address}
                 onChangeText={setAddress}
                 multiline
@@ -184,7 +184,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
             ) : (
               <>
                 <Save size={20} color={Colors.white} style={{ marginRight: 8 }} />
-                <Text style={styles.submitText}>Save Location</Text>
+                <Text style={styles.submitText}>Add Location</Text>
               </>
             )}
           </TouchableOpacity>
