@@ -60,6 +60,18 @@ import {
   RDistributorDeliveryNoteList,
   DeliveryNoteResponse,
   RLastPjpStores,
+  RGetStockItems,
+  RCreateStockBalance,
+  ICreateStockBalance,
+  RGetStoreStockStatus,
+  RGetActivityLocations,
+  RCreateActivityLocation,
+  ICreateActivityLocation,
+  RActivityCheckIn,
+  IActivityCheckIn,
+  RActivityCheckOut,
+  IActivityCheckOut,
+  RGetActivityCheckInStatus,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1316,8 +1328,95 @@ export const baseApi = createApi({
       }),
       providesTags: ['SO'],
     }),
+    // ─── STOCK MANAGEMENT APIs ────────────────────────────────────────────────
+
+    // Stock A — Get Items with Current Stock
+    // Call this first to show the item list before employee enters physical count.
+    getStockItems: builder.query<RGetStockItems, { store: string }>({
+      query: ({ store }) => ({
+        url: '/api/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.get_items',
+        method: 'GET',
+        params: { store },
+      }),
+    }),
+
+    // Stock B — Submit Physical Stock Count
+    // ⚠ items must be sent as a JSON string (use JSON.stringify on the items array before passing).
+    // On success returns { message: true }.
+    // If an item was already submitted today, returns a warning but remaining items still process.
+    createStockBalance: builder.mutation<RCreateStockBalance, ICreateStockBalance>({
+      query: body => ({
+        url: '/api/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.create_stock_balance',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // Stock C — Get Stock Dashboard
+    // Only items with activity or stock are returned (zero-zero items filtered out).
+    // Mobile flow: getStockItems → employee counts → createStockBalance → getStoreStockStatus
+    getStoreStockStatus: builder.query<RGetStoreStockStatus, { store: string }>({
+      query: ({ store }) => ({
+        url: '/api/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.get_store_stock_status',
+        method: 'GET',
+        params: { store },
+      }),
+    }),
+
+    // ─── NON-PJP ACTIVITY ATTENDANCE APIs ────────────────────────────────────
+
+    // Activity A — Get Activity Locations
+    // Fetches all permanently saved Office/Event locations for the mobile dropdown.
+    getActivityLocations: builder.query<RGetActivityLocations, void>({
+      query: () => ({
+        url: '/api/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.get_activity_locations',
+        method: 'GET',
+      }),
+    }),
+
+    // Activity B — Create Activity Location
+    // Creates a new permanent location in the master database.
+    createActivityLocation: builder.mutation<RCreateActivityLocation, ICreateActivityLocation>({
+      query: body => ({
+        url: '/api/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.create_activity_location',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // Activity C — Check-In (Activity)
+    // Validates geofence, uploads selfie, logs check-in, creates "Present" Attendance in HRMS.
+    // Auto-checkout at 11:50 PM if employee forgets to check out.
+    activityCheckIn: builder.mutation<RActivityCheckIn, IActivityCheckIn>({
+      query: body => ({
+        url: '/api/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.mobile_activity_checkin',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // Activity D — Check-Out (Activity)
+    activityCheckOut: builder.mutation<RActivityCheckOut, IActivityCheckOut>({
+      query: body => ({
+        url: '/api/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.mobile_activity_checkout',
+        method: 'POST',
+        body,
+      }),
+    }),
+    // Activity E — Get Activity Check-In Status
+    // Returns current check-in state for the employee (checked in or not).
+    getActivityCheckInStatus: builder.query<RGetActivityCheckInStatus, void>({
+      query: () => ({
+        url: '/api/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.get_activity_checkin_status',
+        method: 'GET',
+      }),
+    }),
   }),
 });
+
+
+
+
 export const {
   //Daily PJP Activity Check-in ---
   usePjpInitializeMutation,
@@ -1414,6 +1513,18 @@ export const {
   //Distributor Delivery Note
   useGetDeliveryNotesListQuery,
   useGetDeliveryNoteByIdQuery,
+
+  // Stock Management
+  useGetStockItemsQuery,
+  useCreateStockBalanceMutation,
+  useGetStoreStockStatusQuery,
+  // Activity Attendance
+  useGetActivityLocationsQuery,
+  useCreateActivityLocationMutation,
+  useActivityCheckInMutation,
+  useActivityCheckOutMutation,
+  useGetActivityCheckInStatusQuery,
+
 } = baseApi;
 
 interface PjpState {

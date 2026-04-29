@@ -2023,3 +2023,146 @@ export type DDNTotals = {
   total: number;
   grand_total: number;
 };
+
+
+
+// ─── STOCK MANAGEMENT TYPES ──────────────────────────────────────────────────
+
+export interface StockItem {
+  name: string;
+  item_name: string;
+  available_qty: number;
+}
+
+export interface RGetStockItems {
+  message: StockItem[];
+}
+
+export interface ICreateStockBalance {
+  store: string;
+  /** Must be JSON.stringify'd array of { item_code, quantity, batch } */
+  items: string;
+}
+
+export interface RCreateStockBalance {
+  message: boolean;
+}
+
+export interface StockDashboardItem {
+  item_code: string;
+  item_name: string;
+  /** ERP warehouse stock at start of month (from first DWSB entry) */
+  opening_stock: number;
+  /** Live ERP stock from Bin right now (updated after each reconciliation) */
+  current_stock: number;
+  /** Units consumed from ERP this month (opening - current). 0 if no monthly baseline yet */
+  mtd_territory: number;
+  /** What employee physically counted today. null if not yet counted */
+  physical_count: number | null;
+  /** Gap between shelf and ERP (physical - current). Positive = extra on shelf, Negative = missing. null if not yet counted */
+  stock_difference: number | null;
+}
+
+export interface RGetStoreStockStatus {
+  message: {
+    status: string;
+    /** Present only when no warehouse is configured for the store */
+    warning?: string;
+    data: StockDashboardItem[];
+  };
+}
+
+// ─── NON-PJP ACTIVITY ATTENDANCE TYPES ───────────────────────────────────────
+
+export interface ActivityLocation {
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+export interface RGetActivityLocations {
+  message: {
+    success: boolean;
+    data: ActivityLocation[];
+  };
+}
+
+export interface ICreateActivityLocation {
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+export interface RCreateActivityLocation {
+  message: {
+    success: boolean;
+    message: string;
+    data: {
+      name: string;
+      owner: string;
+      creation: string;
+      modified: string;
+      modified_by: string;
+      docstatus: number;
+      idx: number;
+      location_name: string;
+      latitude: number;
+      longitude: number;
+      address: string;
+      doctype: string;
+    };
+  };
+}
+
+export interface IActivityCheckIn {
+  activity_location: string;
+  /** Comma-separated "lat,lng" string e.g. "28.7041,77.1025" */
+  current_location: string;
+  image: {
+    mime: string;
+    /** Base64-encoded image data */
+    data: string;
+  };
+}
+
+export interface RActivityCheckIn {
+  message: {
+    success: boolean;
+    message: string;
+    /** Present on success, absent on geofence failure */
+    data?: {
+      log_id: string;
+      activity_location: string;
+      employee: string;
+      image_url: string;
+      check_in_time: string;
+    };
+  };
+}
+
+export interface IActivityCheckOut {
+  /** log_id returned from activityCheckIn */
+  log_id: string;
+  /** Comma-separated "lat,lng" string */
+  current_location: string;
+}
+
+export interface RActivityCheckOut {
+  message: {
+    success: boolean;
+    message: string;
+  };
+}
+export interface RGetActivityCheckInStatus {
+  message: {
+    success: boolean;
+    is_checked_in: boolean;
+    log_id: string | null;
+    activity_location: string | null;
+    check_in_time: string | null;
+    image_url: string | null;
+  };
+}
+
