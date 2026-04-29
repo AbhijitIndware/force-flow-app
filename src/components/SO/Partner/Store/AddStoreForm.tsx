@@ -1,6 +1,6 @@
 // AddDistributorForm.tsx
 import React, { useEffect, useRef, useState, memo } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import { Colors } from '../../../../utils/colors';
@@ -241,61 +241,88 @@ const AddStoreForm: React.FC<Props> = memo(({
             : undefined)
         }
       /> */}
-      <ReusableDropdown
-        label="Store Type"
-        field="store_type"
-        value={values.store_type}
-        data={storeTypeList}
-        error={touched.store_type && errors.store_type}
-        onChange={(val: string) => {
-          onSelect('store_type', val);
-          onSelect('store_category', '');
-        }}
-        onLoadMore={onLoadMoreType}
-        loadingMore={loadingMoreType}
-        searchText={typeSearchText}
-        setSearchText={setTypeSearchText}
-        marginBottom={5}
-      />
-      <ReusableDropdown
-        label="Store Category"
-        field="store_category"
-        value={values.store_category}
-        data={storeCategoryList}
-        error={touched.store_category && errors.store_category}
-        onChange={(val: string) => onSelect('store_category', val)}
-        onLoadMore={onLoadMoreCategory}
-        loadingMore={loadingMoreCategory}
-        searchText={categorySearchText}
-        setSearchText={setCategorySearchText}
-        marginBottom={5}
-      />
-      <ReusableInput
-        label="Zone"
-        value={values.zone}
-        disabled={true}
-        onChangeText={handleChange('zone')}
-        onBlur={() => handleBlur('zone')}
-        error={touched.zone && errors.zone}
-        marginBottom={12}
-      />
-      <ReusableInput
-        label="State"
-        value={values.state}
-        disabled={true}
-        onChangeText={handleChange('state')}
-        onBlur={() => handleBlur('state')}
-        error={touched.state && errors.state}
-        marginBottom={5}
-      />
-      <ReusableInput
-        label="City"
-        value={values.city}
-        onChangeText={handleChange('city')}
-        onBlur={() => handleBlur('city')}
-        error={touched.city && errors.city}
-        marginBottom={5}
-      />
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <ReusableDropdown
+            label="Store Type"
+            field="store_type"
+            value={values.store_type}
+            data={storeTypeList}
+            error={touched.store_type && errors.store_type}
+            onChange={(val: string) => {
+              onSelect('store_type', val);
+              onSelect('store_category', '');
+            }}
+            onLoadMore={onLoadMoreType}
+            loadingMore={loadingMoreType}
+            searchText={typeSearchText}
+            setSearchText={setTypeSearchText}
+            marginBottom={0}
+          />
+        </View>
+        <View style={styles.flex1}>
+          <ReusableDropdown
+            label="Store Category"
+            field="store_category"
+            value={values.store_category}
+            data={storeCategoryList}
+            error={touched.store_category && errors.store_category}
+            onChange={(val: string) => onSelect('store_category', val)}
+            onLoadMore={onLoadMoreCategory}
+            loadingMore={loadingMoreCategory}
+            searchText={categorySearchText}
+            setSearchText={setCategorySearchText}
+            marginBottom={0}
+          />
+        </View>
+      </View>
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="Zone"
+            value={values.zone}
+            disabled={true}
+            onChangeText={handleChange('zone')}
+            onBlur={() => handleBlur('zone')}
+            error={touched.zone && errors.zone}
+            marginBottom={0}
+          />
+        </View>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="State"
+            value={values.state}
+            disabled={true}
+            onChangeText={handleChange('state')}
+            onBlur={() => handleBlur('state')}
+            error={touched.state && errors.state}
+            marginBottom={0}
+          />
+        </View>
+      </View>
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="City"
+            value={values.city}
+            onChangeText={handleChange('city')}
+            onBlur={() => handleBlur('city')}
+            error={touched.city && errors.city}
+            marginBottom={0}
+          />
+        </View>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="PIN Code"
+            value={values.pin_code}
+            onChangeText={handleChange('pin_code')}
+            onBlur={() => handleBlur('pin_code')}
+            error={touched.pin_code && errors.pin_code}
+            keyboardType="numeric"
+            marginBottom={0}
+          />
+        </View>
+      </View>
 
 
       {/* <ReusableDropdown
@@ -353,31 +380,28 @@ const AddStoreForm: React.FC<Props> = memo(({
           </Text>
         </TouchableOpacity>
       </View> */}
-      <ReusableInput
-        label="PAN No"
-        value={values.pan_no}
-        onChangeText={handleChange('pan_no')}
-        onBlur={() => handleBlur('pan_no')}
-        error={touched.pan_no && errors.pan_no}
-        marginBottom={5}
-      />
-      <ReusableInput
-        label="GST No"
-        value={values.gst_no}
-        onChangeText={handleChange('gst_no')}
-        onBlur={() => handleBlur('gst_no')}
-        error={touched.gst_no && errors.gst_no}
-        marginBottom={5}
-      />
-      <ReusableInput
-        label="PIN Code"
-        value={values.pin_code}
-        onChangeText={handleChange('pin_code')}
-        onBlur={() => handleBlur('pin_code')}
-        error={touched.pin_code && errors.pin_code}
-        keyboardType="numeric"
-        marginBottom={5}
-      />
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="PAN No"
+            value={values.pan_no}
+            onChangeText={handleChange('pan_no')}
+            onBlur={() => handleBlur('pan_no')}
+            error={touched.pan_no && errors.pan_no}
+            marginBottom={0}
+          />
+        </View>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="GST No"
+            value={values.gst_no}
+            onChangeText={handleChange('gst_no')}
+            onBlur={() => handleBlur('gst_no')}
+            error={touched.gst_no && errors.gst_no}
+            marginBottom={0}
+          />
+        </View>
+      </View>
       <ReusableInput
         label="Address"
         value={values.address}
@@ -395,6 +419,14 @@ export default AddStoreForm;
 const styles = StyleSheet.create({
   inputWrapper: {
     marginBottom: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  flex1: {
+    flex: 1,
   },
   label: {
     fontSize: Size.xs,

@@ -7,6 +7,9 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import { useGetItemsQuery } from '../../../../features/dropdown/dropdown-api';
+import { Colors } from '../../../../utils/colors';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 
 interface Props {
   index: number;
@@ -138,36 +141,50 @@ const SaleItemField: React.FC<Props> = ({
         loadingMore={loadingMore}
       />
 
-      <ReusableInput
-        label="Quantity"
-        value={item.qty ? String(item.qty) : ''}
-        keyboardType="numeric"
-        onChangeText={text =>
-          setFieldValue(
-            `items[${index}].qty`,
-            Number(text.replace(/[^0-9]/g, '')),
-          )
-        }
-        onBlur={() => handleBlur(`items[${index}].qty`)}
-        error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
-      />
 
-      <ReusableInput
-        label="Rate"
-        value={item.rate ? String(item.rate) : ''}
-        keyboardType="numeric"
-        onChangeText={text =>
-          setFieldValue(
-            `items[${index}].rate`,
-            Number(text.replace(/[^0-9]/g, '')),
-          )
-        }
-        onBlur={() => handleBlur(`items[${index}].rate`)}
-        error={touched.items?.[index]?.rate && errors.items?.[index]?.rate}
-      />
 
-      <View style={styles.amountBox}>
-        <Text>{item.qty > 0 ? item.qty * item.rate : 'Total Amount'}</Text>
+      <View style={styles.row}>
+
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="Qty"
+            value={item.qty ? String(item.qty) : ''}
+            keyboardType="numeric"
+            onChangeText={text =>
+              setFieldValue(
+                `items[${index}].qty`,
+                Number(text.replace(/[^0-9]/g, '')),
+              )
+            }
+            onBlur={() => handleBlur(`items[${index}].qty`)}
+            error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
+          />
+        </  View>
+        <View style={styles.flex1}>
+          <ReusableInput
+            label="Rate"
+            value={item.rate ? String(item.rate) : ''}
+            keyboardType="numeric"
+            onChangeText={text =>
+              setFieldValue(
+                `items[${index}].rate`,
+                Number(text.replace(/[^0-9]/g, '')),
+              )
+            }
+            onBlur={() => handleBlur(`items[${index}].rate`)}
+            error={touched.items?.[index]?.rate && errors.items?.[index]?.rate}
+            marginBottom={0}
+          />
+        </View>
+
+        <View style={styles.flex1}>
+          <Text style={styles.label}>Amount</Text>
+          <View style={styles.amountBox}>
+            <Text style={styles.amountText}>
+              {item.qty > 0 ? item.qty * item.rate : '0'}
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* <TouchableOpacity
@@ -199,10 +216,28 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   amountBox: {
-    padding: 10,
     backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    height: 45,
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#ecececff',
+  },
+  amountText: {
+    color: '#000',
+    fontSize: 12,
+  },
+
+  label: { fontSize: Size.xs, marginBottom: 4, color: Colors.black, fontFamily: Fonts.regular },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
     marginTop: 8,
-    borderRadius: 6,
+  },
+  flex1: {
+    flex: 1,
   },
   dateBtn: {
     padding: 10,

@@ -54,7 +54,12 @@ const MapReusableInput: React.FC<DistributorInputProps> = ({
 
   return (
     <View style={[styles.inputWrapper, { marginBottom }]}>
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.labelContainer}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={styles.helper}>
+          Tap icon to fetch location
+        </Text>
+      </View>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -78,9 +83,6 @@ const MapReusableInput: React.FC<DistributorInputProps> = ({
         </TouchableOpacity>
       </View>
       {error && <Text style={styles.error}>{error}</Text>}
-      <Text style={styles.helper}>
-        Tap the location icon to fetch your current location
-      </Text>
     </View>
   );
 };
@@ -89,9 +91,14 @@ const styles = StyleSheet.create({
   inputWrapper: { marginBottom: 16 },
   label: {
     fontSize: Size.xs,
-    marginBottom: 4,
     color: Colors.black,
     fontFamily: Fonts.regular,
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -116,10 +123,9 @@ const styles = StyleSheet.create({
   },
   error: { fontSize: 12, color: Colors.error, marginTop: 4 },
   helper: {
-    fontSize: 14,
-    color: Colors.primary,
-    marginTop: 4,
-    textAlign: 'left',
+    fontSize: 10,
+    color: Colors.error,
+    fontFamily: Fonts.regular,
   },
 });
 

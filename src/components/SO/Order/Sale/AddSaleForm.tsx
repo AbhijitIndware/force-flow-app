@@ -74,37 +74,34 @@ const AddSaleForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={{ padding: 16, paddingHorizontal: 21 }}>
-      {/* Transaction Date */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.label}>Transaction Date</Text>
-        <TouchableOpacity
-          style={styles.timeInput}
-        // onPress={() => onDateSelect('transaction_date')}
-        >
-          <Text style={styles.timeText}>
-            {values.transaction_date
-              ? moment(values.transaction_date).format('YYYY-MM-DD')
-              : 'Select Date'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.row}>
+        <View style={styles.flex1}>
+          <Text style={styles.label}>Transaction Date</Text>
+          <View style={[styles.timeInput, styles.disabledInput]}>
+            <Text style={styles.disabledText}>
+              {values.transaction_date
+                ? moment(values.transaction_date).format('YYYY-MM-DD')
+                : 'Select Date'}
+            </Text>
+          </View>
+        </View>
 
-      {/* Delivery Date */}
-      <View style={styles.inputWrapper}>
-        <Text style={styles.label}>Delivery Date</Text>
-        <TouchableOpacity
-          style={styles.timeInput}
-          onPress={() => onDateSelect('delivery_date')}>
-          <Text style={styles.timeText}>
-            {values.delivery_date
-              ? moment(values.delivery_date).format('YYYY-MM-DD')
-              : 'Select Date'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.flex1}>
+          <Text style={styles.label}>Delivery Date</Text>
+          <TouchableOpacity
+            style={styles.timeInput}
+            onPress={() => onDateSelect('delivery_date')}>
+            <Text style={styles.timeText}>
+              {values.delivery_date
+                ? moment(values.delivery_date).format('YYYY-MM-DD')
+                : 'Select Date'}
+            </Text>
+          </TouchableOpacity>
 
-        {touched.delivery_date && errors.delivery_date && (
-          <Text style={styles.error}>{errors.delivery_date}</Text>
-        )}
+          {touched.delivery_date && errors.delivery_date && (
+            <Text style={styles.error}>{errors.delivery_date}</Text>
+          )}
+        </View>
       </View>
 
       {/* Warehouse */}
@@ -247,7 +244,15 @@ export default AddSaleForm;
 
 const styles = StyleSheet.create({
   inputWrapper: {
-    marginBottom: 16,
+    marginBottom: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  flex1: {
+    flex: 1,
   },
   label: {
     fontSize: Size.xs,
@@ -262,12 +267,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#ecececff',
-    height: 50,
+    height: 45,
   },
   timeText: {
     color: Colors.black,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
+  },
+  disabledInput: {
+    backgroundColor: '#f8f8f8',
+    borderColor: '#e8e8e8',
+  },
+  disabledText: {
+    color: '#999',
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
   },
   itemBlock: {
     padding: 12,

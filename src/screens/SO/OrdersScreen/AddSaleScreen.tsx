@@ -117,7 +117,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
   const [triggerStoreFetch, { data: storeData, error }] =
     useLazyGetDailyStoreQuery();
-  console.log("🚀 ~ AddSaleScreen ~ storeData:", storeData)
   const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
