@@ -113,6 +113,10 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     state => state?.persistedReducer?.authSlice?.user,
   );
 
+  const selectedStore = useAppSelector(
+    state => state?.persistedReducer?.pjpSlice?.selectedStore,
+  );
+
   const [addSalesOrder] = useAddSaleOrderMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
   const [triggerStoreFetch, { data: storeData, error }] =
@@ -221,6 +225,19 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       });
     }
   }, [user?.email, values?.transaction_date]);
+
+
+  useEffect(() => {
+    if (!orderId && selectedStore && storeData?.message?.stores) {
+      const store = storeData.message.stores.find(s => s.store === selectedStore);
+      if (store) {
+        setFieldValue('custom_warehouse', store.warehouse_id);
+      } else {
+        // Fallback if not found in list (e.g. searching/filtering)
+        setFieldValue('custom_warehouse', selectedStore);
+      }
+    }
+  }, [selectedStore, orderId, storeData]);
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>

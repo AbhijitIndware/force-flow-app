@@ -161,7 +161,7 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
                                             <Text style={styles.stockMiniLabel}>Current: <Text style={styles.stockMiniValue}>{stockInfo.current_stock}</Text></Text>
                                         </View>
                                         <View style={styles.stockInfoItem}>
-                                            <Text style={styles.stockMiniLabel}>MTD: <Text style={styles.stockMiniValue}>{stockInfo.mtd_territory}</Text></Text>
+                                            <Text style={styles.stockMiniLabel}>MTD Territory: <Text style={styles.stockMiniValue}>{stockInfo.mtd_territory}</Text></Text>
                                         </View>
                                         <View style={styles.stockInfoItem}>
                                             <Text style={styles.stockMiniLabel}>Last: <Text style={styles.stockMiniValue}>{stockInfo.physical_count ?? '—'}</Text></Text>

@@ -10,6 +10,8 @@ import { useGetItemsQuery } from '../../../../features/dropdown/dropdown-api';
 import { Colors } from '../../../../utils/colors';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
+import { useGetStoreStockStatusQuery } from '../../../../features/base/base-api';
+import { useAppSelector } from '../../../../store/hook';
 
 interface Props {
   index: number;
@@ -37,12 +39,27 @@ const SaleItemField: React.FC<Props> = ({
   const [rawItemList, setRawItemList] = useState<any[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
-
+  const selectedStore = useAppSelector(
+    state => state?.persistedReducer?.pjpSlice?.selectedStore,
+  );
   const { data, isFetching } = useGetItemsQuery({
     page: String(page),
     page_size: '20',
     search,
   });
+
+  // ── Stock status query ──────────────────────────────────────────────────────
+  const { data: stockData } = useGetStoreStockStatusQuery(
+    { store: selectedStore as string },
+    { skip: !selectedStore || !item.item_code }, // only fetch once an item is selected
+  );
+
+  // Find the stock entry matching the selected item
+  const stockInfo = stockData?.message?.data?.find(
+    s => s.item_code === item.item_code,
+  ) ?? null;
+  // ────────────────────────────────────────────────────────────────────────────
+
 
   const transform = (arr: any[] = []) =>
     arr.map(i => ({
@@ -141,6 +158,38 @@ const SaleItemField: React.FC<Props> = ({
         loadingMore={loadingMore}
       />
 
+      {/* ── Stock info strip (read-only) ────────────────────────────────────── */}
+      {stockInfo && (
+        <View style={styles.stockDetailsRow}>
+          <View style={styles.stockInfoItem}>
+            <Text style={styles.stockMiniLabel}>
+              Opening:{' '}
+              <Text style={styles.stockMiniValue}>{stockInfo.opening_stock}</Text>
+            </Text>
+          </View>
+          <View style={styles.stockInfoItem}>
+            <Text style={styles.stockMiniLabel}>
+              Current:{' '}
+              <Text style={styles.stockMiniValue}>{stockInfo.current_stock}</Text>
+            </Text>
+          </View>
+          <View style={styles.stockInfoItem}>
+            <Text style={styles.stockMiniLabel}>
+              MTD Territory:{' '}
+              <Text style={styles.stockMiniValue}>{stockInfo.mtd_territory}</Text>
+            </Text>
+          </View>
+          <View style={styles.stockInfoItem}>
+            <Text style={styles.stockMiniLabel}>
+              Last:{' '}
+              <Text style={styles.stockMiniValue}>
+                {stockInfo.physical_count ?? '—'}
+              </Text>
+            </Text>
+          </View>
+        </View>
+      )}
+      {/* ────────────────────────────────────────────────────────────────────── */}
 
 
       <View style={styles.row}>
@@ -228,7 +277,32 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
   },
-
+  // ── Stock strip ────────────────────────────────────────────────────────────
+  stockDetailsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    backgroundColor: '#f0f7ff',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    gap: 6,
+  },
+  stockInfoItem: {
+    flexBasis: '45%', // 2 columns
+    flexGrow: 1,
+  },
+  stockMiniLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#64748B',
+  },
+  stockMiniValue: {
+    fontFamily: Fonts.semiBold,
+    color: Colors.darkButton,
+    fontSize: Size.xs
+  },
+  // ──────────────
   label: { fontSize: Size.xs, marginBottom: 4, color: Colors.black, fontFamily: Fonts.regular },
   row: {
     flexDirection: 'row',
