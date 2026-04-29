@@ -73,6 +73,8 @@ export type SoAppStackParamList = {
   TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
   StockManagementScreen: undefined;
   StockManagementFormScreen: { store: string; storeName: string };
+  AddActivityLocationScreen: undefined;
+  ActivityCheckInScreen: undefined;
 };
 
 export type menuType = {

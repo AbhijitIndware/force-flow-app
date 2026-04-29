@@ -32,6 +32,7 @@ interface ReusableDropdownProps {
   disabled?: boolean;
   clearTextAfterSearch?: boolean;
   marginBottom?: number;
+  selectedLabel?: string; // 👈 New prop
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -51,14 +52,14 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   onAddPress,
   placeholder,
 
-  onOpen,
   disabled,
   clearTextAfterSearch = true,
   marginBottom = 16,
+  selectedLabel, // 👈 New prop
 }) => {
   return (
     <View style={[styles.inputWrapper, { marginBottom }]}>
-      <Text style={styles.label}>{label}</Text>
+      {label && <Text style={styles.label}>{label}</Text>}
       <DropdownComponent
         selectText={placeholder || label}
         data={data}
@@ -72,9 +73,10 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         showAddButton={showAddButton}
         addButtonText={addButtonText}
         onAddPress={onAddPress}
-        onOpen={onOpen}
+        // onOpen={onOpen}
         disabled={disabled}
         clearTextAfterSearch={clearTextAfterSearch}
+        selectedLabelOverride={selectedLabel} // 👈 Pass it down
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>

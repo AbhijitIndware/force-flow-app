@@ -34,6 +34,7 @@ type Props = {
   name?: string;
   disabled?: boolean;
   clearTextAfterSearch: boolean;
+  selectedLabelOverride?: string; // 👈 New prop
 };
 
 const DropdownComponent = ({
@@ -53,6 +54,7 @@ const DropdownComponent = ({
   name,
   disabled = false,
   clearTextAfterSearch,
+  selectedLabelOverride, // 👈 New prop
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
@@ -69,13 +71,14 @@ const DropdownComponent = ({
     }
   };
 
-  const selectedLabel =
+  const selectedLabel = selectedLabelOverride || (
     selectedId &&
       data.find(item => {
         return item.value === selectedId;
       })
       ? data.find(item => item.value === selectedId)?.label
-      : `Select ${selectText}`;
+      : `Select ${selectText}`
+  );
 
   return (
     <KeyboardAvoidingView

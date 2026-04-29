@@ -1356,11 +1356,13 @@ export const baseApi = createApi({
     // Only items with activity or stock are returned (zero-zero items filtered out).
     // Mobile flow: getStockItems → employee counts → createStockBalance → getStoreStockStatus
     getStoreStockStatus: builder.query<RGetStoreStockStatus, { store: string }>({
-      query: ({ store }) => ({
-        url: '/api/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.get_store_stock_status',
-        method: 'GET',
-        params: { store },
-      }),
+      query: ({ store }) => {
+        return {
+          url: `/api/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_store_stock_status`,
+          method: 'GET',
+          params: { store },
+        };
+      },
     }),
 
     // ─── NON-PJP ACTIVITY ATTENDANCE APIs ────────────────────────────────────

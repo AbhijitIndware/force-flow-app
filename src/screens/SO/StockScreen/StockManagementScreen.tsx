@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     StyleSheet,
     Text,
@@ -33,33 +33,70 @@ type Props = {
 
 const StockManagementScreen = ({ navigation }: Props) => {
     const [selectedStore, setSelectedStore] = useState<string>('');
+    console.log("🚀 ~ StockManagementScreen ~ selectedStore:", selectedStore)
     const [selectedStoreName, setSelectedStoreName] = useState<string>('');
 
-    // Fetch all stores for selection
-    const { data: storeListData, isLoading: isStoresLoading } = useGetStoreListQuery({
+    const [page, setPage] = useState(1);
+    const [searchText, setSearchText] = useState('');
+    const [storesList, setStoresList] = useState<{ label: string; value: string }[]>([]);
+
+    // Fetch stores with pagination and search
+    const { data: storeListData, isFetching: isStoresFetching } = useGetStoreListQuery({
         include_direct_subordinates: '1',
         include_subordinates: '1',
-        page_size: '100',
+        page_size: '20',
+        page: page.toString(),
+        search: searchText,
     });
+    console.log("🚀 ~ StockManagementScreen ~ storeListData:", storeListData)
+
+    useEffect(() => {
+        if (storeListData?.message?.data?.stores) {
+            const newStores = storeListData.message.data.stores.map(s => ({
+                label: s.store_name,
+                value: s.store_name,
+            }));
+            if (page === 1) {
+                setStoresList(newStores);
+            } else {
+                setStoresList(prev => {
+                    // Prevent duplicates
+                    const existingValues = new Set(prev.map(i => i.value));
+                    const uniqueNew = newStores.filter(i => !existingValues.has(i.value));
+                    return [...prev, ...uniqueNew];
+                });
+            }
+        }
+    }, [storeListData, page]);
+
+    const handleLoadMore = useCallback(() => {
+        if (!isStoresFetching && storeListData?.message?.data?.stores?.length === 20) {
+            setPage(prev => prev + 1);
+        }
+    }, [isStoresFetching, storeListData]);
+
+    const handleSearch = useCallback((val: string) => {
+        setSearchText(val);
+        setPage(1); // Reset to first page on search
+        setStoresList([]); // Clear list for new search
+    }, []);
 
     // Fetch stock status for selected store
     const {
         data: stockStatusData,
         isLoading: isStockLoading,
-        isFetching: isStockFetching
+        isFetching: isStockFetching,
+        error
     } = useGetStoreStockStatusQuery(
         { store: selectedStore },
         { skip: !selectedStore }
     );
-
-    const stores = storeListData?.message?.data?.stores?.map(s => ({
-        label: s.store_name,
-        value: s.id || s.name,
-    })) || [];
+    console.log("🚀 ~ StockManagementScreen ~ error:", error)
+    console.log("🚀 ~ StockManagementScreen ~ stockStatusData:", stockStatusData)
 
     const handleStoreSelect = (value: string) => {
         setSelectedStore(value);
-        const store = stores.find(s => s.value === value);
+        const store = storesList.find(s => s.value === value);
         if (store) setSelectedStoreName(store.label);
     };
 
@@ -134,13 +171,19 @@ const StockManagementScreen = ({ navigation }: Props) => {
 
             <View style={styles.filterContainer}>
                 <ReusableDropdown
-                    label="Select Store"
-                    placeholder="Choose a store"
-                    data={stores}
+                    placeholder="Select Store"
+                    data={storesList}
                     value={selectedStore}
                     onChange={handleStoreSelect}
                     error={false}
                     field='label'
+                    label=''
+                    onLoadMore={handleLoadMore}
+                    loadingMore={isStoresFetching}
+                    searchText={searchText}
+                    setSearchText={handleSearch}
+                    selectedLabel={selectedStoreName}
+                    marginBottom={0}
                 />
             </View>
 
@@ -162,7 +205,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
                         data={stockStatusData?.message?.data || []}
                         keyExtractor={(item) => item.item_code}
                         renderItem={renderStockCard}
-                        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+                        contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
                         ListHeaderComponent={
                             <View style={styles.summaryBox}>
                                 <View style={[flexRow, itemsCenter, justifyBetween]}>
@@ -207,28 +250,29 @@ export default StockManagementScreen;
 
 const styles = StyleSheet.create({
     filterContainer: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 15,
         backgroundColor: Colors.white,
-        paddingBottom: 15,
+        paddingBottom: 10,
+        paddingTop: 10,
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray,
     },
     summaryBox: {
         backgroundColor: '#F8F9FB',
-        padding: 15,
-        borderRadius: 12,
-        marginBottom: 20,
+        padding: 12,
+        borderRadius: 10,
+        marginBottom: 15,
         borderWidth: 1,
         borderColor: '#E2E4E9',
     },
     summaryTitle: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.md,
+        fontSize: Size.sm,
         color: Colors.darkButton,
     },
     summarySubtitle: {
         fontFamily: Fonts.regular,
-        fontSize: Size.xs,
+        fontSize: 11,
         color: Colors.gray,
         marginTop: 2,
     },
@@ -240,14 +284,14 @@ const styles = StyleSheet.create({
     },
     statsCount: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.xs,
+        fontSize: 11,
         color: Colors.white,
     },
     card: {
         backgroundColor: Colors.white,
         borderRadius: 16,
-        padding: 16,
-        marginBottom: 16,
+        padding: 12,
+        marginBottom: 12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -264,14 +308,14 @@ const styles = StyleSheet.create({
     },
     itemName: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.sm,
+        fontSize: Size.xs,
         color: Colors.darkButton,
     },
     itemCode: {
         fontFamily: Fonts.regular,
-        fontSize: Size.xs,
+        fontSize: Size.xxs,
         color: Colors.gray,
-        marginTop: 2,
+        marginTop: 1,
     },
     grid: {
         flexDirection: 'row',
@@ -285,13 +329,13 @@ const styles = StyleSheet.create({
     },
     label: {
         fontFamily: Fonts.regular,
-        fontSize: Size.xs,
+        fontSize: 11,
         color: Colors.gray,
-        marginBottom: 4,
+        marginBottom: 2,
     },
     value: {
         fontFamily: Fonts.medium,
-        fontSize: Size.sm,
+        fontSize: Size.xs,
         color: Colors.darkButton,
     },
     bottomStats: {
@@ -308,7 +352,7 @@ const styles = StyleSheet.create({
     },
     bigValue: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.md,
+        fontSize: Size.sm,
     },
     gapBadge: {
         paddingHorizontal: 12,
@@ -327,7 +371,7 @@ const styles = StyleSheet.create({
     },
     gapText: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.xs,
+        fontSize: 11,
     },
     emptyContainer: {
         flex: 1,
@@ -378,7 +422,7 @@ const styles = StyleSheet.create({
     },
     fabText: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.sm,
+        fontSize: Size.xs,
         color: Colors.white,
         marginLeft: 10,
     },

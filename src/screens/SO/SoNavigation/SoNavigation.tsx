@@ -40,6 +40,8 @@ import TeamAttendanceListScreen from '../HomeScreen/TeamAttendanceListScreen';
 import TeamPerformanceListScreen from '../HomeScreen/TeamPerformanceListScreen';
 import StockManagementScreen from '../StockScreen/StockManagementScreen';
 import StockManagementFormScreen from '../StockScreen/StockManagementFormScreen';
+import AddActivityLocationScreen from '../HomeScreen/AddActivityLocationScreen';
+import ActivityCheckInScreen from '../HomeScreen/ActivityCheckInScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -243,6 +245,16 @@ const SoNavigation = () => {
       <Stack.Screen
         name="StockManagementFormScreen"
         component={StockManagementFormScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddActivityLocationScreen"
+        component={AddActivityLocationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ActivityCheckInScreen"
+        component={ActivityCheckInScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

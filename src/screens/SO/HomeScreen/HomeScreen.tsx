@@ -60,6 +60,8 @@ import {
   useGetEmployeeTargetsQuery,
   useSetEmployeeTargetsMutation,
   useGetSoStatsQuery, useGetDdnStatsQuery,
+  useGetActivityCheckInStatusQuery,
+  useActivityCheckOutMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import { ICheckOut, LocationPayload, StoreData } from '../../../types/baseType';
@@ -316,6 +318,12 @@ const HomeScreen = ({ navigation }: Props) => {
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
   } = useGetLocationTrackerQuery(undefined, { refetchOnMountOrArgChange: true });
+  const { 
+    data: activityStatusData, 
+    refetch: refetchActivityStatus 
+  } = useGetActivityCheckInStatusQuery(undefined, { refetchOnMountOrArgChange: true });
+
+  const [activityCheckOut, { isLoading: isActivityCheckingOut }] = useActivityCheckOutMutation();
   const [startPjp] = useStartPjpMutation();
 
   const onRefresh = useCallback(() => {
@@ -331,6 +339,7 @@ const HomeScreen = ({ navigation }: Props) => {
       refetchDdnStats();
       refetchSoAchievement();       // ← add
       refetchEmployeeTargets();
+      refetchActivityStatus();
     }, 2000);
   }, [
     pjpInitialize,
@@ -342,6 +351,7 @@ const HomeScreen = ({ navigation }: Props) => {
     refetchDdnStats,
     refetchSoAchievement,           // ← add
     refetchEmployeeTargets,
+    refetchActivityStatus,
   ]);
 
   const handleCallLocationPermission = async () => {
@@ -584,6 +594,34 @@ const HomeScreen = ({ navigation }: Props) => {
     setTargetModalVisible(true);
   };
 
+  const handleActivityCheckOut = async () => {
+    try {
+      const logId = activityStatusData?.message?.log_id;
+      if (!logId) return;
+
+      const location = await getCurrentLocation();
+      if (!location) {
+        Toast.show({ type: 'error', text1: 'Unable to fetch location' });
+        return;
+      }
+
+      const res = await activityCheckOut({
+        log_id: logId,
+        current_location: location,
+      }).unwrap();
+
+      if (res.message.success) {
+        Toast.show({ type: 'success', text1: 'Activity Checked Out' });
+        refetchActivityStatus();
+      }
+    } catch (error: any) {
+      Toast.show({ 
+        type: 'error', 
+        text1: error?.data?.message || 'Failed to check out' 
+      });
+    }
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -756,6 +794,59 @@ const HomeScreen = ({ navigation }: Props) => {
                     )}
                   </>
                 )}
+
+                <Divider width={1} color="rgba(255,255,255,0.2)" style={{ marginVertical: 12 }} />
+
+                <View style={{ gap: 8 }}>
+                    <Text style={{ 
+                        fontFamily: Fonts.medium, 
+                        fontSize: 12, 
+                        color: 'rgba(255,255,255,0.8)' 
+                    }}>
+                        ACTIVITY CHECK-IN (NON-PJP)
+                    </Text>
+                    
+                    {activityStatusData?.message?.is_checked_in ? (
+                        <View style={{ gap: 8 }}>
+                            <View style={{ 
+                                backgroundColor: 'rgba(255,255,255,0.15)', 
+                                padding: 8, 
+                                borderRadius: 8,
+                                borderLeftWidth: 3,
+                                borderLeftColor: '#4ADE80'
+                            }}>
+                                <Text style={{ color: Colors.white, fontSize: 13, fontFamily: Fonts.semiBold }}>
+                                    Active: {activityStatusData.message.activity_location}
+                                </Text>
+                                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, fontFamily: Fonts.regular }}>
+                                    Started: {moment(activityStatusData.message.check_in_time, "HH:mm:ss").format("hh:mm A")}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                style={[styles.checkinButton, { backgroundColor: '#F87171' }]} // Soft Red for Checkout
+                                onPress={handleActivityCheckOut}
+                                disabled={isActivityCheckingOut}
+                            >
+                                <Text style={styles.checkinButtonText}>
+                                    {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
+                                </Text>
+                                {isActivityCheckingOut ? (
+                                    <ActivityIndicator size="small" color={Colors.white} />
+                                ) : (
+                                    <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={[styles.checkinButton, { backgroundColor: 'rgba(255,255,255,0.2)' }]}
+                            onPress={() => navigation.navigate('ActivityCheckInScreen')}
+                        >
+                            <Text style={styles.checkinButtonText}>Activity Check-In</Text>
+                            <Ionicons name="location-outline" size={20} color={Colors.white} />
+                        </TouchableOpacity>
+                    )}
+                </View>
               </View>
               <View style={styles.planLink}>
                 <TouchableOpacity
