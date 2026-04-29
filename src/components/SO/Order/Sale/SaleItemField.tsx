@@ -18,7 +18,6 @@ interface Props {
   item: any;
   setFieldValue: (field: string, value: any) => void;
   removeItem: (index: number) => void;
-  //   originalItemList: any[];
   errors: any;
   touched: any;
   handleBlur: any;
@@ -39,9 +38,17 @@ const SaleItemField: React.FC<Props> = ({
   const [rawItemList, setRawItemList] = useState<any[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+
+  // Track the "committed" item code separately so we can clear stock UI
+  // instantly when the user picks a new item, before the query resolves.
+  const [currentItemCode, setCurrentItemCode] = useState<string | null>(
+    item.item_code ?? null,
+  );
+
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
+
   const { data, isFetching } = useGetItemsQuery({
     page: String(page),
     page_size: '20',
@@ -49,17 +56,27 @@ const SaleItemField: React.FC<Props> = ({
   });
 
   // ── Stock status query ──────────────────────────────────────────────────────
-  const { data: stockData } = useGetStoreStockStatusQuery(
-    { store: selectedStore as string },
-    { skip: !selectedStore || !item.item_code }, // only fetch once an item is selected
-  );
+  // Fetch the full store stock list as soon as the store is known.
+  // We no longer skip on item_code — that was causing the stale-UI bug:
+  // the query would not re-run when the item changed because RTK Query
+  // considered the args identical (same store), so the cached (old) stockInfo
+  // kept rendering until the component re-mounted.
+  const { data: stockData, isFetching: isStockFetching } =
+    useGetStoreStockStatusQuery(
+      { store: selectedStore as string },
+      { skip: !selectedStore },
+    );
 
-  // Find the stock entry matching the selected item
-  const stockInfo = stockData?.message?.data?.find(
-    s => s.item_code === item.item_code,
-  ) ?? null;
+  // Derive stockInfo from the local `currentItemCode` state (not item.item_code
+  // directly). This lets us set currentItemCode to null the moment a new item
+  // is selected, which immediately hides the stale stock strip in the UI.
+  const stockInfo =
+    currentItemCode && !isStockFetching
+      ? (stockData?.message?.data?.find(
+        s => s.item_code === currentItemCode,
+      ) ?? null)
+      : null;
   // ────────────────────────────────────────────────────────────────────────────
-
 
   const transform = (arr: any[] = []) =>
     arr.map(i => ({
@@ -115,6 +132,10 @@ const SaleItemField: React.FC<Props> = ({
     if (selectedItem) {
       setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
     }
+
+    // 1. Clear stock strip immediately so the old item's data doesn't linger.
+    // 2. Set the new code so the strip repopulates once stockData is available.
+    setCurrentItemCode(itemCode);
   };
 
   return (
@@ -149,6 +170,8 @@ const SaleItemField: React.FC<Props> = ({
           touched.items?.[index]?.item_code && errors.items?.[index]?.item_code
         }
         onChange={(val: string) => {
+          // Clear stock info first so old data never shows for the new item
+          setCurrentItemCode(null);
           setFieldValue(`items[${index}].item_code`, val);
           handleSelectedItemValues(val);
         }}
@@ -191,9 +214,7 @@ const SaleItemField: React.FC<Props> = ({
       )}
       {/* ────────────────────────────────────────────────────────────────────── */}
 
-
       <View style={styles.row}>
-
         <View style={styles.flex1}>
           <ReusableInput
             label="Qty"
@@ -208,7 +229,7 @@ const SaleItemField: React.FC<Props> = ({
             onBlur={() => handleBlur(`items[${index}].qty`)}
             error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
           />
-        </  View>
+        </View>
         <View style={styles.flex1}>
           <ReusableInput
             label="Rate"
@@ -235,16 +256,6 @@ const SaleItemField: React.FC<Props> = ({
           </View>
         </View>
       </View>
-
-      {/* <TouchableOpacity
-        style={styles.dateBtn}
-        onPress={() => setTimePickerVisible(true)}>
-        <Text>
-          {item.delivery_date
-            ? moment(item.delivery_date).format('YYYY-MM-DD')
-            : 'Select Date'}
-        </Text>
-      </TouchableOpacity> */}
     </View>
   );
 };
@@ -289,7 +300,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stockInfoItem: {
-    flexBasis: '45%', // 2 columns
+    flexBasis: '45%',
     flexGrow: 1,
   },
   stockMiniLabel: {
@@ -300,10 +311,15 @@ const styles = StyleSheet.create({
   stockMiniValue: {
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
-    fontSize: Size.xs
+    fontSize: Size.xs,
   },
   // ──────────────
-  label: { fontSize: Size.xs, marginBottom: 4, color: Colors.black, fontFamily: Fonts.regular },
+  label: {
+    fontSize: Size.xs,
+    marginBottom: 4,
+    color: Colors.black,
+    fontFamily: Fonts.regular,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',

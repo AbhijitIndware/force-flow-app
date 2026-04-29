@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
     StyleSheet,
     Text,
@@ -6,7 +6,7 @@ import {
     View,
     FlatList,
     TouchableOpacity,
-    ScrollView,
+    TextInput,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
@@ -18,8 +18,7 @@ import { useGetStoreStockStatusQuery, useGetStoreListQuery } from '../../../feat
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
-import { Boxes, Info, Package, AlertCircle, TrendingUp, History } from 'lucide-react-native';
-import { Divider } from '@rneui/themed';
+import { Boxes, Package, AlertCircle, TrendingUp, History, Search, X } from 'lucide-react-native';
 
 type NavigationProp = NativeStackNavigationProp<
     SoAppStackParamList,
@@ -31,15 +30,78 @@ type Props = {
     route: any;
 };
 
+// ─── Fixed card height for getItemLayout ──────────────────────────────────────
+// card padding(20) + icon row(~32) + metrics row(~42) + gap(10) + margins(10)
+const CARD_HEIGHT = 124;
+const CARD_MARGIN_BOTTOM = 10;
+const ITEM_HEIGHT = CARD_HEIGHT + CARD_MARGIN_BOTTOM;
+
+// ─── Memoized card to prevent re-renders when other items change ───────────────
+const StockCard = memo(({ item }: { item: any }) => {
+    const isGapPositive = (item.stock_difference || 0) > 0;
+    const isGapNegative = (item.stock_difference || 0) < 0;
+
+    return (
+        <View style={styles.card}>
+            <View style={[flexRow, itemsCenter, { justifyContent: 'space-between' }]}>
+                <View style={[flexRow, itemsCenter, { flex: 1, marginRight: 10 }]}>
+                    <View style={styles.iconContainer}>
+                        <Package size={16} color={Colors.white} />
+                    </View>
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={styles.itemName} numberOfLines={1}>{item.item_name}</Text>
+                        <Text style={styles.itemCode}>{item.item_code}</Text>
+                    </View>
+                </View>
+
+                <View style={[
+                    styles.gapBadge,
+                    isGapPositive && styles.positiveGap,
+                    isGapNegative && styles.negativeGap,
+                    item.stock_difference === 0 && styles.neutralGap,
+                ]}>
+                    <Text style={[
+                        styles.gapText,
+                        isGapPositive && { color: Colors.success },
+                        isGapNegative && { color: Colors.denger },
+                        item.stock_difference === 0 && { color: Colors.gray },
+                    ]}>
+                        {item.stock_difference !== null
+                            ? (item.stock_difference > 0 ? `+${item.stock_difference}` : item.stock_difference)
+                            : 'Pending'}
+                    </Text>
+                </View>
+            </View>
+
+            <View style={styles.miniMetricsContainer}>
+                <View style={styles.miniMetric}>
+                    <Text style={styles.miniLabel}>Opening: <Text style={styles.miniValue}>{item.opening_stock || 0}</Text></Text>
+                </View>
+                <View style={styles.miniMetric}>
+                    <Text style={styles.miniLabel}>System: <Text style={styles.miniValue}>{item.current_stock || 0}</Text></Text>
+                </View>
+                <View style={styles.miniMetric}>
+                    <Text style={styles.miniLabel}>MTD: <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text></Text>
+                </View>
+                <View style={styles.miniMetric}>
+                    <Text style={styles.miniLabel}>Physical: <Text style={[styles.miniValue, { color: Colors.orange }]}>{item.physical_count !== null ? item.physical_count : '—'}</Text></Text>
+                </View>
+            </View>
+        </View>
+    );
+});
+
+// ─── Main screen ──────────────────────────────────────────────────────────────
 const StockManagementScreen = ({ navigation }: Props) => {
     const [selectedStore, setSelectedStore] = useState<string>('');
     const [selectedStoreName, setSelectedStoreName] = useState<string>('');
-
     const [page, setPage] = useState(1);
     const [searchText, setSearchText] = useState('');
     const [storesList, setStoresList] = useState<{ label: string; value: string }[]>([]);
 
-    // Fetch stores with pagination and search
+    // ── Item search (client-side) ──
+    const [itemSearch, setItemSearch] = useState('');
+
     const { data: storeListData, isFetching: isStoresFetching } = useGetStoreListQuery({
         include_direct_subordinates: '1',
         include_subordinates: '1',
@@ -58,7 +120,6 @@ const StockManagementScreen = ({ navigation }: Props) => {
                 setStoresList(newStores);
             } else {
                 setStoresList(prev => {
-                    // Prevent duplicates
                     const existingValues = new Set(prev.map(i => i.value));
                     const uniqueNew = newStores.filter(i => !existingValues.has(i.value));
                     return [...prev, ...uniqueNew];
@@ -75,85 +136,80 @@ const StockManagementScreen = ({ navigation }: Props) => {
 
     const handleSearch = useCallback((val: string) => {
         setSearchText(val);
-        setPage(1); // Reset to first page on search
-        setStoresList([]); // Clear list for new search
+        setPage(1);
+        setStoresList([]);
     }, []);
 
-    // Fetch stock status for selected store
     const {
         data: stockStatusData,
         isLoading: isStockLoading,
         isFetching: isStockFetching,
-        error
     } = useGetStoreStockStatusQuery(
         { store: selectedStore },
         { skip: !selectedStore }
     );
 
-    const handleStoreSelect = (value: string) => {
+    const handleStoreSelect = useCallback((value: string) => {
         setSelectedStore(value);
+        setItemSearch(''); // clear item search when store changes
         const store = storesList.find(s => s.value === value);
         if (store) setSelectedStoreName(store.label);
-    };
+    }, [storesList]);
 
-    const renderStockCard = ({ item }: { item: any }) => {
-        const isGapPositive = (item.stock_difference || 0) > 0;
-        const isGapNegative = (item.stock_difference || 0) < 0;
+    // ── Filter items client-side — memoized so it only recomputes when data/search changes ──
+    const allItems = stockStatusData?.message?.data || [];
+    const filteredItems = useMemo(() => {
+        if (!itemSearch.trim()) return allItems;
+        const q = itemSearch.toLowerCase();
+        return allItems.filter(
+            (item: any) =>
+                item.item_name?.toLowerCase().includes(q) ||
+                item.item_code?.toLowerCase().includes(q)
+        );
+    }, [allItems, itemSearch]);
 
-        return (
-            <View style={styles.card}>
-                <View style={[flexRow, itemsCenter, { justifyContent: 'space-between' }]}>
-                    <View style={[flexRow, itemsCenter, { flex: 1, marginRight: 10 }]}>
-                        <View style={styles.iconContainer}>
-                            <Package size={16} color={Colors.white} />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 10 }}>
-                            <Text style={styles.itemName} numberOfLines={1}>{item.item_name}</Text>
-                            <Text style={styles.itemCode}>{item.item_code}</Text>
-                        </View>
-                    </View>
+    // ── Stable render & key functions ──
+    const renderItem = useCallback(({ item }: { item: any }) => <StockCard item={item} />, []);
+    const keyExtractor = useCallback((item: any) => item.item_code, []);
+    const getItemLayout = useCallback(
+        (_: any, index: number) => ({
+            length: ITEM_HEIGHT,
+            offset: ITEM_HEIGHT * index,
+            index,
+        }),
+        []
+    );
 
-                    <View style={[
-                        styles.gapBadge,
-                        isGapPositive && styles.positiveGap,
-                        isGapNegative && styles.negativeGap,
-                        item.stock_difference === 0 && styles.neutralGap
-                    ]}>
-                        <Text style={[
-                            styles.gapText,
-                            isGapPositive && { color: Colors.success },
-                            isGapNegative && { color: Colors.denger },
-                            item.stock_difference === 0 && { color: Colors.gray }
-                        ]}>
-                            {item.stock_difference !== null
-                                ? (item.stock_difference > 0 ? `+${item.stock_difference}` : item.stock_difference)
-                                : 'Pending'}
-                        </Text>
-                    </View>
+    const ListHeader = useMemo(() => (
+        <View style={styles.summaryBox}>
+            <View style={[flexRow, itemsCenter, justifyBetween]}>
+                <View>
+                    <Text style={styles.summaryTitle}>Stock Overview</Text>
+                    <Text style={styles.summarySubtitle}>{selectedStoreName}</Text>
                 </View>
-
-                <View style={styles.miniMetricsContainer}>
-                    <View style={styles.miniMetric}>
-                        <Text style={styles.miniLabel}>Opening: <Text style={styles.miniValue}>{item.opening_stock || 0}</Text></Text>
-                    </View>
-                    <View style={styles.miniMetric}>
-                        <Text style={styles.miniLabel}>System: <Text style={styles.miniValue}>{item.current_stock || 0}</Text></Text>
-                    </View>
-                    <View style={styles.miniMetric}>
-                        <Text style={styles.miniLabel}>MTD: <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text></Text>
-                    </View>
-                    <View style={styles.miniMetric}>
-                        <Text style={styles.miniLabel}>Physical: <Text style={[styles.miniValue, { color: Colors.orange }]}>{item.physical_count !== null ? item.physical_count : '—'}</Text></Text>
-                    </View>
+                <View style={styles.statsBadge}>
+                    <Text style={styles.statsCount}>
+                        {filteredItems.length}{itemSearch ? ` of ${allItems.length}` : ''} Items
+                    </Text>
                 </View>
             </View>
-        );
-    };
+        </View>
+    ), [selectedStoreName, filteredItems.length, allItems.length, itemSearch]);
+
+    const ListEmpty = useMemo(() => (
+        <View style={styles.emptyContainer}>
+            <TrendingUp size={60} color={Colors.lightGray} strokeWidth={1} />
+            <Text style={styles.emptyText}>
+                {itemSearch ? `No items match "${itemSearch}"` : 'No stock activity found for this store'}
+            </Text>
+        </View>
+    ), [itemSearch]);
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
             <PageHeader title="Stock Management" navigation={() => navigation.goBack()} />
 
+            {/* Store picker */}
             <View style={styles.filterContainer}>
                 <ReusableDropdown
                     placeholder="Select Store"
@@ -186,32 +242,40 @@ const StockManagementScreen = ({ navigation }: Props) => {
                 </View>
             ) : (
                 <View style={{ flex: 1 }}>
+                    {/* ── Item search bar ── */}
+                    <View style={styles.itemSearchContainer}>
+                        <Search size={16} color={Colors.gray} style={{ marginRight: 8 }} />
+                        <TextInput
+                            style={styles.itemSearchInput}
+                            placeholder="Search by item name or code…"
+                            placeholderTextColor={Colors.gray}
+                            value={itemSearch}
+                            onChangeText={setItemSearch}
+                            clearButtonMode="never"
+                            autoCorrect={false}
+                            autoCapitalize="none"
+                        />
+                        {itemSearch.length > 0 && (
+                            <TouchableOpacity onPress={() => setItemSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                                <X size={16} color={Colors.gray} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                     <FlatList
-                        data={stockStatusData?.message?.data || []}
-                        keyExtractor={(item) => item.item_code}
-                        renderItem={renderStockCard}
+                        data={filteredItems}
+                        keyExtractor={keyExtractor}
+                        renderItem={renderItem}
                         contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
-                        ListHeaderComponent={
-                            <View style={styles.summaryBox}>
-                                <View style={[flexRow, itemsCenter, justifyBetween]}>
-                                    <View>
-                                        <Text style={styles.summaryTitle}>Stock Overview</Text>
-                                        <Text style={styles.summarySubtitle}>{selectedStoreName}</Text>
-                                    </View>
-                                    <View style={styles.statsBadge}>
-                                        <Text style={styles.statsCount}>
-                                            {(stockStatusData?.message?.data || []).length} Items
-                                        </Text>
-                                    </View>
-                                </View>
-                            </View>
-                        }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <TrendingUp size={60} color={Colors.lightGray} strokeWidth={1} />
-                                <Text style={styles.emptyText}>No stock activity found for this store</Text>
-                            </View>
-                        }
+                        // ── Performance props ──
+                        getItemLayout={getItemLayout}
+                        removeClippedSubviews={true}
+                        maxToRenderPerBatch={12}
+                        updateCellsBatchingPeriod={50}
+                        initialNumToRender={10}
+                        windowSize={7}
+                        ListHeaderComponent={ListHeader}
+                        ListEmptyComponent={ListEmpty}
                     />
 
                     <TouchableOpacity
@@ -219,7 +283,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
                         activeOpacity={0.8}
                         onPress={() => navigation.navigate('StockManagementFormScreen', {
                             store: selectedStore,
-                            storeName: selectedStoreName
+                            storeName: selectedStoreName,
                         })}
                     >
                         <History size={24} color={Colors.white} />
@@ -242,11 +306,31 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray,
     },
+    itemSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.white,
+        marginHorizontal: 12,
+        marginTop: 10,
+        marginBottom: 2,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: Colors.lightGray,
+    },
+    itemSearchInput: {
+        flex: 1,
+        fontFamily: Fonts.regular,
+        fontSize: Size.sm,
+        color: Colors.darkButton,
+        paddingVertical: 0, // remove default Android padding
+    },
     summaryBox: {
         backgroundColor: '#F8F9FB',
         padding: 12,
         borderRadius: 10,
-        marginBottom: 15,
+        marginBottom: 10,
         borderWidth: 1,
         borderColor: '#E2E4E9',
     },
@@ -276,7 +360,8 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         borderRadius: 12,
         padding: 10,
-        marginBottom: 10,
+        marginBottom: CARD_MARGIN_BOTTOM,
+        height: CARD_HEIGHT,
         elevation: 2,
     },
     iconContainer: {
@@ -330,15 +415,9 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         fontSize: 10,
     },
-    positiveGap: {
-        backgroundColor: '#E8F5E9',
-    },
-    negativeGap: {
-        backgroundColor: '#FFEBEE',
-    },
-    neutralGap: {
-        backgroundColor: '#F5F5F5',
-    },
+    positiveGap: { backgroundColor: '#E8F5E9' },
+    negativeGap: { backgroundColor: '#FFEBEE' },
+    neutralGap: { backgroundColor: '#F5F5F5' },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
