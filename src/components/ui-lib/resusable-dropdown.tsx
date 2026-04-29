@@ -26,6 +26,7 @@ interface ReusableDropdownProps {
   showAddButton?: boolean;
   addButtonText?: string;
   onAddPress?: () => void;
+  placeholder?: string;
 
   onOpen?: () => void;
   disabled?: boolean;
@@ -48,6 +49,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   showAddButton,
   addButtonText,
   onAddPress,
+  placeholder,
 
   onOpen,
   disabled,
@@ -58,7 +60,7 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
     <View style={[styles.inputWrapper, { marginBottom }]}>
       <Text style={styles.label}>{label}</Text>
       <DropdownComponent
-        selectText={label}
+        selectText={placeholder || label}
         data={data}
         selectedId={value ? String(value) : null}
         setSelectedId={onChange}

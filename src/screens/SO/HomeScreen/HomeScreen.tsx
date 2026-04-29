@@ -41,6 +41,8 @@ import {
   ChevronDown,
   ChevronRight,
   Filter,
+  Eye,
+  Boxes,
 } from 'lucide-react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
@@ -1429,104 +1431,113 @@ const HomeScreen = ({ navigation }: Props) => {
               </TouchableOpacity>
             </View>
           </View> */}
-          <View style={[styles.container, { paddingTop: 10 }]}>
-            <Text style={styles.SectionHeading}>Expenses Claim</Text>
-            <View
+
+
+          <View
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text
               style={[
-                styles.dataBox,
-                {
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  marginTop: 10,
-                },
+                styles.SectionHeading,
+                { marginBottom: 10, paddingHorizontal: 20 },
               ]}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('ExpenseScreen')}
+              Claims
+            </Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ExpenseScreen')}
+              style={styles.IconlinkBox}>
+              <View
                 style={[
-                  styles.positionValue,
+                  styles.iconbox,
                   {
-                    flexDirection: 'row',
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    marginTop: 0,
-                    height: 20,
-                    borderRadius: 8,
-                    width: '100%',
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
                   },
                 ]}>
-                <View style={styles.incentiveContent}>
-                  <View
-                    style={[
-                      styles.iconbox,
-                      {
-                        width: 35,
-                        height: 35,
-                        borderRadius: 10,
-                        backgroundColor: Colors.darkButton,
-                      },
-                    ]}>
-                    <BanknoteArrowDown
-                      strokeWidth={2}
-                      color={Colors.white}
-                      size={20}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.quantitytime}>Expense</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={[styles.container, { paddingTop: 10 }]}>
-            <Text style={styles.SectionHeading}>Visibility Claim</Text>
-            <View
-              style={[
-                styles.dataBox,
-                {
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  marginTop: 10,
-                },
-              ]}>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('VisibilityScreen')}
+                <BanknoteArrowDown
+                  strokeWidth={2}
+                  color={Colors.white}
+                  size={20}
+                />
+              </View>
+              <Text style={styles.linkTitle}>Expense Claim</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+            />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('VisibilityScreen')}
+              style={styles.IconlinkBox}>
+              <View
                 style={[
-                  styles.positionValue,
+                  styles.iconbox,
                   {
-                    flexDirection: 'row',
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    marginTop: 0,
-                    height: 20,
-                    borderRadius: 8,
-                    width: '100%',
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
                   },
                 ]}>
-                <View style={styles.incentiveContent}>
-                  <View
-                    style={[
-                      styles.iconbox,
-                      {
-                        width: 35,
-                        height: 35,
-                        borderRadius: 10,
-                        backgroundColor: Colors.darkButton,
-                      },
-                    ]}>
-                    <BanknoteArrowDown
-                      strokeWidth={2}
-                      color={Colors.white}
-                      size={20}
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.quantitytime}>Visibility</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
+                <Eye strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Visibility Claim</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
           </View>
+
+          <View
+            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            <Text
+              style={[
+                styles.SectionHeading,
+                { marginBottom: 10, paddingHorizontal: 20 },
+              ]}>
+              Stock
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('StockManagementScreen')
+              }
+              style={styles.IconlinkBox}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {
+                    width: 35,
+                    height: 35,
+                    borderRadius: 10,
+                    backgroundColor: Colors.darkButton,
+                  },
+                ]}>
+                <Boxes strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Stock Management</Text>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+
           <View
             style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
             <Text
@@ -1647,40 +1658,6 @@ const HomeScreen = ({ navigation }: Props) => {
                 />
               </View>
             </TouchableOpacity>
-            {/* <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            /> */}
-            {/* <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('OrdersScreen', { index: 0 })}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {
-                    width: 35,
-                    height: 35,
-                    borderRadius: 10,
-                    backgroundColor: Colors.darkButton,
-                  },
-                ]}>
-                <ShoppingCart strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Purchase Order</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
-            /> */}
           </View>
         </ScrollView>
       )}

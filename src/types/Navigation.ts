@@ -71,6 +71,8 @@ export type SoAppStackParamList = {
   DeliveryNoteDetailScreen: { id: string };
   TeamAttendanceListScreen: { apiParams: any; today: string };
   TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
+  StockManagementScreen: undefined;
+  StockManagementFormScreen: { store: string; storeName: string };
 };
 
 export type menuType = {

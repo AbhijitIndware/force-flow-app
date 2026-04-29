@@ -38,6 +38,15 @@ export const flexEnd: any = {
   justifyContent: 'flex-end',
   alignItems: 'flex-end',
 };
+export const itemsCenter: any = {
+  alignItems: 'center',
+};
+export const justifyBetween: any = {
+  justifyContent: 'space-between',
+};
+export const justifyCenter: any = {
+  justifyContent: 'center',
+};
 
 // Spacing utilities
 export const p10 = {padding: 10};
