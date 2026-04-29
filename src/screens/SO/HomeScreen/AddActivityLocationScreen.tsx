@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,6 +16,7 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { useCreateActivityLocationMutation } from '../../../features/base/base-api';
+import { useGetLocationByLatLongQuery } from '../../../features/dropdown/dropdown-api';
 import { getCurrentLocation, requestLocationPermission } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
 import { MapPin, Navigation, Save } from 'lucide-react-native';
@@ -31,6 +32,20 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
   const [isLocating, setIsLocating] = useState(false);
 
   const [createLocation, { isLoading }] = useCreateActivityLocationMutation();
+
+  const { data: locationData } = useGetLocationByLatLongQuery(
+    {
+      latitude: coordinates?.latitude.toString() || '',
+      longitude: coordinates?.longitude.toString() || '',
+    },
+    { skip: !coordinates }
+  );
+
+  useEffect(() => {
+    if (locationData?.message?.raw?.display_name) {
+      setAddress(locationData.message.raw.display_name);
+    }
+  }, [locationData]);
 
   const handleGetLocation = async () => {
     try {
@@ -77,9 +92,10 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
         navigation.goBack();
       }
     } catch (error: any) {
-      Toast.show({ 
-        type: 'error', 
-        text1: error?.data?.message || 'Failed to create location' 
+      console.log("🚀 ~ handleSubmit ~ error:", error)
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message || 'Failed to create location'
       });
     }
   };
@@ -87,7 +103,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader title="Add Activity Location" navigation={() => navigation.goBack()} />
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
       >
@@ -99,28 +115,18 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 style={styles.input}
                 placeholder="e.g. Regional Office, City Event"
                 value={locationName}
+                placeholderTextColor={'#000'}
                 onChangeText={setLocationName}
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Address / Landmark</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Enter address details"
-                value={address}
-                onChangeText={setAddress}
-                multiline
-                numberOfLines={3}
-              />
-            </View>
 
             <View style={styles.coordinatesCard}>
               <View style={styles.cardHeader}>
                 <MapPin size={20} color={Colors.darkButton} />
                 <Text style={styles.cardTitle}>Coordinates</Text>
               </View>
-              
+
               {coordinates ? (
                 <View style={styles.coordsRow}>
                   <View style={styles.coordBox}>
@@ -136,8 +142,8 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 <Text style={styles.noCoords}>No coordinates captured yet</Text>
               )}
 
-              <TouchableOpacity 
-                style={styles.locationBtn} 
+              <TouchableOpacity
+                style={styles.locationBtn}
                 onPress={handleGetLocation}
                 disabled={isLocating}
               >
@@ -151,11 +157,24 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 )}
               </TouchableOpacity>
             </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Address / Landmark</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Enter address details"
+                placeholderTextColor={'#000'}
+                value={address}
+                onChangeText={setAddress}
+                multiline
+                numberOfLines={3}
+              />
+            </View>
           </View>
         </ScrollView>
 
         <View style={styles.footer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.submitBtn, isLoading && { opacity: 0.7 }]}
             onPress={handleSubmit}
             disabled={isLoading}

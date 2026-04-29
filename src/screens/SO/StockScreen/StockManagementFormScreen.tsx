@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     Text,
     SafeAreaView,
     View,
-    FlatList,
     TouchableOpacity,
     TextInput,
     KeyboardAvoidingView,
     Platform,
     Alert,
+    ScrollView,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
 import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
-import { useGetStockItemsQuery, useCreateStockBalanceMutation, useGetStoreStockStatusQuery } from '../../../features/base/base-api';
+import { useCreateStockBalanceMutation, useGetStoreStockStatusQuery } from '../../../features/base/base-api';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { Check, ClipboardList, Package, Save } from 'lucide-react-native';
+import { ClipboardList, Package, Save, Trash2, Plus } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import ItemDropdownField from '../../../components/SO/Stock/ItemDropdownField';
 
 type NavigationProp = NativeStackNavigationProp<
     SoAppStackParamList,
@@ -38,43 +38,56 @@ type Props = {
     };
 };
 
-interface StockCount {
-    item_code: string;
+interface StockItemEntry {
+    itemCode: string;
     quantity: string;
-    item_name: string;
+    itemName?: string;
 }
 
 const StockManagementFormScreen = ({ navigation, route }: Props) => {
     const { store, storeName } = route.params;
-    const [counts, setCounts] = useState<Record<string, string>>({});
+    const [items, setItems] = useState<StockItemEntry[]>([{ itemCode: '', quantity: '' }]);
 
-    const { data: stockItemsData, isLoading: isItemsLoading } = useGetStoreStockStatusQuery({ store });
+    const { data: stockStatusData } = useGetStoreStockStatusQuery({ store });
     const [createStockBalance, { isLoading: isSubmitting }] = useCreateStockBalanceMutation();
 
-    const handleCountChange = (itemCode: string, value: string) => {
-        // Only allow numeric input
-        const cleanValue = value.replace(/[^0-9]/g, '');
-        setCounts(prev => ({
-            ...prev,
-            [itemCode]: cleanValue,
-        }));
+    const handleAddItem = () => {
+        setItems(prev => [...prev, { itemCode: '', quantity: '' }]);
+    };
+
+    const handleRemoveItem = (index: number) => {
+        if (items.length === 1) {
+            setItems([{ itemCode: '', quantity: '' }]);
+            return;
+        }
+        setItems(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const handleUpdateItem = (index: number, field: keyof StockItemEntry, value: string) => {
+        const updated = [...items];
+        if (field === 'quantity') {
+            updated[index][field] = value.replace(/[^0-9]/g, '');
+        } else {
+            updated[index][field] = value;
+        }
+        setItems(updated);
     };
 
     const handleSubmit = async () => {
         try {
-            const itemsToSubmit = Object.entries(counts)
-                .filter(([_, qty]) => qty !== '')
-                .map(([code, qty]) => ({
-                    item_code: code,
-                    quantity: parseInt(qty, 10),
-                    batch: "", // Using empty batch as not provided in get_items
+            const itemsToSubmit = items
+                .filter(item => item.itemCode && item.quantity !== '')
+                .map(item => ({
+                    item_code: item.itemCode,
+                    quantity: parseInt(item.quantity, 10),
+                    batch: "",
                 }));
 
             if (itemsToSubmit.length === 0) {
                 Toast.show({
                     type: 'error',
-                    text1: 'No counts entered',
-                    text2: 'Please enter at least one item count',
+                    text1: 'No items entered',
+                    text2: 'Please select an item and enter quantity',
                 });
                 return;
             }
@@ -97,62 +110,90 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => (
-        <View style={styles.itemRow}>
-            <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.itemName} numberOfLines={1}>{item.item_name}</Text>
-                <Text style={styles.itemCode}>{item.item_code}</Text>
-                <View style={[flexRow, itemsCenter, { marginTop: 4 }]}>
-                    <Text style={styles.stockLabel}>ERP Stock: </Text>
-                    <Text style={styles.stockValue}>{item.current_stock || 0}</Text>
-                </View>
-            </View>
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    keyboardType="numeric"
-                    placeholder="0"
-                    value={counts[item.item_code] || ''}
-                    onChangeText={(val) => handleCountChange(item.item_code, val)}
-                />
-            </View>
-        </View>
-    );
-
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.white }]}>
-            <PageHeader title="Physical Count" navigation={() => navigation.goBack()} />
+            <PageHeader title={`${storeName}`} navigation={() => navigation.goBack()} />
 
-            <View style={styles.headerInfo}>
+            {/* <View style={styles.headerInfo}>
                 <Package size={20} color={Colors.orange} />
                 <Text style={styles.storeName}>{storeName}</Text>
-            </View>
+            </View> */}
 
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
-                {isItemsLoading ? (
-                    <LoadingScreen />
-                ) : (
-                    <FlatList
-                        data={stockItemsData?.message?.data || []}
-                        keyExtractor={(item) => item.item_code}
-                        renderItem={renderItem}
-                        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-                        ListHeaderComponent={
-                            <View style={styles.listHeader}>
-                                <ClipboardList size={18} color={Colors.gray} />
-                                <Text style={styles.listHeaderText}>Enter current physical shelf counts</Text>
+                <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+                    <View style={styles.listHeader}>
+                        <ClipboardList size={18} color={Colors.gray} />
+                        <Text style={styles.listHeaderText}>Add items and enter stock counts</Text>
+                    </View>
+
+                    {items.map((item, index) => {
+                        const stockInfo = stockStatusData?.message?.data?.find(s => s.item_name === item.itemCode);
+
+                        return (
+                            <View key={index} style={styles.itemRow}>
+                                <View style={[flexRow, itemsCenter, { justifyContent: 'space-between', marginBottom: 10 }]}>
+                                    <View style={{ flex: 1, marginRight: 10 }}>
+                                        <ItemDropdownField
+                                            label={`Item ${index + 1}`}
+                                            field={`item_${index}`}
+                                            value={item.itemCode}
+                                            store={store}
+                                            onChange={(val) => handleUpdateItem(index, 'itemCode', val)}
+                                        />
+                                    </View>
+                                    <TouchableOpacity
+                                        onPress={() => handleRemoveItem(index)}
+                                        style={styles.removeBtn}
+                                    >
+                                        <Trash2 size={18} color={Colors.denger} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {stockInfo && (
+                                    <View style={styles.stockDetailsRow}>
+                                        <View style={styles.stockInfoItem}>
+                                            <Text style={styles.stockMiniLabel}>Opening: <Text style={styles.stockMiniValue}>{stockInfo.opening_stock}</Text></Text>
+                                        </View>
+                                        <View style={styles.stockInfoItem}>
+                                            <Text style={styles.stockMiniLabel}>Current: <Text style={styles.stockMiniValue}>{stockInfo.current_stock}</Text></Text>
+                                        </View>
+                                        <View style={styles.stockInfoItem}>
+                                            <Text style={styles.stockMiniLabel}>MTD: <Text style={styles.stockMiniValue}>{stockInfo.mtd_territory}</Text></Text>
+                                        </View>
+                                        <View style={styles.stockInfoItem}>
+                                            <Text style={styles.stockMiniLabel}>Last: <Text style={styles.stockMiniValue}>{stockInfo.physical_count ?? '—'}</Text></Text>
+                                        </View>
+                                    </View>
+                                )}
+
+                                <View style={[flexRow, itemsCenter, { justifyContent: 'flex-start', marginTop: 10, gap: 12 }]}>
+                                    <Text style={styles.countLabel}>Stock Count:</Text>
+                                    <View style={styles.inputContainer}>
+                                        <TextInput
+                                            style={styles.input}
+                                            keyboardType="numeric"
+                                            placeholder="0"
+                                            placeholderTextColor={Colors.gray}
+                                            value={item.quantity}
+                                            onChangeText={(val) => handleUpdateItem(index, 'quantity', val)}
+                                        />
+                                    </View>
+                                </View>
                             </View>
-                        }
-                        ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>No items found for stock update</Text>
-                            </View>
-                        }
-                    />
-                )}
+                        );
+                    })}
+
+                    <TouchableOpacity
+                        onPress={handleAddItem}
+                        style={styles.addButton}
+                    >
+                        <Plus size={18} color={Colors.white} />
+                        <Text style={styles.addButtonText}>Add Item</Text>
+                    </TouchableOpacity>
+                </ScrollView>
             </KeyboardAvoidingView>
 
             <View style={styles.footer}>
@@ -163,7 +204,7 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
                 >
                     <Save size={20} color={Colors.white} style={{ marginRight: 8 }} />
                     <Text style={styles.submitButtonText}>
-                        {isSubmitting ? 'Submitting...' : 'Submit Count'}
+                        {isSubmitting ? 'Submitting...' : 'Submit Stock'}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -201,48 +242,78 @@ const styles = StyleSheet.create({
         color: Colors.gray,
     },
     itemRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        marginBottom: 12,
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#EEF0F4',
+        elevation: 1,
     },
-    itemName: {
+    countLabel: {
         fontFamily: Fonts.medium,
-        fontSize: Size.sm,
+        fontSize: Size.xs,
         color: Colors.darkButton,
-    },
-    itemCode: {
-        fontFamily: Fonts.regular,
-        fontSize: 11,
-        color: Colors.gray,
-    },
-    stockLabel: {
-        fontFamily: Fonts.regular,
-        fontSize: 10,
-        color: Colors.gray,
-    },
-    stockValue: {
-        fontFamily: Fonts.medium,
-        fontSize: 10,
-        color: Colors.orange,
     },
     inputContainer: {
         width: 80,
-        height: 40,
-        backgroundColor: '#F8F9FB',
-        borderRadius: 8,
+        // height: 45,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 6,
         borderWidth: 1,
         borderColor: '#E2E4E9',
         justifyContent: 'center',
+        alignItems: 'center'
     },
     input: {
         paddingHorizontal: 8,
-        fontFamily: Fonts.semiBold,
-        fontSize: Size.sm,
+        fontFamily: Fonts.bold,
+        fontSize: Size.xs,
         color: Colors.darkButton,
-        textAlign: 'center',
+        // textAlign: 'center',
+        height: 45
+    },
+    removeBtn: {
+        padding: 4,
+    },
+    stockDetailsRow: {
+        flexDirection: 'row',
+        backgroundColor: '#F8FAFC',
+        borderRadius: 6,
+        padding: 8,
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: '#F1F5F9',
+    },
+    stockInfoItem: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    stockMiniLabel: {
+        fontFamily: Fonts.regular,
+        fontSize: 9,
+        color: '#64748B',
+    },
+    stockMiniValue: {
+        fontFamily: Fonts.semiBold,
+        color: Colors.darkButton,
+        fontSize: Size.xs
+    },
+    addButton: {
+        backgroundColor: Colors.orange,
+        paddingVertical: 12,
+        borderRadius: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        marginTop: 10,
+    },
+    addButtonText: {
+        fontFamily: Fonts.semiBold,
+        fontSize: Size.xs,
+        color: Colors.white,
     },
     footer: {
         padding: 20,
@@ -262,14 +333,5 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.semiBold,
         fontSize: Size.sm,
         color: Colors.white,
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        fontFamily: Fonts.regular,
-        fontSize: Size.sm,
-        color: Colors.gray,
     },
 });

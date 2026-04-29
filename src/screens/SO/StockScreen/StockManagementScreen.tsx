@@ -33,7 +33,6 @@ type Props = {
 
 const StockManagementScreen = ({ navigation }: Props) => {
     const [selectedStore, setSelectedStore] = useState<string>('');
-    console.log("🚀 ~ StockManagementScreen ~ selectedStore:", selectedStore)
     const [selectedStoreName, setSelectedStoreName] = useState<string>('');
 
     const [page, setPage] = useState(1);
@@ -48,7 +47,6 @@ const StockManagementScreen = ({ navigation }: Props) => {
         page: page.toString(),
         search: searchText,
     });
-    console.log("🚀 ~ StockManagementScreen ~ storeListData:", storeListData)
 
     useEffect(() => {
         if (storeListData?.message?.data?.stores) {
@@ -91,8 +89,6 @@ const StockManagementScreen = ({ navigation }: Props) => {
         { store: selectedStore },
         { skip: !selectedStore }
     );
-    console.log("🚀 ~ StockManagementScreen ~ error:", error)
-    console.log("🚀 ~ StockManagementScreen ~ stockStatusData:", stockStatusData)
 
     const handleStoreSelect = (value: string) => {
         setSelectedStore(value);
@@ -106,59 +102,48 @@ const StockManagementScreen = ({ navigation }: Props) => {
 
         return (
             <View style={styles.card}>
-                <View style={[flexRow, itemsCenter, { marginBottom: 12 }]}>
-                    <View style={styles.iconContainer}>
-                        <Package size={20} color={Colors.white} />
+                <View style={[flexRow, itemsCenter, { justifyContent: 'space-between' }]}>
+                    <View style={[flexRow, itemsCenter, { flex: 1, marginRight: 10 }]}>
+                        <View style={styles.iconContainer}>
+                            <Package size={16} color={Colors.white} />
+                        </View>
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                            <Text style={styles.itemName} numberOfLines={1}>{item.item_name}</Text>
+                            <Text style={styles.itemCode}>{item.item_code}</Text>
+                        </View>
                     </View>
-                    <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={styles.itemName} numberOfLines={2}>{item.item_name}</Text>
-                        <Text style={styles.itemCode}>{item.item_code}</Text>
-                    </View>
-                </View>
 
-                <Divider style={{ marginVertical: 8 }} color={Colors.lightGray} width={0.5} />
-
-                <View style={styles.grid}>
-                    <View style={styles.gridItem}>
-                        <Text style={styles.label}>Opening</Text>
-                        <Text style={styles.value}>{item.opening_stock || 0}</Text>
-                    </View>
-                    <View style={styles.gridItem}>
-                        <Text style={styles.label}>ERP Stock</Text>
-                        <Text style={styles.value}>{item.current_stock || 0}</Text>
-                    </View>
-                    <View style={styles.gridItem}>
-                        <Text style={styles.label}>Monthly Cons.</Text>
-                        <Text style={styles.value}>{item.mtd_territory || 0}</Text>
-                    </View>
-                </View>
-
-                <View style={[styles.bottomStats, flexRow, justifyBetween, itemsCenter]}>
-                    <View>
-                        <Text style={styles.smallLabel}>Physical Count</Text>
-                        <Text style={[styles.bigValue, { color: Colors.darkButton }]}>
-                            {item.physical_count !== null ? item.physical_count : '—'}
+                    <View style={[
+                        styles.gapBadge,
+                        isGapPositive && styles.positiveGap,
+                        isGapNegative && styles.negativeGap,
+                        item.stock_difference === 0 && styles.neutralGap
+                    ]}>
+                        <Text style={[
+                            styles.gapText,
+                            isGapPositive && { color: Colors.success },
+                            isGapNegative && { color: Colors.denger },
+                            item.stock_difference === 0 && { color: Colors.gray }
+                        ]}>
+                            {item.stock_difference !== null
+                                ? (item.stock_difference > 0 ? `+${item.stock_difference}` : item.stock_difference)
+                                : 'Pending'}
                         </Text>
                     </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.smallLabel}>Difference / Gap</Text>
-                        <View style={[
-                            styles.gapBadge,
-                            isGapPositive && styles.positiveGap,
-                            isGapNegative && styles.negativeGap,
-                            item.stock_difference === 0 && styles.neutralGap
-                        ]}>
-                            <Text style={[
-                                styles.gapText,
-                                isGapPositive && { color: Colors.success },
-                                isGapNegative && { color: Colors.denger },
-                                item.stock_difference === 0 && { color: Colors.gray }
-                            ]}>
-                                {item.stock_difference !== null
-                                    ? (item.stock_difference > 0 ? `+${item.stock_difference}` : item.stock_difference)
-                                    : 'Pending'}
-                            </Text>
-                        </View>
+                </View>
+
+                <View style={styles.miniMetricsContainer}>
+                    <View style={styles.miniMetric}>
+                        <Text style={styles.miniLabel}>Opening: <Text style={styles.miniValue}>{item.opening_stock || 0}</Text></Text>
+                    </View>
+                    <View style={styles.miniMetric}>
+                        <Text style={styles.miniLabel}>System: <Text style={styles.miniValue}>{item.current_stock || 0}</Text></Text>
+                    </View>
+                    <View style={styles.miniMetric}>
+                        <Text style={styles.miniLabel}>MTD: <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text></Text>
+                    </View>
+                    <View style={styles.miniMetric}>
+                        <Text style={styles.miniLabel}>Physical: <Text style={[styles.miniValue, { color: Colors.orange }]}>{item.physical_count !== null ? item.physical_count : '—'}</Text></Text>
                     </View>
                 </View>
             </View>
@@ -167,7 +152,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
-            <PageHeader title="Stock Dashboard" navigation={() => navigation.goBack()} />
+            <PageHeader title="Stock Management" navigation={() => navigation.goBack()} />
 
             <View style={styles.filterContainer}>
                 <ReusableDropdown
@@ -289,76 +274,61 @@ const styles = StyleSheet.create({
     },
     card: {
         backgroundColor: Colors.white,
-        borderRadius: 16,
-        padding: 12,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 3,
+        borderRadius: 12,
+        padding: 10,
+        marginBottom: 10,
+        elevation: 2,
     },
     iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
+        width: 32,
+        height: 32,
+        borderRadius: 8,
         backgroundColor: Colors.darkButton,
         justifyContent: 'center',
         alignItems: 'center',
     },
     itemName: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.xs,
+        fontSize: 12,
         color: Colors.darkButton,
     },
     itemCode: {
         fontFamily: Fonts.regular,
-        fontSize: Size.xxs,
-        color: Colors.gray,
-        marginTop: 1,
-    },
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginTop: 10,
-        gap: 10,
-    },
-    gridItem: {
-        flex: 1,
-        minWidth: '28%',
-    },
-    label: {
-        fontFamily: Fonts.regular,
-        fontSize: 11,
-        color: Colors.gray,
-        marginBottom: 2,
-    },
-    value: {
-        fontFamily: Fonts.medium,
-        fontSize: Size.xs,
-        color: Colors.darkButton,
-    },
-    bottomStats: {
-        marginTop: 15,
-        paddingTop: 15,
-        borderTopWidth: 1,
-        borderTopColor: Colors.lightGray,
-    },
-    smallLabel: {
-        fontFamily: Fonts.regular,
         fontSize: 10,
         color: Colors.gray,
-        marginBottom: 2,
     },
-    bigValue: {
+    miniMetricsContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#F8FAFC',
+        borderRadius: 6,
+        padding: 8,
+        marginTop: 10,
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: '#F1F5F9',
+    },
+    miniMetric: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    miniLabel: {
+        fontFamily: Fonts.regular,
+        fontSize: 9,
+        color: '#64748B',
+    },
+    miniValue: {
         fontFamily: Fonts.semiBold,
-        fontSize: Size.sm,
+        fontSize: 10,
+        color: Colors.darkButton,
     },
     gapBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 8,
-        marginTop: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    gapText: {
+        fontFamily: Fonts.bold,
+        fontSize: 10,
     },
     positiveGap: {
         backgroundColor: '#E8F5E9',
@@ -368,10 +338,6 @@ const styles = StyleSheet.create({
     },
     neutralGap: {
         backgroundColor: '#F5F5F5',
-    },
-    gapText: {
-        fontFamily: Fonts.semiBold,
-        fontSize: 11,
     },
     emptyContainer: {
         flex: 1,
