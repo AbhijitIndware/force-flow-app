@@ -12,19 +12,19 @@ import {
   TextInput,
   RefreshControl,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
-import {RSoDetailData} from '../../../../types/baseType';
-import {soStatusColors} from '../../../../utils/utils';
+import React, { useCallback, useState } from 'react';
+import { RSoDetailData } from '../../../../types/baseType';
+import { soStatusColors } from '../../../../utils/utils';
 import {
   useAmendSaleOrderMutation,
   useCancelSaleOrderMutation,
   useSubmitSaleOrderMutation,
 } from '../../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import {Colors} from '../../../../utils/colors';
+import { Colors } from '../../../../utils/colors';
 import CreatePoFromSo from './CreatePoFromSo';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
 
 type Props = {
   detail: RSoDetailData;
@@ -32,17 +32,17 @@ type Props = {
   refetch: any;
 };
 
-const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
-  const {order_details, items, store_details, totals} = detail;
+const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
+  const { order_details, items, store_details, totals } = detail;
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const [submitSaleOrder, {isLoading: isSubmitLoading}] =
+  const [submitSaleOrder, { isLoading: isSubmitLoading }] =
     useSubmitSaleOrderMutation();
-  const [cancelSaleOrder, {isLoading: isCancelLoading}] =
+  const [cancelSaleOrder, { isLoading: isCancelLoading }] =
     useCancelSaleOrderMutation();
-  const [amendSaleOrder, {isLoading: isAmendLoading}] =
+  const [amendSaleOrder, { isLoading: isAmendLoading }] =
     useAmendSaleOrderMutation();
 
   const onConfirmCancel = () => {
@@ -178,7 +178,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Order Details</Text>
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
               display: 'flex',
@@ -201,6 +201,26 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
             <Text style={styles.contentHeading}>Customer: </Text>
             <Text style={styles.contenttext}>
               {order_details.customer_name}
+            </Text>
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <Text style={styles.contentHeading}>Created By:</Text>
+            <Text
+              style={[
+                styles.contenttext,
+                {
+                  flexWrap: 'wrap',
+                  textAlign: 'right',
+                },
+              ]}>
+              {order_details.created_by}
             </Text>
           </View>
           <View
@@ -282,7 +302,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Store Details</Text>
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
               display: 'flex',
@@ -330,17 +350,17 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
           data={items}
           scrollEnabled={false}
           keyExtractor={(item, index) => `${item.item_code}-${index}`}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <>
               <View style={styles.itemRow}>
                 <Text
                   style={[
                     styles.contentHeading,
-                    {fontSize: Size.xsmd, paddingHorizontal: 16},
+                    { fontSize: Size.xsmd, paddingHorizontal: 16 },
                   ]}>
                   {item.item_name}
                 </Text>
-                <View style={{paddingHorizontal: 16}}>
+                <View style={{ paddingHorizontal: 16 }}>
                   <View
                     style={{
                       display: 'flex',
@@ -386,7 +406,7 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Totals</Text>
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
               display: 'flex',
@@ -525,12 +545,12 @@ const SaleDetailComponent = ({detail, navigation, refetch}: Props) => {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.submitBtn2, {backgroundColor: Colors.gray}]}
+                  style={[styles.submitBtn2, { backgroundColor: Colors.gray }]}
                   onPress={() => setCancelModalVisible(false)}>
                   <Text style={styles.submitText}>Close</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.submitBtn2, !cancelReason && {opacity: 0.7}]}
+                  style={[styles.submitBtn2, !cancelReason && { opacity: 0.7 }]}
                   disabled={!cancelReason}
                   onPress={onConfirmCancel}>
                   <Text style={styles.submitText}>Confirm</Text>

@@ -20,15 +20,12 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { DeliveryNoteItem } from '../../../types/distributorType';
-
-type DistributorAppStackParamList = {
-    DeliveryNotes: undefined;
-    DeliveryNoteDetail: { note_name: string };
-};
+import { flexRow } from '../../../utils/styles';
+import { DistributorAppStackParamList } from '../../../types/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<
     DistributorAppStackParamList,
-    'DeliveryNotes'
+    'DeliveryNoteDetailScreen'
 >;
 
 type Props = { navigation: NavigationProp };
@@ -43,13 +40,15 @@ const C = {
     border: '#E5E7EB',
 };
 
-const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered'];
+const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered', 'Partially Delivered', 'Rejected'];
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const colorMap: Record<string, { bg: string; text: string }> = {
         Pending: { bg: '#FEF3C7', text: '#92400E' },
-        Approved: { bg: '#DCFCE7', text: '#166534' },
-        Delivered: { bg: '#DBEAFE', text: '#1E40AF' },
+        Approved: { bg: '#DCFCE7', text: '#1E40AF' },
+        Delivered: { bg: '#8de58dff', text: ' #21974eff' },
+        'Partially Delivered': { bg: '#FEE2E2', text: '#991B1B' },
+        Rejected: { bg: '#ff6557ff', text: '#92400E' },
     };
     const colors = colorMap[status] ?? { bg: C.background, text: C.textMuted };
     return (
@@ -67,12 +66,12 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
 
     const { data, isFetching, refetch } = useGetDeliveryNotesListQuery({
         page,
-        page_size: 20,
+        page_size: 10,
         search: search || undefined,
         status: activeStatus === 'All' ? undefined : activeStatus,
     });
 
-    const notes: DeliveryNoteItem[] = data?.data ?? [];
+    const notes: DeliveryNoteItem[] = data?.message?.data?.delivery_notes ?? [];
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -82,30 +81,60 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
     const renderItem = ({ item }: { item: DeliveryNoteItem }) => (
         <TouchableOpacity
             style={styles.card}
-            activeOpacity={0.75}
+            activeOpacity={0.8}
             onPress={() =>
-                navigation.navigate('DeliveryNoteDetail', { note_name: item.name })
-            }>
-            <View style={[styles.cardStripe, { backgroundColor: C.accent }]} />
-            <View style={styles.cardBody}>
-                <View style={styles.cardRow}>
-                    <Text style={styles.cardId}>{item.name}</Text>
-                    <StatusBadge status={item.workflow_state} />
+                navigation.navigate('DeliveryNoteDetailScreen', {
+                    id: item.delivery_note_id,
+                })
+            }
+        >
+            {/* Header Section: ID and Status */}
+            <View style={styles.cardHeader}>
+                <View style={styles.idContainer}>
+                    <Truck size={14} color={C.accent} style={{ marginRight: 6 }} />
+                    <Text style={styles.cardId}>{item.delivery_note_id}</Text>
                 </View>
-                <View style={styles.cardRow}>
-                    <Text style={styles.cardMeta}>PO: {item.purchase_order}</Text>
+                <StatusBadge status={item.workflow_state} />
+            </View>
+
+            {/* Content Section */}
+            <View style={styles.cardContent}>
+                <View style={styles.mainInfo}>
+                    <View style={[flexRow, { gap: 5, alignItems: 'center' }]}>
+                        <Ionicons name="business-outline" size={15} color={C.textMuted} />
+                        <Text style={styles.distributorName}>{item.store_name}</Text>
+                    </View>
+
                     <Text style={styles.cardMeta}>
-                        {moment(item.date).format('DD MMM YYYY')}
+                        {moment(item.posting_date).format('MMM DD, YYYY')} • PO: {item.purchase_order}
                     </Text>
                 </View>
-                {item.invoice_no ? (
-                    <Text style={styles.cardInvoice}>Invoice: {item.invoice_no}</Text>
-                ) : null}
+
+                <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>AMOUNT</Text>
+                        <Text style={styles.statValue}>₹{Number(item.grand_total).toLocaleString()}</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statLabel}>DELIVERED</Text>
+                        <Text style={styles.statValue}>
+                            {item.delivered_qty}
+                            <Text style={styles.qtyTotal}> of {item.ordered_qty} delivered</Text>
+                        </Text>
+                    </View>
+
+                </View>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
+
+            {/* Footer Section */}
+            {/* <View style={styles.cardFooter}>
+                <View style={styles.footerInfo}>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={C.accent} />
+            </View> */}
         </TouchableOpacity>
     );
-
     const renderEmpty = () =>
         !isFetching ? (
             <View style={styles.emptyState}>
@@ -172,7 +201,7 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
             {/* Summary */}
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryText}>
-                    {notes.length} note{notes.length !== 1 ? 's' : ''}
+                    {notes.length} Delivery note{notes.length !== 1 ? 's' : ''}
                     {activeStatus !== 'All' ? ` · ${activeStatus}` : ''}
                 </Text>
             </View>
@@ -180,7 +209,7 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
             {/* List */}
             <FlatList
                 data={notes}
-                keyExtractor={item => item.name}
+                keyExtractor={item => item.delivery_note_id}
                 renderItem={renderItem}
                 ListEmptyComponent={renderEmpty}
                 ListFooterComponent={
@@ -271,25 +300,109 @@ const styles = StyleSheet.create({
     summaryText: { fontSize: 12, fontFamily: Fonts.regular, color: C.textMuted },
     listContent: { paddingHorizontal: 16, paddingBottom: 16, flexGrow: 1 },
     card: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: C.card,
-        borderRadius: 12,
-        borderWidth: 0.5,
-        borderColor: C.border,
-        marginBottom: 8,
-        overflow: 'hidden',
+        backgroundColor: C.white,
+        borderRadius: 16,
+        marginBottom: 5,
+        // Elevation for Android
+        elevation: 3,
+        // Shadow for iOS
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.03)',
     },
-    cardStripe: { width: 4, alignSelf: 'stretch' },
-    cardBody: { flex: 1, padding: 12, gap: 4 },
-    cardRow: {
+    cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
     },
-    cardId: { fontSize: 13, fontFamily: Fonts.semiBold, color: C.text },
-    cardMeta: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted },
-    cardInvoice: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted, marginTop: 2 },
+    idContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    cardId: {
+        fontSize: 13,
+        fontFamily: Fonts.bold,
+        color: C.text,
+        letterSpacing: 0.3
+    },
+    cardContent: {
+        padding: 5,
+        paddingHorizontal: 12
+    },
+    mainInfo: {
+        marginBottom: 0,
+        paddingHorizontal: 10
+    },
+    distributorName: {
+        fontSize: 15,
+        fontFamily: Fonts.semiBold,
+        color: C.text,
+        marginBottom: 4,
+    },
+    cardMeta: {
+        fontSize: 12,
+        fontFamily: Fonts.regular,
+        color: C.textMuted
+    },
+    statsRow: {
+        flexDirection: 'row',
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 12,
+        alignItems: 'center',
+    },
+    statItem: {
+        flex: 1,
+    },
+    statDivider: {
+        width: 1,
+        height: 24,
+        backgroundColor: '#E5E7EB',
+        marginHorizontal: 12,
+    },
+    statLabel: {
+        fontSize: 10,
+        fontFamily: Fonts.bold,
+        color: C.textMuted,
+        marginBottom: 2,
+    },
+    statValue: {
+        fontSize: 14,
+        fontFamily: Fonts.semiBold,
+        color: C.text,
+    },
+    qtyTotal: {
+        fontSize: 12,
+        fontFamily: Fonts.regular,
+        color: C.textMuted,
+    },
+    cardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#FCFCFD',
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+    },
+    footerInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    footerText: {
+        fontSize: 11,
+        fontFamily: Fonts.medium,
+        color: C.textMuted,
+    },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',

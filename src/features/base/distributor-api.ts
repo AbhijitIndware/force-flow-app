@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuthGuard } from '../utility';
 import { createSlice } from '@reduxjs/toolkit';
-import { DistributorInfo, IApproveAndCreateDDNRequest, ILoginRequest, RApproveAndCreateDDN, RDashboardCounts, RDeliveryNoteList, RLoginResponse, RPurchaseOrderList } from '../../types/distributorType';
+import { DistributorInfo, IApproveAndCreateDDNRequest, ILoginRequest, RApproveAndCreateDDN, RDashboardCounts, RDeliveryNoteList, RLoginResponse, RPendingCounts, RPurchaseOrderList } from '../../types/distributorType';
 
 
 
@@ -91,6 +91,20 @@ export const distributorBaseApi = createApi({
             }),
             invalidatesTags: ['Distributor'],
         }),
+
+        // Pending Counts
+        getPendingCounts: builder.query<RPendingCounts,
+            { from_date?: string; to_date?: string }>({
+                query: ({ from_date, to_date } = {}) => ({
+                    url: '/method/salesforce_management.mobile_app_apis.order_apis.order_count.get_pending_counts',
+                    method: 'GET', params: {
+                        ...(from_date && { from_date }),
+                        ...(to_date && { to_date }),
+                    },
+                }),
+                providesTags: ['Distributor'],
+            }),
+
     }),
 });
 
@@ -99,6 +113,7 @@ export const {
     useGetPurchaseOrdersListQuery,
     useGetDeliveryNotesListQuery,
     useApproveAndCreateDDNMutation,
+    useGetPendingCountsQuery
 } = distributorBaseApi;
 
 // ---------- Slice ----------

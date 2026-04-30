@@ -230,7 +230,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
     const ListHeader = useMemo(() => (
         <View style={styles.summaryBox}>
             <View style={[flexRow, itemsCenter, justifyBetween]}>
-                <View>
+                <View style={{ width: '80%' }}>
                     <Text style={styles.summaryTitle}>Stock Overview</Text>
                     <Text style={styles.summarySubtitle}>{selectedStoreName}</Text>
                 </View>
@@ -391,6 +391,7 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: Colors.gray,
         marginTop: 2,
+        // width: '85%'
     },
     statsBadge: {
         backgroundColor: Colors.darkButton,

@@ -20,16 +20,12 @@ import { useGetPurchaseOrdersListQuery } from '../../../features/base/distributo
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { PurchaseOrderItem } from '../../../types/distributorType';
-
-type DistributorAppStackParamList = {
-    PurchaseOrders: undefined;
-    PurchaseOrderDetail: { order_id: string };
-};
+import { PurchaseOrder } from '../../../types/distributorType';
+import { DistributorAppStackParamList } from '../../../types/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<
     DistributorAppStackParamList,
-    'PurchaseOrders'
+    'PurchaseOrdersScreen'
 >;
 
 type Props = {
@@ -46,14 +42,15 @@ const C = {
     border: '#E5E7EB',
 };
 
-const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered', 'Partially Delivered'];
+const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered', 'Partially Delivered', 'Rejected'];
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const colorMap: Record<string, { bg: string; text: string }> = {
         Pending: { bg: '#FEF3C7', text: '#92400E' },
-        Approved: { bg: '#DCFCE7', text: '#166534' },
-        Delivered: { bg: '#DBEAFE', text: '#1E40AF' },
+        Approved: { bg: '#DCFCE7', text: '#1E40AF' },
+        Delivered: { bg: '#8de58dff', text: ' #21974eff' },
         'Partially Delivered': { bg: '#FEE2E2', text: '#991B1B' },
+        Rejected: { bg: '#ff6557ff', text: '#92400E' },
     };
     const colors = colorMap[status] ?? { bg: C.background, text: C.textMuted };
     return (
@@ -75,9 +72,8 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
         search: search || undefined,
         status: activeStatus === 'All' ? undefined : activeStatus,
     });
-
-    const orders: PurchaseOrderItem[] = data?.data ?? [];
-    const totalPages = data?.pagination?.total_pages ?? 1;
+    const orders: PurchaseOrder[] = data?.message?.data?.purchase_orders ?? [];
+    const totalPages = data?.message?.data?.pagination?.total_pages ?? 1;
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -89,18 +85,18 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
         setPage(1);
     };
 
-    const renderItem = ({ item }: { item: PurchaseOrderItem }) => (
+    const renderItem = ({ item }: { item: PurchaseOrder }) => (
         <TouchableOpacity
             style={styles.card}
             activeOpacity={0.75}
             onPress={() =>
-                navigation.navigate('PurchaseOrderDetail', { order_id: item.order_id })
+                navigation.navigate('PurchaseOrderDetailScreen', { order_id: item.order_id })
             }>
             <View style={[styles.cardStripe, { backgroundColor: C.accent }]} />
             <View style={styles.cardBody}>
                 <View style={styles.cardRow}>
                     <Text style={styles.cardId}>{item.order_id}</Text>
-                    <StatusBadge status={item.status} />
+                    <StatusBadge status={item.workflow_state} />
                 </View>
                 <View style={styles.cardRow}>
                     <Text style={styles.cardMeta}>
@@ -110,8 +106,8 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                         ₹{item.grand_total.toLocaleString('en-IN')}
                     </Text>
                 </View>
-                {item.distributor_name ? (
-                    <Text style={styles.cardSub}>{item.distributor_name}</Text>
+                {item.supplier_name ? (
+                    <Text style={styles.cardSub}>{item.supplier_name}</Text>
                 ) : null}
             </View>
             <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
@@ -143,7 +139,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={22} color={C.text} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Purchase Orders</Text>
+                <Text style={styles.headerTitle}>Orders</Text>
                 <View style={{ width: 38 }} />
             </View>
 

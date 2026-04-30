@@ -29,6 +29,8 @@ export type DistributorAppStackParamList = {
   PurchaseOrdersScreen: undefined;
   DeliveryNotesScreen: undefined;
   DistributorProfileScreen: undefined;
+  PurchaseOrderDetailScreen: { order_id?: string };
+  DeliveryNoteDetailScreen: { id: string }
 };
 export type SoAppStackParamList = {
   Home: undefined;

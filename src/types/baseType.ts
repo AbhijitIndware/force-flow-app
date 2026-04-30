@@ -486,6 +486,7 @@ export type RPoList = {
 };
 
 export interface POOrderDetails {
+  created_by: string
   order_id: string;
   supplier: string;
   supplier_name: string;
@@ -502,6 +503,7 @@ export interface POOrderDetails {
   creation: string; // datetime string
   modified: string; // datetime string
   docstatus: number;
+  workflow_state: string
 }
 export interface POOrderItem {
   item_code: string;

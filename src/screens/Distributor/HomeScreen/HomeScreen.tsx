@@ -30,19 +30,12 @@ import {
 import { useAppSelector } from '../../../store/hook';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import moment from 'moment';
-import { useGetDashboardCountsQuery, useGetDeliveryNotesListQuery, useGetPurchaseOrdersListQuery } from '../../../features/base/distributor-api';
+import { useGetDashboardCountsQuery, useGetDeliveryNotesListQuery, useGetPendingCountsQuery, useGetPurchaseOrdersListQuery } from '../../../features/base/distributor-api';
+import { DistributorAppStackParamList } from '../../../types/Navigation';
 
-// ─── Update with your actual navigation type ──────────────────────────────────
-type DistributorAppStackParamList = {
-  DistributorHomeScreen: undefined;
-  PurchaseOrderDetail: { order_id: string };
-  DeliveryNoteDetail: { note_name: string };
-  PurchaseOrders: undefined;
-  DeliveryNotes: undefined;
-  ProfileScreen: undefined;
-};
 
 const { width } = Dimensions.get('window');
+
 type NavigationProp = NativeStackNavigationProp<
   DistributorAppStackParamList,
   'DistributorHomeScreen'
@@ -109,9 +102,10 @@ const StatCard: React.FC<{
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const colorMap: Record<string, { bg: string; text: string }> = {
     Pending: { bg: '#FEF3C7', text: '#92400E' },
-    Approved: { bg: '#DCFCE7', text: '#166534' },
-    Delivered: { bg: '#DBEAFE', text: '#1E40AF' },
+    Approved: { bg: '#DCFCE7', text: '#1E40AF' },
+    Delivered: { bg: '#8de58dff', text: ' #21974eff' },
     'Partially Delivered': { bg: '#FEE2E2', text: '#991B1B' },
+    Rejected: { bg: '#ff6557ff', text: '#92400E' },
   };
   const colors = colorMap[status] ?? { bg: C.background, text: C.textMuted };
   return (
@@ -128,10 +122,6 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
   const distributor = useAppSelector(
     state => (state?.persistedReducer as any)?.authSlice?.distributor,
   );
-  console.log("🚀 ~ DistributorHomeScreen ~ distributor:", distributor)
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
 
   const today = moment().format('YYYY-MM-DD');
   const firstOfMonth = moment().startOf('month').format('YYYY-MM-DD');
@@ -142,6 +132,12 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
     refetch: refetchDashboard,
     isFetching: isDashboardFetching,
   } = useGetDashboardCountsQuery({ from_date: firstOfMonth, to_date: today });
+
+  const {
+    data: pendingData,
+    refetch: refetchPending,
+    isFetching: isPendingFetching,
+  } = useGetPendingCountsQuery({ from_date: firstOfMonth, to_date: today });
 
   const {
     data: poData,
@@ -164,9 +160,9 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
     }, 1500);
   }, [refetchDashboard, refetchPO, refetchDN]);
 
-  const counts = dashboardData?.message;
-  const purchaseOrders = poData?.data ?? [];
-  const deliveryNotes = dnData?.data ?? [];
+  const counts = dashboardData?.message?.data?.overall;
+  const purchaseOrders = poData?.message?.data?.purchase_orders ?? [];
+  const deliveryNotes = dnData?.message?.data?.delivery_notes ?? [];
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -231,32 +227,32 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
             ) : (
               <View style={styles.statsRow}>
                 <StatCard
-                  label="Total POs"
-                  value={counts?.purchase_counts?.total ?? 0}
+                  label="Total Orders"
+                  value={counts?.total_purchase_orders ?? 0}
                   accentColor="#534AB7"
-                  icon={<ShoppingCart size={20} color="#534AB7" />}
-                  onPress={() => navigation.navigate('PurchaseOrders')}
+                  icon={<ShoppingCart size={20} color="#b79e4aff" />}
+                  onPress={() => navigation.navigate('PurchaseOrdersScreen')}
                 />
                 <StatCard
-                  label="Pending"
-                  value={counts?.purchase_counts?.status_wise?.Pending ?? 0}
-                  accentColor="#F59E0B"
-                  icon={<Clock size={20} color="#F59E0B" />}
-                  onPress={() => navigation.navigate('PurchaseOrders')}
+                  label="Total Pending Orders"
+                  value={pendingData?.data?.pending_purchase_orders ?? 0}
+                  accentColor="#534AB7"
+                  icon={<Clock size={20} color="#c2362cff" />}
+                  onPress={() => navigation.navigate('PurchaseOrdersScreen')}
                 />
                 <StatCard
-                  label="Approved"
-                  value={counts?.purchase_counts?.status_wise?.Approved ?? 0}
-                  accentColor="#10B981"
-                  icon={<CheckCircle2 size={20} color="#10B981" />}
-                  onPress={() => navigation.navigate('PurchaseOrders')}
-                />
-                <StatCard
-                  label="Deliveries"
-                  value={counts?.dn_counts?.total ?? 0}
+                  label="Total Deliveries"
+                  value={counts?.total_delivery_notes ?? 0}
                   accentColor="#185FA5"
                   icon={<Truck size={20} color="#185FA5" />}
-                  onPress={() => navigation.navigate('DeliveryNotes')}
+                  onPress={() => navigation.navigate('DeliveryNotesScreen')}
+                />
+                <StatCard
+                  label="Total Pending Deliveries"
+                  value={pendingData?.data?.pending_delivery_notes ?? 0}
+                  accentColor="#185FA5"
+                  icon={<Clock size={20} color="#b52929ff" />}
+                  onPress={() => navigation.navigate('DeliveryNotesScreen')}
                 />
               </View>
             )}
@@ -266,12 +262,12 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <SectionTitle
-                title="Recent Purchase Orders"
+                title="Recent Orders"
                 sub={`${moment().format('MMMM YYYY')}`}
               />
               <TouchableOpacity
                 style={styles.viewAllBtn}
-                onPress={() => navigation.navigate('PurchaseOrders')}>
+                onPress={() => navigation.navigate('PurchaseOrdersScreen')}>
                 <Text style={styles.viewAllText}>View All</Text>
                 <ArrowRight size={14} color={C.accent} />
               </TouchableOpacity>
@@ -288,10 +284,11 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
                   key={po.order_id}
                   style={styles.listCard}
                   onPress={() =>
-                    navigation.navigate('PurchaseOrderDetail', {
+                    navigation.navigate('PurchaseOrderDetailScreen', {
                       order_id: po.order_id,
                     })
-                  }>
+                  }
+                >
                   {/* Left accent */}
                   <View
                     style={[
@@ -302,7 +299,7 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
                   <View style={styles.listCardBody}>
                     <View style={styles.listCardTop}>
                       <Text style={styles.listCardId}>{po.order_id}</Text>
-                      <StatusBadge status={po.status} />
+                      <StatusBadge status={po.workflow_state} />
                     </View>
                     <View style={styles.listCardBottom}>
                       <Text style={styles.listCardMeta}>
@@ -313,11 +310,11 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
                       </Text>
                     </View>
                   </View>
-                  <Ionicons
+                  {/* <Ionicons
                     name="chevron-forward"
                     size={16}
                     color={C.textMuted}
-                  />
+                  /> */}
                 </TouchableOpacity>
               ))
             )}
@@ -329,7 +326,7 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
               <SectionTitle title="Recent Deliveries" />
               <TouchableOpacity
                 style={styles.viewAllBtn}
-                onPress={() => navigation.navigate('DeliveryNotes')}>
+                onPress={() => navigation.navigate('DeliveryNotesScreen')}>
                 <Text style={styles.viewAllText}>View All</Text>
                 <ArrowRight size={14} color={C.accent} />
               </TouchableOpacity>
@@ -343,13 +340,14 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
             ) : (
               deliveryNotes.map((dn, idx) => (
                 <TouchableOpacity
-                  key={dn.name}
+                  key={dn.delivery_note_id}
                   style={styles.listCard}
                   onPress={() =>
-                    navigation.navigate('DeliveryNoteDetail', {
-                      note_name: dn.name,
+                    navigation.navigate('DeliveryNoteDetailScreen', {
+                      id: dn.delivery_note_id,
                     })
-                  }>
+                  }
+                >
                   <View
                     style={[
                       styles.listCardStripe,
@@ -358,28 +356,29 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
                   />
                   <View style={styles.listCardBody}>
                     <View style={styles.listCardTop}>
-                      <Text style={styles.listCardId}>{dn.name}</Text>
+                      <Text style={styles.listCardId}>{dn.delivery_note_id}</Text>
                       <StatusBadge status={dn.workflow_state} />
                     </View>
                     <View style={styles.listCardBottom}>
                       <Text style={styles.listCardMeta}>
                         PO: {dn.purchase_order}
                       </Text>
+                    </View>
+
+                    <View style={styles.listCardBottom}>
                       <Text style={styles.listCardMeta}>
-                        {moment(dn.date).format('DD MMM YYYY')}
+                        {moment(dn.posting_date).format('DD MMM YYYY')}
+                      </Text>
+                      <Text style={styles.listCardAmount}>
+                        ₹{dn.grand_total.toLocaleString('en-IN')}
                       </Text>
                     </View>
-                    {dn.invoice_no ? (
-                      <Text style={styles.listCardInvoice}>
-                        Inv: {dn.invoice_no}
-                      </Text>
-                    ) : null}
                   </View>
-                  <Ionicons
+                  {/* <Ionicons
                     name="chevron-forward"
                     size={16}
                     color={C.textMuted}
-                  />
+                  /> */}
                 </TouchableOpacity>
               ))
             )}
@@ -393,11 +392,11 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
 
             <TouchableOpacity
               style={styles.iconLinkBox}
-              onPress={() => navigation.navigate('PurchaseOrders')}>
+              onPress={() => navigation.navigate('PurchaseOrdersScreen')}>
               <View style={styles.iconBox}>
                 <ShoppingCart strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Purchase Orders</Text>
+              <Text style={styles.linkTitle}>Orders</Text>
               <View style={[styles.arrowBox, { marginLeft: 'auto' }]}>
                 <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
               </View>
@@ -411,7 +410,7 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
 
             <TouchableOpacity
               style={styles.iconLinkBox}
-              onPress={() => navigation.navigate('DeliveryNotes')}>
+              onPress={() => navigation.navigate('DeliveryNotesScreen')}>
               <View style={styles.iconBox}>
                 <Truck strokeWidth={2} color={Colors.white} size={20} />
               </View>
@@ -427,7 +426,7 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
               style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.iconLinkBox}
               onPress={() => navigation.navigate('ProfileScreen')}>
               <View style={styles.iconBox}>
@@ -437,7 +436,7 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
               <View style={[styles.arrowBox, { marginLeft: 'auto' }]}>
                 <Ionicons name="chevron-forward-outline" size={12} color={Colors.darkButton} />
               </View>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
         </ScrollView>

@@ -132,11 +132,11 @@ const DistributorProfileScreen = ({ navigation }: any) => {
                         <InfoRow icon={Mail} label="Email" value={distributor?.email} />
                     </Section>
 
-                    <Section title="Assignment">
+                    {/* <Section title="Assignment">
                         <InfoRow icon={Briefcase} label="Designation" value={distributor?.designation} />
                         <View style={rowStyles.line} />
                         <InfoRow icon={User} label="Reports To" value={distributor?.reports_to} />
-                    </Section>
+                    </Section> */}
 
                     <Section title="Location">
                         <InfoRow icon={MapPin} label="City / State" value={`${distributor?.city || '-'}, ${distributor?.state || '-'}`} />

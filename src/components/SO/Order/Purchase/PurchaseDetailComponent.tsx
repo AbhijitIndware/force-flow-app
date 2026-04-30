@@ -12,9 +12,9 @@ import {
   TextInput,
   RefreshControl,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
-import {POOrderData, RSoDetailData} from '../../../../types/baseType';
-import {soStatusColors} from '../../../../utils/utils';
+import React, { useCallback, useState } from 'react';
+import { POOrderData, RSoDetailData } from '../../../../types/baseType';
+import { soStatusColors } from '../../../../utils/utils';
 import {
   useAmendPurchaseOrderMutation,
   useCancelPurchaseOrderMutation,
@@ -22,9 +22,9 @@ import {
   useSubmitPurchaseOrderMutation,
 } from '../../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import {Colors} from '../../../../utils/colors';
-import {Size} from '../../../../utils/fontSize';
-import {Fonts} from '../../../../constants';
+import { Colors } from '../../../../utils/colors';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
 
 type Props = {
   detail: POOrderData;
@@ -32,18 +32,18 @@ type Props = {
   refetch: any;
 };
 
-const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
-  const {order_details, items, totals} = detail;
+const PurchaseDetailComponent = ({ detail, navigation, refetch }: Props) => {
+  const { order_details, items, totals } = detail;
 
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const [submitPurchaseOrder, {isLoading: isSubmitLoading}] =
+  const [submitPurchaseOrder, { isLoading: isSubmitLoading }] =
     useSubmitPurchaseOrderMutation();
-  const [cancelPurchaseOrder, {isLoading: isCancelLoading}] =
+  const [cancelPurchaseOrder, { isLoading: isCancelLoading }] =
     useCancelPurchaseOrderMutation();
-  const [amendPurchaseOrder, {isLoading: isAmendLoading}] =
+  const [amendPurchaseOrder, { isLoading: isAmendLoading }] =
     useAmendPurchaseOrderMutation();
 
   const onConfirmCancel = () => {
@@ -181,7 +181,7 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Order Details</Text>
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
               display: 'flex',
@@ -211,6 +211,26 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
                 },
               ]}>
               {order_details.distributor_name}
+            </Text>
+          </View>
+          <View
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <Text style={styles.contentHeading}>Created By:</Text>
+            <Text
+              style={[
+                styles.contenttext,
+                {
+                  flexWrap: 'wrap',
+                  textAlign: 'right',
+                },
+              ]}>
+              {order_details.created_by}
             </Text>
           </View>
           <View
@@ -294,10 +314,10 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
           data={items}
           scrollEnabled={false}
           keyExtractor={(item, index) => `${item.item_code}-${index}`}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <>
               <View style={styles.itemRow}>
-                <View style={{paddingHorizontal: 16}}>
+                <View style={{ paddingHorizontal: 16 }}>
                   <View
                     style={{
                       width: '100%',
@@ -305,12 +325,12 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
                       alignItems: 'flex-start',
                     }}>
                     {/* Left label */}
-                    <View style={{width: 100}}>
+                    <View style={{ width: 100 }}>
                       <Text style={styles.contentHeading}>Item Name:</Text>
                     </View>
 
                     {/* Right value */}
-                    <View style={{flex: 1}}>
+                    <View style={{ flex: 1 }}>
                       <Text
                         style={[
                           styles.contenttext,
@@ -413,7 +433,7 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
         <View style={styles.cardInnerHeader}>
           <Text style={styles.title}>Totals</Text>
         </View>
-        <View style={{paddingHorizontal: 16}}>
+        <View style={{ paddingHorizontal: 16 }}>
           <View
             style={{
               display: 'flex',
@@ -541,12 +561,12 @@ const PurchaseDetailComponent = ({detail, navigation, refetch}: Props) => {
               />
               <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[styles.submitBtn, {backgroundColor: Colors.gray}]}
+                  style={[styles.submitBtn, { backgroundColor: Colors.gray }]}
                   onPress={() => setCancelModalVisible(false)}>
                   <Text style={styles.submitText}>Close</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.submitBtn, !cancelReason && {opacity: 0.7}]}
+                  style={[styles.submitBtn, !cancelReason && { opacity: 0.7 }]}
                   disabled={!cancelReason}
                   onPress={onConfirmCancel}>
                   <Text style={styles.submitText}>Confirm</Text>
