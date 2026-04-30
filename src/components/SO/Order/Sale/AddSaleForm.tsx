@@ -223,6 +223,7 @@ const AddSaleForm: React.FC<Props> = ({
           key={index}
           index={index}
           item={item}
+          store={values?.custom_warehouse}
           setFieldValue={setFieldValue}
           removeItem={removeItem}
           // originalItemList={originalItemList}

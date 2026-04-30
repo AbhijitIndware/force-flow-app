@@ -21,6 +21,7 @@ interface Props {
   errors: any;
   touched: any;
   handleBlur: any;
+  store: string
 }
 
 const SaleItemField: React.FC<Props> = ({
@@ -31,6 +32,7 @@ const SaleItemField: React.FC<Props> = ({
   errors,
   touched,
   handleBlur,
+  store
 }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -43,10 +45,6 @@ const SaleItemField: React.FC<Props> = ({
   // instantly when the user picks a new item, before the query resolves.
   const [currentItemCode, setCurrentItemCode] = useState<string | null>(
     item.item_code ?? null,
-  );
-
-  const selectedStore = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
 
   const { data, isFetching } = useGetItemsQuery({
@@ -63,8 +61,8 @@ const SaleItemField: React.FC<Props> = ({
   // kept rendering until the component re-mounted.
   const { data: stockData, isFetching: isStockFetching } =
     useGetStoreStockStatusQuery(
-      { store: selectedStore as string },
-      { skip: !selectedStore },
+      { store: store as string },
+      { skip: !store },
     );
 
   // Derive stockInfo from the local `currentItemCode` state (not item.item_code
