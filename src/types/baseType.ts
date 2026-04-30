@@ -2061,6 +2061,7 @@ export interface StockDashboardItem {
   physical_count: number | null;
   /** Gap between shelf and ERP (physical - current). Positive = extra on shelf, Negative = missing. null if not yet counted */
   stock_difference: number | null;
+  new_orders: number | null
 }
 
 export interface RGetStoreStockStatus {

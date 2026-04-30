@@ -78,13 +78,13 @@ const StockCard = memo(({ item }: { item: any }) => {
                     <Text style={styles.miniLabel}>Opening: <Text style={styles.miniValue}>{item.opening_stock || 0}</Text></Text>
                 </View>
                 <View style={styles.miniMetric}>
-                    <Text style={styles.miniLabel}>System: <Text style={styles.miniValue}>{item.current_stock || 0}</Text></Text>
+                    <Text style={styles.miniLabel}>Current: <Text style={styles.miniValue}>{item.current_stock || 0}</Text></Text>
                 </View>
                 <View style={styles.miniMetric}>
-                    <Text style={styles.miniLabel}>MTD: <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text></Text>
+                    <Text style={styles.miniLabel}>MTD Territory: <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text></Text>
                 </View>
                 <View style={styles.miniMetric}>
-                    <Text style={styles.miniLabel}>Physical: <Text style={[styles.miniValue, { color: Colors.orange }]}>{item.physical_count !== null ? item.physical_count : '—'}</Text></Text>
+                    <Text style={styles.miniLabel}>New: <Text style={[styles.miniValue, { color: Colors.orange }]}>{item.new_orders !== null ? item.new_orders : '—'}</Text></Text>
                 </View>
             </View>
         </View>

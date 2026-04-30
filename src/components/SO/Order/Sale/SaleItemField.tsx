@@ -202,9 +202,9 @@ const SaleItemField: React.FC<Props> = ({
           </View>
           <View style={styles.stockInfoItem}>
             <Text style={styles.stockMiniLabel}>
-              Last:{' '}
+              New:{' '}
               <Text style={styles.stockMiniValue}>
-                {stockInfo.physical_count ?? '—'}
+                {stockInfo.new_orders ?? '—'}
               </Text>
             </Text>
           </View>
