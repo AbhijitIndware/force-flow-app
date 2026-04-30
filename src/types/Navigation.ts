@@ -22,7 +22,10 @@ export type PromoterAppStackParamList = {
   ProductFeedbackScreen: undefined;
   ProfileScreen: undefined;
 };
-
+export type DistributorAppStackParamList = {
+  DistributorHome: undefined;
+  DistributorHomeScreen: undefined;
+};
 export type SoAppStackParamList = {
   Home: undefined;
   HomeScreen: undefined;

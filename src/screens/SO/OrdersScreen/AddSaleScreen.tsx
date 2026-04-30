@@ -179,7 +179,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       const store = storeData.message.stores.find(
         s => s.store === selectedStore,
       );
-      console.log("🚀 ~ AddSaleScreen ~ store:", store)
       if (store) {
         setFieldValue('custom_warehouse', store.warehouse_id);
         setSelectedStoreName(store.store_name);
@@ -188,6 +187,17 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       }
     }
   }, [selectedStore, orderId, storeData]);
+
+  useEffect(() => {
+    if (!orderId && values.custom_warehouse && storeData?.message?.stores) {
+      const store = storeData.message.stores.find(
+        s => s.warehouse_id === values.custom_warehouse,
+      );
+      if (store) {
+        setSelectedStoreName(store.store_name);
+      }
+    }
+  }, [values.custom_warehouse]);
 
   if (orderId && isFetching) {
     return (

@@ -35,6 +35,7 @@ const SaleItemField: React.FC<Props> = ({
   store,
   onLockChange, // ← NEW
 }) => {
+  console.log("🚀 ~ SaleItemField ~ store:", store)
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [itemList, setItemList] = useState<any[]>([]);
@@ -186,41 +187,41 @@ const SaleItemField: React.FC<Props> = ({
 
       {/* ── Stock info strip ─────────────────────────────────────────────── */}
       {stockInfo && (
-        <View style={styles.stockDetailsRow}>
-          <View style={styles.stockInfoItem}>
-            <Text style={styles.stockMiniLabel}>
-              Opening:{' '}
-              <Text style={styles.stockMiniValue}>
+        <View style={styles.stockCard}>
+          <View style={styles.stockRow}>
+            <View style={styles.stockCell}>
+              <Text style={styles.stockLabel}>Opening</Text>
+              <Text style={styles.stockValue}>
                 {stockInfo.opening_stock}
               </Text>
-            </Text>
-          </View>
-          <View style={styles.stockInfoItem}>
-            <Text style={styles.stockMiniLabel}>
-              Current:{' '}
-              <Text style={styles.stockMiniValue}>
+            </View>
+
+            <View style={styles.stockCell}>
+              <Text style={styles.stockLabel}>Current</Text>
+              <Text style={styles.stockValue}>
                 {stockInfo.current_stock}
               </Text>
-            </Text>
+            </View>
           </View>
-          <View style={styles.stockInfoItem}>
-            <Text style={styles.stockMiniLabel}>
-              MTD Territory:{' '}
-              <Text style={styles.stockMiniValue}>
+
+          <View style={styles.stockRow}>
+            <View style={styles.stockCell}>
+              <Text style={styles.stockLabel}>MTD Territory</Text>
+              <Text style={styles.stockValue}>
                 {stockInfo.mtd_territory}
               </Text>
-            </Text>
-          </View>
-          <View style={styles.stockInfoItem}>
-            <Text style={styles.stockMiniLabel}>
-              New:{' '}
-              <Text style={styles.stockMiniValue}>
+            </View>
+
+            <View style={styles.stockCell}>
+              <Text style={styles.stockLabel}>New orders</Text>
+              <Text style={styles.stockValue}>
                 {stockInfo.new_orders ?? '—'}
               </Text>
-            </Text>
+            </View>
           </View>
         </View>
       )}
+
 
       {/* ── Lock warning banner ──────────────────────────────────────────── */}
       {currentItemCode && !isStockFetching && isOrderLocked && (
@@ -307,30 +308,53 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
   },
-  stockDetailsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    backgroundColor: '#f0f7ff',
-    borderRadius: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  stockCard: {
     marginTop: 8,
-    gap: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    overflow: 'hidden',
+    backgroundColor: '#e3e3e3ff',
   },
-  stockInfoItem: {
-    flexBasis: '45%',
-    flexGrow: 1,
+
+  stockRow: {
+    flexDirection: 'row',
   },
-  stockMiniLabel: {
-    fontFamily: Fonts.regular,
+
+  stockCell: {
+    flex: 1,
+    paddingVertical: 0,
+    paddingHorizontal: 10,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#ffffffff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+
+  stockCellLast: {
+    borderRightWidth: 0,
+  },
+
+  // Remove bottom border for last row (optional improvement)
+  stockLastRow: {
+    borderBottomWidth: 0,
+  },
+
+  stockLabel: {
     fontSize: 11,
-    color: '#64748B',
+    color: '#6b7280',
+    marginBottom: 4,
+    fontFamily: Fonts.regular,
   },
-  stockMiniValue: {
+
+  stockValue: {
+    fontSize: 14,
+    color: '#111827',
     fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
   },
+
   lockBanner: {
     flexDirection: 'row',
     alignItems: 'center',
