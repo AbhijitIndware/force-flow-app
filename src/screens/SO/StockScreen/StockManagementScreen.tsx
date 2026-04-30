@@ -54,7 +54,7 @@ const StockCard = memo(({ item }: { item: any }) => {
                     </View>
                 </View>
 
-                <View style={[
+                {/* <View style={[
                     styles.gapBadge,
                     isGapPositive && styles.positiveGap,
                     isGapNegative && styles.negativeGap,
@@ -70,7 +70,7 @@ const StockCard = memo(({ item }: { item: any }) => {
                             ? (item.stock_difference > 0 ? `+${item.stock_difference}` : item.stock_difference)
                             : 'Pending'}
                     </Text>
-                </View>
+                </View> */}
             </View>
 
             <View style={styles.miniMetricsContainer}>
