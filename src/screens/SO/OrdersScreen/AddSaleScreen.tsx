@@ -101,6 +101,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const orderId = route.params?.orderId;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
+  const [selectedStoreName, setSelectedStoreName] = useState<string>('');
   // const [searchItem, setSearchItem] = useState('');
   // const [itemListData, setItemListData] = useState<
   //   {label: string; value: string}[]
@@ -232,9 +233,11 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       const store = storeData.message.stores.find(s => s.store === selectedStore);
       if (store) {
         setFieldValue('custom_warehouse', store.warehouse_id);
+        setSelectedStoreName(store?.store_name)
       } else {
         // Fallback if not found in list (e.g. searching/filtering)
-        setFieldValue('custom_warehouse', selectedStore);
+        // setFieldValue('custom_warehouse', selectedStore);
+        setSelectedStoreName(selectedStore)
       }
     }
   }, [selectedStore, orderId, storeData]);
@@ -278,6 +281,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         setFieldValue={setFieldValue}
         scrollY={scrollY}
         warehouseList={warehouseList || []}
+        selectedStore={selectedStoreName}
         onDateSelect={field => {
           setActiveField(field);
           setTimePickerVisible(true);

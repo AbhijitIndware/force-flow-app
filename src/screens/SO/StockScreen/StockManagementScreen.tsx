@@ -19,6 +19,8 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import { Boxes, Package, AlertCircle, TrendingUp, History, Search, X } from 'lucide-react-native';
+import { useAppSelector } from '../../../store/hook';
+import { getStoreLabel } from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
     SoAppStackParamList,
@@ -102,6 +104,26 @@ const StockManagementScreen = ({ navigation }: Props) => {
     // ── Item search (client-side) ──
     const [itemSearch, setItemSearch] = useState('');
 
+    const selectedStoreFromCheckin = useAppSelector(
+        state => state?.persistedReducer?.pjpSlice?.selectedStore,
+    );
+
+    useEffect(() => {
+        if (selectedStoreFromCheckin) {
+            setSelectedStore(selectedStoreFromCheckin)
+        }
+    }, [selectedStoreFromCheckin])
+
+    // Add this NEW effect to sync the name once storesList is populated
+    useEffect(() => {
+        if (selectedStore && storesList.length > 0) {
+            const match = storesList.find(s => s.value === selectedStore);
+            if (match) {
+                setSelectedStoreName(match.label);
+            }
+        }
+    }, [selectedStore, storesList]);
+
     const { data: storeListData, isFetching: isStoresFetching } = useGetStoreListQuery({
         include_direct_subordinates: '1',
         include_subordinates: '1',
@@ -113,7 +135,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
     useEffect(() => {
         if (storeListData?.message?.data?.stores) {
             const newStores = storeListData.message.data.stores.map(s => ({
-                label: s.store_name,
+                label: getStoreLabel(s),
                 value: s.store_name,
             }));
             if (page === 1) {
@@ -127,6 +149,31 @@ const StockManagementScreen = ({ navigation }: Props) => {
             }
         }
     }, [storeListData, page]);
+
+    // Add a separate query to fetch just the pre-selected store
+    const { data: preselectedStoreData } = useGetStoreListQuery(
+        {
+            include_direct_subordinates: '1',
+            include_subordinates: '1',
+            page_size: '1',
+            page: '1',
+            search: selectedStoreFromCheckin || '',
+        },
+        { skip: !selectedStoreFromCheckin }
+    );
+
+    // Merge it into storesList when it arrives
+    useEffect(() => {
+        if (preselectedStoreData && preselectedStoreData?.message?.data?.stores?.length > 0) {
+            const preStore = preselectedStoreData.message.data.stores[0];
+            const entry = { label: getStoreLabel(preStore), value: preStore.store_name };
+            setStoresList(prev => {
+                if (prev.find(s => s.value === entry.value)) return prev;
+                return [entry, ...prev]; // prepend so it's always present
+            });
+            setSelectedStoreName(getStoreLabel(preStore));
+        }
+    }, [preselectedStoreData]);
 
     const handleLoadMore = useCallback(() => {
         if (!isStoresFetching && storeListData?.message?.data?.stores?.length === 20) {
@@ -148,6 +195,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
         { store: selectedStore },
         { skip: !selectedStore }
     );
+    console.log("🚀 ~ StockManagementScreen ~ stockStatusData:", stockStatusData)
 
     const handleStoreSelect = useCallback((value: string) => {
         setSelectedStore(value);

@@ -309,6 +309,7 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
       page: String(listConfig.distributor.page),
       search: listConfig.distributor.search,
     });
+  console.log("🚀 ~ AddStoreScreen ~ distributorData:", distributorData)
 
   const { data: typeData, isFetching: typeFetching } = useGetStoreTypeQuery({
     page_size: '20',

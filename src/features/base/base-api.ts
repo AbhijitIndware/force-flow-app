@@ -136,7 +136,7 @@ export const baseApi = createApi({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.get_sales_orders_list?page=${page}&page_size=${page_size}`,
         method: 'GET',
       }),
-      providesTags: ['SO'],
+      providesTags: ['SO', 'Stock', 'Activity'],
     }),
     getSalesOrderById: builder.query<RSoDetails, string>({
       query: id => ({
@@ -146,7 +146,7 @@ export const baseApi = createApi({
           order_id: id,
         },
       }),
-      providesTags: ['SO'],
+      providesTags: ['SO', 'Stock', 'Activity'],
     }),
     addSaleOrder: builder.mutation<RAddSalesOrder, IAddSalesOrder>({
       query: body => ({
@@ -154,7 +154,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
     }),
     updateSaleOrder: builder.mutation<RAddSalesOrder, IUpdateSalesOrder>({
       query: body => ({
@@ -162,7 +162,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
     }),
     submitSaleOrder: builder.mutation<RAddSalesOrder, IUpdateSOAction>({
       query: body => ({
@@ -170,7 +170,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
     }),
     cancelSaleOrder: builder.mutation<RAddSalesOrder, ICancelSO>({
       query: body => ({
@@ -178,7 +178,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
     }),
     amendSaleOrder: builder.mutation<RAddSalesOrder, IAmendSO>({
       query: body => ({
@@ -186,7 +186,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO'],
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
     }),
 
     //Purchase Order

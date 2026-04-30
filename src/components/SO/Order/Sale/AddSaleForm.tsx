@@ -29,6 +29,7 @@ interface Props {
   scrollY: Animated.Value;
   warehouseList: { label: string; value: string }[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
+  selectedStore: string
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -40,7 +41,7 @@ const AddSaleForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   warehouseList,
-  onDateSelect,
+  onDateSelect, selectedStore
 }) => {
   // const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const addNewItem = () => {
@@ -218,12 +219,13 @@ const AddSaleForm: React.FC<Props> = ({
           </View>
         </View>
       ))} */}
+
       {values.items.map((item, index) => (
         <SaleItemField
           key={index}
           index={index}
           item={item}
-          store={values?.custom_warehouse}
+          store={selectedStore}
           setFieldValue={setFieldValue}
           removeItem={removeItem}
           // originalItemList={originalItemList}
