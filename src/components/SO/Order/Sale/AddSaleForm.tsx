@@ -1,5 +1,4 @@
-// AddSaleForm.tsx
-import React, { Dispatch, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import moment from 'moment';
@@ -29,7 +28,8 @@ interface Props {
   scrollY: Animated.Value;
   warehouseList: { label: string; value: string }[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
-  selectedStore: string
+  selectedStore: string;
+  onAnyItemLocked: (locked: boolean) => void; // ← NEW
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -41,9 +41,23 @@ const AddSaleForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   warehouseList,
-  onDateSelect, selectedStore
+  onDateSelect,
+  selectedStore,
+  onAnyItemLocked, // ← NEW
 }) => {
-  // const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const [itemLockMap, setItemLockMap] = useState<Record<number, boolean>>({});
+
+  // ── Notify parent whenever any item's lock state changes ──────────────────
+  const handleLockChange = (index: number, isLocked: boolean) => {
+    setItemLockMap(prev => {
+      const next = { ...prev, [index]: isLocked };
+      // Notify parent with the updated map synchronously
+      onAnyItemLocked(Object.values(next).some(Boolean));
+      return next;
+    });
+  };
+  // ──────────────────────────────────────────────────────────────────────────
+
   const addNewItem = () => {
     const newItem = {
       item_code: '',
@@ -57,24 +71,30 @@ const AddSaleForm: React.FC<Props> = ({
   const removeItem = (index: number) => {
     const updatedItems = values.items.filter((_, i) => i !== index);
     setFieldValue('items', updatedItems);
-  };
 
-  // const handleSelectedItemValues = (itemCode: string, index: number) => {
-  //   const selectedItem = originalItemList.find(
-  //     item => item.item_code === itemCode,
-  //   );
-  //   if (selectedItem) {
-  //     setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
-  //   }
-  // };
+    // Rebuild lock map: remove the deleted index and shift higher keys down
+    setItemLockMap(prev => {
+      const next: Record<number, boolean> = {};
+      Object.entries(prev).forEach(([key, val]) => {
+        const k = Number(key);
+        if (k < index) next[k] = val;
+        else if (k > index) next[k - 1] = val;
+        // k === index → deleted, drop it
+      });
+      onAnyItemLocked(Object.values(next).some(Boolean));
+      return next;
+    });
+  };
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-        useNativeDriver: false,
-      })}
+      onScroll={Animated.event(
+        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+        { useNativeDriver: false },
+      )}
       scrollEventThrottle={16}
       contentContainerStyle={{ padding: 16, paddingHorizontal: 21 }}>
+      {/* ── Date row ──────────────────────────────────────────────────────── */}
       <View style={styles.row}>
         <View style={styles.flex1}>
           <Text style={styles.label}>Transaction Date</Text>
@@ -98,14 +118,13 @@ const AddSaleForm: React.FC<Props> = ({
                 : 'Select Date'}
             </Text>
           </TouchableOpacity>
-
           {touched.delivery_date && errors.delivery_date && (
             <Text style={styles.error}>{errors.delivery_date}</Text>
           )}
         </View>
       </View>
 
-      {/* Warehouse */}
+      {/* ── Warehouse ─────────────────────────────────────────────────────── */}
       <ReusableDropdown
         label="Store"
         field="custom_warehouse"
@@ -115,111 +134,7 @@ const AddSaleForm: React.FC<Props> = ({
         onChange={(val: string) => setFieldValue('custom_warehouse', val)}
       />
 
-      {/* Items */}
-      {/* {values.items.map((item, index) => (
-        <View key={index} style={styles.itemBlock}>
-          {index > 0 && (
-            <TouchableOpacity
-              onPress={() => removeItem(index)}
-              style={styles.removeButton}>
-              <Ionicons name="trash-bin-outline" size={20} color={'#FF0000'} />
-            </TouchableOpacity>
-          )}
-          <DateTimePickerModal
-            isVisible={isTimePickerVisible}
-            mode="date"
-            onConfirm={(date: Date) => {
-              const formatted = moment(date).format('YYYY-MM-DD');
-              setFieldValue(`items[${index}].delivery_date`, formatted);
-
-              setTimePickerVisible(false);
-            }}
-            onCancel={() => setTimePickerVisible(false)}
-          />
-          <ReusableDropdown
-            label="Item"
-            field={`items[${index}].item_code`}
-            value={item.item_code}
-            data={itemList}
-            // error={
-            //   touched[`items.${index}.item_code`] &&
-            //   errors[`items.${index}.item_code`]
-            // }
-            error={
-              touched.items?.[index]?.item_code &&
-              errors.items?.[index]?.item_code
-            }
-            onChange={(val: string) => {
-              setFieldValue(`items[${index}].item_code`, val);
-              handleSelectedItemValues(val, index);
-            }}
-            searchText={searchItem}
-            setSearchText={setSearchItem}
-            onLoadMore={onLoadMoreItems}
-            loadingMore={loadingMoreItems}
-          />
-          <ReusableInput
-            label="Quantity"
-            value={item.qty ? String(item.qty) : ''}
-            keyboardType="numeric"
-            onChangeText={text =>
-              setFieldValue(
-                `items[${index}].qty`,
-                Number(text.replace(/[^0-9]/g, '')),
-              )
-            }
-            onBlur={() => handleBlur(`items[${index}].qty`)}
-            error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
-          />
-
-          <ReusableInput
-            label="Rate"
-            value={item.rate ? String(item.rate) : ''}
-            keyboardType="numeric"
-            onChangeText={text =>
-              setFieldValue(
-                `items[${index}].rate`,
-                Number(text.replace(/[^0-9]/g, '')),
-              )
-            }
-            onBlur={() => handleBlur(`items[${index}].rate`)}
-            error={touched.items?.[index]?.rate && errors.items?.[index]?.rate}
-          />
-
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Amount</Text>
-            <TouchableOpacity
-              style={styles.timeInput}
-              // onPress={() => onDateSelect('transaction_date')}
-            >
-              <Text style={styles.timeText}>
-                {item.qty > 0 ? item.qty * item.rate : 'Total Amount'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Item Delivery Date</Text>
-            <TouchableOpacity
-              style={styles.timeInput}
-              onPress={() => setTimePickerVisible(true)}>
-              <Text style={styles.timeText}>
-                {item.delivery_date
-                  ? moment(item.delivery_date).format('YYYY-MM-DD')
-                  : 'Select Date'}
-              </Text>
-            </TouchableOpacity>
-
-            {touched.items?.[index]?.delivery_date &&
-              errors.items?.[index]?.delivery_date && (
-                <Text style={styles.error}>
-                  {errors.items?.[index]?.delivery_date}
-                </Text>
-              )}
-          </View>
-        </View>
-      ))} */}
-
+      {/* ── Items ─────────────────────────────────────────────────────────── */}
       {values.items.map((item, index) => (
         <SaleItemField
           key={index}
@@ -228,14 +143,14 @@ const AddSaleForm: React.FC<Props> = ({
           store={selectedStore}
           setFieldValue={setFieldValue}
           removeItem={removeItem}
-          // originalItemList={originalItemList}
           errors={errors}
           touched={touched}
           handleBlur={handleBlur}
+          onLockChange={handleLockChange} // ← NEW
         />
       ))}
 
-      {/* ➕ Add More Button */}
+      {/* ── Add More ──────────────────────────────────────────────────────── */}
       <TouchableOpacity style={styles.addMoreBtn} onPress={addNewItem}>
         <Text style={styles.addMoreText}>+ Add More Item</Text>
       </TouchableOpacity>

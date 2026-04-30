@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     StyleSheet,
     Text,
@@ -30,12 +30,7 @@ type NavigationProp = NativeStackNavigationProp<
 
 type Props = {
     navigation: NavigationProp;
-    route: {
-        params: {
-            store: string;
-            storeName: string;
-        };
-    };
+    route: any
 };
 
 interface StockItemEntry {
@@ -45,7 +40,8 @@ interface StockItemEntry {
 }
 
 const StockManagementFormScreen = ({ navigation, route }: Props) => {
-    const { store, storeName } = route.params;
+    const { store, storeName, items: routeItems } = route.params;
+    console.log("🚀 ~ StockManagementFormScreen ~ routeItems:", store, storeName, routeItems)
     const [items, setItems] = useState<StockItemEntry[]>([{ itemCode: '', quantity: '' }]);
 
     const { data: stockStatusData } = useGetStoreStockStatusQuery({ store });
@@ -109,6 +105,19 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
             Alert.alert('Error', error?.data?.message || 'Failed to update stock. Please try again.');
         }
     };
+
+    useEffect(() => {
+        if (routeItems && routeItems.length > 0) {
+            const mapped: StockItemEntry[] = routeItems
+                .filter((it: any) => it.item_code) // skip blank rows
+                .map((it: any) => ({
+                    itemCode: it.item_code,
+                    quantity: '',  // quantity stays empty — promoter must fill it in
+                }));
+
+            setItems(mapped.length > 0 ? mapped : [{ itemCode: '', quantity: '' }]);
+        }
+    }, [routeItems]);
 
     return (
         <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.white }]}>

@@ -11,7 +11,6 @@ import { Colors } from '../../../../utils/colors';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
 import { useGetStoreStockStatusQuery } from '../../../../features/base/base-api';
-import { useAppSelector } from '../../../../store/hook';
 
 interface Props {
   index: number;
@@ -21,7 +20,8 @@ interface Props {
   errors: any;
   touched: any;
   handleBlur: any;
-  store: string
+  store: string;
+  onLockChange: (index: number, isLocked: boolean) => void; // ← NEW
 }
 
 const SaleItemField: React.FC<Props> = ({
@@ -32,7 +32,8 @@ const SaleItemField: React.FC<Props> = ({
   errors,
   touched,
   handleBlur,
-  store
+  store,
+  onLockChange, // ← NEW
 }) => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -41,8 +42,6 @@ const SaleItemField: React.FC<Props> = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
 
-  // Track the "committed" item code separately so we can clear stock UI
-  // instantly when the user picks a new item, before the query resolves.
   const [currentItemCode, setCurrentItemCode] = useState<string | null>(
     item.item_code ?? null,
   );
@@ -53,12 +52,6 @@ const SaleItemField: React.FC<Props> = ({
     search,
   });
 
-  // ── Stock status query ──────────────────────────────────────────────────────
-  // Fetch the full store stock list as soon as the store is known.
-  // We no longer skip on item_code — that was causing the stale-UI bug:
-  // the query would not re-run when the item changed because RTK Query
-  // considered the args identical (same store), so the cached (old) stockInfo
-  // kept rendering until the component re-mounted.
   const { data: stockData, isFetching: isStockFetching } =
     useGetStoreStockStatusQuery(
       { store: store as string },
@@ -66,16 +59,37 @@ const SaleItemField: React.FC<Props> = ({
     );
   console.log("🚀 ~ SaleItemField ~ stockData:", stockData)
 
-  // Derive stockInfo from the local `currentItemCode` state (not item.item_code
-  // directly). This lets us set currentItemCode to null the moment a new item
-  // is selected, which immediately hides the stale stock strip in the UI.
   const stockInfo =
     currentItemCode && !isStockFetching
       ? (stockData?.message?.data?.find(
         s => s.item_code === currentItemCode,
       ) ?? null)
       : null;
-  // ────────────────────────────────────────────────────────────────────────────
+
+  // ── Order lock logic ──────────────────────────────────────────────────────
+  const isExistingItem =
+    stockInfo !== null &&
+    (stockInfo.opening_stock > 0 || stockInfo.current_stock > 0);
+
+  const isOrderLocked = isExistingItem && stockInfo?.physical_count === null;
+
+  const canOrder = !currentItemCode
+    ? true
+    : isStockFetching
+      ? false
+      : !isOrderLocked;
+  // ──────────────────────────────────────────────────────────────────────────
+
+  // ── Notify parent whenever lock state changes ─────────────────────────────
+  useEffect(() => {
+    if (currentItemCode && !isStockFetching) {
+      onLockChange(index, isOrderLocked);
+    } else if (!currentItemCode) {
+      // Item cleared → no longer locked
+      onLockChange(index, false);
+    }
+  }, [isOrderLocked, isStockFetching, currentItemCode, index]);
+  // ──────────────────────────────────────────────────────────────────────────
 
   const transform = (arr: any[] = []) =>
     arr.map(i => ({
@@ -96,7 +110,6 @@ const SaleItemField: React.FC<Props> = ({
           const merged = [...prev, ...newDropdown];
           return Array.from(new Map(merged.map(i => [i.value, i])).values());
         });
-
         setRawItemList(prev => {
           const merged = [...prev, ...apiData];
           return Array.from(
@@ -104,7 +117,6 @@ const SaleItemField: React.FC<Props> = ({
           );
         });
       }
-
       setLoadingMore(false);
     }
   }, [data]);
@@ -115,25 +127,18 @@ const SaleItemField: React.FC<Props> = ({
 
   const handleLoadMore = () => {
     if (isFetching || loadingMore) return;
-
     const current = data?.message?.pagination?.page ?? 1;
     const total = data?.message?.pagination?.total_pages ?? 1;
-
     if (current >= total) return;
-
     setLoadingMore(true);
     setPage(prev => prev + 1);
   };
 
   const handleSelectedItemValues = (itemCode: string) => {
     const selectedItem = rawItemList.find(i => i.item_code === itemCode);
-
     if (selectedItem) {
       setFieldValue(`items[${index}].rate`, selectedItem.selling_rate);
     }
-
-    // 1. Clear stock strip immediately so the old item's data doesn't linger.
-    // 2. Set the new code so the strip repopulates once stockData is available.
     setCurrentItemCode(itemCode);
   };
 
@@ -169,7 +174,6 @@ const SaleItemField: React.FC<Props> = ({
           touched.items?.[index]?.item_code && errors.items?.[index]?.item_code
         }
         onChange={(val: string) => {
-          // Clear stock info first so old data never shows for the new item
           setCurrentItemCode(null);
           setFieldValue(`items[${index}].item_code`, val);
           handleSelectedItemValues(val);
@@ -180,25 +184,31 @@ const SaleItemField: React.FC<Props> = ({
         loadingMore={loadingMore}
       />
 
-      {/* ── Stock info strip (read-only) ────────────────────────────────────── */}
+      {/* ── Stock info strip ─────────────────────────────────────────────── */}
       {stockInfo && (
         <View style={styles.stockDetailsRow}>
           <View style={styles.stockInfoItem}>
             <Text style={styles.stockMiniLabel}>
               Opening:{' '}
-              <Text style={styles.stockMiniValue}>{stockInfo.opening_stock}</Text>
+              <Text style={styles.stockMiniValue}>
+                {stockInfo.opening_stock}
+              </Text>
             </Text>
           </View>
           <View style={styles.stockInfoItem}>
             <Text style={styles.stockMiniLabel}>
               Current:{' '}
-              <Text style={styles.stockMiniValue}>{stockInfo.current_stock}</Text>
+              <Text style={styles.stockMiniValue}>
+                {stockInfo.current_stock}
+              </Text>
             </Text>
           </View>
           <View style={styles.stockInfoItem}>
             <Text style={styles.stockMiniLabel}>
               MTD Territory:{' '}
-              <Text style={styles.stockMiniValue}>{stockInfo.mtd_territory}</Text>
+              <Text style={styles.stockMiniValue}>
+                {stockInfo.mtd_territory}
+              </Text>
             </Text>
           </View>
           <View style={styles.stockInfoItem}>
@@ -211,7 +221,16 @@ const SaleItemField: React.FC<Props> = ({
           </View>
         </View>
       )}
-      {/* ────────────────────────────────────────────────────────────────────── */}
+
+      {/* ── Lock warning banner ──────────────────────────────────────────── */}
+      {currentItemCode && !isStockFetching && isOrderLocked && (
+        <View style={styles.lockBanner}>
+          <Ionicons name="lock-closed-outline" size={14} color="#b45309" />
+          <Text style={styles.lockText}>
+            Update physical shelf stock for this item before placing an order.
+          </Text>
+        </View>
+      )}
 
       <View style={styles.row}>
         <View style={styles.flex1}>
@@ -219,6 +238,7 @@ const SaleItemField: React.FC<Props> = ({
             label="Qty"
             value={item.qty ? String(item.qty) : ''}
             keyboardType="numeric"
+            disabled={!canOrder}
             onChangeText={text =>
               setFieldValue(
                 `items[${index}].qty`,
@@ -234,6 +254,7 @@ const SaleItemField: React.FC<Props> = ({
             label="Rate"
             value={item.rate ? String(item.rate) : ''}
             keyboardType="numeric"
+            disabled={!canOrder}
             onChangeText={text =>
               setFieldValue(
                 `items[${index}].rate`,
@@ -245,7 +266,6 @@ const SaleItemField: React.FC<Props> = ({
             marginBottom={0}
           />
         </View>
-
         <View style={styles.flex1}>
           <Text style={styles.label}>Amount</Text>
           <View style={styles.amountBox}>
@@ -287,7 +307,6 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
   },
-  // ── Stock strip ────────────────────────────────────────────────────────────
   stockDetailsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -312,7 +331,24 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.xs,
   },
-  // ──────────────
+  lockBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fffbeb',
+    borderColor: '#fcd34d',
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 8,
+    marginTop: 8,
+  },
+  lockText: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#b45309',
+    lineHeight: 16,
+  },
   label: {
     fontSize: Size.xs,
     marginBottom: 4,

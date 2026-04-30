@@ -195,7 +195,6 @@ const StockManagementScreen = ({ navigation }: Props) => {
         { store: selectedStore },
         { skip: !selectedStore }
     );
-    console.log("🚀 ~ StockManagementScreen ~ stockStatusData:", stockStatusData)
 
     const handleStoreSelect = useCallback((value: string) => {
         setSelectedStore(value);

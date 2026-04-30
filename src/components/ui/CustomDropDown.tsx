@@ -158,7 +158,7 @@ const DropdownComponent = ({
           {/* List */}
           <FlatList
             data={data}
-            keyExtractor={item => `${item.value}-${item?.label}`}
+            keyExtractor={(item, index) => `${item.value}-${item?.label}-${index}`}
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
