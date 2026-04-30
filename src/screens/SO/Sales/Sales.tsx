@@ -47,7 +47,13 @@ const SalesScreen = ({ navigation, route }: Props) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const isAsm = employee?.designation === 'ASM';
+  const isAsm =
+    employee?.designation === 'ASM' ||
+    employee?.designation === 'Area Sales Executive' ||
+    employee?.designation === 'ASE';
+
+  console.log("🚀 ~ SalesScreen ~ isAsm:", isAsm);
+
 
   const { data, refetch, isFetching } = useGetSalesRepotsQuery({
     view_type: isAsm
@@ -188,7 +194,7 @@ const SalesScreen = ({ navigation, route }: Props) => {
               }}
               variant="primary"
               style={{ backgroundColor: Colors.transparent, padding: 0 }}>
-              {employee?.designation === 'ASM' && (
+              {isAsm && (
                 <Tab.Item
                   title="Dashboard"
                   titleStyle={{
@@ -245,7 +251,6 @@ const SalesScreen = ({ navigation, route }: Props) => {
           </View>
           {/* Conditionally rendered tab content */}
           {(() => {
-            const isAsm = employee?.designation === 'ASM';
 
             if (isAsm) {
               switch (index) {
