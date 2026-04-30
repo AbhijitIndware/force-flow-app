@@ -1,6 +1,6 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import {createSlice} from '@reduxjs/toolkit';
-import {apiBaseUrl} from '../apiBaseUrl.js';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createSlice } from '@reduxjs/toolkit';
+import { apiBaseUrl } from '../apiBaseUrl.js';
 import {
   Employee,
   EmployeeProfileResponse,
@@ -8,6 +8,7 @@ import {
   RCheckSession,
   RLogin,
 } from '../../types/authType';
+import { Distributor } from '../../types/baseType.js';
 
 //Auth api calling
 export const authApi = createApi({
@@ -24,14 +25,14 @@ export const authApi = createApi({
         body,
       }),
     }),
-    checkSession: builder.query<RCheckSession, {sId: string}>({
-      query: ({sId}) => ({
+    checkSession: builder.query<RCheckSession, { sId: string }>({
+      query: ({ sId }) => ({
         url: `/method/salesforce_management.mobile_app_apis.authentications.login.check_session?sid=${sId}`,
         method: 'GET',
       }),
     }),
-    getProfileData: builder.query<EmployeeProfileResponse, {emp_id: string}>({
-      query: ({emp_id}) => ({
+    getProfileData: builder.query<EmployeeProfileResponse, { emp_id: string }>({
+      query: ({ emp_id }) => ({
         url: `/method/salesforce_management.mobile_app_apis.authentications.profile.profile_data`,
         method: 'GET',
         params: {
@@ -51,6 +52,7 @@ interface InitialState {
   employee: Employee | null;
   sId: string | null;
   empId: string | null;
+  distributor: Distributor | null | undefined;
 }
 const initialState: InitialState = {
   status: null,
@@ -61,6 +63,7 @@ const initialState: InitialState = {
   employee: null,
   sId: null,
   empId: null,
+  distributor: null
 };
 
 //auth api response handling(saving the token)
@@ -90,6 +93,7 @@ export const authSlice = createSlice({
         state.user = action?.payload.message?.user;
         state.sId = action?.payload.message?.user?.sid;
         state.empId = action?.payload.message?.employee?.id;
+        state.distributor = action?.payload.message?.distributor;
       })
       .addMatcher(authApi.endpoints.login.matchRejected, state => {
         state.status = 'Rejected';
@@ -123,7 +127,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const {logout} = authSlice.actions;
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;
-export const {useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery} =
+export const { useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery } =
   authApi;

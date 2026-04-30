@@ -128,6 +128,10 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
   const distributor = useAppSelector(
     state => (state?.persistedReducer as any)?.authSlice?.distributor,
   );
+  console.log("🚀 ~ DistributorHomeScreen ~ distributor:", distributor)
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
 
   const today = moment().format('YYYY-MM-DD');
   const firstOfMonth = moment().startOf('month').format('YYYY-MM-DD');

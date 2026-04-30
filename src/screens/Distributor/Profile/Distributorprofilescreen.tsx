@@ -7,6 +7,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    StatusBar,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -19,192 +20,144 @@ import {
     Globe,
     Briefcase,
     Hash,
+    LogOut,
     ChevronRight,
 } from 'lucide-react-native';
-import { useAppSelector } from '../../../store/hook';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { DistributorInfo } from '../../../types/distributorType';
+import { APP_VERSION } from '../../../utils/utils';
+import Toast from 'react-native-toast-message';
+import { logout } from '../../../features/auth/auth';
+import { baseApi } from '../../../features/base/base-api';
+import { dropdownApi } from '../../../features/dropdown/dropdown-api';
+import { persistor } from '../../../store/store';
 
-type DistributorAppStackParamList = {
-    ProfileScreen: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<
-    DistributorAppStackParamList,
-    'ProfileScreen'
->;
-
-type Props = { navigation: NavigationProp };
-
-const C = {
+// Modern Color Palette
+const THEME = {
+    primary: '#534AB7',
+    primaryLight: '#EEEDF9',
+    background: '#F8F9FD',
     white: '#FFFFFF',
-    text: '#1A1A2E',
-    textMuted: '#6B7280',
-    accent: '#534AB7',
-    accentSoft: 'rgba(83,74,183,0.1)',
-    background: '#F5F5F7',
-    card: '#FFFFFF',
-    border: '#E5E7EB',
-    orange: Colors.orange,
+    textDark: '#1F2937',
+    textMain: '#4B5563',
+    textMuted: '#9CA3AF',
+    divider: '#F3F4F6',
+    danger: '#EF4444',
 };
 
-// ─── Info Row ────────────────────────────────────────────────────────────────
-const InfoRow: React.FC<{
-    icon: React.ReactNode;
-    label: string;
-    value?: string | null;
-}> = ({ icon, label, value }) => (
+// ─── Refined Components ───────────────────────────────────────────────────────
+
+const InfoRow = ({ icon: Icon, label, value }: { icon: any; label: string; value?: string | null }) => (
     <View style={rowStyles.row}>
-        <View style={rowStyles.iconWrap}>{icon}</View>
-        <View style={rowStyles.textWrap}>
+        <View style={rowStyles.iconContainer}>
+            <Icon size={18} color={THEME.primary} />
+        </View>
+        <View style={rowStyles.textContainer}>
             <Text style={rowStyles.label}>{label}</Text>
-            <Text style={rowStyles.value}>{value || '—'}</Text>
+            <Text style={rowStyles.value}>{value || 'Not provided'}</Text>
         </View>
     </View>
 );
 
-// ─── Section Card ─────────────────────────────────────────────────────────────
-const SectionCard: React.FC<{ title: string; children: React.ReactNode }> = ({
-    title,
-    children,
-}) => (
-    <View style={cardStyles.container}>
-        <Text style={cardStyles.title}>{title}</Text>
-        <View style={cardStyles.body}>{children}</View>
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <View style={sectionStyles.card}>
+        <Text style={sectionStyles.title}>{title}</Text>
+        {children}
     </View>
 );
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
-const DistributorProfileScreen = ({ navigation }: Props) => {
+
+const DistributorProfileScreen = ({ navigation }: any) => {
     const distributor: DistributorInfo | null = useAppSelector(
         state => (state?.persistedReducer as any)?.authSlice?.distributor ?? null,
     );
 
+    const dispatch = useAppDispatch();
+
     const initials = distributor?.distributor_name
-        ? distributor.distributor_name
-            .split(' ')
-            .slice(0, 2)
-            .map(w => w[0])
-            .join('')
-            .toUpperCase()
+        ? distributor.distributor_name.split(' ').slice(0, 2).map(w => w[0]).join('')
         : 'D';
 
+    const handleLogout = () => {
+        Toast.show({ type: 'success', text1: 'Logged out successfully' });
+        dispatch(logout());
+        dispatch(baseApi.util.resetApiState());
+        dispatch(dropdownApi.util.resetApiState());
+        persistor.purge();
+    };
+
     return (
-        <SafeAreaView style={styles.safeArea}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={22} color={C.text} />
+        <SafeAreaView style={styles.container}>
+            <View style={styles.topBackground} />
+
+            {/* Custom Header */}
+            <View style={styles.headerNav}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconBtn}>
+                    <Ionicons name="chevron-back" size={24} color={THEME.white} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>My Profile</Text>
-                <View style={{ width: 38 }} />
+                <Text style={styles.headerTitle}>Profile</Text>
+                <TouchableOpacity style={styles.iconBtn} onPress={handleLogout}>
+                    <LogOut size={20} color={THEME.white} />
+                </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* ── Avatar Banner ── */}
-                <View style={styles.banner}>
-                    <View style={styles.avatarRing}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                {/* Profile Card */}
+                <View style={styles.profileCard}>
+                    <View style={styles.avatarContainer}>
                         <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{initials}</Text>
+                            <Text style={styles.avatarText}>{initials.toUpperCase()}</Text>
                         </View>
                     </View>
-                    <Text style={styles.bannerName}>
-                        {distributor?.distributor_name ?? 'Distributor'}
-                    </Text>
-                    {distributor?.designation ? (
-                        <Text style={styles.bannerDesig}>{distributor.designation}</Text>
-                    ) : null}
+                    <Text style={styles.userName}>{distributor?.distributor_name || 'Distributor'}</Text>
+                    <Text style={styles.userCode}>{distributor?.distributor_code}</Text>
 
-                    {/* Quick badges */}
                     <View style={styles.badgeRow}>
-                        {distributor?.distributor_group ? (
-                            <View style={styles.infoBadge}>
-                                <Tag size={11} color={C.accent} />
-                                <Text style={styles.infoBadgeText}>
-                                    {distributor.distributor_group}
-                                </Text>
-                            </View>
-                        ) : null}
-                        {distributor?.zone ? (
-                            <View style={styles.infoBadge}>
-                                <Globe size={11} color={C.accent} />
-                                <Text style={styles.infoBadgeText}>{distributor.zone}</Text>
-                            </View>
-                        ) : null}
+                        <View style={styles.chip}>
+                            <Tag size={12} color={THEME.primary} />
+                            <Text style={styles.chipText}>{distributor?.distributor_group || 'General'}</Text>
+                        </View>
                     </View>
                 </View>
 
-                <View style={styles.content}>
-                    {/* ── Basic Info ── */}
-                    <SectionCard title="Basic Information">
-                        <InfoRow
-                            icon={<Hash size={16} color={C.accent} />}
-                            label="Distributor Code"
-                            value={distributor?.distributor_code}
-                        />
-                        <View style={rowStyles.divider} />
-                        <InfoRow
-                            icon={<Briefcase size={16} color={C.accent} />}
-                            label="Designation"
-                            value={distributor?.designation}
-                        />
-                        <View style={rowStyles.divider} />
-                        <InfoRow
-                            icon={<User size={16} color={C.accent} />}
-                            label="Reports To"
-                            value={distributor?.reports_to}
-                        />
-                    </SectionCard>
+                {/* Info Sections */}
+                <View style={styles.infoWrapper}>
+                    <Section title="Contact Details">
+                        <InfoRow icon={Phone} label="Mobile" value={distributor?.mobile} />
+                        <View style={rowStyles.line} />
+                        <InfoRow icon={Mail} label="Email" value={distributor?.email} />
+                    </Section>
 
-                    {/* ── Contact Info ── */}
-                    <SectionCard title="Contact Information">
-                        <InfoRow
-                            icon={<Phone size={16} color={C.accent} />}
-                            label="Mobile"
-                            value={distributor?.mobile}
-                        />
-                        <View style={rowStyles.divider} />
-                        <InfoRow
-                            icon={<Mail size={16} color={C.accent} />}
-                            label="Email"
-                            value={distributor?.email}
-                        />
-                    </SectionCard>
+                    <Section title="Assignment">
+                        <InfoRow icon={Briefcase} label="Designation" value={distributor?.designation} />
+                        <View style={rowStyles.line} />
+                        <InfoRow icon={User} label="Reports To" value={distributor?.reports_to} />
+                    </Section>
 
-                    {/* ── Location ── */}
-                    <SectionCard title="Location">
-                        <InfoRow
-                            icon={<MapPin size={16} color={C.accent} />}
-                            label="City"
-                            value={distributor?.city}
-                        />
-                        <View style={rowStyles.divider} />
-                        <InfoRow
-                            icon={<Globe size={16} color={C.accent} />}
-                            label="State"
-                            value={distributor?.state}
-                        />
-                        <View style={rowStyles.divider} />
-                        <InfoRow
-                            icon={<Tag size={16} color={C.accent} />}
-                            label="Zone"
-                            value={distributor?.zone}
-                        />
-                    </SectionCard>
-
-                    {/* ── Distribution Info ── */}
-                    <SectionCard title="Distribution Details">
-                        <InfoRow
-                            icon={<Briefcase size={16} color={C.accent} />}
-                            label="Distributor Group"
-                            value={distributor?.distributor_group}
-                        />
-                    </SectionCard>
-
-                    {/* Bottom spacer */}
-                    <View style={{ height: 24 }} />
+                    <Section title="Location">
+                        <InfoRow icon={MapPin} label="City / State" value={`${distributor?.city || '-'}, ${distributor?.state || '-'}`} />
+                        <View style={rowStyles.line} />
+                        <InfoRow icon={Globe} label="Zone" value={distributor?.zone} />
+                    </Section>
+                </View>
+                {/* ── High-Visibility Logout Card ── */}
+                <TouchableOpacity
+                    style={styles.logoutCard}
+                    onPress={handleLogout}
+                    activeOpacity={0.7}
+                >
+                    <View style={styles.logoutIconContainer}>
+                        <LogOut size={20} color={THEME.danger} />
+                    </View>
+                    <Text style={styles.logoutText}>Logout</Text>
+                    <ChevronRight size={18} color={THEME.textMuted} />
+                </TouchableOpacity>
+                <View style={styles.footer}>
+                    <Text style={styles.versionText}>Version {APP_VERSION}</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -214,163 +167,153 @@ const DistributorProfileScreen = ({ navigation }: Props) => {
 export default DistributorProfileScreen;
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-    safeArea: { flex: 1, backgroundColor: C.background },
-    header: {
+    container: { flex: 1, backgroundColor: THEME.background },
+    topBackground: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 200,
+        backgroundColor: Colors.orange,
+    },
+    headerNav: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: C.white,
-        borderBottomWidth: 1,
-        borderBottomColor: C.border,
-    },
-    backBtn: {
-        width: 38,
-        height: 38,
-        borderRadius: 10,
-        backgroundColor: C.background,
-        alignItems: 'center',
-        justifyContent: 'center',
+        height: 60,
     },
     headerTitle: {
-        flex: 1,
-        textAlign: 'center',
-        fontSize: Size.md,
+        fontSize: 18,
         fontFamily: Fonts.semiBold,
-        color: C.text,
+        color: THEME.white,
     },
+    iconBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    scrollContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 },
 
-    // Banner
-    banner: {
-        backgroundColor: C.white,
+    // Profile Header Card
+    profileCard: {
+        backgroundColor: THEME.white,
+        borderRadius: 24,
+        padding: 24,
         alignItems: 'center',
-        paddingTop: 28,
-        paddingBottom: 24,
-        borderBottomWidth: 1,
-        borderBottomColor: C.border,
+        marginBottom: 20,
+        // Shadow
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
     },
-    avatarRing: {
-        width: 90,
-        height: 90,
-        borderRadius: 45,
-        borderWidth: 3,
-        borderColor: C.accent,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 14,
-    },
-    avatar: {
-        width: 78,
-        height: 78,
-        borderRadius: 39,
-        backgroundColor: C.orange,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatarText: {
-        fontSize: 28,
-        fontFamily: Fonts.semiBold,
-        color: C.white,
-        letterSpacing: 1,
-    },
-    bannerName: {
-        fontSize: Size.lg,
-        fontFamily: Fonts.semiBold,
-        color: C.text,
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    bannerDesig: {
-        fontSize: Size.sm,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
+    avatarContainer: {
+        padding: 4,
+        backgroundColor: THEME.white,
+        borderRadius: 100,
+        marginTop: -10,
         marginBottom: 12,
     },
-    badgeRow: {
-        flexDirection: 'row',
-        gap: 8,
-        flexWrap: 'wrap',
+    avatar: {
+        width: 85,
+        height: 85,
+        borderRadius: 100,
+        backgroundColor: Colors.orange,
+        alignItems: 'center',
         justifyContent: 'center',
     },
-    infoBadge: {
+    avatarText: { fontSize: 32, color: THEME.white, fontFamily: Fonts.bold },
+    userName: { fontSize: 20, fontFamily: Fonts.bold, color: THEME.textDark, marginBottom: 4 },
+    userCode: { fontSize: 14, fontFamily: Fonts.medium, color: THEME.textMuted, marginBottom: 16 },
+
+    badgeRow: { flexDirection: 'row', gap: 8 },
+    chip: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 5,
-        backgroundColor: C.accentSoft,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
+        backgroundColor: THEME.primaryLight,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 100,
+        gap: 6,
     },
-    infoBadgeText: {
-        fontSize: 11,
-        fontFamily: Fonts.medium,
-        color: C.accent,
-    },
+    chipText: { fontSize: 12, color: THEME.primary, fontFamily: Fonts.semiBold },
 
-    content: {
+    infoWrapper: { gap: 16 }, logoutCard: {
+        marginTop: 24,
+        backgroundColor: THEME.white,
+        borderRadius: 20,
         padding: 16,
-        gap: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        // Subtle red border to hint at action without being "too much"
+        borderWidth: 1,
+        borderColor: '#FEE2E2', // light red
+        elevation: 2,
+        shadowColor: THEME.danger,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
     },
+    logoutIconContainer: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#FEF2F2', // very light red
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
+    },
+    logoutText: {
+        flex: 1,
+        fontSize: 16,
+        fontFamily: Fonts.semiBold,
+        color: THEME.danger, // Bright red text
+    },
+    footer: { marginTop: 30, alignItems: 'center' },
+    versionText: { fontSize: 15, color: THEME.textMuted, fontFamily: Fonts.regular },
 });
 
-const cardStyles = StyleSheet.create({
-    container: {
-        backgroundColor: C.white,
-        borderRadius: 14,
-        borderWidth: 0.5,
-        borderColor: C.border,
-        overflow: 'hidden',
-        marginBottom: 4,
+const sectionStyles = StyleSheet.create({
+    card: {
+        backgroundColor: THEME.white,
+        borderRadius: 20,
+        padding: 16,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
     },
     title: {
-        fontSize: 12,
-        fontFamily: Fonts.semiBold,
-        color: C.textMuted,
+        fontSize: 13,
+        fontFamily: Fonts.bold,
+        color: THEME.textMuted,
         textTransform: 'uppercase',
-        letterSpacing: 0.8,
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: C.border,
-    },
-    body: {
-        paddingHorizontal: 16,
-        paddingVertical: 4,
+        letterSpacing: 1,
+        marginBottom: 12,
+        marginLeft: 4,
     },
 });
 
 const rowStyles = StyleSheet.create({
-    row: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 12,
-    },
-    iconWrap: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        backgroundColor: 'rgba(83,74,183,0.08)',
+    row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        backgroundColor: THEME.primaryLight,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: 14,
     },
-    textWrap: { flex: 1 },
-    label: {
-        fontSize: 11,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
-        marginBottom: 2,
-    },
-    value: {
-        fontSize: 13,
-        fontFamily: Fonts.medium,
-        color: C.text,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: C.border,
-        marginLeft: 44,
-    },
+    textContainer: { flex: 1 },
+    label: { fontSize: 12, color: THEME.textMuted, fontFamily: Fonts.regular, marginBottom: 2 },
+    value: { fontSize: 15, color: THEME.textDark, fontFamily: Fonts.semiBold },
+    line: { height: 1, backgroundColor: THEME.divider, marginLeft: 54 },
 });

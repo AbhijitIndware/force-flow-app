@@ -6,6 +6,7 @@ export type MainNavigationStackParamList = {
   SoNavigation: undefined;
   LoginScreen: undefined;
   SignupScreen: undefined;
+  DistributorNavigation: undefined
 };
 export type PromoterAppStackParamList = {
   Home: undefined;
@@ -25,6 +26,9 @@ export type PromoterAppStackParamList = {
 export type DistributorAppStackParamList = {
   DistributorHome: undefined;
   DistributorHomeScreen: undefined;
+  PurchaseOrdersScreen: undefined;
+  DeliveryNotesScreen: undefined;
+  DistributorProfileScreen: undefined;
 };
 export type SoAppStackParamList = {
   Home: undefined;

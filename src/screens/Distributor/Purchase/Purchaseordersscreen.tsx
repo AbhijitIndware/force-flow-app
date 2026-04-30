@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
     RefreshControl,
+    ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -168,26 +169,30 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                     ) : null}
                 </View>
             </View>
-
-            {/* Status filter chips */}
-            <View style={styles.filterRow}>
-                {STATUS_FILTERS.map(s => (
-                    <TouchableOpacity
-                        key={s}
-                        style={[
-                            styles.chip,
-                            activeStatus === s && styles.chipActive,
-                        ]}
-                        onPress={() => handleStatusFilter(s)}>
-                        <Text
+            <View style={styles.filterContainer}>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filterScrollContent}
+                >
+                    {STATUS_FILTERS.map(s => (
+                        <TouchableOpacity
+                            key={s}
                             style={[
-                                styles.chipText,
-                                activeStatus === s && styles.chipTextActive,
-                            ]}>
-                            {s}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+                                styles.chip,
+                                activeStatus === s && styles.chipActive,
+                            ]}
+                            onPress={() => handleStatusFilter(s)}>
+                            <Text
+                                style={[
+                                    styles.chipText,
+                                    activeStatus === s && styles.chipTextActive,
+                                ]}>
+                                {s}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
             </View>
 
             {/* Summary row */}
@@ -251,6 +256,13 @@ const styles = StyleSheet.create({
         backgroundColor: C.white,
         borderBottomWidth: 1,
         borderBottomColor: C.border,
+    }, filterContainer: {
+        backgroundColor: Colors.white, // or your background color
+        paddingVertical: 12,
+    },
+    filterScrollContent: {
+        paddingHorizontal: 16, // Keeps chips from hitting screen edges
+        gap: 8, // Modern way to handle spacing between chips
     },
     backBtn: {
         width: 38,

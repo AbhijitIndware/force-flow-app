@@ -1,20 +1,21 @@
 import React from 'react';
 import PromoterNavigation from '../Promoter/PromoterNavigation/PromoterNavigation';
 import SoNavigation from '../SO/SoNavigation/SoNavigation';
-import {MainNavigationStackParamList} from '../../types/Navigation';
-import {createStackNavigator} from '@react-navigation/stack';
+import { MainNavigationStackParamList } from '../../types/Navigation';
+import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
-import {useAppDispatch, useAppSelector} from '../../store/hook';
-import {Text, View} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import { useAppDispatch, useAppSelector } from '../../store/hook';
+import { Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   logout,
   useCheckSessionQuery,
   useGetProfileDataQuery,
 } from '../../features/auth/auth';
-import {ActivityIndicator} from 'react-native';
-import {StyleSheet} from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { StyleSheet } from 'react-native';
+import DistributorNavigation from '../Distributor/DistributorNavigation/DistributorNavigation';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
@@ -31,11 +32,25 @@ const MainNavigation = () => {
   const employeeId = useAppSelector(
     state => state?.persistedReducer?.authSlice?.empId,
   );
-  const userType =
-    employee?.designation !== 'Promoter' ? 'Sales Officer' : 'PROMOTER';
+  const designation = employee?.designation;
+
+  let userType: 'PROMOTER' | 'SALES_OFFICER' | 'DISTRIBUTOR' | null = null;
+
+  if (designation === 'Promoter') {
+    userType = 'PROMOTER';
+  } else if (
+    ['ASM', 'ASE', 'Area Sales Executive', 'Sales Officer'].includes(
+      designation || '',
+    )
+  ) {
+    userType = 'SALES_OFFICER';
+  } else if (designation === 'Distributor') {
+    userType = 'DISTRIBUTOR';
+  }
+
   const insets = useSafeAreaInsets();
   useGetProfileDataQuery(
-    {emp_id: employeeId as string},
+    { emp_id: employeeId as string },
     {
       refetchOnFocus: true,
       skip: !employeeId,
@@ -46,7 +61,7 @@ const MainNavigation = () => {
     data,
     isLoading,
     error: sessionError,
-  } = useCheckSessionQuery({sId: sId as string}, {skip: !sId});
+  } = useCheckSessionQuery({ sId: sId as string }, { skip: !sId });
 
   React.useEffect(() => {
     if (
@@ -69,7 +84,7 @@ const MainNavigation = () => {
   }
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       {sessionExpired && <SessionExpiredBanner />}
       {isAuthenticated && userType ? (
         <AppStackNavigator userType={userType} insets={insets} />
@@ -87,7 +102,7 @@ const SessionExpiredBanner = () => (
   </View>
 );
 
-const AuthStackNavigator = ({insets}: any) => (
+const AuthStackNavigator = ({ insets }: any) => (
   <View
     style={{
       flex: 1,
@@ -95,7 +110,7 @@ const AuthStackNavigator = ({insets}: any) => (
       paddingBottom: insets.bottom,
     }}>
     <AuthStack.Navigator
-      screenOptions={{headerShown: false}}
+      screenOptions={{ headerShown: false }}
       initialRouteName="LoginScreen">
       <AuthStack.Screen name="LoginScreen" component={LoginScreen} />
       <AuthStack.Screen name="SignupScreen" component={SignupScreen} />
@@ -107,7 +122,7 @@ const AppStackNavigator = ({
   userType,
   insets,
 }: {
-  userType: 'PROMOTER' | 'Sales Officer';
+  userType: "PROMOTER" | "SALES_OFFICER" | "DISTRIBUTOR";
   insets: any;
 }) => (
   <View
@@ -116,21 +131,33 @@ const AppStackNavigator = ({
       paddingTop: insets.top,
       paddingBottom: insets.bottom,
     }}>
-    <AppStack.Navigator screenOptions={{headerShown: false}}>
-      {userType === 'PROMOTER' ? (
+    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+      {userType === 'PROMOTER' && (
         <AppStack.Screen
           name="PromoterNavigation"
           component={PromoterNavigation}
         />
-      ) : (
-        <AppStack.Screen name="SoNavigation" component={SoNavigation} />
+      )}
+
+      {userType === 'SALES_OFFICER' && (
+        <AppStack.Screen
+          name="SoNavigation"
+          component={SoNavigation}
+        />
+      )}
+
+      {userType === 'DISTRIBUTOR' && (
+        <AppStack.Screen
+          name="DistributorNavigation"
+          component={DistributorNavigation}
+        />
       )}
     </AppStack.Navigator>
   </View>
 );
 
 const FullScreenLoader = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <ActivityIndicator size="large" color="#000" />
   </View>
 );

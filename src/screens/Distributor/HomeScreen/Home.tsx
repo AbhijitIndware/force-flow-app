@@ -147,7 +147,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => props.navigation.navigate('ProfileScreen' as never)}>
+          onPress={() => props.navigation.navigate('DistributorProfileScreen' as never)}>
           {profileImageSource ? (
             <Image
               source={profileImageSource}

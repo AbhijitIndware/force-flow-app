@@ -1,3 +1,5 @@
+import { Distributor } from "./baseType";
+
 export interface ILogin {
   data: {
     usr: string;
@@ -19,6 +21,7 @@ export type RLogin = {
       api_key: string;
       api_secret: string;
     };
+    distributor?: Distributor | null;
     employee: Employee;
   };
 };
