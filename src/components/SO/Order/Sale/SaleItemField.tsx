@@ -64,6 +64,7 @@ const SaleItemField: React.FC<Props> = ({
       { store: store as string },
       { skip: !store },
     );
+  console.log("🚀 ~ SaleItemField ~ stockData:", stockData)
 
   // Derive stockInfo from the local `currentItemCode` state (not item.item_code
   // directly). This lets us set currentItemCode to null the moment a new item

@@ -42,7 +42,7 @@ import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { uniqueByValue } from '../../../utils/utils';
-import { ICity, Store, StoreDataById } from '../../../types/baseType';
+import { Distributor, ICity, Store, StoreDataById } from '../../../types/baseType';
 
 const { width } = Dimensions.get('window');
 const transformList = (arr: { name: string }[] = []) => {
@@ -51,10 +51,10 @@ const transformList = (arr: { name: string }[] = []) => {
 };
 
 const disTransformList = (
-  arr: { name: string; distributor_name: string }[] = [],
+  arr: Distributor[] = [],
 ) => {
   const unique = Array.from(new Map(arr.map(i => [i.name, i])).values());
-  return unique.map(i => ({ label: i.distributor_name, value: i.name }));
+  return unique.map(i => ({ label: `${i.distributor_name} (${i.city}, ${i.state}) • ${i.mobile}`, value: i.name }));
 };
 
 const initial = {
@@ -468,7 +468,7 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
 
   useEffect(() => {
     if (distributorData?.message?.data) {
-      const newData = disTransformList(distributorData.message.data);
+      const newData = disTransformList(distributorData?.message?.data as any);
       setDistributorListData(prev => {
         let merged = [];
         if (

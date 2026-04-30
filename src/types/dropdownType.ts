@@ -1,4 +1,4 @@
-import {ApiResponse, Filters, PaginationInfo} from './Navigation';
+import { ApiResponse, Filters, PaginationInfo } from './Navigation';
 
 export type RResponse = {
   message: {
@@ -11,13 +11,24 @@ export type RResponse = {
     search: string | null;
   };
 };
+type Distributor = {
+  name: string;
+  distributor_name: string;
+  distributor_group: string;
+  distributor_code: string;
+  mobile: string;
+  email: string;
+  employee: string;
+  zone: string;
+  state: string;
+  city: string;
+  reports_to: string;
+  designation: string;
+};
 export type RDistributor = {
   message: {
     status: string;
-    data: {
-      name: string;
-      distributor_name: string;
-    }[];
+    data: Distributor[];
     pagination: PaginationInfo;
     filters: Filters;
     search: string | null;
