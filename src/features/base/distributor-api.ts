@@ -64,9 +64,11 @@ export const distributorBaseApi = createApi({
                 page: number;
                 page_size: number;
                 search?: string;
+                from_date?: string;
+                to_date?: string;
             }
         >({
-            query: ({ status, page, page_size, search }) => ({
+            query: ({ status, page, page_size, search, from_date, to_date }) => ({
                 url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_notes_list',
                 method: 'GET',
                 params: {
@@ -74,6 +76,8 @@ export const distributorBaseApi = createApi({
                     page,
                     page_size,
                     search,
+                    from_date,
+                    to_date,
                 },
             }),
             providesTags: ['Distributor'],

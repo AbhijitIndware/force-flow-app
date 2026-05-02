@@ -5,16 +5,19 @@ import {
     FlatList,
     RefreshControl,
     SafeAreaView,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
+    Platform,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Truck, Search } from 'lucide-react-native';
+import { Truck, Search, CalendarDays, ChevronDown } from 'lucide-react-native';
 import moment from 'moment';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useGetDeliveryNotesListQuery } from '../../../features/base/distributor-api';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -42,6 +45,7 @@ const C = {
 
 const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered', 'Partially Delivered', 'Rejected'];
 
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const colorMap: Record<string, { bg: string; text: string }> = {
         Pending: { bg: '#FEF3C7', text: '#92400E' },
@@ -58,17 +62,62 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     );
 };
 
+// ─── Date Picker Button ───────────────────────────────────────────────────────
+const DatePickerButton: React.FC<{
+    label: string;
+    date: Date;
+    onPress: () => void;
+}> = ({ label, date, onPress }) => (
+    <TouchableOpacity style={datePickerStyles.btn} onPress={onPress} activeOpacity={0.75}>
+        <CalendarDays size={13} color={C.accent} />
+        <View style={{ flex: 1 }}>
+            <Text style={datePickerStyles.btnLabel}>{label}</Text>
+            <Text style={datePickerStyles.btnDate}>{moment(date).format('DD MMM YYYY')}</Text>
+        </View>
+        <ChevronDown size={14} color={C.textMuted} />
+    </TouchableOpacity>
+);
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 const DeliveryNotesScreen = ({ navigation }: Props) => {
     const [search, setSearch] = useState('');
     const [activeStatus, setActiveStatus] = useState('All');
     const [page, setPage] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
 
+    // ── Date Range State ───────────────────────────────────────────────────────
+    const [fromDate, setFromDate] = useState<Date>(moment().startOf('month').toDate());
+    const [toDate, setToDate] = useState<Date>(new Date());
+    const [showFromPicker, setShowFromPicker] = useState(false);
+    const [showToPicker, setShowToPicker] = useState(false);
+
+    const fromDateStr = moment(fromDate).format('YYYY-MM-DD');
+    const toDateStr = moment(toDate).format('YYYY-MM-DD');
+
+    const handleFromChange = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowFromPicker(Platform.OS === 'ios');
+        if (event.type === 'set' && selected) {
+            if (moment(selected).isAfter(toDate)) setToDate(selected);
+            setFromDate(selected);
+            setPage(1);
+        }
+    };
+
+    const handleToChange = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowToPicker(Platform.OS === 'ios');
+        if (event.type === 'set' && selected) {
+            setToDate(selected);
+            setPage(1);
+        }
+    };
+
     const { data, isFetching, refetch } = useGetDeliveryNotesListQuery({
         page,
         page_size: 10,
         search: search || undefined,
         status: activeStatus === 'All' ? undefined : activeStatus,
+        from_date: fromDateStr,
+        to_date: toDateStr,
     });
 
     const notes: DeliveryNoteItem[] = data?.message?.data?.delivery_notes ?? [];
@@ -123,18 +172,11 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
                             <Text style={styles.qtyTotal}> of {item.ordered_qty} delivered</Text>
                         </Text>
                     </View>
-
                 </View>
             </View>
-
-            {/* Footer Section */}
-            {/* <View style={styles.cardFooter}>
-                <View style={styles.footerInfo}>
-                </View>
-                <Ionicons name="chevron-forward" size={14} color={C.accent} />
-            </View> */}
         </TouchableOpacity>
     );
+
     const renderEmpty = () =>
         !isFetching ? (
             <View style={styles.emptyState}>
@@ -150,7 +192,8 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            {/* Header */}
+
+            {/* ── Header ── */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={22} color={C.text} />
@@ -159,7 +202,7 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
                 <View style={{ width: 38 }} />
             </View>
 
-            {/* Search */}
+            {/* ── Search ── */}
             <View style={styles.searchRow}>
                 <View style={styles.searchBox}>
                     <Search size={16} color={C.textMuted} />
@@ -181,32 +224,75 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
                 </View>
             </View>
 
-            {/* Filter chips */}
-            <View style={styles.filterRow}>
-                {STATUS_FILTERS.map(s => (
-                    <TouchableOpacity
-                        key={s}
-                        style={[styles.chip, activeStatus === s && styles.chipActive]}
-                        onPress={() => {
-                            setActiveStatus(s);
-                            setPage(1);
-                        }}>
-                        <Text style={[styles.chipText, activeStatus === s && styles.chipTextActive]}>
-                            {s}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+            {/* ── Date Range Picker ── */}
+            <View style={datePickerStyles.container}>
+                <DatePickerButton
+                    label="From"
+                    date={fromDate}
+                    onPress={() => setShowFromPicker(true)}
+                />
+                <View style={datePickerStyles.divider} />
+                <DatePickerButton
+                    label="To"
+                    date={toDate}
+                    onPress={() => setShowToPicker(true)}
+                />
             </View>
 
-            {/* Summary */}
+            {showFromPicker && (
+                <DateTimePicker
+                    value={fromDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    maximumDate={toDate}
+                    onChange={handleFromChange}
+                />
+            )}
+            {showToPicker && (
+                <DateTimePicker
+                    value={toDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    minimumDate={fromDate}
+                    maximumDate={new Date()}
+                    onChange={handleToChange}
+                />
+            )}
+
+            {/* ── Filter chips ── */}
+            <View style={styles.filterContainer}>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    // style={styles.filterRow}
+                    contentContainerStyle={styles.filterContent}>
+                    {STATUS_FILTERS.map(s => (
+                        <TouchableOpacity
+                            key={s}
+                            style={[styles.chip, activeStatus === s && styles.chipActive]}
+                            onPress={() => {
+                                setActiveStatus(s);
+                                setPage(1);
+                            }}>
+                            <Text style={[styles.chipText, activeStatus === s && styles.chipTextActive]}>
+                                {s}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+
+            {/* ── Summary ── */}
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryText}>
                     {notes.length} Delivery note{notes.length !== 1 ? 's' : ''}
                     {activeStatus !== 'All' ? ` · ${activeStatus}` : ''}
+                    {' · '}{moment(fromDate).format('DD MMM')} – {moment(toDate).format('DD MMM YYYY')}
                 </Text>
             </View>
 
-            {/* List */}
+            {/* ── List ── */}
             <FlatList
                 data={notes}
                 keyExtractor={item => item.delivery_note_id}
@@ -228,6 +314,7 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
 
 export default DeliveryNotesScreen;
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: C.background },
     header: {
@@ -278,12 +365,13 @@ const styles = StyleSheet.create({
         color: C.text,
         padding: 0,
     },
-    filterRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        gap: 6,
+    filterContainer: {
         backgroundColor: C.white,
+        paddingVertical: 10,
+    },
+    filterContent: {
+        paddingHorizontal: 16,
+        gap: 8,
     },
     chip: {
         paddingHorizontal: 12,
@@ -303,9 +391,7 @@ const styles = StyleSheet.create({
         backgroundColor: C.white,
         borderRadius: 16,
         marginBottom: 5,
-        // Elevation for Android
         elevation: 3,
-        // Shadow for iOS
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
@@ -322,35 +408,12 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',
     },
-    idContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    cardId: {
-        fontSize: 13,
-        fontFamily: Fonts.bold,
-        color: C.text,
-        letterSpacing: 0.3
-    },
-    cardContent: {
-        padding: 5,
-        paddingHorizontal: 12
-    },
-    mainInfo: {
-        marginBottom: 0,
-        paddingHorizontal: 10
-    },
-    distributorName: {
-        fontSize: 15,
-        fontFamily: Fonts.semiBold,
-        color: C.text,
-        marginBottom: 4,
-    },
-    cardMeta: {
-        fontSize: 12,
-        fontFamily: Fonts.regular,
-        color: C.textMuted
-    },
+    idContainer: { flexDirection: 'row', alignItems: 'center' },
+    cardId: { fontSize: 13, fontFamily: Fonts.bold, color: C.text, letterSpacing: 0.3 },
+    cardContent: { padding: 5, paddingHorizontal: 12 },
+    mainInfo: { marginBottom: 0, paddingHorizontal: 10 },
+    distributorName: { fontSize: 15, fontFamily: Fonts.semiBold, color: C.text, marginBottom: 4 },
+    cardMeta: { fontSize: 12, fontFamily: Fonts.regular, color: C.textMuted },
     statsRow: {
         flexDirection: 'row',
         backgroundColor: '#F9FAFB',
@@ -358,31 +421,11 @@ const styles = StyleSheet.create({
         padding: 12,
         alignItems: 'center',
     },
-    statItem: {
-        flex: 1,
-    },
-    statDivider: {
-        width: 1,
-        height: 24,
-        backgroundColor: '#E5E7EB',
-        marginHorizontal: 12,
-    },
-    statLabel: {
-        fontSize: 10,
-        fontFamily: Fonts.bold,
-        color: C.textMuted,
-        marginBottom: 2,
-    },
-    statValue: {
-        fontSize: 14,
-        fontFamily: Fonts.semiBold,
-        color: C.text,
-    },
-    qtyTotal: {
-        fontSize: 12,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
-    },
+    statItem: { flex: 1 },
+    statDivider: { width: 1, height: 24, backgroundColor: '#E5E7EB', marginHorizontal: 12 },
+    statLabel: { fontSize: 10, fontFamily: Fonts.bold, color: C.textMuted, marginBottom: 2 },
+    statValue: { fontSize: 14, fontFamily: Fonts.semiBold, color: C.text },
+    qtyTotal: { fontSize: 12, fontFamily: Fonts.regular, color: C.textMuted },
     cardFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -393,32 +436,40 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: 16,
         borderBottomRightRadius: 16,
     },
-    footerInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    footerText: {
-        fontSize: 11,
-        fontFamily: Fonts.medium,
-        color: C.textMuted,
-    },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 60,
-        gap: 10,
-    },
+    footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    footerText: { fontSize: 11, fontFamily: Fonts.medium, color: C.textMuted },
+    emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60, gap: 10 },
     emptyTitle: { fontSize: Size.md, fontFamily: Fonts.semiBold, color: C.text },
-    emptySubtitle: {
-        fontSize: Size.sm,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
-        textAlign: 'center',
-    },
+    emptySubtitle: { fontSize: Size.sm, fontFamily: Fonts.regular, color: C.textMuted, textAlign: 'center' },
 });
 
 const badgeStyles = StyleSheet.create({
     badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     text: { fontSize: 10, fontWeight: '700' },
+});
+
+// ─── Date Picker Styles ───────────────────────────────────────────────────────
+const datePickerStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 16,
+        marginVertical: 10,
+        backgroundColor: C.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: C.border,
+        overflow: 'hidden',
+    },
+    btn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+    },
+    divider: { width: 1, height: 36, backgroundColor: C.border },
+    btnLabel: { fontFamily: Fonts.regular, fontSize: 10, color: C.textMuted, lineHeight: 13 },
+    btnDate: { fontFamily: Fonts.semiBold, fontSize: 12, color: C.text, lineHeight: 16 },
 });

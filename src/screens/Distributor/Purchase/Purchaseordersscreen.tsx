@@ -11,11 +11,13 @@ import {
     View,
     RefreshControl,
     ScrollView,
+    Platform,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ShoppingCart, Package, Search, Filter } from 'lucide-react-native';
+import { ShoppingCart, Package, Search, CalendarDays, ChevronDown } from 'lucide-react-native';
 import moment from 'moment';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useGetPurchaseOrdersListQuery } from '../../../features/base/distributor-api';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -44,6 +46,7 @@ const C = {
 
 const STATUS_FILTERS = ['All', 'Pending', 'Approved', 'Delivered', 'Partially Delivered', 'Rejected'];
 
+// ─── Status Badge ─────────────────────────────────────────────────────────────
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const colorMap: Record<string, { bg: string; text: string }> = {
         Pending: { bg: '#FEF3C7', text: '#92400E' },
@@ -60,18 +63,64 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     );
 };
 
+// ─── Date Picker Button ───────────────────────────────────────────────────────
+const DatePickerButton: React.FC<{
+    label: string;
+    date: Date;
+    onPress: () => void;
+}> = ({ label, date, onPress }) => (
+    <TouchableOpacity style={datePickerStyles.btn} onPress={onPress} activeOpacity={0.75}>
+        <CalendarDays size={13} color={C.accent} />
+        <View style={{ flex: 1 }}>
+            <Text style={datePickerStyles.btnLabel}>{label}</Text>
+            <Text style={datePickerStyles.btnDate}>{moment(date).format('DD MMM YYYY')}</Text>
+        </View>
+        <ChevronDown size={14} color={C.textMuted} />
+    </TouchableOpacity>
+);
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 const PurchaseOrdersScreen = ({ navigation }: Props) => {
     const [search, setSearch] = useState('');
     const [activeStatus, setActiveStatus] = useState('All');
     const [page, setPage] = useState(1);
     const [refreshing, setRefreshing] = useState(false);
 
+    // ── Date Range State ───────────────────────────────────────────────────────
+    const [fromDate, setFromDate] = useState<Date>(moment().startOf('month').toDate());
+    const [toDate, setToDate] = useState<Date>(new Date());
+    const [showFromPicker, setShowFromPicker] = useState(false);
+    const [showToPicker, setShowToPicker] = useState(false);
+
+    const fromDateStr = moment(fromDate).format('YYYY-MM-DD');
+    const toDateStr = moment(toDate).format('YYYY-MM-DD');
+
+    const handleFromChange = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowFromPicker(Platform.OS === 'ios');
+        if (event.type === 'set' && selected) {
+            if (moment(selected).isAfter(toDate)) setToDate(selected);
+            setFromDate(selected);
+            setPage(1);
+        }
+    };
+
+    const handleToChange = (event: DateTimePickerEvent, selected?: Date) => {
+        setShowToPicker(Platform.OS === 'ios');
+        if (event.type === 'set' && selected) {
+            setToDate(selected);
+            setPage(1);
+        }
+    };
+
     const { data, isFetching, refetch } = useGetPurchaseOrdersListQuery({
         page,
         page_size: 20,
         search: search || undefined,
         status: activeStatus === 'All' ? undefined : activeStatus,
+        from_date: fromDateStr,
+        to_date: toDateStr,
     });
+
     const orders: PurchaseOrder[] = data?.message?.data?.purchase_orders ?? [];
     const totalPages = data?.message?.data?.pagination?.total_pages ?? 1;
 
@@ -134,7 +183,8 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            {/* Header */}
+
+            {/* ── Header ── */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <Ionicons name="arrow-back" size={22} color={C.text} />
@@ -143,7 +193,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                 <View style={{ width: 38 }} />
             </View>
 
-            {/* Search */}
+            {/* ── Search ── */}
             <View style={styles.searchRow}>
                 <View style={styles.searchBox}>
                     <Search size={16} color={C.textMuted} />
@@ -165,25 +215,54 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                     ) : null}
                 </View>
             </View>
+
+            {/* ── Date Range Picker ── */}
+            <View style={datePickerStyles.container}>
+                <DatePickerButton
+                    label="From"
+                    date={fromDate}
+                    onPress={() => setShowFromPicker(true)}
+                />
+                <View style={datePickerStyles.divider} />
+                <DatePickerButton
+                    label="To"
+                    date={toDate}
+                    onPress={() => setShowToPicker(true)}
+                />
+            </View>
+
+            {showFromPicker && (
+                <DateTimePicker
+                    value={fromDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    maximumDate={toDate}
+                    onChange={handleFromChange}
+                />
+            )}
+            {showToPicker && (
+                <DateTimePicker
+                    value={toDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                    minimumDate={fromDate}
+                    maximumDate={new Date()}
+                    onChange={handleToChange}
+                />
+            )}
+
+            {/* ── Status Filter Chips ── */}
             <View style={styles.filterContainer}>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterScrollContent}
-                >
+                    contentContainerStyle={styles.filterScrollContent}>
                     {STATUS_FILTERS.map(s => (
                         <TouchableOpacity
                             key={s}
-                            style={[
-                                styles.chip,
-                                activeStatus === s && styles.chipActive,
-                            ]}
+                            style={[styles.chip, activeStatus === s && styles.chipActive]}
                             onPress={() => handleStatusFilter(s)}>
-                            <Text
-                                style={[
-                                    styles.chipText,
-                                    activeStatus === s && styles.chipTextActive,
-                                ]}>
+                            <Text style={[styles.chipText, activeStatus === s && styles.chipTextActive]}>
                                 {s}
                             </Text>
                         </TouchableOpacity>
@@ -191,15 +270,16 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                 </ScrollView>
             </View>
 
-            {/* Summary row */}
+            {/* ── Summary Row ── */}
             <View style={styles.summaryRow}>
                 <Text style={styles.summaryText}>
                     {orders.length} order{orders.length !== 1 ? 's' : ''}
                     {activeStatus !== 'All' ? ` · ${activeStatus}` : ''}
+                    {' · '}{moment(fromDate).format('DD MMM')} – {moment(toDate).format('DD MMM YYYY')}
                 </Text>
             </View>
 
-            {/* List */}
+            {/* ── List ── */}
             <FlatList
                 data={orders}
                 keyExtractor={item => item.order_id}
@@ -216,7 +296,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                 onEndReachedThreshold={0.3}
             />
 
-            {/* Pagination footer */}
+            {/* ── Pagination ── */}
             {totalPages > 1 && (
                 <View style={styles.paginationBar}>
                     <TouchableOpacity
@@ -225,9 +305,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                         onPress={() => setPage(p => Math.max(1, p - 1))}>
                         <Ionicons name="chevron-back" size={16} color={page === 1 ? C.textMuted : C.accent} />
                     </TouchableOpacity>
-                    <Text style={styles.pageText}>
-                        Page {page} / {totalPages}
-                    </Text>
+                    <Text style={styles.pageText}>Page {page} / {totalPages}</Text>
                     <TouchableOpacity
                         style={[styles.pageBtn, page >= totalPages && styles.pageBtnDisabled]}
                         disabled={page >= totalPages}
@@ -242,6 +320,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
 
 export default PurchaseOrdersScreen;
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
     safeArea: { flex: 1, backgroundColor: C.background },
     header: {
@@ -252,13 +331,6 @@ const styles = StyleSheet.create({
         backgroundColor: C.white,
         borderBottomWidth: 1,
         borderBottomColor: C.border,
-    }, filterContainer: {
-        backgroundColor: Colors.white, // or your background color
-        paddingVertical: 12,
-    },
-    filterScrollContent: {
-        paddingHorizontal: 16, // Keeps chips from hitting screen edges
-        gap: 8, // Modern way to handle spacing between chips
     },
     backBtn: {
         width: 38,
@@ -299,13 +371,13 @@ const styles = StyleSheet.create({
         color: C.text,
         padding: 0,
     },
-    filterRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        gap: 6,
+    filterContainer: {
         backgroundColor: C.white,
-        flexWrap: 'nowrap',
+        paddingVertical: 10,
+    },
+    filterScrollContent: {
+        paddingHorizontal: 16,
+        gap: 8,
     },
     chip: {
         paddingHorizontal: 12,
@@ -324,9 +396,7 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.medium,
         color: C.textMuted,
     },
-    chipTextActive: {
-        color: C.white,
-    },
+    chipTextActive: { color: C.white },
     summaryRow: {
         paddingHorizontal: 16,
         paddingVertical: 8,
@@ -358,37 +428,17 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    cardId: {
-        fontSize: 13,
-        fontFamily: Fonts.semiBold,
-        color: C.text,
-    },
-    cardMeta: {
-        fontSize: 11,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
-    },
-    cardAmount: {
-        fontSize: 13,
-        fontFamily: Fonts.semiBold,
-        color: C.accent,
-    },
-    cardSub: {
-        fontSize: 11,
-        fontFamily: Fonts.regular,
-        color: C.textMuted,
-    },
+    cardId: { fontSize: 13, fontFamily: Fonts.semiBold, color: C.text },
+    cardMeta: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted },
+    cardAmount: { fontSize: 13, fontFamily: Fonts.semiBold, color: C.accent },
+    cardSub: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 60,
         gap: 10,
     },
-    emptyTitle: {
-        fontSize: Size.md,
-        fontFamily: Fonts.semiBold,
-        color: C.text,
-    },
+    emptyTitle: { fontSize: Size.md, fontFamily: Fonts.semiBold, color: C.text },
     emptySubtitle: {
         fontSize: Size.sm,
         fontFamily: Fonts.regular,
@@ -414,14 +464,50 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     pageBtnDisabled: { opacity: 0.4 },
-    pageText: {
-        fontSize: 13,
-        fontFamily: Fonts.medium,
-        color: C.text,
-    },
+    pageText: { fontSize: 13, fontFamily: Fonts.medium, color: C.text },
 });
 
 const badgeStyles = StyleSheet.create({
     badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
     text: { fontSize: 10, fontWeight: '700' },
+});
+
+// ─── Date Picker Styles ───────────────────────────────────────────────────────
+const datePickerStyles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 16,
+        marginVertical: 10,
+        backgroundColor: C.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: C.border,
+        overflow: 'hidden',
+    },
+    btn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+    },
+    divider: {
+        width: 1,
+        height: 36,
+        backgroundColor: C.border,
+    },
+    btnLabel: {
+        fontFamily: Fonts.regular,
+        fontSize: 10,
+        color: C.textMuted,
+        lineHeight: 13,
+    },
+    btnDate: {
+        fontFamily: Fonts.semiBold,
+        fontSize: 12,
+        color: C.text,
+        lineHeight: 16,
+    },
 });
