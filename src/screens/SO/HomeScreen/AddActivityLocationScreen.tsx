@@ -22,14 +22,32 @@ import Toast from 'react-native-toast-message';
 import { MapPin, Navigation, Save } from 'lucide-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'AddActivityLocationScreen'>;
 
+const LOCATION_TYPES = [
+  { label: 'Office Visit', value: 'Office Visit' },
+  { label: 'Miscellaneous Visit', value: 'Miscellaneous Visit' },
+  { label: 'Distributor Point', value: 'Distributor Point' },
+  { label: 'Key Account', value: 'Key Account' },
+  { label: 'New Account Opening', value: 'New Account Opening' },
+  { label: 'Distributor Opening', value: 'Distributor Opening' },
+];
+
+// Location types that require an additional text input
+const TYPES_WITH_TEXT_INPUT = ['Office Visit', 'Miscellaneous Visit', 'Key Account'];
+
 const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp }) => {
   const [locationName, setLocationName] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationDetail, setLocationDetail] = useState('');
   const [address, setAddress] = useState('');
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+
+  const showDetailInput = TYPES_WITH_TEXT_INPUT.includes(locationName);
 
   const [createLocation, { isLoading }] = useCreateActivityLocationMutation();
 
@@ -46,6 +64,17 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
       setAddress(locationData.message.raw.display_name);
     }
   }, [locationData]);
+
+  // Clear detail input when switching to a type that doesn't need it
+  useEffect(() => {
+    if (!showDetailInput) {
+      setLocationDetail('');
+    }
+  }, [locationName]);
+
+  const filteredLocationTypes = LOCATION_TYPES.filter((item) =>
+    item.label.toLowerCase().includes(locationSearch.toLowerCase())
+  );
 
   const handleGetLocation = async () => {
     try {
@@ -71,7 +100,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
 
   const handleSubmit = async () => {
     if (!locationName.trim()) {
-      Toast.show({ type: 'error', text1: 'Please enter location name' });
+      Toast.show({ type: 'error', text1: 'Please select a location name' });
       return;
     }
     if (!coordinates) {
@@ -92,10 +121,10 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
         navigation.goBack();
       }
     } catch (error: any) {
-      console.log("🚀 ~ handleSubmit ~ error:", error)
+      console.log('🚀 ~ handleSubmit ~ error:', error);
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to create location'
+        text1: error?.data?.message || 'Failed to create location',
       });
     }
   };
@@ -109,18 +138,35 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Location Name *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Regional Office, City Event"
-                value={locationName}
-                placeholderTextColor={Colors.gray}
-                onChangeText={setLocationName}
-              />
-            </View>
 
+            {/* Location Name Dropdown */}
+            <ReusableDropdown
+              label="Location Type"
+              field="value"
+              value={locationName}
+              data={filteredLocationTypes}
+              onChange={(item: any) => {
+                setLocationName(item)
+              }}
+              searchText={locationSearch}
+              setSearchText={setLocationSearch}
+              marginBottom={0}
+            />
+            {/* Conditional Detail Text Input */}
+            {showDetailInput && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>{locationName} Details</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`Enter details for ${locationName}`}
+                  placeholderTextColor={Colors.gray}
+                  value={locationDetail}
+                  onChangeText={setLocationDetail}
+                />
+              </View>
+            )}
 
+            {/* Coordinates Card */}
             <View style={styles.coordinatesCard}>
               <View style={styles.cardHeader}>
                 <MapPin size={20} color={Colors.darkButton} />
@@ -158,6 +204,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
               </TouchableOpacity>
             </View>
 
+            {/* Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Address / Landmark</Text>
               <TextInput
@@ -170,6 +217,7 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 numberOfLines={3}
               />
             </View>
+
           </View>
         </ScrollView>
 
@@ -208,11 +256,11 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   inputGroup: {
-    gap: 8,
+    gap: 5,
   },
   label: {
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: '#374151',
   },
   input: {

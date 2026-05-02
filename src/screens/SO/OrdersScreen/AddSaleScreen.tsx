@@ -85,7 +85,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const orderId = route.params?.orderId;
   const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
   const [selectedStoreName, setSelectedStoreName] = useState<string>('');
-  console.log("🚀 ~ AddSaleScreen ~ selectedStoreName:", selectedStoreName)
   const [hasLockedItem, setHasLockedItem] = useState(false); // ← NEW
 
   const user = useAppSelector(
@@ -215,7 +214,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     <SafeAreaView
       style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title="Create Sales Order"
+        title="Create Order"
         navigation={() =>
           navigation.navigate('OrdersScreen', { index: 1 })
         }

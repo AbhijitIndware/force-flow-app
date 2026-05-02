@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     paddingHorizontal: 10,
+    backgroundColor: "#eeededff"
     // paddingVertical: 2,
   },
   inputSearchStyle: {

@@ -275,7 +275,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title={id ? 'Edit PJP' : 'Add PJP'}
+        title={id ? 'Modify PJP' : 'Add PJP'}
         navigation={() => navigation.goBack()}
       />
       {showDuplicatePjp && (
@@ -357,7 +357,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>{id ? 'Modify' : 'Add'}</Text>
+            <Text style={styles.submitText}>{id ? 'Modify PJP' : 'Add PJP'}</Text>
           )}
         </TouchableOpacity>
       </View>

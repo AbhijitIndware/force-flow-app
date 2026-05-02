@@ -89,7 +89,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.sales_orders?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total Order</Text>
+                  <Text style={styles.countBoxTitle}>Total Orders</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -102,7 +102,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.sales_orders?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
+                  <Text style={styles.countBoxTitle}>Delivered Orders</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -115,7 +115,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.sales_orders?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending Order</Text>
+                  <Text style={styles.countBoxTitle}>Pending Orders</Text>
                 </View>
               </View>
             </View>
@@ -134,7 +134,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.purchase_orders?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total Order</Text>
+                  <Text style={styles.countBoxTitle}>Total Orders</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -147,7 +147,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.purchase_orders?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Delivered Order</Text>
+                  <Text style={styles.countBoxTitle}>Delivered Orders</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -160,7 +160,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.purchase_orders?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending Order</Text>
+                  <Text style={styles.countBoxTitle}>Pending Orders</Text>
                 </View>
               </View>
             </View>
@@ -179,7 +179,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.delivery_notes?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total DDN</Text>
+                  <Text style={styles.countBoxTitle}>Total Delivery Note</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -192,7 +192,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.delivery_notes?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Approved DDN</Text>
+                  <Text style={styles.countBoxTitle}>Approved Delivery Note</Text>
                 </View>
                 <View style={styles.countBox}>
                   <View
@@ -205,7 +205,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                   <Text style={styles.countBoxDay}>
                     {countData?.message?.data?.delivery_notes?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending DDN</Text>
+                  <Text style={styles.countBoxTitle}>Pending Delivery Note</Text>
                 </View>
               </View>
             </View>
@@ -237,7 +237,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
               gap: 0,
             }}>
             <Tab.Item
-              title="Store"
+              title="Orders"
               titleStyle={{
                 fontSize: Size.xs,
                 fontFamily: Fonts.medium,
@@ -319,7 +319,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
             }>
             <CirclePlus strokeWidth={1.4} color={Colors.white} />
             <Text style={styles.checkinButtonText}>
-              {`Add Sales Orders`}
+              {`Add Orders`}
             </Text>
           </TouchableOpacity>
         </View>

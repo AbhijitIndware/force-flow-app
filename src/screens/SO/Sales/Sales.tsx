@@ -52,8 +52,6 @@ const SalesScreen = ({ navigation, route }: Props) => {
     employee?.designation === 'Area Sales Executive' ||
     employee?.designation === 'ASE';
 
-  console.log("🚀 ~ SalesScreen ~ isAsm:", isAsm);
-
 
   const { data, refetch, isFetching } = useGetSalesRepotsQuery({
     view_type: isAsm

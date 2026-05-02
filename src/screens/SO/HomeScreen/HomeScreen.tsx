@@ -1262,7 +1262,7 @@ const HomeScreen = ({ navigation }: Props) => {
               />
 
               <TargetMetricBox
-                label="Sales Order"
+                label="Orders"
                 achieved={`₹${soAchievement % 1 !== 0 ? soAchievement.toFixed(2) : soAchievement}`}
                 target={`₹${salesTarget}`}
                 rate={soPct}
@@ -1271,7 +1271,7 @@ const HomeScreen = ({ navigation }: Props) => {
             </View>
             <View style={[styles.metricRow, { marginTop: 10 }]}>
               <TargetMetricBox
-                label="DDN Value"
+                label="Delivery Note"
                 achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0 ? (ddnStats?.value ?? 0).toFixed(2) : (ddnStats?.value ?? 0)}`}
                 target={`₹${ddnTarget}`}
                 rate={ddnPct}
@@ -1300,7 +1300,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
                 {/* Sales Target */}
                 <View>
-                  <Text style={styles.modalLabel}>Sales Order Target (₹)</Text>
+                  <Text style={styles.modalLabel}>Order Target (₹)</Text>
                   <TextInput
                     value={editSalesTarget}
                     onChangeText={setEditSalesTarget}
@@ -1317,7 +1317,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
                 {/* DDN Target */}
                 <View>
-                  <Text style={styles.modalLabel}>DDN Delivery Target (₹)</Text>
+                  <Text style={styles.modalLabel}>Delivery Note Target (₹)</Text>
                   <TextInput
                     value={editDdnTarget}
                     onChangeText={setEditDdnTarget}
