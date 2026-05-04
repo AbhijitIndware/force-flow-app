@@ -177,6 +177,7 @@ export type StoreData = {
   actions: StoreActions;
   times: StoreTimes;
   targets: StoreTargets;
+  store_name: string
 };
 export type RPjpInitialize = {
   message: {
@@ -351,6 +352,7 @@ export type RSoDetailData = {
     qty: number;
     rate: number;
     amount: number;
+    physical_qty?: number;
     uom: string;
     warehouse: string;
     delivery_date: string; // ISO Date string
@@ -404,9 +406,50 @@ export type RAddSalesOrder = {
   };
 };
 
+export type IAddSalesOrderV2 = {
+  customer?: string;
+  transaction_date?: string;    // ISO date string — defaults to today
+  delivery_date?: string;       // ISO date string — defaults to today + 7 days
+  custom_warehouse: string;     // store's warehouse ID — REQUIRED
+  terms?: string | null;               // terms and conditions name
+  submit_order?: boolean;       // defaults to false (keep as Draft)
+  items: {
+    item_code: string;
+    qty: number;                // order quantity
+    rate: number;
+    physical_qty?: number;      // required for items with stock history
+    // unless already counted today (Rule 3)
+    delivery_date?: string;     // per-item override
+  }[];
+};
+export type RAddSalesOrderV2 = {
+  message: {
+    success: boolean;
+    message: string;
+    // ── Success payload ───────────────────────────────────────────────
+    data?: {
+      order_id: string;
+      status: string;
+      workflow_state: string;
+      grand_total: number;
+      total_qty: number;
+      docstatus: number;
+      stock_update: {
+        item_code: string;
+        physical_qty: number | null;
+        // "recorded"         → count saved successfully today
+        // "already_recorded" → count already existed for today, skipped
+        status: 'recorded' | 'already_recorded';
+      }[];
+    };
+    // ── Rule 1 violation payload ──────────────────────────────────────
+    blocked_items?: string[];
+  };
+}
+
 // 🔹 Update type
 export type IUpdateSalesOrder = Pick<
-  IAddSalesOrder,
+  IAddSalesOrderV2,
   'transaction_date' | 'delivery_date' | 'items'
 > & {
   order_id: string;
@@ -645,6 +688,7 @@ export interface Store {
   store_category: string;
   city: string | null;
   state: string | null;
+  outstanding_amount: number;
   warehouse: Warehouse[];
 }
 
@@ -2053,17 +2097,20 @@ export interface RCreateStockBalance {
 export interface StockDashboardItem {
   item_code: string;
   item_name: string;
+  item_rate: number;
   /** ERP warehouse stock at start of month (from first DWSB entry) */
   opening_stock: number;
-  /** Live ERP stock from Bin right now (updated after each reconciliation) */
+  /** Live ERP stock from Bin right now */
   current_stock: number;
-  /** Units consumed from ERP this month (opening - current). 0 if no monthly baseline yet */
+  /** Units consumed from ERP this month (opening - current) */
   mtd_territory: number;
-  /** What employee physically counted today. null if not yet counted */
+  /** What employee physically counted today. null = not yet counted */
   physical_count: number | null;
-  /** Gap between shelf and ERP (physical - current). Positive = extra on shelf, Negative = missing. null if not yet counted */
+  /** Gap between shelf and ERP (physical - current). null = not yet counted */
   stock_difference: number | null;
-  new_orders: number | null
+  new_orders: number | null;
+  /** true when opening>0 OR current>0 OR item appears in any previous SO */
+  has_history: boolean;
 }
 
 export interface RGetStoreStockStatus {
@@ -2071,7 +2118,16 @@ export interface RGetStoreStockStatus {
     status: string;
     /** Present only when no warehouse is configured for the store */
     warning?: string;
-    data: StockDashboardItem[];
+    /**
+     * Items with stock history for this store.
+     * USE THIS to auto-populate rows in the SO items table when store is selected.
+     */
+    previous_items: StockDashboardItem[];
+    /**
+     * All items available for this store (includes previous_items + new items).
+     * USE THIS as the item picker / dropdown when SO adds a new item.
+     */
+    all_items: StockDashboardItem[];
   };
 }
 

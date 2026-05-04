@@ -72,6 +72,8 @@ import {
   RActivityCheckOut,
   IActivityCheckOut,
   RGetActivityCheckInStatus,
+  RAddSalesOrderV2,
+  IAddSalesOrderV2,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -128,6 +130,14 @@ export const baseApi = createApi({
     }),
 
     //Sales Order
+    createSalesOrderWithStock: builder.mutation<RAddSalesOrderV2, IAddSalesOrderV2>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.create_sales_order_with_stock',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
+    }),
     getSalesOrderList: builder.query<
       RSoList,
       Pick<PaginationInfo, 'page' | 'page_size'>
@@ -1365,7 +1375,7 @@ export const baseApi = createApi({
           params: { store },
         };
       },
-      providesTags: ['Stock'],
+      providesTags: ['Stock', "SO", "Store"],
     }),
 
     // ─── NON-PJP ACTIVITY ATTENDANCE APIs ────────────────────────────────────
@@ -1436,6 +1446,7 @@ export const {
   useCheckOutMutation,
   //Sales Order
   useAddSaleOrderMutation,
+  useCreateSalesOrderWithStockMutation,
   useAmendSaleOrderMutation,
   useCancelSaleOrderMutation,
   useGetSalesOrderListQuery,

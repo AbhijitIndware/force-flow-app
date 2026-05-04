@@ -119,6 +119,7 @@ export type DailyStoreType = {
     store_type: string;
     created_by_employee_name: string;
     store_owner_name: string;
+    outstanding_amount: number;
   }[];
   pjp_daily_store_doc: string;
 };

@@ -327,6 +327,14 @@ const HomeScreen = ({ navigation }: Props) => {
   const [activityCheckOut, { isLoading: isActivityCheckingOut }] = useActivityCheckOutMutation();
   const [startPjp] = useStartPjpMutation();
 
+  // ADD THIS:
+  const isActivityCheckedIn = activityStatusData?.message?.is_checked_in === true;
+  const isPjpActive = !!(
+    selectedStoreValue?.actions?.can_check_out ||
+    selectedStoreValue?.actions?.can_mark_activity
+  );
+
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
@@ -651,6 +659,10 @@ const HomeScreen = ({ navigation }: Props) => {
                   <DateBox />
                   {selectedStoreValue && (
                     <View style={styles.linkContent}>
+
+                      <Text style={styles.paraText}>
+                        Store- {selectedStoreValue?.store_name}
+                      </Text>
                       {selectedStoreValue?.times?.check_in_time && (
                         <Text style={styles.paraText}>
                           Last check-in at{' '}
@@ -661,31 +673,81 @@ const HomeScreen = ({ navigation }: Props) => {
                           .
                         </Text>
                       )}
-                      <Text style={styles.paraText}>
-                        Store- {selectedStoreValue?.name}
-                      </Text>
                     </View>
                   )}
                 </View>
-                {locationTrackerData?.message?.data?.pjp_records?.length ===
-                  0 ? (
+                {/* ── ACTIVITY STATUS BLOCK — shown at top when activity is active ── */}
+                {isActivityCheckedIn && (
+                  <View style={{ marginTop: 12, gap: 8 }}>
+                    {/* Info card */}
+                    <View style={{
+                      backgroundColor: '#F8FAFC',
+                      padding: 12,
+                      borderRadius: 10,
+                      borderLeftWidth: 4,
+                      borderLeftColor: '#4ADE80',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                    }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="location-sharp" size={16} color={Colors.orange} />
+                        <Text style={{
+                          color: Colors.darkButton,
+                          fontSize: 15,
+                          fontFamily: Fonts.semiBold,
+                        }}>
+                          {activityStatusData.message.activity_location}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
+                        <Clock size={14} color={Colors.gray} />
+                        <Text style={{ color: Colors.gray, fontSize: 12, fontFamily: Fonts.regular }}>
+                          Check-in at: {moment(activityStatusData.message.check_in_time, 'HH:mm:ss').format('hh:mm A')}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Activity Check-Out button */}
+                    <TouchableOpacity
+                      style={[styles.checkinButton, { backgroundColor: '#F87171', marginTop: 0 }]}
+                      onPress={handleActivityCheckOut}
+                      disabled={isActivityCheckingOut}
+                    >
+                      <Text style={styles.checkinButtonText}>
+                        {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
+                      </Text>
+                      {isActivityCheckingOut ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+                      )}
+                    </TouchableOpacity>
+
+                    {/* Disabled PJP hint */}
+                    <Text style={{
+                      fontSize: 11,
+                      color: '#ffeaea',
+                      textAlign: 'center',
+                      fontFamily: Fonts.regular,
+                    }}>
+                      ⚠️ PJP Check-In is disabled while Activity is active
+                    </Text>
+                  </View>
+                )}
+
+                {/* ── PJP SECTION — existing logic, unchanged except isDisabled now includes isActivityCheckedIn ── */}
+                {locationTrackerData?.message?.data?.pjp_records?.length === 0 ? (
                   <>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        color: '#ffeaea', // light red
-                        marginBottom: 4,
-                        textAlign: 'center',
-                      }}>
-                      You don’t have a Daily PJP for this date.
+                    <Text style={{
+                      fontSize: 14, color: '#ffeaea', marginBottom: 4, textAlign: 'center',
+                    }}>
+                      You don't have a Daily PJP for this date.
                       {'\n'}Please add one to continue check-in.
                     </Text>
                     <TouchableOpacity
                       style={[styles.checkinButton]}
                       onPress={() => navigation.navigate('AddPjpScreen')}>
-                      <Text style={styles.checkinButtonText}>
-                        Add Daily PJP
-                      </Text>
+                      <Text style={styles.checkinButtonText}>Add Daily PJP</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -695,28 +757,23 @@ const HomeScreen = ({ navigation }: Props) => {
                         style={[
                           styles.checkinButton,
                           (isStartingPjp ||
-                            locationTrackerData?.message?.data?.pjp_records
-                              ?.length === 0) &&
+                            locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
+                            isActivityCheckedIn) &&   // ← disabled when activity active
                           styles.checkinButtonDisabled,
                         ]}
                         disabled={
                           isStartingPjp ||
-                          locationTrackerData?.message?.data?.pjp_records
-                            ?.length === 0
+                          locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
+                          isActivityCheckedIn         // ← disabled when activity active
                         }
                         onPress={handleStartPjp}>
                         <Text style={styles.checkinButtonText}>
                           {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
                         </Text>
-
                         {isStartingPjp ? (
                           <ActivityIndicator color={Colors.white} />
                         ) : (
-                          <Ionicons
-                            name="chevron-forward-circle-sharp"
-                            size={24}
-                            color={Colors.white}
-                          />
+                          <Ionicons name="chevron-forward-circle-sharp" size={24} color={Colors.white} />
                         )}
                       </TouchableOpacity>
                     )}
@@ -724,40 +781,15 @@ const HomeScreen = ({ navigation }: Props) => {
                     {selectedStoreValue?.actions?.can_check_out ||
                       selectedStoreValue?.actions?.can_mark_activity ? (
                       <View>
-                        {/* <TouchableOpacity
-                      style={styles.checkinButton}
-                      onPress={() => navigation.navigate('MarkActivityScreen')}
-                      disabled={
-                        !selectedStoreValue?.actions?.can_mark_activity
-                      }>
-                      <Text style={styles.checkinButtonText}>
-                        Mark Activity
-                      </Text>
-                      <Ionicons
-                        name="chevron-forward-circle-sharp"
-                        size={24}
-                        color={Colors.white}
-                      />
-                    </TouchableOpacity> */}
                         <TouchableOpacity
                           style={styles.checkinButton}
                           onPress={handleCheckOut}
-                          disabled={
-                            !selectedStoreValue?.actions?.can_check_out ||
-                            isLoading
-                          }>
-                          <Text style={styles.checkinButtonText}>
-                            {/* Check Out from New mart */} Check Out
-                          </Text>
-
+                          disabled={!selectedStoreValue?.actions?.can_check_out || isLoading}>
+                          <Text style={styles.checkinButtonText}>Check Out</Text>
                           {isLoading ? (
                             <ActivityIndicator size="small" />
                           ) : (
-                            <Ionicons
-                              name="chevron-forward-circle-sharp"
-                              size={24}
-                              color={Colors.white}
-                            />
+                            <Ionicons name="chevron-forward-circle-sharp" size={24} color={Colors.white} />
                           )}
                         </TouchableOpacity>
                       </View>
@@ -770,23 +802,17 @@ const HomeScreen = ({ navigation }: Props) => {
                         disabled={isDisabled}
                         onPress={() => {
                           if (errorMessage !== '') {
-                            Toast.show({
-                              type: 'error',
-                              text1: `❌ ${errorMessage}`,
-                              position: 'top',
-                            });
+                            Toast.show({ type: 'error', text1: `❌ ${errorMessage}`, position: 'top' });
                           } else {
                             navigation.navigate('CheckInForm');
                           }
                         }}>
-                        <Text
-                          style={[
-                            styles.checkinButtonText,
-                            isDisabled && styles.checkinButtonTextDisabled,
-                          ]}>
+                        <Text style={[
+                          styles.checkinButtonText,
+                          isDisabled && styles.checkinButtonTextDisabled,
+                        ]}>
                           Check In
                         </Text>
-
                         <Ionicons
                           name="chevron-forward-circle-sharp"
                           size={24}
@@ -1478,65 +1504,37 @@ const HomeScreen = ({ navigation }: Props) => {
             </Text>
 
             <View style={{ paddingHorizontal: 20 }}>
-              {activityStatusData?.message?.is_checked_in ? (
-                <View style={{ gap: 10 }}>
-                  <View style={{
-                    backgroundColor: '#F8FAFC',
-                    padding: 12,
-                    borderRadius: 10,
-                    borderLeftWidth: 4,
-                    borderLeftColor: '#4ADE80',
-                    borderWidth: 1,
-                    borderColor: '#E2E8F0',
-                  }}>
-                    <View style={[flexRow, itemsCenter, { gap: 8 }]}>
-                      <Ionicons name="location-sharp" size={16} color={Colors.orange} />
-                      <Text style={{
-                        color: Colors.darkButton,
-                        fontSize: 15,
-                        fontFamily: Fonts.semiBold
-                      }}>
-                        {activityStatusData.message.activity_location}
-                      </Text>
-                    </View>
-
-                    <View style={[flexRow, itemsCenter, { marginTop: 6, gap: 6 }]}>
-                      <Clock size={14} color={Colors.gray} />
-                      <Text style={{
-                        color: Colors.gray,
-                        fontSize: 12,
-                        fontFamily: Fonts.regular
-                      }}>
-                        Check-in at: {moment(activityStatusData.message.check_in_time, "HH:mm:ss").format("hh:mm A")}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.checkinButton, { backgroundColor: '#F87171', marginTop: 5 }]}
-                    onPress={handleActivityCheckOut}
-                    disabled={isActivityCheckingOut}
-                  >
-                    <Text style={styles.checkinButtonText}>
-                      {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
-                    </Text>
-                    {isActivityCheckingOut ? (
-                      <ActivityIndicator size="small" color={Colors.white} />
-                    ) : (
-                      <Ionicons name="log-out-outline" size={20} color={Colors.white} />
-                    )}
-                  </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.checkinButton,
+                  { backgroundColor: Colors.darkButton, marginTop: 5 },
+                  isPjpActive && styles.checkinButtonDisabled,   // ← greyed out when PJP active
+                ]}
+                disabled={isPjpActive}                           // ← blocked when PJP active
+                onPress={() => navigation.navigate('ActivityCheckInScreen')}
+              >
+                <View style={[flexRow, itemsCenter]}>
+                  <Text style={[
+                    styles.checkinButtonText,
+                    isPjpActive && styles.checkinButtonTextDisabled,
+                  ]}>
+                    Activity Check-In
+                  </Text>
+                  <Ionicons name="chevron-forward-circle-sharp" size={20}
+                    color={isPjpActive ? Colors.gray : Colors.white}
+                    style={{ marginLeft: 8 }}
+                  />
                 </View>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.checkinButton, { backgroundColor: Colors.darkButton, marginTop: 5 }]}
-                  onPress={() => navigation.navigate('ActivityCheckInScreen')}
-                >
-                  <View style={[flexRow, itemsCenter]}>
-                    <Text style={styles.checkinButtonText}>Activity Check-In</Text>
-                    <Ionicons name="chevron-forward-circle-sharp" size={20} color={Colors.white} style={{ marginLeft: 8 }} />
-                  </View>
-                </TouchableOpacity>
+              </TouchableOpacity>
+
+              {isPjpActive && (
+                <Text style={{
+                  fontSize: 11, color: Colors.gray,
+                  textAlign: 'center', marginTop: 6,
+                  fontFamily: Fonts.regular,
+                }}>
+                  ⚠️ Activity Check-In is disabled while PJP is active
+                </Text>
               )}
             </View>
           </View>

@@ -21,32 +21,25 @@ import AddSaleForm from '../../../components/SO/Order/Sale/AddSaleForm';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import { addSalesOrderSchema } from '../../../types/schema';
-import { IAddSalesOrder, RSoDetailData } from '../../../types/baseType';
+import { IAddSalesOrderV2, RSoDetailData } from '../../../types/baseType';
 import {
-  useAddSaleOrderMutation,
+  useCreateSalesOrderWithStockMutation,
   useGetSalesOrderByIdQuery,
+  useGetStoreStockStatusQuery,
   useUpdateSaleOrderMutation,
 } from '../../../features/base/base-api';
 import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
 import { useAppSelector } from '../../../store/hook';
-import { History } from 'lucide-react-native'; // ← NEW
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { getStoreLabel } from '../../../utils/utils';
 
 const { width } = Dimensions.get('window');
 
-type NavigationProp = NativeStackNavigationProp<
-  SoAppStackParamList,
-  'AddSaleScreen'
->;
+type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'AddSaleScreen'>;
+type Props = { navigation: NavigationProp; route: any };
 
-type Props = {
-  navigation: NavigationProp;
-  route: any;
-};
-
-const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrder => ({
+const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrderV2 => ({
   transaction_date: detail.order_details.transaction_date,
   delivery_date: detail.order_details.delivery_date,
   custom_warehouse: detail.order_details.custom_warehouse || '',
@@ -55,23 +48,25 @@ const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrder => ({
     qty: it.qty,
     rate: it.rate,
     delivery_date: it.delivery_date,
+    physical_qty: it.physical_qty,
   })),
   terms: detail.order_details.terms,
   submit_order: false,
 });
 
-const initial: IAddSalesOrder = {
+const EMPTY_ITEM = {
+  item_code: '',
+  qty: 0,
+  rate: 0,
+  physical_qty: 0,
+  delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
+};
+
+const initial: IAddSalesOrderV2 = {
   transaction_date: moment().format('YYYY-MM-DD'),
   delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
   custom_warehouse: '',
-  items: [
-    {
-      item_code: '',
-      qty: 0,
-      rate: 0,
-      delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
-    },
-  ],
+  items: [{ ...EMPTY_ITEM }],
   terms: null,
   submit_order: false,
 };
@@ -83,110 +78,130 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const [activeField, setActiveField] = useState<DateField | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const orderId = route.params?.orderId;
-  const [initialValues, setInitialValues] = useState<IAddSalesOrder>(initial);
-  const [selectedStoreName, setSelectedStoreName] = useState<string>('');
-  const [hasLockedItem, setHasLockedItem] = useState(false); // ← NEW
+  const [initialValues, setInitialValues] = useState<IAddSalesOrderV2>(initial);
+  const [selectedStoreName, setSelectedStoreName] = useState('');
+  const [selectedStoreId, setSelectedStoreId] = useState('');
+  const [hasLockedItem, setHasLockedItem] = useState(false);
+  const [seededCount, setSeededCount] = useState(0);
+  const seededWarehouseRef = useRef<string | null>(null);
 
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
-  );
-  const selectedStore = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.selectedStore,
-  );
+  const user = useAppSelector(state => state?.persistedReducer?.authSlice?.user);
+  const selectedStore = useAppSelector(state => state?.persistedReducer?.pjpSlice?.selectedStore);
 
-  const [addSalesOrder] = useAddSaleOrderMutation();
+  const [addSalesOrder] = useCreateSalesOrderWithStockMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
   const [triggerStoreFetch, { data: storeData }] = useLazyGetDailyStoreQuery();
-  const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(
-    orderId,
-    { skip: orderId === null || orderId === undefined },
+  const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
+    skip: orderId === null || orderId === undefined,
+  });
+
+  // ── Single stock fetch — results flow down as plain props ─────────────────
+  const { data: stockData, isFetching: isStockFetching } = useGetStoreStockStatusQuery(
+    { store: selectedStoreId },
+    { skip: !selectedStoreId },
   );
 
+  // Derived values passed to AddSaleForm → SaleItemField
+  const allItems = stockData?.message?.all_items ?? [];
+  const stockWarning = stockData?.message?.warning;
+
+  const { values, errors, touched, handleChange, handleBlur, handleSubmit, setFieldValue } =
+    useFormik<IAddSalesOrderV2>({
+      initialValues,
+      validationSchema: addSalesOrderSchema,
+      enableReinitialize: true,
+      onSubmit: async (formValues, actions) => {
+        try {
+          setLoading(true);
+          const res = orderId
+            ? await updateSaleOrder({ ...formValues, order_id: orderId }).unwrap()
+            : await addSalesOrder(formValues).unwrap();
+
+          if (res?.message?.success) {
+            Toast.show({ type: 'success', text1: `✅ ${res.message.message}`, position: 'top' });
+            actions.resetForm();
+            seededWarehouseRef.current = null;
+            setSeededCount(0);
+            navigation.navigate('OrdersScreen', { index: 1 });
+          } else {
+            Toast.show({
+              type: 'error',
+              text1: `❌ ${res.message.message || 'Something went wrong'}`,
+              position: 'top',
+            });
+          }
+        } catch (error: any) {
+          Toast.show({
+            type: 'error',
+            text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+            text2: 'Please try again later.',
+            position: 'top',
+          });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+
+  // ── Seed previous_items when stock loads ──────────────────────────────────
+  useEffect(() => {
+    if (orderId || isStockFetching || !values.custom_warehouse) return;
+    if (seededWarehouseRef.current === values.custom_warehouse) return;
+
+    const previousItems = stockData?.message?.previous_items ?? [];
+    const defaultDate = moment().add(7, 'days').format('YYYY-MM-DD');
+
+    if (previousItems.length > 0) {
+      const seededItems = previousItems.map(i => ({
+        item_code: i.item_code,
+        qty: 0,
+        rate: i.item_rate ?? 0,
+        physical_qty: i.physical_count ?? 0,
+        delivery_date: defaultDate,
+      }));
+      setFieldValue('items', [...seededItems]);
+      setSeededCount(seededItems.length);
+    } else {
+      setFieldValue('items', [{ ...EMPTY_ITEM }]);
+      setSeededCount(0);
+    }
+
+    seededWarehouseRef.current = values.custom_warehouse;
+  }, [stockData, isStockFetching, values.custom_warehouse, orderId]);
+
+  // ── Existing order → populate form ────────────────────────────────────────
   useEffect(() => {
     if (salesDetails?.message?.data) {
       setInitialValues(mapSalesDetailToForm(salesDetails.message.data));
+      setSeededCount(0);
     }
   }, [salesDetails, orderId]);
 
-  const {
-    values,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-    setFieldValue,
-  } = useFormik<IAddSalesOrder>({
-    initialValues,
-    validationSchema: addSalesOrderSchema,
-    enableReinitialize: true,
-    onSubmit: async (formValues, actions) => {
-      try {
-        setLoading(true);
-        let res;
-        if (orderId) {
-          res = await updateSaleOrder({
-            ...formValues,
-            order_id: orderId,
-          }).unwrap();
-        } else {
-          res = await addSalesOrder(formValues).unwrap();
-        }
-
-        if (res?.message?.success) {
-          Toast.show({
-            type: 'success',
-            text1: `✅ ${res.message.message}`,
-            position: 'top',
-          });
-          actions.resetForm();
-          navigation.navigate('OrdersScreen', { index: 1 });
-        } else {
-          Toast.show({
-            type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
-            position: 'top',
-          });
-        }
-      } catch (error: any) {
-        Toast.show({
-          type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
-          text2: 'Please try again later.',
-          position: 'top',
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
-  });
-
-  const warehouseList = storeData?.message?.stores?.map(store => ({
-    value: store.warehouse_id,
-    label: getStoreLabel(store),
-  }));
-
+  // ── Fetch store list ──────────────────────────────────────────────────────
   useEffect(() => {
     if (user?.email && values?.transaction_date) {
       triggerStoreFetch({ user: user.email, date: values.transaction_date });
     }
   }, [user?.email, values?.transaction_date]);
 
+  // ── Auto-select store from PJP ────────────────────────────────────────────
   useEffect(() => {
     if (!orderId && selectedStore && storeData?.message?.stores) {
-      const store = storeData.message.stores.find(
-        s => s.store === selectedStore,
-      );
+      const store = storeData.message.stores.find(s => s.store === selectedStore);
       if (store) {
         setFieldValue('custom_warehouse', store.warehouse_id);
         setSelectedStoreName(store.store_name);
+        setSelectedStoreId(store.store);
       } else {
         setSelectedStoreName(selectedStore);
+        setSelectedStoreId(selectedStore);
       }
+      seededWarehouseRef.current = null;
+      setSeededCount(0);
     }
   }, [selectedStore, orderId, storeData]);
 
+  // ── Manual warehouse change ───────────────────────────────────────────────
   useEffect(() => {
     if (!orderId && values.custom_warehouse && storeData?.message?.stores) {
       const store = storeData.message.stores.find(
@@ -194,30 +209,33 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       );
       if (store) {
         setSelectedStoreName(store.store_name);
+        if (store.store !== selectedStoreId) {
+          setSelectedStoreId(store.store);
+          seededWarehouseRef.current = null;
+          setSeededCount(0);
+        }
       }
     }
   }, [values.custom_warehouse]);
 
+  const warehouseList = storeData?.message?.stores?.map(store => ({
+    value: store.warehouse_id,
+    label: getStoreLabel(store),
+  }));
+
   if (orderId && isFetching) {
     return (
-      <SafeAreaView
-        style={[
-          flexCol,
-          { flex: 1, justifyContent: 'center', alignItems: 'center' },
-        ]}>
+      <SafeAreaView style={[flexCol, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
-      style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Create Order"
-        navigation={() =>
-          navigation.navigate('OrdersScreen', { index: 1 })
-        }
+        navigation={() => navigation.navigate('OrdersScreen', { index: 1 })}
       />
 
       <DateTimePickerModal
@@ -226,17 +244,20 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         onConfirm={(date: Date) => {
           if (activeField) {
             const formatted = moment(date).format('YYYY-MM-DD');
-            const updatedItems = values.items.map(it => ({
-              ...it,
-              delivery_date: formatted,
-            }));
-            setFieldValue('items', updatedItems);
+            setFieldValue('items', values.items.map(it => ({ ...it, delivery_date: formatted })));
             setFieldValue(activeField, formatted);
           }
           setTimePickerVisible(false);
         }}
         onCancel={() => setTimePickerVisible(false)}
       />
+
+      {isStockFetching && selectedStoreId && !orderId && (
+        <View style={styles.seedingBanner}>
+          <ActivityIndicator size="small" color={Colors.darkButton} />
+          <Text style={styles.seedingText}>Loading store items…</Text>
+        </View>
+      )}
 
       <AddSaleForm
         values={values}
@@ -247,44 +268,26 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         setFieldValue={setFieldValue}
         scrollY={scrollY}
         warehouseList={warehouseList || []}
-        selectedStore={selectedStoreName}
         onDateSelect={field => {
           setActiveField(field);
           setTimePickerVisible(true);
         }}
-        onAnyItemLocked={setHasLockedItem} // ← NEW
+        onAnyItemLocked={setHasLockedItem}
+        seededCount={seededCount}
+        allItems={allItems}
+        isStockFetching={isStockFetching}
+        stockWarning={stockWarning}
       />
 
-      {/* ── Bottom bar ──────────────────────────────────────────────────── */}
       <View
         style={{
           paddingHorizontal: 20,
-          display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: Colors.bgColor,
           width: '100%',
           height: 80,
         }}>
-
-        {/* ── Physical Stock FAB — only when at least one item is locked ── */}
-        {hasLockedItem && (
-          <TouchableOpacity
-            style={styles.fab}
-            activeOpacity={0.8}
-            onPress={() =>
-              navigation.navigate('StockManagementFormScreen', {
-                store: selectedStore as string,
-                storeName: selectedStoreName,
-                items: values.items, // ← pass all current items
-              })
-            }>
-            <History size={18} color={Colors.white} />
-            <Text style={styles.fabText}>Update Physical Stock</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* ── Create Order button ────────────────────────────────────────── */}
         <TouchableOpacity
           style={[styles.submitBtn, (loading || hasLockedItem) && { opacity: 0.7 }]}
           onPress={() => handleSubmit()}
@@ -292,7 +295,9 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>Create Order</Text>
+            <Text style={styles.submitText}>
+              {isStockFetching && !orderId ? 'Loading items…' : 'Create Order'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -304,7 +309,6 @@ export default AddSaleScreen;
 
 const styles = StyleSheet.create({
   submitBtn: {
-    display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -318,33 +322,16 @@ const styles = StyleSheet.create({
     zIndex: 1,
     width: width * 0.9,
   },
-  submitText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-  fab: {
-    position: 'absolute',
-    top: -48,
-    right: 20,
+  submitText: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white, lineHeight: 22 },
+  seedingBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    zIndex: 2,
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#BFDBFE',
   },
-  fabText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.xs,
-    color: Colors.white,
-  },
+  seedingText: { fontFamily: Fonts.regular, fontSize: Size.xs, color: '#1D4ED8' },
 });
