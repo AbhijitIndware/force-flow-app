@@ -1,11 +1,11 @@
-import { PermissionsAndroid, Platform } from 'react-native';
-import { Dimensions } from 'react-native';
+import {PermissionsAndroid, Platform} from 'react-native';
+import {Dimensions} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
-export { windowHeight, windowWidth };
+export {windowHeight, windowWidth};
 
 export const soStatusColors: Record<string, string> = {
   Draft: '#FACC15', // yellow
@@ -49,13 +49,13 @@ const getPositionWithRetry = async (
     forceRequestLocation: true,
     showLocationDialog: true,
   },
-): Promise<{ latitude: number; longitude: number }> => {
+): Promise<{latitude: number; longitude: number}> => {
   try {
     return await new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
         position => {
-          const { latitude, longitude } = position.coords;
-          resolve({ latitude, longitude });
+          const {latitude, longitude} = position.coords;
+          resolve({latitude, longitude});
         },
         error => reject(error),
         options,
@@ -77,7 +77,7 @@ export const getCurrentLocation = async (): Promise<string> => {
   }
 
   try {
-    const { latitude, longitude } = await getPositionWithRetry();
+    const {latitude, longitude} = await getPositionWithRetry();
     return `${latitude},${longitude}`;
   } catch (error: any) {
     if (error?.code === 3) {
@@ -134,7 +134,7 @@ export const getAddressFromCoordinates = async (
   }
 };
 
-export const uniqueByValue = <T extends { value: string }>(arr: T[]) => {
+export const uniqueByValue = <T extends {value: string}>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(i => {
     if (seen.has(i.value)) return false;

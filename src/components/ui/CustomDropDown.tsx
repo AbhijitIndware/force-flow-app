@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useMemo } from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   View,
   StyleSheet,
@@ -9,12 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, ActivityIndicator, Menu, Button } from 'react-native-paper';
-import { Fonts } from '../../constants';
-import { Colors } from '../../utils/colors';
-import { Size } from '../../utils/fontSize';
-import { DropDownList } from '../../types/Navigation';
-import { ChevronDown } from 'lucide-react-native';
+import {Text, ActivityIndicator, Menu, Button} from 'react-native-paper';
+import {Fonts} from '../../constants';
+import {Colors} from '../../utils/colors';
+import {Size} from '../../utils/fontSize';
+import {DropDownList} from '../../types/Navigation';
+import {ChevronDown} from 'lucide-react-native';
 
 type Props = {
   selectText: string;
@@ -35,6 +35,7 @@ type Props = {
   disabled?: boolean;
   clearTextAfterSearch: boolean;
   selectedLabelOverride?: string; // 👈 New prop
+  textSize?: number; // 👈 New prop for font size
 };
 
 const DropdownComponent = ({
@@ -55,6 +56,7 @@ const DropdownComponent = ({
   disabled = false,
   clearTextAfterSearch,
   selectedLabelOverride, // 👈 New prop
+  textSize = Size.xs, // 👈 New prop with default
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
@@ -71,14 +73,14 @@ const DropdownComponent = ({
     }
   };
 
-  const selectedLabel = selectedLabelOverride || (
-    selectedId &&
-      data.find(item => {
-        return item.value === selectedId;
-      })
+  const selectedLabel =
+    selectedLabelOverride ||
+    (selectedId &&
+    data.find(item => {
+      return item.value === selectedId;
+    })
       ? data.find(item => item.value === selectedId)?.label
-      : `Select ${selectText}`
-  );
+      : `Select ${selectText}`);
 
   return (
     <KeyboardAvoidingView
@@ -113,7 +115,8 @@ const DropdownComponent = ({
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
-                  disabled && { color: '#9E9E9E' },
+                  {fontSize: textSize},
+                  disabled && {color: '#9E9E9E'},
                   selectedId && styles.selectedTextActive, // 👈 add this line
                 ]}>
                 {selectedLabel}
@@ -151,14 +154,16 @@ const DropdownComponent = ({
               }}
               placeholder={`Search ${selectText}...`}
               placeholderTextColor={Colors.inputBorder}
-              style={styles.inputSearchStyle}
+              style={[styles.inputSearchStyle, {fontSize: textSize}]}
             />
           </View>
 
           {/* List */}
           <FlatList
             data={data}
-            keyExtractor={(item, index) => `${item.value}-${item?.label}-${index}`}
+            keyExtractor={(item, index) =>
+              `${item.value}-${item?.label}-${index}`
+            }
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
@@ -167,11 +172,11 @@ const DropdownComponent = ({
                 <ActivityIndicator
                   size="small"
                   color={Colors.primary}
-                  style={{ marginVertical: 10 }}
+                  style={{marginVertical: 10}}
                 />
               ) : null
             }
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <TouchableOpacity
                 onPress={() => {
                   handleSelect(item.value);
@@ -184,21 +189,22 @@ const DropdownComponent = ({
                 <Text
                   style={[
                     styles.itemText,
+                    {fontSize: textSize},
                     item.value === selectedId && styles.selectedItemText,
                   ]}>
                   {item.label}
                 </Text>
               </TouchableOpacity>
             )}
-            style={{ maxHeight: 200, minWidth: '90%', zIndex: 9999 }}
-            contentContainerStyle={{ zIndex: 9999 }}
+            style={{maxHeight: 200, minWidth: '90%', zIndex: 9999}}
+            contentContainerStyle={{zIndex: 9999}}
             ListEmptyComponent={
-              <View style={{ padding: 20, alignItems: 'center' }}>
+              <View style={{padding: 20, alignItems: 'center'}}>
                 <Text
                   style={{
                     color: Colors.inputBorder,
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm
+                    fontSize: textSize,
                   }}>
                   No {selectText} found
                 </Text>
@@ -249,7 +255,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     paddingHorizontal: 10,
-    backgroundColor: "#eeededff"
+    backgroundColor: '#eeededff',
     // paddingVertical: 2,
   },
   inputSearchStyle: {
