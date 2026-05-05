@@ -173,27 +173,27 @@ const DistributorHomeScreen = ({ navigation }: Props) => {
     data: dashboardData,
     refetch: refetchDashboard,
     isFetching: isDashboardFetching,
-  } = useGetDashboardCountsQuery({ from_date: fromDateStr, to_date: toDateStr });
+  } = useGetDashboardCountsQuery({ from_date: fromDateStr, to_date: toDateStr }, { refetchOnMountOrArgChange: true });
 
   const {
     data: pendingData,
     refetch: refetchPending,
     isFetching: isPendingFetching,
-  } = useGetPendingCountsQuery({ from_date: fromDateStr, to_date: toDateStr });
+  } = useGetPendingCountsQuery({ from_date: fromDateStr, to_date: toDateStr }, { refetchOnMountOrArgChange: true });
 
   const { data: poData, refetch: refetchPO } = useGetPurchaseOrdersListQuery({
     page: 1,
     page_size: 3,
     from_date: fromDateStr,
     to_date: toDateStr,
-  });
+  }, { refetchOnMountOrArgChange: true });
 
   const { data: dnData, refetch: refetchDN } = useGetDeliveryNotesListQuery({
     page: 1,
     page_size: 3,
     from_date: fromDateStr,
     to_date: toDateStr,
-  });
+  }, { refetchOnMountOrArgChange: true });
 
   // ── Refresh ────────────────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {

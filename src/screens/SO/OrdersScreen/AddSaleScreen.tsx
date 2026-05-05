@@ -126,7 +126,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     validationSchema: addSalesOrderSchema,
     enableReinitialize: true,
     onSubmit: async (formValues, actions) => {
-      console.log("🚀 ~ AddSaleScreen ~ formValues:", formValues)
       try {
         setLoading(true);
         const res = orderId
@@ -163,7 +162,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       }
     },
   });
-  console.log("🚀 ~ AddSaleScreen ~ errors:", errors)
 
   // ── Seed previous_items when stock loads ──────────────────────────────────
   useEffect(() => {
@@ -191,13 +189,33 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     seededWarehouseRef.current = values.custom_warehouse;
   }, [stockData, isStockFetching, values.custom_warehouse, orderId]);
 
-  // ── Existing order → populate form ────────────────────────────────────────
+  // ── Existing order → populate form (merge salesDetails + stockData physical_qty) ──
   useEffect(() => {
-    if (salesDetails?.message?.data) {
-      setInitialValues(mapSalesDetailToForm(salesDetails.message.data));
-      setSeededCount(0);
-    }
-  }, [salesDetails, orderId]);
+    if (!orderId || !salesDetails?.message?.data) return;
+    setFieldValue('custom_warehouse', salesDetails?.message?.data?.store_details?.warehouse_name);
+    setSelectedStoreName(salesDetails?.message?.data?.store_details?.warehouse_name);
+    setSelectedStoreId(salesDetails?.message?.data?.store_details?.store);
+
+    const detail = salesDetails.message.data;
+    const allStockItems = stockData?.message?.previous_items ?? [];
+
+    const mergedItems = detail.items.map(it => {
+      const stockItem = allStockItems.find(s => s.item_code === it.item_code);
+      return {
+        item_code: it.item_code,
+        qty: it.qty,
+        rate: it.rate,
+        delivery_date: it.delivery_date,
+        physical_qty: stockItem?.physical_count ?? it.physical_qty ?? 0,
+      };
+    });
+
+    setInitialValues({
+      ...mapSalesDetailToForm(detail),
+      items: mergedItems,
+    });
+    setSeededCount(0);
+  }, [salesDetails, stockData, orderId]);
 
   // ── Fetch store list ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -223,7 +241,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       seededWarehouseRef.current = null;
       setSeededCount(0);
     }
-  }, [selectedStore, orderId, storeData]);
+  }, [selectedStore, orderId, storeData, salesDetails]);
 
   // ── Manual warehouse change ───────────────────────────────────────────────
   useEffect(() => {
@@ -326,7 +344,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
             (loading || hasLockedItem) && { opacity: 0.7 },
           ]}
           onPress={() => {
-            console.log('Presed')
             handleSubmit()
           }}
           disabled={loading}>

@@ -94,6 +94,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         skip: !order_id,
         refetchOnMountOrArgChange: true,
     });
+    console.log("🚀 ~ PurchaseOrderDetailScreen ~ data:", data)
     const [approveDDN, { isLoading: isApproving }] = useApproveAndCreateDDNMutation();
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -108,26 +109,31 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
     const orderData = data?.message?.data;
     const details = orderData?.order_details;
     const items = orderData?.items || [];
-    const linkedDDNs: LinkedDDN[] = orderData?.linked_ddns || [];
 
-    // ─── Derived ──────────────────────────────────────────────────────────────
+    const isItemChecked = (item_code: string, remainingQty: number) => {
+        if (remainingQty <= 0) return false;
+        return checkedItems[item_code] !== false;
+    };
+
+    // ─── Derived ──────────────────────────────────────────────────────────────────
 
     const grandTotal = items.reduce((acc: number, item: any) => {
-        const isChecked = checkedItems[item.item_code] !== false;
-        if (!isChecked) return acc;
-        const qty = parseFloat(deliveryQtys[item.item_code] ?? String(item.qty)) || 0;
+        const remainingQty = item.qty - (item.received_qty || 0);
+        const checked = isItemChecked(item.item_code, remainingQty);
+        if (!checked) return acc;
+        const qty = parseFloat(deliveryQtys[item.item_code] ?? String(remainingQty)) || 0;
         return acc + qty * (item.rate || 0);
     }, 0);
 
-    const selectedCount = items.filter(
-        (item: any) => checkedItems[item.item_code] !== false
-    ).length;
-
-    const isItemChecked = (item_code: string) => checkedItems[item_code] !== false;
+    const selectedCount = items.filter((item: any) => {
+        const remainingQty = item.qty - (item.received_qty || 0);
+        return isItemChecked(item.item_code, remainingQty);
+    }).length;
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
 
-    const toggleItem = (item_code: string) => {
+    const toggleItem = (item_code: string, remainingQty: number) => {
+        if (remainingQty <= 0) return; // fully delivered, cannot toggle
         setCheckedItems(prev => ({
             ...prev,
             [item_code]: !(prev[item_code] !== false),
@@ -140,7 +146,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
             Toast.show({
                 type: 'error',
                 text1: 'Invalid Quantity',
-                text2: `Cannot exceed ordered qty (${maxQty})`,
+                text2: `Cannot exceed remaining qty (${maxQty})`,
             });
             setDeliveryQtys(prev => ({ ...prev, [item_code]: String(maxQty) }));
         } else {
@@ -159,13 +165,20 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         }
 
         const delivered_items = items
-            .filter((item: any) => isItemChecked(item.item_code))
-            .map((item: any) => ({
-                item_code: item.item_code,
-                del_qty: deliveryQtys[item.item_code]
-                    ? parseFloat(deliveryQtys[item.item_code])
-                    : item.qty,
-            }));
+            .filter((item: any) => {
+                const remainingQty = item.qty - (item.received_qty || 0);
+                if (remainingQty <= 0) return false; // fully delivered, skip
+                return checkedItems[item.item_code] !== false;
+            })
+            .map((item: any) => {
+                const remainingQty = item.qty - (item.received_qty || 0);
+                return {
+                    item_code: item.item_code,
+                    del_qty: deliveryQtys[item.item_code]
+                        ? parseFloat(deliveryQtys[item.item_code])
+                        : remainingQty,
+                };
+            });
 
         try {
             const res = await approveDDN({
@@ -197,6 +210,16 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         }
     };
 
+
+    useEffect(() => {
+        if (data && data?.message?.data?.linked_ddns?.length > 0) {
+            const lastDDN = data.message.data.linked_ddns[data.message.data.linked_ddns.length - 1];
+            setInvoiceNo(lastDDN.invoice_no ?? '');
+            setDate(lastDDN.date ?? moment().format('YYYY-MM-DD'));
+            setRemarks(lastDDN.remarks ?? '');
+        }
+    }, [data]);
+
     // ─── Loading / Empty ──────────────────────────────────────────────────────
 
     if (isLoading) {
@@ -214,15 +237,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
             </View>
         );
     }
-
-    useEffect(() => {
-        if (data?.message?.data?.linked_ddns?.length > 0) {
-            const lastDDN = data.message.data.linked_ddns[data.message.data.linked_ddns.length - 1];
-            setInvoiceNo(lastDDN.invoice_no ?? '');
-            setDate(lastDDN.date ?? moment().format('YYYY-MM-DD'));
-            setRemarks(lastDDN.remarks ?? '');
-        }
-    }, [data]);
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
@@ -312,26 +326,86 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                     <View style={styles.sectionHeader}>
                         <Package size={16} color={C.accent} />
                         <Text style={styles.sectionTitle}>
-                            Items ({selectedCount}/{items.length} selected)
+                            {details?.workflow_state === 'Delivered'
+                                ? `Items (${items.length} delivered)`
+                                : `Items (${selectedCount}/${items.length} selected)`
+                            }
                         </Text>
                     </View>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
+                            {/* ── Header ── */}
                             <View style={gridStyles.headerRow}>
+                                {/* {details?.workflow_state !== 'Delivered' && ( */}
                                 <View style={{ width: COLUMN_WIDTHS.check }} />
+                                {/* )} */}
                                 <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.item }]}>Item</Text>
-                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.ordered, textAlign: 'center' }]}>Ordered</Text>
-                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.delQty, textAlign: 'center' }]}>Del. Qty</Text>
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.ordered, textAlign: 'center' }]}>
+                                    {details?.workflow_state === 'Delivered' ? 'Ordered' : 'Ordered'}
+                                </Text>
+                                {details?.workflow_state === 'Partially Delivered' && (
+                                    <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.ordered }]}>Received</Text>
+                                )}
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.delQty, textAlign: 'center' }]}>
+                                    {details?.workflow_state === 'Delivered' ? 'Received' : 'Deliver Qty'}
+                                </Text>
                                 <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.amount, textAlign: 'right' }]}>Amount</Text>
                             </View>
 
                             {items.map((item: any, index: number) => {
-                                const checked = isItemChecked(item.item_code);
-                                const rowQty = deliveryQtys[item.item_code] ?? String(item.qty);
-                                const amount = checked
-                                    ? (parseFloat(rowQty) || 0) * (item.rate || 0)
-                                    : 0;
+                                const remainingQty = item.qty - (item.received_qty || 0);
+                                const isFullyDelivered = remainingQty <= 0;
+                                const checked = isItemChecked(item.item_code, remainingQty);
+                                const rowQty = deliveryQtys[item.item_code] || '0';
+                                const amount = checked ? (parseFloat(rowQty) || 0) * (item.rate || 0) : 0;
+                                const receivedAmount = (item.received_qty || 0) * (item.rate || 0);
+
+                                // ── Delivered view (read-only) ──
+                                if (details?.workflow_state === 'Delivered') {
+                                    return (
+                                        <View
+                                            key={item.item_code}
+                                            style={[
+                                                gridStyles.row,
+                                                index % 2 === 0 ? gridStyles.evenRow : gridStyles.oddRow,
+                                                { backgroundColor: '#F0FDF4' }, // always green-tinted
+                                            ]}
+                                        >
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.check }]}>
+                                                {/* <Text style={gridStyles.itemName} numberOfLines={2}>
+                                                    {item.item_name}
+                                                </Text> */}
+                                            </View>
+
+                                            {/* Item Name */}
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}>
+                                                <Text style={gridStyles.itemName} numberOfLines={2}>
+                                                    {item.item_name}
+                                                </Text>
+                                            </View>
+
+                                            {/* Ordered Qty */}
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
+                                                <Text style={gridStyles.orderedQty}>{item.qty}</Text>
+                                            </View>
+
+                                            {/* Received Qty */}
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.delQty, alignItems: 'center' }]}>
+                                                <Text style={[gridStyles.orderedQty, { color: C.success }]}>
+                                                    {item.received_qty || 0}
+                                                </Text>
+                                            </View>
+
+                                            {/* Amount based on received */}
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
+                                                <Text style={[gridStyles.amount, { color: C.success }]}>
+                                                    ₹{receivedAmount.toLocaleString()}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    );
+                                }
 
                                 return (
                                     <View
@@ -340,35 +414,51 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             gridStyles.row,
                                             index % 2 === 0 ? gridStyles.evenRow : gridStyles.oddRow,
                                             checked && gridStyles.checkedRow,
+                                            isFullyDelivered && { opacity: 0.45 }, // dim fully delivered rows
                                         ]}
                                     >
+                                        {/* Checkbox */}
                                         <TouchableOpacity
                                             style={[gridStyles.cell, { width: COLUMN_WIDTHS.check }]}
-                                            onPress={() => toggleItem(item.item_code)}
-                                            activeOpacity={0.7}
+                                            onPress={() => toggleItem(item.item_code, remainingQty)}
+                                            activeOpacity={isFullyDelivered ? 1 : 0.7}
                                         >
-                                            <View style={[gridStyles.checkbox, checked && gridStyles.checkboxChecked]}>
+                                            <View style={[gridStyles.checkbox, checked && gridStyles.checkboxChecked, isFullyDelivered && { borderColor: C.border, backgroundColor: C.background }]}>
                                                 {checked && <Text style={gridStyles.checkmark}>✓</Text>}
+                                                {isFullyDelivered && <Text style={{ fontSize: 10, color: C.textMuted }}>✓</Text>}
                                             </View>
                                         </TouchableOpacity>
 
+                                        {/* Item Name */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}>
                                             <Text style={gridStyles.itemName} numberOfLines={2}>
                                                 {item.item_name}
                                             </Text>
                                         </View>
 
+                                        {/* Ordered (remaining) */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
                                             <Text style={gridStyles.orderedQty}>{item.qty}</Text>
                                         </View>
 
+
+                                        {details?.workflow_state === 'Partially Delivered' && (
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
+                                                <Text style={gridStyles.orderedQty}>{item.received_qty}</Text>
+                                                {item.received_qty > 0 && remainingQty > 0 && (
+                                                    <Text style={{ fontSize: 9, color: C.warning }}>{remainingQty} remaining</Text>
+                                                )}
+                                            </View>
+                                        )}
+
+                                        {/* Del. Qty input */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.delQty, alignItems: 'center' }]}>
-                                            {checked ? (
+                                            {checked && !isFullyDelivered ? (
                                                 <TextInput
                                                     style={gridStyles.qtyInput}
                                                     keyboardType="numeric"
                                                     value={rowQty}
-                                                    onChangeText={v => setQty(item.item_code, v, item.qty)}
+                                                    onChangeText={v => setQty(item.item_code, v, remainingQty)} // ← max is remainingQty
                                                     placeholderTextColor={C.textMuted}
                                                     selectTextOnFocus
                                                 />
@@ -377,6 +467,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             )}
                                         </View>
 
+                                        {/* Amount */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
                                             <Text style={[gridStyles.amount, !checked && { color: C.textMuted }]}>
                                                 {checked ? `₹${amount.toLocaleString()}` : '—'}
@@ -388,6 +479,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                         </View>
                     </ScrollView>
 
+                    {/* ── Totals row ── */}
                     <View style={gridStyles.totalRow}>
                         <View style={gridStyles.totalCol}>
                             <Text style={gridStyles.totalSubLabel}>Ordered Total</Text>
@@ -397,9 +489,14 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                         </View>
                         <View style={gridStyles.totalDivider} />
                         <View style={[gridStyles.totalCol, { alignItems: 'flex-end' }]}>
-                            <Text style={gridStyles.totalSubLabel}>Delivery Total</Text>
+                            <Text style={gridStyles.totalSubLabel}>
+                                {details?.workflow_state === 'Delivered' ? 'Received Total' : 'Delivery Total'}
+                            </Text>
                             <Text style={[gridStyles.totalValue, { color: '#16A34A' }]}>
-                                ₹{grandTotal.toLocaleString()}
+                                {details?.workflow_state === 'Delivered'
+                                    ? `₹${items.reduce((acc: number, item: any) => acc + (item.received_qty || 0) * (item.rate || 0), 0).toLocaleString()}`
+                                    : `₹${grandTotal.toLocaleString()}`
+                                }
                             </Text>
                         </View>
                     </View>
