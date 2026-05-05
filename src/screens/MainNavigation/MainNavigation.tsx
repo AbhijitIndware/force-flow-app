@@ -53,6 +53,7 @@ const MainNavigation = () => {
     { emp_id: employeeId as string },
     {
       refetchOnFocus: true,
+      refetchOnMountOrArgChange: true,
       skip: !employeeId,
     },
   );

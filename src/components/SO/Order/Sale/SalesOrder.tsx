@@ -31,7 +31,7 @@ const SalesOrder = ({ navigation }: any) => {
     useGetSalesOrderListQuery({
       page,
       page_size: PAGE_SIZE,
-    });
+    }, { refetchOnMountOrArgChange: true, refetchOnFocus: true });
 
   // append new data when page changes
   useEffect(() => {

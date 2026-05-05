@@ -1,16 +1,7 @@
-/* eslint-disable react/self-closing-comp */
-/* eslint-disable react-native/no-inline-styles */
 import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Modal,
-  TextInput,
-  RefreshControl,
+  StyleSheet, Text, View, FlatList, ScrollView,
+  TouchableOpacity, ActivityIndicator, Modal,
+  TextInput, RefreshControl,
 } from 'react-native';
 import React, { useCallback, useState } from 'react';
 import { RSoDetailData } from '../../../../types/baseType';
@@ -25,6 +16,7 @@ import { Colors } from '../../../../utils/colors';
 import CreatePoFromSo from './CreatePoFromSo';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type Props = {
   detail: RSoDetailData;
@@ -32,650 +24,442 @@ type Props = {
   refetch: any;
 };
 
+// ── Reusable row component ─────────────────────────────────────────────────────
+const InfoRow = ({ label, value }: { label: string; value: any }) => (
+  <View style={D.row}>
+    <Text style={D.rowLabel}>{label}</Text>
+    <Text style={D.rowValue} numberOfLines={2}>{value ?? '—'}</Text>
+  </View>
+);
+
+// ── Section card wrapper ───────────────────────────────────────────────────────
+const Section = ({
+  icon, title, children,
+}: {
+  icon: string; title: string; children: React.ReactNode;
+}) => (
+  <View style={D.card}>
+    <View style={D.cardHeader}>
+      <View style={D.iconCircle}>
+        <Ionicons name={icon} size={14} color="#534AB7" />
+      </View>
+      <Text style={D.cardTitle}>{title}</Text>
+    </View>
+    {children}
+  </View>
+);
+
 const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
   const { order_details, items, store_details, totals } = detail;
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [submitSaleOrder, { isLoading: isSubmitLoading }] =
-    useSubmitSaleOrderMutation();
-  const [cancelSaleOrder, { isLoading: isCancelLoading }] =
-    useCancelSaleOrderMutation();
-  const [amendSaleOrder, { isLoading: isAmendLoading }] =
-    useAmendSaleOrderMutation();
+  const [submitSaleOrder, { isLoading: isSubmitLoading }] = useSubmitSaleOrderMutation();
+  const [cancelSaleOrder, { isLoading: isCancelLoading }] = useCancelSaleOrderMutation();
+  const [amendSaleOrder, { isLoading: isAmendLoading }] = useAmendSaleOrderMutation();
 
-  const onConfirmCancel = () => {
-    setCancelModalVisible(false);
-    handleCancel();
-  };
+  const statusColor = soStatusColors[order_details.status] || '#6B7280';
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => { setRefreshing(false); refetch(); }, 2000);
+  }, []);
 
   const handleSubmit = async () => {
     try {
-      let payload = {
-        order_id: order_details?.order_id,
-        action: 'Approve',
-      };
-      const res = await submitSaleOrder(payload).unwrap();
-      if (res?.message?.success) {
-        Toast.show({
-          type: 'success',
-          text1: '✅ Sales order submitted successfully',
-          position: 'top',
-        });
-
-        // navigation.navigate('OrdersScreen');
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: `❌ ${res.message.message || 'Something went wrong'}`,
-          position: 'top',
-        });
-      }
-    } catch (error: any) {
-      // console.error('Sales Order API Error:', error);
+      const res = await submitSaleOrder({
+        order_id: order_details?.order_id, action: 'Approve',
+      }).unwrap();
       Toast.show({
-        type: 'error',
-        text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
-        text2: 'Please try again later.',
+        type: res?.message?.success ? 'success' : 'error',
+        text1: res?.message?.success
+          ? '✅ Sales order submitted successfully'
+          : `❌ ${res.message.message || 'Something went wrong'}`,
         position: 'top',
       });
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
     }
   };
 
   const handleCancel = async () => {
     try {
-      let payload = {
-        order_id: order_details?.order_id,
-        action: 'Reject',
-        reason: cancelReason,
-      };
-      const res = await cancelSaleOrder(payload).unwrap();
+      const res = await cancelSaleOrder({
+        order_id: order_details?.order_id, action: 'Reject', reason: cancelReason,
+      }).unwrap();
       if (res?.message?.success) {
-        Toast.show({
-          type: 'success',
-          text1: `✅ ${res.message.message}`,
-          position: 'top',
-        });
+        Toast.show({ type: 'success', text1: `✅ ${res.message.message}`, position: 'top' });
         setCancelReason('');
-        // navigation.navigate('OrdersScreen');
+        setCancelModalVisible(false);
       } else {
-        Toast.show({
-          type: 'error',
-          text1: `❌ ${res.message.message || 'Something went wrong'}`,
-          position: 'top',
-        });
+        Toast.show({ type: 'error', text1: `❌ ${res.message.message || 'Something went wrong'}`, position: 'top' });
       }
     } catch (error: any) {
-      // console.error('Sales Order API Error:', error);
-      Toast.show({
-        type: 'error',
-        text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
-        text2: 'Please try again later.',
-        position: 'top',
-      });
+      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
     }
   };
 
   const handleAmend = async () => {
     try {
-      let _amendment = {
-        delivery_date: order_details?.delivery_date,
-        items: items?.map(item => ({
-          item_code: item?.item_code,
-          qty: item?.qty,
-          rate: item?.rate,
-          delivery_date: item?.delivery_date,
-        })),
-      };
-      let payload = {
+      const res = await amendSaleOrder({
         order_id: order_details?.order_id,
-        amendments: _amendment,
-      };
-      const res = await amendSaleOrder(payload).unwrap();
-      if (res?.message?.success) {
-        Toast.show({
-          type: 'success',
-          text1: `✅ ${res.message.message}`,
-          position: 'top',
-        });
-        // navigation.navigate('OrdersScreen');
-      } else {
-        // console.error('Sales Order API Error:', res.message.message);
-        Toast.show({
-          type: 'error',
-          text1: `❌ ${res.message.message || 'Something went wrong'}`,
-          position: 'top',
-        });
-      }
-    } catch (error: any) {
-      // console.error('Sales Order API Error:', error);
+        amendments: {
+          delivery_date: order_details?.delivery_date,
+          items: items?.map(item => ({
+            item_code: item?.item_code, qty: item?.qty,
+            rate: item?.rate, delivery_date: item?.delivery_date,
+          })),
+        },
+      }).unwrap();
       Toast.show({
-        type: 'error',
-        text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
-        text2: 'Please try again later.',
+        type: res?.message?.success ? 'success' : 'error',
+        text1: res?.message?.success ? `✅ ${res.message.message}` : `❌ ${res.message.message || 'Something went wrong'}`,
         position: 'top',
       });
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
     }
   };
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      refetch();
-    }, 2000);
-  }, []);
 
   return (
     <ScrollView
-      style={styles.container}
+      style={D.container}
+      contentContainerStyle={{ paddingBottom: 32 }}
       nestedScrollEnabled
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
-      {/* Order Details */}
-      <View style={styles.card}>
-        <View style={styles.cardInnerHeader}>
-          <Text style={styles.title}>Order Details</Text>
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
+      {/* ── Hero status banner ── */}
+      <View style={[D.heroBanner, { borderLeftColor: statusColor }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={D.heroOrderId}>{order_details.order_id}</Text>
+          <Text style={D.heroMeta}>
+            {order_details.transaction_date}  ·  {order_details.customer_name}
+          </Text>
         </View>
-        <View style={{ paddingHorizontal: 16 }}>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Order ID:</Text>
-            <Text style={styles.contenttext}>{order_details.order_id}</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Customer: </Text>
-            <Text style={styles.contenttext}>
-              {order_details.customer_name}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Created By:</Text>
-            <Text
-              style={[
-                styles.contenttext,
-                {
-                  flexWrap: 'wrap',
-                  textAlign: 'right',
-                },
-              ]}>
-              {order_details.created_by}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Transaction Date: </Text>
-            <Text style={styles.contenttext}>
-              {order_details.transaction_date}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Delivery Date: </Text>
-            <Text style={styles.contenttext}>
-              {order_details.delivery_date}
-            </Text>
-          </View>
-
-          <View
-            style={{
-              backgroundColor:
-                `${soStatusColors[detail.order_details.status]}40` ||
-                '#E5E7EB40',
-              padding: 8,
-              borderRadius: 6,
-              width: 'auto',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginVertical: 8,
-            }}>
-            <Text
-              style={{
-                color: soStatusColors[detail.order_details.status] || '#E5E7EB',
-                fontSize: 16,
-                justifyContent: 'center',
-                fontFamily: Fonts.semiBold,
-              }}>
-              {detail.order_details.status}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Grand Total: </Text>
-            <Text style={styles.contenttext}>{order_details.grand_total}</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Total Qty: </Text>
-            <Text style={styles.contenttext}>{order_details.total_qty}</Text>
-          </View>
+        <View style={[D.statusPill, { backgroundColor: `${statusColor}20`, borderColor: `${statusColor}50` }]}>
+          <View style={[D.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={[D.statusText, { color: statusColor }]}>{order_details.status}</Text>
         </View>
       </View>
 
-      {/* Store Details */}
-      <View style={styles.card}>
-        <View style={styles.cardInnerHeader}>
-          <Text style={styles.title}>Store Details</Text>
+      {/* ── Quick stats row ── */}
+      <View style={D.statsRow}>
+        <View style={D.statBox}>
+          <Text style={D.statLabel}>Grand Total</Text>
+          <Text style={D.statValue}>₹{order_details.grand_total}</Text>
         </View>
-        <View style={{ paddingHorizontal: 16 }}>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Warehouse:</Text>
-            <Text style={styles.contenttext}>
-              {store_details.warehouse_name}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Store:</Text>
-            <Text style={styles.contenttext}>{order_details.store_name}</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Distributor:</Text>
-            <Text style={styles.contenttext}>{store_details.distributor}</Text>
-          </View>
+        <View style={D.statDivider} />
+        <View style={D.statBox}>
+          <Text style={D.statLabel}>Total Qty</Text>
+          <Text style={D.statValue}>{order_details.total_qty}</Text>
+        </View>
+        <View style={D.statDivider} />
+        <View style={D.statBox}>
+          <Text style={D.statLabel}>Items</Text>
+          <Text style={D.statValue}>{items?.length ?? 0}</Text>
         </View>
       </View>
 
-      {/* Items List */}
-      <View style={styles.card}>
-        <View style={styles.cardInnerHeader}>
-          <Text style={styles.title}>Items</Text>
-        </View>
-        <FlatList
-          data={items}
-          scrollEnabled={false}
-          keyExtractor={(item, index) => `${item.item_code}-${index}`}
-          renderItem={({ item }) => (
-            <>
-              <View style={styles.itemRow}>
-                <Text
-                  style={[
-                    styles.contentHeading,
-                    { fontSize: Size.xsmd, paddingHorizontal: 16 },
-                  ]}>
-                  {item.item_name}
-                </Text>
-                <View style={{ paddingHorizontal: 16 }}>
-                  <View
-                    style={{
-                      display: 'flex',
-                      width: '100%',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                    <Text style={styles.contentHeading}>Qty:</Text>
-                    <Text style={styles.contenttext}>{item.qty}</Text>
-                  </View>
-                  <View
-                    style={{
-                      display: 'flex',
-                      width: '100%',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                    <Text style={styles.contentHeading}>Rate:</Text>
-                    <Text style={styles.contenttext}>{item.rate}</Text>
-                  </View>
-                  <View
-                    style={{
-                      display: 'flex',
-                      width: '100%',
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}>
-                    <Text style={styles.contentHeading}>Amount:</Text>
-                    <Text style={styles.contenttext}>{item.amount}</Text>
-                  </View>
-                </View>
+      {/* ── Order Details ── */}
+      <Section icon="receipt-outline" title="Order Details">
+        <InfoRow label="Order ID" value={order_details.order_id} />
+        <InfoRow label="Customer" value={order_details.customer_name} />
+        <InfoRow label="Created By" value={order_details.created_by} />
+        <InfoRow label="Transaction Date" value={order_details.transaction_date} />
+        <InfoRow label="Delivery Date" value={order_details.delivery_date} />
+      </Section>
+
+      {/* ── Store Details ── */}
+      <Section icon="storefront-outline" title="Store Details">
+        <InfoRow label="Warehouse" value={store_details.warehouse_name} />
+        <InfoRow label="Store" value={order_details.store_name} />
+        <InfoRow label="Distributor" value={store_details.distributor} />
+      </Section>
+
+      {/* ── Items ── */}
+      <Section icon="cube-outline" title={`Items (${items?.length ?? 0})`}>
+        {items?.map((item, index) => (
+          <View
+            key={`${item.item_code}-${index}`}
+            style={[D.itemCard, index < items.length - 1 && D.itemBorder]}
+          >
+            <Text style={D.itemName} numberOfLines={2}>{item.item_name}</Text>
+            <Text style={D.itemCode}>{item.item_code}</Text>
+            <View style={D.itemMetaRow}>
+              <View style={D.itemChip}>
+                <Text style={D.itemChipLabel}>Qty</Text>
+                <Text style={D.itemChipValue}>{item.qty}</Text>
               </View>
-            </>
-          )}
-        />
-      </View>
-
-      {/* Totals */}
-      <View style={styles.card}>
-        <View style={styles.cardInnerHeader}>
-          <Text style={styles.title}>Totals</Text>
-        </View>
-        <View style={{ paddingHorizontal: 16 }}>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Total:</Text>
-            <Text style={styles.contenttext}>{totals.total}</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Taxes:</Text>
-            <Text style={styles.contenttext}>
-              {totals.total_taxes_and_charges}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Grand Total:</Text>
-            <Text style={styles.contenttext}>{totals.grand_total}</Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              width: '100%',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <Text style={styles.contentHeading}>Rounded:</Text>
-            <Text style={styles.contenttext}>{totals.rounded_total}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Purchase Order Section */}
-      {order_details.custom_purchase_order && (
-        <CreatePoFromSo
-          detail={detail as RSoDetailData}
-          navigation={navigation}
-        />
-      )}
-
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.submitBtn,
-            (isSubmitLoading || order_details.docstatus !== 0) && {
-              opacity: 0.7,
-            },
-          ]}
-          onPress={() => handleSubmit()}
-          disabled={isSubmitLoading || order_details.docstatus !== 0}>
-          {isSubmitLoading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <Text style={styles.submitText}>Submit</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.submitBtn,
-            (isCancelLoading ||
-              order_details.status ||
-              order_details.docstatus !== 1) && {
-              opacity: 0.7,
-            },
-            {
-              backgroundColor: Colors.darkGray,
-            },
-          ]}
-          onPress={() => setCancelModalVisible(true)}
-          disabled={isCancelLoading || order_details.docstatus !== 1}>
-          {isCancelLoading ? (
-            <ActivityIndicator size="small" color={Colors.white} />
-          ) : (
-            <Text style={styles.submitText}>Cancel</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        {order_details.docstatus === 2 && (
-          <TouchableOpacity
-            style={[
-              styles.submitBtn,
-              isAmendLoading && {
-                opacity: 0.7,
-              },
-              {
-                backgroundColor: Colors.primary,
-              },
-            ]}
-            onPress={() => handleAmend()}
-            disabled={isAmendLoading}>
-            {isAmendLoading ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <Text style={styles.submitText}>Amend</Text>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {/* Cancel Modal */}
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={cancelModalVisible}
-          onRequestClose={() => setCancelModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Cancel Reason</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter reason for cancellation"
-                value={cancelReason}
-                placeholderTextColor={Colors.black}
-                onChangeText={setCancelReason}
-                multiline
-              />
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  style={[styles.submitBtn2, { backgroundColor: Colors.gray }]}
-                  onPress={() => setCancelModalVisible(false)}>
-                  <Text style={styles.submitText}>Close</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.submitBtn2, !cancelReason && { opacity: 0.7 }]}
-                  disabled={!cancelReason}
-                  onPress={onConfirmCancel}>
-                  <Text style={styles.submitText}>Confirm</Text>
-                </TouchableOpacity>
+              <View style={D.itemChip}>
+                <Text style={D.itemChipLabel}>Rate</Text>
+                <Text style={D.itemChipValue}>₹{item.rate}</Text>
+              </View>
+              <View style={[D.itemChip, { backgroundColor: '#EEF2FF' }]}>
+                <Text style={D.itemChipLabel}>Amount</Text>
+                <Text style={[D.itemChipValue, { color: '#534AB7' }]}>₹{item.amount}</Text>
               </View>
             </View>
           </View>
-        </Modal>
+        ))}
+      </Section>
+
+      {/* ── Totals ── */}
+      <Section icon="calculator-outline" title="Totals">
+        <InfoRow label="Subtotal" value={`₹${totals.total}`} />
+        <InfoRow label="Taxes" value={`₹${totals.total_taxes_and_charges}`} />
+        <View style={[D.row, D.grandTotalRow]}>
+          <Text style={D.grandTotalLabel}>Grand Total</Text>
+          <Text style={D.grandTotalValue}>₹{totals.grand_total}</Text>
+        </View>
+        {totals.rounded_total && (
+          <InfoRow label="Rounded" value={`₹${totals.rounded_total}`} />
+        )}
+      </Section>
+
+      {/* ── Purchase Order Section ── */}
+      {order_details.custom_purchase_order && (
+        <CreatePoFromSo detail={detail as RSoDetailData} navigation={navigation} />
+      )}
+
+      {/* ── Action Buttons ── */}
+      <View style={D.actions}>
+        <TouchableOpacity
+          style={[D.actionBtn, D.btnGreen, (isSubmitLoading || order_details.docstatus !== 0) && D.btnDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitLoading || order_details.docstatus !== 0}
+        >
+          {isSubmitLoading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <>
+              <Ionicons name="checkmark-circle-outline" size={18} color="#fff" />
+              <Text style={D.actionBtnText}>Submit</Text>
+            </>
+          }
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[D.actionBtn, D.btnRed, (isCancelLoading || order_details.docstatus !== 1) && D.btnDisabled]}
+          onPress={() => setCancelModalVisible(true)}
+          disabled={isCancelLoading || order_details.docstatus !== 1}
+        >
+          {isCancelLoading
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <>
+              <Ionicons name="close-circle-outline" size={18} color="#fff" />
+              <Text style={D.actionBtnText}>Cancel</Text>
+            </>
+          }
+        </TouchableOpacity>
       </View>
+
+      {order_details.docstatus === 2 && (
+        <View style={[D.actions, { marginTop: 0 }]}>
+          <TouchableOpacity
+            style={[D.actionBtn, D.btnPurple, { flex: 1 }, isAmendLoading && D.btnDisabled]}
+            onPress={handleAmend}
+            disabled={isAmendLoading}
+          >
+            {isAmendLoading
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <>
+                <Ionicons name="create-outline" size={18} color="#fff" />
+                <Text style={D.actionBtnText}>Amend Order</Text>
+              </>
+            }
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* ── Cancel Modal ── */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={cancelModalVisible}
+        onRequestClose={() => setCancelModalVisible(false)}
+      >
+        <View style={D.modalOverlay}>
+          <View style={D.modalBox}>
+            <View style={D.modalIconRow}>
+              <View style={D.modalIconCircle}>
+                <Ionicons name="warning-outline" size={24} color="#EF4444" />
+              </View>
+            </View>
+            <Text style={D.modalTitle}>Cancel Order</Text>
+            <Text style={D.modalSubtitle}>Please provide a reason for cancellation</Text>
+
+            <TextInput
+              style={D.modalInput}
+              placeholder="Enter reason..."
+              value={cancelReason}
+              placeholderTextColor="#9CA3AF"
+              onChangeText={setCancelReason}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+
+            <View style={D.modalActions}>
+              <TouchableOpacity
+                style={[D.modalBtn, D.modalBtnGhost]}
+                onPress={() => setCancelModalVisible(false)}
+              >
+                <Text style={D.modalBtnGhostText}>Dismiss</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[D.modalBtn, D.modalBtnDanger, !cancelReason && D.btnDisabled]}
+                disabled={!cancelReason}
+                onPress={handleCancel}
+              >
+                {isCancelLoading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={D.modalBtnText}>Confirm</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
 
 export default SaleDetailComponent;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 12,
-  },
-  card: {
-    backgroundColor: Colors.white,
-    paddingVertical: 20,
-    marginBottom: 12,
-    borderRadius: 16,
-  },
+const D = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F5F5F7', paddingHorizontal: 14, paddingTop: 12 },
 
-  itemRow: {
-    paddingVertical: 6,
-  },
-  itemName: {
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    marginBottom: 20,
-    columnGap: 20,
-  },
-  submitBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.green,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    gap: 5,
-    zIndex: 1,
-    width: '48%',
-  },
-  submitText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.white,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContainer: {
-    width: '90%',
+  // ── Hero ──
+  heroBanner: {
     backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-  },
-  modalTitle: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    color: Colors.darkButton,
-  },
-  input: {
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#ecececff',
-    height: 50,
-  },
-  modalActions: {
+    borderRadius: 14,
+    padding: 14,
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 20,
-  },
-  submitBtn2: {
-    display: 'flex',
     alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.green,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    gap: 5,
-    zIndex: 1,
-    width: '49%',
+    marginBottom: 10,
+    borderLeftWidth: 4,
   },
+  heroOrderId: { fontSize: 14, fontFamily: Fonts.semiBold, color: '#1A1A2E' },
+  heroMeta: { fontSize: 11, fontFamily: Fonts.regular, color: '#6B7280', marginTop: 3 },
+  statusPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 20, borderWidth: 1,
+  },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 11, fontFamily: Fonts.semiBold },
 
-  cardInnerHeader: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    paddingHorizontal: 15,
-    paddingBottom: 8,
+  // ── Stats row ──
+  statsRow: {
+    backgroundColor: '#fff', borderRadius: 14,
+    flexDirection: 'row', marginBottom: 10,
+    overflow: 'hidden',
+  },
+  statBox: { flex: 1, alignItems: 'center', paddingVertical: 12 },
+  statDivider: { width: 0.5, backgroundColor: '#E5E7EB', marginVertical: 10 },
+  statLabel: { fontSize: 10, fontFamily: Fonts.regular, color: '#6B7280', marginBottom: 4 },
+  statValue: { fontSize: 15, fontFamily: Fonts.semiBold, color: '#1A1A2E' },
+
+  // ── Card ──
+  card: {
+    backgroundColor: '#fff', borderRadius: 14,
+    marginBottom: 10, overflow: 'hidden',
+  },
+  cardHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 0.5, borderBottomColor: '#E5E7EB',
+  },
+  iconCircle: {
+    width: 26, height: 26, borderRadius: 8,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  cardTitle: { fontSize: 13, fontFamily: Fonts.semiBold, color: '#1A1A2E' },
+
+  // ── Info rows ──
+  row: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', paddingHorizontal: 14,
+    paddingVertical: 9, borderBottomWidth: 0.5, borderBottomColor: '#F3F4F6',
+  },
+  rowLabel: { fontSize: 12, fontFamily: Fonts.regular, color: '#6B7280', flex: 1 },
+  rowValue: { fontSize: 12, fontFamily: Fonts.semiBold, color: '#1A1A2E', flex: 1, textAlign: 'right' },
+
+  // ── Grand total row ──
+  grandTotalRow: {
+    backgroundColor: '#F5F3FF',
+    borderBottomWidth: 0,
+    marginTop: 2,
+    borderRadius: 8,
+    marginHorizontal: 10,
     marginBottom: 8,
   },
-  title: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
+  grandTotalLabel: { fontSize: 13, fontFamily: Fonts.semiBold, color: '#1A1A2E', flex: 1 },
+  grandTotalValue: { fontSize: 15, fontFamily: Fonts.semiBold, color: '#534AB7', flex: 1, textAlign: 'right' },
+
+  // ── Items ──
+  itemCard: { paddingHorizontal: 14, paddingVertical: 12 },
+  itemBorder: { borderBottomWidth: 0.5, borderBottomColor: '#F3F4F6' },
+  itemName: { fontSize: 13, fontFamily: Fonts.semiBold, color: '#1A1A2E', marginBottom: 2 },
+  itemCode: { fontSize: 10, fontFamily: Fonts.regular, color: '#9CA3AF', marginBottom: 8 },
+  itemMetaRow: { flexDirection: 'row', gap: 8 },
+  itemChip: {
+    flex: 1, backgroundColor: '#F9FAFB',
+    borderRadius: 8, padding: 8, alignItems: 'center',
+    borderWidth: 0.5, borderColor: '#E5E7EB',
   },
-  contentHeading: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
+  itemChipLabel: { fontSize: 9, fontFamily: Fonts.regular, color: '#6B7280', marginBottom: 2 },
+  itemChipValue: { fontSize: 12, fontFamily: Fonts.semiBold, color: '#1A1A2E' },
+
+  // ── Actions ──
+  actions: {
+    flexDirection: 'row', gap: 10,
+    marginBottom: 10,
   },
-  contenttext: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
+  actionBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: 6,
+    paddingVertical: 14, borderRadius: 12,
   },
+  btnGreen: { backgroundColor: '#16A34A' },
+  btnRed: { backgroundColor: '#EF4444' },
+  btnPurple: { backgroundColor: '#534AB7' },
+  btnDisabled: { opacity: 0.45 },
+  actionBtnText: { fontSize: 14, fontFamily: Fonts.semiBold, color: '#fff' },
+
+  // ── Cancel Modal ──
+  modalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  modalBox: {
+    width: '88%', backgroundColor: '#fff',
+    borderRadius: 20, padding: 22,
+  },
+  modalIconRow: { alignItems: 'center', marginBottom: 12 },
+  modalIconCircle: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  modalTitle: { fontSize: 17, fontFamily: Fonts.semiBold, color: '#1A1A2E', textAlign: 'center' },
+  modalSubtitle: { fontSize: 12, fontFamily: Fonts.regular, color: '#6B7280', textAlign: 'center', marginTop: 4, marginBottom: 16 },
+  modalInput: {
+    backgroundColor: '#F9FAFB', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 0.5, borderColor: '#E5E7EB',
+    fontSize: 13, fontFamily: Fonts.regular,
+    color: '#1A1A2E', minHeight: 80,
+    marginBottom: 16,
+  },
+  modalActions: { flexDirection: 'row', gap: 10 },
+  modalBtn: {
+    flex: 1, paddingVertical: 13,
+    borderRadius: 12, alignItems: 'center',
+  },
+  modalBtnGhost: { backgroundColor: '#F3F4F6' },
+  modalBtnGhostText: { fontSize: 14, fontFamily: Fonts.semiBold, color: '#374151' },
+  modalBtnDanger: { backgroundColor: '#EF4444' },
+  modalBtnText: { fontSize: 14, fontFamily: Fonts.semiBold, color: '#fff' },
 });

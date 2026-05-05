@@ -210,7 +210,6 @@ const HomeScreen = ({ navigation }: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
   const { data: teamReportData } = useGetSalesRepotsQuery({

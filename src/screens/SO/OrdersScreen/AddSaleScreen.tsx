@@ -9,38 +9,38 @@ import {
   View,
   Dimensions,
 } from 'react-native';
-import {useEffect, useRef, useState} from 'react';
-import {useFormik} from 'formik';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { useEffect, useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import Toast from 'react-native-toast-message';
 import AddSaleForm from '../../../components/SO/Order/Sale/AddSaleForm';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import {addSalesOrderSchema} from '../../../types/schema';
-import {IAddSalesOrderV2, RSoDetailData} from '../../../types/baseType';
+import { addSalesOrderSchema } from '../../../types/schema';
+import { IAddSalesOrderV2, RSoDetailData } from '../../../types/baseType';
 import {
   useCreateSalesOrderWithStockMutation,
   useGetSalesOrderByIdQuery,
   useGetStoreStockStatusQuery,
   useUpdateSaleOrderMutation,
 } from '../../../features/base/base-api';
-import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
-import {useAppSelector} from '../../../store/hook';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {getStoreLabel} from '../../../utils/utils';
+import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
+import { useAppSelector } from '../../../store/hook';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { getStoreLabel } from '../../../utils/utils';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'AddSaleScreen'
 >;
-type Props = {navigation: NavigationProp; route: any};
+type Props = { navigation: NavigationProp; route: any };
 
 const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrderV2 => ({
   transaction_date: detail.order_details.transaction_date,
@@ -69,12 +69,12 @@ const initial: IAddSalesOrderV2 = {
   transaction_date: moment().format('YYYY-MM-DD'),
   delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
   custom_warehouse: '',
-  items: [{...EMPTY_ITEM}],
+  items: [{ ...EMPTY_ITEM }],
   terms: null,
   submit_order: false,
 };
 
-const AddSaleScreen = ({navigation, route}: Props) => {
+const AddSaleScreen = ({ navigation, route }: Props) => {
   const [loading, setLoading] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   type DateField = 'transaction_date' | 'delivery_date';
@@ -97,16 +97,16 @@ const AddSaleScreen = ({navigation, route}: Props) => {
 
   const [addSalesOrder] = useCreateSalesOrderWithStockMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
-  const [triggerStoreFetch, {data: storeData}] = useLazyGetDailyStoreQuery();
-  const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
+  const [triggerStoreFetch, { data: storeData }] = useLazyGetDailyStoreQuery();
+  const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
 
   // ── Single stock fetch — results flow down as plain props ─────────────────
-  const {data: stockData, isFetching: isStockFetching} =
+  const { data: stockData, isFetching: isStockFetching } =
     useGetStoreStockStatusQuery(
-      {store: selectedStoreId},
-      {skip: !selectedStoreId},
+      { store: selectedStoreId },
+      { skip: !selectedStoreId },
     );
 
   // Derived values passed to AddSaleForm → SaleItemField
@@ -129,7 +129,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       try {
         setLoading(true);
         const res = orderId
-          ? await updateSaleOrder({...formValues, order_id: orderId}).unwrap()
+          ? await updateSaleOrder({ ...formValues, order_id: orderId }).unwrap()
           : await addSalesOrder(formValues).unwrap();
 
         if (res?.message?.success) {
@@ -141,7 +141,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           actions.resetForm();
           seededWarehouseRef.current = null;
           setSeededCount(0);
-          navigation.navigate('OrdersScreen', {index: 1});
+          navigation.navigate('OrdersScreen', { index: 0 });
         } else {
           Toast.show({
             type: 'error',
@@ -182,7 +182,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       setFieldValue('items', [...seededItems]);
       setSeededCount(seededItems.length);
     } else {
-      setFieldValue('items', [{...EMPTY_ITEM}]);
+      setFieldValue('items', [{ ...EMPTY_ITEM }]);
       setSeededCount(0);
     }
 
@@ -200,7 +200,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   // ── Fetch store list ──────────────────────────────────────────────────────
   useEffect(() => {
     if (user?.email && values?.transaction_date) {
-      triggerStoreFetch({user: user.email, date: values.transaction_date});
+      triggerStoreFetch({ user: user.email, date: values.transaction_date });
     }
   }, [user?.email, values?.transaction_date]);
 
@@ -251,7 +251,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       <SafeAreaView
         style={[
           flexCol,
-          {flex: 1, justifyContent: 'center', alignItems: 'center'},
+          { flex: 1, justifyContent: 'center', alignItems: 'center' },
         ]}>
         <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
@@ -259,10 +259,10 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   }
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Create Order"
-        navigation={() => navigation.navigate('OrdersScreen', {index: 1})}
+        navigation={() => navigation.navigate('OrdersScreen', { index: 1 })}
       />
 
       <DateTimePickerModal
@@ -273,7 +273,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
             const formatted = moment(date).format('YYYY-MM-DD');
             setFieldValue(
               'items',
-              values.items.map(it => ({...it, delivery_date: formatted})),
+              values.items.map(it => ({ ...it, delivery_date: formatted })),
             );
             setFieldValue(activeField, formatted);
           }
@@ -321,7 +321,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            (loading || hasLockedItem) && {opacity: 0.7},
+            (loading || hasLockedItem) && { opacity: 0.7 },
           ]}
           onPress={() => handleSubmit()}
           disabled={loading || hasLockedItem}>
@@ -371,5 +371,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#BFDBFE',
   },
-  seedingText: {fontFamily: Fonts.regular, fontSize: Size.xs, color: '#1D4ED8'},
+  seedingText: { fontFamily: Fonts.regular, fontSize: Size.xs, color: '#1D4ED8' },
 });

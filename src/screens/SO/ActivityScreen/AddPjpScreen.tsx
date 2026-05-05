@@ -43,11 +43,19 @@ type Props = {
   route: any;
 };
 
-const initial = {
-  date: new Date().toISOString().split('T')[0],
+const getLocalDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getInitial = () => ({
+  date: getLocalDateString(),
   employee: '',
   stores: [{ store: '' }],
-};
+});
 
 // helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
 const mapPjpDetailToForm = (detail: PjpDailyStore): any => {
@@ -82,7 +90,7 @@ export const uniqueByStoreName = <T extends { name: string }>(arr: T[]) => {
 
 const AddPjpScreen = ({ navigation, route }: Props) => {
   const { id } = route?.params ?? {};
-  const [initialValues, setInitialValues] = useState<any>(initial);
+  const [initialValues, setInitialValues] = useState<any>(getInitial());
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
   const employee = useAppSelector(
@@ -168,7 +176,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
             text1: `✅ ${res.message.message}`,
             position: 'top',
           });
-          resetForm();
+          resetForm({ values: getInitial() });
           navigation.navigate('Home');
         } else {
           Toast.show({

@@ -136,7 +136,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     getSalesOrderList: builder.query<
       RSoList,
@@ -146,7 +146,7 @@ export const baseApi = createApi({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.get_sales_orders_list?page=${page}&page_size=${page_size}`,
         method: 'GET',
       }),
-      providesTags: ['SO', 'Stock', 'Activity'],
+      providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     getSalesOrderById: builder.query<RSoDetails, string>({
       query: id => ({
@@ -156,7 +156,7 @@ export const baseApi = createApi({
           order_id: id,
         },
       }),
-      providesTags: ['SO', 'Stock', 'Activity'],
+      providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     addSaleOrder: builder.mutation<RAddSalesOrder, IAddSalesOrder>({
       query: body => ({
@@ -164,7 +164,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     updateSaleOrder: builder.mutation<RAddSalesOrder, IUpdateSalesOrder>({
       query: body => ({
@@ -172,7 +172,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     submitSaleOrder: builder.mutation<RAddSalesOrder, IUpdateSOAction>({
       query: body => ({
@@ -180,7 +180,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     cancelSaleOrder: builder.mutation<RAddSalesOrder, ICancelSO>({
       query: body => ({
@@ -188,7 +188,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     amendSaleOrder: builder.mutation<RAddSalesOrder, IAmendSO>({
       query: body => ({
@@ -196,9 +196,8 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
-
     //Purchase Order
     getPurchaseOrderList: builder.query<
       RPoList,
@@ -213,7 +212,7 @@ export const baseApi = createApi({
           status: status,
         },
       }),
-      providesTags: ['PO'],
+      providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     getPurchaseOrderById: builder.query<RPoDetails, string>({
       query: id => ({
@@ -223,7 +222,7 @@ export const baseApi = createApi({
           order_id: id,
         },
       }),
-      providesTags: ['PO'],
+      providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     createPurchaseOrder: builder.mutation<RAddSalesOrder, IAddPurchaseOrder>({
       query: body => ({
@@ -231,7 +230,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['SO', 'PO'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     submitPurchaseOrder: builder.mutation<RAddSalesOrder, IUpdateSOAction>({
       query: body => ({
@@ -239,7 +238,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['PO'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     cancelPurchaseOrder: builder.mutation<RAddSalesOrder, ICancelSO>({
       query: body => ({
@@ -247,7 +246,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['PO'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     amendPurchaseOrder: builder.mutation<RAddSalesOrder, IAmendPO>({
       query: body => ({
@@ -255,7 +254,7 @@ export const baseApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['PO'],
+      invalidatesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
 
     //Counts
@@ -264,7 +263,7 @@ export const baseApi = createApi({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.order_count.get_orders_count`,
         method: 'GET',
       }),
-      providesTags: ['PO', 'SO'],
+      providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
     getProdCount: builder.query<RProdCount, { date: string }>({
       query: ({ date }) => ({
@@ -274,7 +273,7 @@ export const baseApi = createApi({
           date: date,
         },
       }),
-      providesTags: ['PJP', 'Store'],
+      providesTags: ['PJP', 'Store', 'SO', 'Stock', 'Activity'],
     }),
 
     //PJP
