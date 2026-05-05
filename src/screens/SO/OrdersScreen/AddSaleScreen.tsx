@@ -126,6 +126,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     validationSchema: addSalesOrderSchema,
     enableReinitialize: true,
     onSubmit: async (formValues, actions) => {
+      console.log("🚀 ~ AddSaleScreen ~ formValues:", formValues)
       try {
         setLoading(true);
         const res = orderId
@@ -162,6 +163,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
       }
     },
   });
+  console.log("🚀 ~ AddSaleScreen ~ errors:", errors)
 
   // ── Seed previous_items when stock loads ──────────────────────────────────
   useEffect(() => {
@@ -323,8 +325,11 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
             styles.submitBtn,
             (loading || hasLockedItem) && { opacity: 0.7 },
           ]}
-          onPress={() => handleSubmit()}
-          disabled={loading || hasLockedItem}>
+          onPress={() => {
+            console.log('Presed')
+            handleSubmit()
+          }}
+          disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (

@@ -82,8 +82,7 @@ export const addSalesOrderSchema = Yup.object().shape({
         item_code: Yup.string().required('Item code is required'),
         qty: Yup.number()
           .typeError('Quantity must be a number')
-          .positive('Quantity must be greater than 0')
-          .required('Quantity is required'),
+          .optional(),
         rate: Yup.number()
           .typeError('Rate must be a number')
           .positive('Rate must be greater than 0')

@@ -1,13 +1,13 @@
 import React from 'react';
-import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {SafeAreaView} from 'react-native';
-import {Colors} from '../../../utils/colors';
-import {flexCol} from '../../../utils/styles';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { SafeAreaView } from 'react-native';
+import { Colors } from '../../../utils/colors';
+import { flexCol } from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetPurchaseOrderByIdQuery} from '../../../features/base/base-api';
-import {POOrderData} from '../../../types/baseType';
+import { useGetPurchaseOrderByIdQuery } from '../../../features/base/base-api';
+import { POOrderData } from '../../../types/baseType';
 import PurchaseDetailComponent from '../../../components/SO/Order/Purchase/PurchaseDetailComponent';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
@@ -21,19 +21,19 @@ type Props = {
   navigation: NavigationProp;
   route: any;
 };
-const PurchaseDetailScreen = ({navigation, route}: Props) => {
-  const {id} = route.params;
-  const {data, isFetching, refetch} = useGetPurchaseOrderByIdQuery(id);
+const PurchaseDetailScreen = ({ navigation, route }: Props) => {
+  const { id } = route.params;
+  const { data, isFetching, refetch } = useGetPurchaseOrderByIdQuery(id);
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Purchase Order Detail"
         navigation={() => navigation.goBack()}
       />
       {/* Header with Edit */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Purchase Order Detail</Text>
-        {/* {data?.message?.data?.order_details?.status === 'Draft' && (
+      {/* <View style={styles.header}> */}
+      {/* <Text style={styles.headerTitle}>Purchase Order Detail</Text> */}
+      {/* {data?.message?.data?.order_details?.status === 'Draft' && (
           <TouchableOpacity
             onPress={() =>
               navigation.navigate(
@@ -46,7 +46,7 @@ const PurchaseDetailScreen = ({navigation, route}: Props) => {
             <Icon name="edit" size={24} color={Colors.primary} />
           </TouchableOpacity>
         )} */}
-      </View>
+      {/* </View> */}
       {isFetching ? (
         <ActivityIndicator size="large" />
       ) : (
@@ -63,17 +63,17 @@ const PurchaseDetailScreen = ({navigation, route}: Props) => {
 export default PurchaseDetailScreen;
 
 const styles = StyleSheet.create({
- header: {
-     flexDirection: 'row',
-     justifyContent: 'space-between',
-     alignItems: 'center',
-     marginTop: 12,
-     paddingHorizontal: 20,
-     backgroundColor:'transperent',
-   },
-   headerTitle: {
-     fontFamily: Fonts.semiBold,
-     fontSize: Size.xsmd,
-     color: Colors.darkButton,
-   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 20,
+    backgroundColor: 'transperent',
+  },
+  headerTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xsmd,
+    color: Colors.darkButton,
+  },
 });
