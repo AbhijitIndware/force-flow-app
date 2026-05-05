@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useCallback, useMemo, memo} from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,15 +16,15 @@ import {
   itemsCenter,
   justifyBetween,
 } from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   useGetStoreStockStatusQuery,
   useGetStoreListQuery,
 } from '../../../features/base/base-api';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {
   Boxes,
@@ -35,9 +35,9 @@ import {
   Search,
   X,
 } from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
-import {getStoreLabel} from '../../../utils/utils';
-import {StockDashboardItem} from '../../../types/baseType';
+import { useAppSelector } from '../../../store/hook';
+import { getStoreLabel } from '../../../utils/utils';
+import { StockDashboardItem } from '../../../types/baseType';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -56,15 +56,15 @@ const CARD_MARGIN_BOTTOM = 10;
 const ITEM_HEIGHT = CARD_HEIGHT + CARD_MARGIN_BOTTOM;
 
 // ─── Memoized card to prevent re-renders when other items change ───────────────
-const StockCard = memo(({item}: {item: StockDashboardItem}) => {
+const StockCard = memo(({ item }: { item: StockDashboardItem }) => {
   return (
     <View style={styles.card}>
-      <View style={[flexRow, itemsCenter, {justifyContent: 'space-between'}]}>
-        <View style={[flexRow, itemsCenter, {flex: 1, marginRight: 10}]}>
+      <View style={[flexRow, itemsCenter, { justifyContent: 'space-between' }]}>
+        <View style={[flexRow, itemsCenter, { flex: 1, marginRight: 10 }]}>
           <View style={styles.iconContainer}>
             <Package size={16} color={Colors.white} />
           </View>
-          <View style={{flex: 1, marginLeft: 10}}>
+          <View style={{ flex: 1, marginLeft: 10 }}>
             <Text style={styles.itemName} numberOfLines={1}>
               {item.item_name}
             </Text>
@@ -113,7 +113,7 @@ const StockCard = memo(({item}: {item: StockDashboardItem}) => {
         <View style={styles.miniMetric}>
           <Text style={styles.miniLabel}>
             New:{' '}
-            <Text style={[styles.miniValue, {color: Colors.orange}]}>
+            <Text style={[styles.miniValue, { color: Colors.orange }]}>
               {item.new_orders !== null ? item.new_orders : '—'}
             </Text>
           </Text>
@@ -124,13 +124,13 @@ const StockCard = memo(({item}: {item: StockDashboardItem}) => {
 });
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
-const StockManagementScreen = ({navigation}: Props) => {
+const StockManagementScreen = ({ navigation }: Props) => {
   const [selectedStore, setSelectedStore] = useState<string>('');
   const [selectedStoreName, setSelectedStoreName] = useState<string>('');
   const [page, setPage] = useState(1);
   const [searchText, setSearchText] = useState('');
   const [storesList, setStoresList] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
 
   // ── Item search (client-side) ──
@@ -156,7 +156,7 @@ const StockManagementScreen = ({navigation}: Props) => {
     }
   }, [selectedStore, storesList]);
 
-  const {data: storeListData, isFetching: isStoresFetching} =
+  const { data: storeListData, isFetching: isStoresFetching } =
     useGetStoreListQuery({
       include_direct_subordinates: '1',
       include_subordinates: '1',
@@ -184,7 +184,7 @@ const StockManagementScreen = ({navigation}: Props) => {
   }, [storeListData, page]);
 
   // Add a separate query to fetch just the pre-selected store
-  const {data: preselectedStoreData} = useGetStoreListQuery(
+  const { data: preselectedStoreData } = useGetStoreListQuery(
     {
       include_direct_subordinates: '1',
       include_subordinates: '1',
@@ -192,7 +192,7 @@ const StockManagementScreen = ({navigation}: Props) => {
       page: '1',
       search: selectedStoreFromCheckin || '',
     },
-    {skip: !selectedStoreFromCheckin},
+    { skip: !selectedStoreFromCheckin },
   );
 
   // Merge it into storesList when it arrives
@@ -234,8 +234,8 @@ const StockManagementScreen = ({navigation}: Props) => {
     isLoading: isStockLoading,
     isFetching: isStockFetching,
   } = useGetStoreStockStatusQuery(
-    {store: selectedStore},
-    {skip: !selectedStore},
+    { store: selectedStore },
+    { skip: !selectedStore },
   );
 
   const handleStoreSelect = useCallback(
@@ -270,7 +270,7 @@ const StockManagementScreen = ({navigation}: Props) => {
 
   // ── Stable render & key functions ──
   const renderItem = useCallback(
-    ({item}: {item: StockDashboardItem}) => <StockCard item={item} />,
+    ({ item }: { item: StockDashboardItem }) => <StockCard item={item} />,
     [],
   );
   const keyExtractor = useCallback(
@@ -290,7 +290,7 @@ const StockManagementScreen = ({navigation}: Props) => {
     () => (
       <View style={styles.summaryBox}>
         <View style={[flexRow, itemsCenter, justifyBetween]}>
-          <View style={{width: '80%'}}>
+          <View style={{ width: '80%' }}>
             <Text style={styles.summaryTitle}>Stock Overview</Text>
             <Text style={styles.summarySubtitle}>{selectedStoreName}</Text>
           </View>
@@ -321,7 +321,7 @@ const StockManagementScreen = ({navigation}: Props) => {
   );
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Stock Management"
         navigation={() => navigation.goBack()}
@@ -363,10 +363,10 @@ const StockManagementScreen = ({navigation}: Props) => {
           </Text>
         </View>
       ) : (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           {/* ── Item search bar ── */}
           <View style={styles.itemSearchContainer}>
-            <Search size={16} color={Colors.gray} style={{marginRight: 8}} />
+            <Search size={16} color={Colors.gray} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.itemSearchInput}
               placeholder="Search by item name or code…"
@@ -380,7 +380,7 @@ const StockManagementScreen = ({navigation}: Props) => {
             {itemSearch.length > 0 && (
               <TouchableOpacity
                 onPress={() => setItemSearch('')}
-                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                 <X size={16} color={Colors.gray} />
               </TouchableOpacity>
             )}
@@ -390,7 +390,7 @@ const StockManagementScreen = ({navigation}: Props) => {
             data={filteredItems}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
-            contentContainerStyle={{padding: 12, paddingBottom: 120}}
+            contentContainerStyle={{ padding: 12, paddingBottom: 120 }}
             // ── Performance props ──
             getItemLayout={getItemLayout}
             removeClippedSubviews={true}
@@ -402,7 +402,7 @@ const StockManagementScreen = ({navigation}: Props) => {
             ListEmptyComponent={ListEmpty}
           />
 
-          {/* <TouchableOpacity
+          <TouchableOpacity
             style={styles.fab}
             activeOpacity={0.8}
             onPress={() =>
@@ -413,7 +413,7 @@ const StockManagementScreen = ({navigation}: Props) => {
             }>
             <History size={24} color={Colors.white} />
             <Text style={styles.fabText}>Update Physical Stock</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
@@ -541,9 +541,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: 10,
   },
-  positiveGap: {backgroundColor: '#E8F5E9'},
-  negativeGap: {backgroundColor: '#FFEBEE'},
-  neutralGap: {backgroundColor: '#F5F5F5'},
+  positiveGap: { backgroundColor: '#E8F5E9' },
+  negativeGap: { backgroundColor: '#FFEBEE' },
+  neutralGap: { backgroundColor: '#F5F5F5' },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,

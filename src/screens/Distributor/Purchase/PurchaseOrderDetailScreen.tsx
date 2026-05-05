@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, ActivityIndicator, TextInput, Modal,
@@ -86,107 +86,6 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     );
 };
 
-// ─── DDN State Badge ──────────────────────────────────────────────────────────
-
-const DDNStateBadge: React.FC<{ state: string }> = ({ state }) => {
-    const colorMap: Record<string, { bg: string; text: string }> = {
-        Draft: { bg: '#F3F4F6', text: '#374151' },
-        Submitted: { bg: '#DBEAFE', text: '#1D4ED8' },
-        Delivered: { bg: '#D1FAE5', text: '#065F46' },
-        Cancelled: { bg: '#FEE2E2', text: '#991B1B' },
-    };
-    const colors = colorMap[state] ?? { bg: C.background, text: C.textMuted };
-    return (
-        <View style={[ddnStyles.stateBadge, { backgroundColor: colors.bg }]}>
-            <Text style={[ddnStyles.stateBadgeText, { color: colors.text }]}>{state}</Text>
-        </View>
-    );
-};
-
-// ─── Linked DDN Card ──────────────────────────────────────────────────────────
-
-const LinkedDDNCard: React.FC<{ ddn: LinkedDDN }> = ({ ddn }) => {
-    const fulfilledPct = ddn.ord_qty > 0
-        ? Math.min(100, Math.round((ddn.del_qty / ddn.ord_qty) * 100))
-        : 0;
-
-    return (
-        <View style={ddnStyles.card}>
-            {/* Top row: DDN name + state badge */}
-            <View style={ddnStyles.cardHeader}>
-                <View style={{ flex: 1 }}>
-                    <Text style={ddnStyles.ddnName} numberOfLines={1}>{ddn.name}</Text>
-                    <Text style={ddnStyles.createdBy} numberOfLines={1}>by {ddn.created_by}</Text>
-                </View>
-                <DDNStateBadge state={ddn.workflow_state} />
-            </View>
-
-            <View style={ddnStyles.divider} />
-
-            {/* Info grid: Invoice · Date · Remarks */}
-            <View style={ddnStyles.infoGrid}>
-                {/* Invoice No */}
-                <View style={ddnStyles.infoCell}>
-                    <View style={ddnStyles.infoIconRow}>
-                        <FileText size={11} color={C.accent} />
-                        <Text style={ddnStyles.infoLabel}>Invoice No.</Text>
-                    </View>
-                    <Text style={ddnStyles.infoValue} numberOfLines={1}>
-                        {ddn.invoice_no || '—'}
-                    </Text>
-                </View>
-
-                {/* Date */}
-                <View style={ddnStyles.infoCell}>
-                    <View style={ddnStyles.infoIconRow}>
-                        <Calendar size={11} color={C.accent} />
-                        <Text style={ddnStyles.infoLabel}>Date</Text>
-                    </View>
-                    <Text style={ddnStyles.infoValue}>
-                        {ddn.date ? moment(ddn.date).format('DD MMM YYYY') : '—'}
-                    </Text>
-                </View>
-
-                {/* Remarks */}
-                <View style={[ddnStyles.infoCell, { flex: 1.4 }]}>
-                    <View style={ddnStyles.infoIconRow}>
-                        <MessageSquare size={11} color={C.textMuted} />
-                        <Text style={ddnStyles.infoLabel}>Remarks</Text>
-                    </View>
-                    <Text style={[ddnStyles.infoValue, { color: C.textMuted }]} numberOfLines={1}>
-                        {ddn.remarks
-                            ? (REMARKS_OPTIONS.find(r => r.value === ddn.remarks)?.label ?? ddn.remarks)
-                            : '—'}
-                    </Text>
-                </View>
-            </View>
-
-            {/* Bottom row: qty fulfillment + grand total */}
-            <View style={ddnStyles.footerRow}>
-                {/* Qty bar */}
-                <View style={{ flex: 1, gap: 4 }}>
-                    <View style={ddnStyles.qtyLabelRow}>
-                        <TrendingDown size={11} color={C.textMuted} />
-                        <Text style={ddnStyles.qtyLabel}>
-                            {ddn.del_qty} / {ddn.ord_qty} qty delivered
-                        </Text>
-                        <Text style={ddnStyles.qtyPct}>{fulfilledPct}%</Text>
-                    </View>
-                    <View style={ddnStyles.progressTrack}>
-                        <View style={[ddnStyles.progressFill, { width: `${fulfilledPct}%` }]} />
-                    </View>
-                </View>
-
-                {/* Grand total */}
-                <View style={ddnStyles.totalBox}>
-                    <Text style={ddnStyles.totalLabel}>Total</Text>
-                    <Text style={ddnStyles.totalValue}>₹{ddn.grand_total?.toLocaleString()}</Text>
-                </View>
-            </View>
-        </View>
-    );
-};
-
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
@@ -195,7 +94,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         skip: !order_id,
         refetchOnMountOrArgChange: true,
     });
-    console.log("🚀 ~ PurchaseOrderDetailScreen ~ data:", data)
     const [approveDDN, { isLoading: isApproving }] = useApproveAndCreateDDNMutation();
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -317,6 +215,14 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         );
     }
 
+    useEffect(() => {
+        if (data?.message?.data?.linked_ddns?.length > 0) {
+            const lastDDN = data.message.data.linked_ddns[data.message.data.linked_ddns.length - 1];
+            setInvoiceNo(lastDDN.invoice_no ?? '');
+            setDate(lastDDN.date ?? moment().format('YYYY-MM-DD'));
+            setRemarks(lastDDN.remarks ?? '');
+        }
+    }, [data]);
     // ─── Render ───────────────────────────────────────────────────────────────
 
     return (
@@ -360,7 +266,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
 
                 {/* ── Delivery Fields ── */}
                 <View style={styles.section}>
-                    <View style={styles.fieldRow}>
+                    <View style={[styles.fieldRow, details?.workflow_state === 'Delivered' && { opacity: 0.5 }]}>
                         <View style={{ flex: 1 }}>
                             <Text style={styles.inputLabel}>Invoice No. *</Text>
                             <TextInput
@@ -369,9 +275,9 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                 placeholderTextColor={Colors.gray}
                                 value={invoiceNo}
                                 onChangeText={setInvoiceNo}
+                                editable={details?.workflow_state !== 'Delivered'}
                             />
                         </View>
-
                         <View style={{ flex: 1 }}>
                             <ReusableDatePicker
                                 label="Date *"
@@ -380,9 +286,9 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                 marginBottom={0}
                                 labelStyle={styles.inputLabel}
                                 inputStyle={styles.input}
+                                disabled={details?.workflow_state === 'Delivered'}
                             />
                         </View>
-
                         <View style={{ flex: 1.5 }}>
                             <ReusableDropdown
                                 label="Remarks"
@@ -396,32 +302,11 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                 labelStyle={styles.inputLabel}
                                 textSize={Size.xxs}
                                 height={35}
+                                disabled={details?.workflow_state === 'Delivered'}
                             />
                         </View>
                     </View>
                 </View>
-
-                {/* ── Linked DDNs ── */}
-                {linkedDDNs.length > 0 && (
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <FileText size={16} color={C.accent} />
-                            <Text style={styles.sectionTitle}>
-                                Linked DDNs
-                            </Text>
-                            <View style={ddnStyles.countPill}>
-                                <Text style={ddnStyles.countPillText}>{linkedDDNs.length}</Text>
-                            </View>
-                        </View>
-
-                        <View style={{ gap: 10 }}>
-                            {linkedDDNs.map((ddn) => (
-                                <LinkedDDNCard key={ddn.name} ddn={ddn} />
-                            ))}
-                        </View>
-                    </View>
-                )}
-
                 {/* ── Items Grid ── */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>

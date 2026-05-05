@@ -13,11 +13,12 @@ interface Props {
   error?: string | false;
   marginBottom?: any;
   labelStyle?: any;        // add
-  inputStyle?: any;        // add
+  inputStyle?: any;
+  disabled?: boolean        // add
 }
 
 const ReusableDatePicker: React.FC<Props> = ({
-  label, value, onChange, error, marginBottom, labelStyle, inputStyle
+  label, value, onChange, error, marginBottom, labelStyle, inputStyle, disabled
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -42,6 +43,7 @@ const ReusableDatePicker: React.FC<Props> = ({
           height: 50,
           justifyContent: 'center',
         }, inputStyle]}
+        disabled={disabled}
       >
         <Text style={[{ fontSize: Size.sm, fontFamily: Fonts.regular }, inputStyle]}>
           {value || 'Select date'}
