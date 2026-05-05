@@ -26,6 +26,9 @@ const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
   const handleClick = () => {
     if (type === 'so') {
       navigations.navigate('ProfileScreen');
+    } else if (type = 'distributor') {
+      navigations.navigate('DistributorProfileScreen');
+
     }
   };
   const employee = useAppSelector(

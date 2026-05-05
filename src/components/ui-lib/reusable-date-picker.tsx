@@ -11,40 +11,39 @@ interface Props {
   value: string;
   onChange: (dateStr: string) => void;
   error?: string | false;
-  marginBottom?: any
+  marginBottom?: any;
+  labelStyle?: any;        // add
+  inputStyle?: any;        // add
 }
 
 const ReusableDatePicker: React.FC<Props> = ({
-  label,
-  value,
-  onChange,
-  error,
-  marginBottom
+  label, value, onChange, error, marginBottom, labelStyle, inputStyle
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
   const handleDateChange = (_: any, selectedDate?: Date) => {
     setShowPicker(false);
     if (selectedDate) {
-      const formatted = selectedDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
-      onChange(formatted);
+      onChange(selectedDate.toISOString().split('T')[0]);
     }
   };
 
   return (
-    <View style={{ marginBottom: marginBottom || 16 }}>
-      <Text style={{ marginBottom: 4, fontSize: 14 }}>{label}</Text>
+    <View style={{ marginBottom: marginBottom ?? 16 }}>
+      <Text style={[{ marginBottom: 4, fontSize: 14 }, labelStyle]}>{label}</Text>
       <TouchableOpacity
         onPress={() => setShowPicker(true)}
-        style={{
+        style={[{
           borderColor: error ? 'red' : '#ecececff',
           borderWidth: 1,
           padding: 12,
           borderRadius: 10,
           backgroundColor: Colors.white,
           height: 50,
-        }}>
-        <Text style={{ fontSize: Size.sm, fontFamily: Fonts.regular }}>
+          justifyContent: 'center',
+        }, inputStyle]}
+      >
+        <Text style={[{ fontSize: Size.sm, fontFamily: Fonts.regular }, inputStyle]}>
           {value || 'Select date'}
         </Text>
       </TouchableOpacity>

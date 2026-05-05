@@ -141,6 +141,8 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                 activity_location: selectedLocation,
                 current_location: locationStr,
                 image: image as { mime: string; data: string },
+                activity_type: locationName,
+                remarks: locationDetail,
             }).unwrap();
 
             if (res.message.success) {

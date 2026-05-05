@@ -2184,6 +2184,8 @@ export interface IActivityCheckIn {
     /** Base64-encoded image data */
     data: string;
   };
+  activity_type: string;
+  remarks: string;
 }
 
 export interface RActivityCheckIn {
@@ -2222,6 +2224,8 @@ export interface RGetActivityCheckInStatus {
     activity_location: string | null;
     check_in_time: string | null;
     image_url: string | null;
+    activity_type: string | null;
+    remarks: string | null;
   };
 }
 

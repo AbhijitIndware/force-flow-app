@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState, useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,12 +9,12 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import {Text, ActivityIndicator, Menu, Button} from 'react-native-paper';
-import {Fonts} from '../../constants';
-import {Colors} from '../../utils/colors';
-import {Size} from '../../utils/fontSize';
-import {DropDownList} from '../../types/Navigation';
-import {ChevronDown} from 'lucide-react-native';
+import { Text, ActivityIndicator, Menu, Button } from 'react-native-paper';
+import { Fonts } from '../../constants';
+import { Colors } from '../../utils/colors';
+import { Size } from '../../utils/fontSize';
+import { DropDownList } from '../../types/Navigation';
+import { ChevronDown } from 'lucide-react-native';
 
 type Props = {
   selectText: string;
@@ -76,9 +76,9 @@ const DropdownComponent = ({
   const selectedLabel =
     selectedLabelOverride ||
     (selectedId &&
-    data.find(item => {
-      return item.value === selectedId;
-    })
+      data.find(item => {
+        return item.value === selectedId;
+      })
       ? data.find(item => item.value === selectedId)?.label
       : `Select ${selectText}`);
 
@@ -115,8 +115,8 @@ const DropdownComponent = ({
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
-                  {fontSize: textSize},
-                  disabled && {color: '#9E9E9E'},
+                  { fontSize: textSize },
+                  disabled && { color: '#9E9E9E' },
                   selectedId && styles.selectedTextActive, // 👈 add this line
                 ]}>
                 {selectedLabel}
@@ -154,7 +154,7 @@ const DropdownComponent = ({
               }}
               placeholder={`Search ${selectText}...`}
               placeholderTextColor={Colors.inputBorder}
-              style={[styles.inputSearchStyle, {fontSize: textSize}]}
+              style={[styles.inputSearchStyle, { fontSize: textSize }]}
             />
           </View>
 
@@ -172,11 +172,11 @@ const DropdownComponent = ({
                 <ActivityIndicator
                   size="small"
                   color={Colors.primary}
-                  style={{marginVertical: 10}}
+                  style={{ marginVertical: 10 }}
                 />
               ) : null
             }
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <TouchableOpacity
                 onPress={() => {
                   handleSelect(item.value);
@@ -189,17 +189,17 @@ const DropdownComponent = ({
                 <Text
                   style={[
                     styles.itemText,
-                    {fontSize: textSize},
+                    { fontSize: textSize },
                     item.value === selectedId && styles.selectedItemText,
                   ]}>
                   {item.label}
                 </Text>
               </TouchableOpacity>
             )}
-            style={{maxHeight: 200, minWidth: '90%', zIndex: 9999}}
-            contentContainerStyle={{zIndex: 9999}}
+            style={{ maxHeight: 200, minWidth: '90%', zIndex: 9999 }}
+            contentContainerStyle={{ zIndex: 9999 }}
             ListEmptyComponent={
-              <View style={{padding: 20, alignItems: 'center'}}>
+              <View style={{ padding: 20, alignItems: 'center' }}>
                 <Text
                   style={{
                     color: Colors.inputBorder,

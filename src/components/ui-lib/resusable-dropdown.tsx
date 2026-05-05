@@ -17,22 +17,22 @@ interface ReusableDropdownProps {
   data: DropdownOption[];
   error?: string | false;
   onChange: (value: string) => void;
-  onLoadMore?: () => void; // 👈 New prop
-  loadingMore?: boolean; // 👈 New prop
-
-  searchText?: string; // 👈 new
-  setSearchText?: (val: string) => void; // 👈 new
-
+  onLoadMore?: () => void;
+  loadingMore?: boolean;
+  searchText?: string;
+  setSearchText?: (val: string) => void;
   showAddButton?: boolean;
   addButtonText?: string;
   onAddPress?: () => void;
   placeholder?: string;
-
   onOpen?: () => void;
   disabled?: boolean;
   clearTextAfterSearch?: boolean;
   marginBottom?: number;
-  selectedLabel?: string; // 👈 New prop
+  selectedLabel?: string;
+  labelStyle?: any;   // 👈 add
+  height?: number;
+  textSize?: number;
 }
 
 const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
@@ -46,43 +46,45 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   loadingMore,
   searchText,
   setSearchText,
-  // 👇 NEW
   showAddButton,
   addButtonText,
   onAddPress,
   placeholder,
-
   disabled,
   clearTextAfterSearch = true,
   marginBottom = 16,
-  selectedLabel, // 👈 New prop
+  selectedLabel,
+  labelStyle,   // 👈 add
+  height,
+  textSize
 }) => {
   return (
     <View style={[styles.inputWrapper, { marginBottom }]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <DropdownComponent
         selectText={placeholder || label}
         data={data}
         selectedId={value ? String(value) : null}
         setSelectedId={onChange}
         name={field}
-        onLoadMore={onLoadMore} // 👈 Pass pagination handler
+        onLoadMore={onLoadMore}
         loadingMore={loadingMore}
-        searchText={searchText} // 👈 pass down
-        setSearchText={setSearchText} // 👈 pass down
+        searchText={searchText}
+        setSearchText={setSearchText}
         showAddButton={showAddButton}
         addButtonText={addButtonText}
         onAddPress={onAddPress}
-        // onOpen={onOpen}
         disabled={disabled}
         clearTextAfterSearch={clearTextAfterSearch}
-        selectedLabelOverride={selectedLabel} // 👈 Pass it down
+        selectedLabelOverride={selectedLabel}
+
+        height={height}
+        textSize={textSize}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   inputWrapper: { marginBottom: 16 },
   label: {

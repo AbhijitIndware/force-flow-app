@@ -146,6 +146,8 @@ export interface DeliveredItem {
 export interface IApproveAndCreateDDNRequest {
     purchase_order_id: string;
     invoice_no: string;
+    date: string;
+    remarks: string;
     delivered_items?: DeliveredItem[];
 }
 

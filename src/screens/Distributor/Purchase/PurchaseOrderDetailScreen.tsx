@@ -1,45 +1,23 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    SafeAreaView,
-    ScrollView,
-    TouchableOpacity,
-    ActivityIndicator,
-    TextInput,
-    Modal,
-    Alert,
+    View, Text, StyleSheet, SafeAreaView, ScrollView,
+    TouchableOpacity, ActivityIndicator, TextInput, Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Package, Truck, Receipt, Info, CheckCircle2 } from 'lucide-react-native';
+import { Package, Info, CheckCircle2 } from 'lucide-react-native';
 import moment from 'moment';
-import {
-    useApproveAndCreateDDNMutation
-} from '../../../features/base/distributor-api';
+import { useApproveAndCreateDDNMutation } from '../../../features/base/distributor-api';
 import { useGetPurchaseOrderByIdQuery } from '../../../features/base/base-api';
 import { DistributorAppStackParamList } from '../../../types/Navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { opacity } from 'react-native-reanimated/lib/typescript/Colors';
 import { Colors } from '../../../utils/colors';
 import Toast from 'react-native-toast-message';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import PageHeader from '../../../components/ui/PageHeader';
+import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
+import { Size } from '../../../utils/fontSize';
 
-// Helper for status colors
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    const colorMap: Record<string, { bg: string; text: string }> = {
-        Pending: { bg: '#FEF3C7', text: '#92400E' },
-        Approved: { bg: '#DCFCE7', text: '#1E40AF' },
-        Delivered: { bg: '#8de58dff', text: ' #21974eff' },
-        'Partially Delivered': { bg: '#FEE2E2', text: '#991B1B' },
-        Rejected: { bg: '#ff6557ff', text: '#92400E' },
-    };
-    const colors = colorMap[status] ?? { bg: C.background, text: C.textMuted };
-    return (
-        <View style={[badgeStyles.badge, { backgroundColor: colors.bg }]}>
-            <Text style={[badgeStyles.text, { color: colors.text }]}>{status}</Text>
-        </View>
-    );
-};
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type NavigationProp = NativeStackNavigationProp<
     DistributorAppStackParamList,
@@ -50,6 +28,14 @@ type Props = {
     navigation: NavigationProp;
     route: any
 };
+
+
+const REMARKS_OPTIONS = [
+    { label: 'Credit limit exceed', value: 'credit_limit_exceed' },
+    { label: 'Stock not available', value: 'stock_not_available' },
+];
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const C = {
     white: '#FFFFFF',
@@ -62,82 +48,146 @@ const C = {
     warning: '#92400E',
 };
 
+
+const COLUMN_WIDTHS = {
+    check: 32,
+    item: 160,
+    ordered: 58,
+    delQty: 64,
+    amount: 76,
+};
+// ─── Status Badge ──────────────────────────────────────────────────────────────
+
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+    const colorMap: Record<string, { bg: string; text: string }> = {
+        Pending: { bg: '#FEF3C7', text: '#92400E' },
+        Approved: { bg: '#DCFCE7', text: '#1E40AF' },
+        Delivered: { bg: '#8de58dff', text: '#21974eff' },
+        'Partially Delivered': { bg: '#FEE2E2', text: '#991B1B' },
+        Rejected: { bg: '#ff6557ff', text: '#92400E' },
+    };
+    const colors = colorMap[status] ?? { bg: C.background, text: C.textMuted };
+    return (
+        <View style={[badgeStyles.badge, { backgroundColor: colors.bg }]}>
+            <Text style={[badgeStyles.text, { color: colors.text }]}>{status}</Text>
+        </View>
+    );
+};
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
     const { order_id } = route.params;
-    const { data, isLoading } = useGetPurchaseOrderByIdQuery(order_id, { skip: !order_id, refetchOnMountOrArgChange: true });
+    const { data, isLoading } = useGetPurchaseOrderByIdQuery(order_id, {
+        skip: !order_id,
+        refetchOnMountOrArgChange: true,
+    });
+    console.log("🚀 ~ PurchaseOrderDetailScreen ~ data:", data)
     const [approveDDN, { isLoading: isApproving }] = useApproveAndCreateDDNMutation();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [invoiceNo, setInvoiceNo] = useState('');
+    const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
+    const [remarks, setRemarks] = useState('');
+    const [remarksSearch, setRemarksSearch] = useState('');
+
+    // Per-item state: checked + delivery qty
+    const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
     const [deliveryQtys, setDeliveryQtys] = useState<Record<string, string>>({});
 
-    // Fix: Accessing the correct nested data structure
     const orderData = data?.message?.data;
-    const details = orderData?.order_details; // Extracting order_details for easier access
+    const details = orderData?.order_details;
     const items = orderData?.items || [];
-    console.log("🚀 ~ PurchaseOrderDetailScreen ~ items:", items)
 
-    const handleApprove = async () => {
-        if (!invoiceNo) {
+    // ─── Derived ──────────────────────────────────────────────────────────────
+
+    const grandTotal = items.reduce((acc: number, item: any) => {
+        const isChecked = checkedItems[item.item_code] !== false; // default checked
+        if (!isChecked) return acc;
+        const qty = parseFloat(deliveryQtys[item.item_code] ?? String(item.qty)) || 0;
+        return acc + qty * (item.rate || 0);
+    }, 0);
+
+    const selectedCount = items.filter(
+        (item: any) => checkedItems[item.item_code] !== false
+    ).length;
+
+    const isItemChecked = (item_code: string) =>
+        checkedItems[item_code] !== false; // default true
+
+    // ─── Handlers ─────────────────────────────────────────────────────────────
+
+    const toggleItem = (item_code: string) => {
+        setCheckedItems(prev => ({
+            ...prev,
+            [item_code]: !(prev[item_code] !== false),
+        }));
+    };
+
+    const setQty = (item_code: string, val: string, maxQty: number) => {
+        const num = parseFloat(val);
+        if (num > maxQty) {
             Toast.show({
                 type: 'error',
-                text1: 'Required Field',
-                text2: 'Please enter an Invoice Number',
+                text1: 'Invalid Quantity',
+                text2: `Cannot exceed ordered qty (${maxQty})`,
             });
+            setDeliveryQtys(prev => ({ ...prev, [item_code]: String(maxQty) }));
+        } else {
+            setDeliveryQtys(prev => ({ ...prev, [item_code]: val }));
+        }
+    };
+
+    const handleApprove = async () => {
+        if (!invoiceNo.trim()) {
+            Toast.show({ type: 'error', text1: 'Required', text2: 'Enter an Invoice Number' });
+            return;
+        }
+        if (!date) {
+            Toast.show({ type: 'error', text1: 'Required', text2: 'Select a delivery date' });
             return;
         }
 
-        const delivered_items = items.map(item => ({
-            item_code: item.item_code,
-            del_qty: deliveryQtys[item.item_code]
-                ? parseFloat(deliveryQtys[item.item_code])
-                : item.qty,
-        }));
+        const delivered_items = items
+            .filter((item: any) => isItemChecked(item.item_code))
+            .map((item: any) => ({
+                item_code: item.item_code,
+                del_qty: deliveryQtys[item.item_code]
+                    ? parseFloat(deliveryQtys[item.item_code])
+                    : item.qty,
+            }));
 
         try {
-            let payload = {
+            const res = await approveDDN({
                 purchase_order_id: order_id,
                 invoice_no: invoiceNo,
+                date,
+                remarks,
                 delivered_items,
-            }
-            console.log("🚀 ~ handleApprove ~ payload:", payload)
-            const res = await approveDDN(payload).unwrap();
-            console.log("🚀 ~ handleApprove ~ res:", res)
+            }).unwrap();
 
-            // --- ADDED PERMISSION CHECKING HERE ---
             if (res?.message?.success === false) {
                 Toast.show({
                     type: 'error',
                     text1: 'Permission Denied',
-                    text2: res?.message.message || "You don't have permission to Approve this order",
+                    text2: res?.message?.message || "You don't have permission to approve",
                 });
-                return; // Stop execution
+                return;
             }
 
-            // 1. Show Success Toast
-            Toast.show({
-                type: 'success',
-                text1: 'Order Approved',
-                text2: 'DDN created successfully! 🚚',
-            });
-
-            // 2. Close Modal
+            Toast.show({ type: 'success', text1: 'Order Approved', text2: 'DDN created successfully!' });
             setModalVisible(false);
-
-            // 3. Navigate
             navigation.navigate('DeliveryNotesScreen');
-
         } catch (err: any) {
-            // Handle actual HTTP errors (403, 500, etc.)
-            const errorMessage = err?.data?.message || 'Failed to approve order';
-
             Toast.show({
                 type: 'error',
                 text1: 'Action Failed',
-                text2: errorMessage,
+                text2: err?.data?.message || 'Failed to approve order',
             });
         }
     };
+
+    // ─── Loading / Empty ──────────────────────────────────────────────────────
 
     if (isLoading) {
         return (
@@ -155,266 +205,462 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         );
     }
 
+    // ─── Render ───────────────────────────────────────────────────────────────
+
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-                    <Ionicons name="arrow-back" size={22} color={C.text} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Order Details</Text>
-                <View style={{ width: 38 }} />
-            </View>
+            {/* Header */}
+            <PageHeader title='Order Details' navigation={() => navigation.goBack()} type='distributor' />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* 1. Primary Status Card */}
-                <View style={styles.statusCard}>
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.orderIdText}>{details?.order_id || order_id}</Text>
-                        <Text style={styles.dateText}>
-                            Created: {moment(details?.creation).format('DD MMM YYYY, hh:mm A')}
+
+                {/* ── Top Row: Status + Participants ── */}
+                <View style={styles.topRow}>
+                    <View style={[styles.card, { flex: 1.5 }]}>
+                        <Text style={styles.orderIdText} numberOfLines={2}>
+                            {details?.order_id || order_id}
                         </Text>
                         <Text style={styles.dateText}>
-                            Created By: {details?.created_by}
+                            {moment(details?.creation).format('DD MMM YY')}
                         </Text>
-                    </View>
-                    <View style={styles.statusCol}>
-                        <StatusBadge status={details?.workflow_state as string} />
-                        {/* <Text style={styles.workflowText}>{details?.workflow_state}</Text> */}
-                    </View>
-                </View>
-
-                {/* 2. Parties Involved Section */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Info size={18} color={C.accent} />
-                        <Text style={styles.sectionTitle}>Order Participants</Text>
+                        <Text style={styles.dateText} numberOfLines={1}>
+                            {details?.created_by}
+                        </Text>
+                        <View style={{ marginTop: 2, width: '50%' }}>
+                            <StatusBadge status={details?.workflow_state as string} />
+                        </View>
                     </View>
 
-                    <View style={styles.detailRow}>
-                        <View style={styles.detailCol}>
+                    <View style={[styles.card, { flex: 1 }]}>
+                        <View style={styles.participantItem}>
                             <Text style={styles.detailLabel}>Supplier</Text>
-                            <Text style={styles.detailValue}>{details?.supplier_name}</Text>
-                            {/* <Text style={styles.detailSub}>{details?.supplier}</Text> */}
-                        </View>
-                        <View style={styles.detailCol}>
-                            <Text style={styles.detailLabel}>Distributor</Text>
-                            <Text style={styles.detailValue}>{details?.distributor_name}</Text>
-                            {/* <Text style={styles.detailSub}>{details?.distributor}</Text> */}
-                        </View>
-                    </View>
-                </View>
-
-                {/* Items Section */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Package size={18} color={C.accent} />
-                        <Text style={styles.sectionTitle}>Items ({items.length})</Text>
-                    </View>
-                    {items.map((item, index) => (
-                        <View key={index} style={styles.itemRow}>
-                            <View style={styles.itemInfo}>
-                                <Text style={styles.itemName}>{item.item_name}</Text>
-                                <Text style={styles.itemSub}>{item.item_code} • {item.uom}</Text>
-                            </View>
-                            <View style={styles.itemPricing}>
-                                <Text style={styles.itemQty}>Qty: {item.qty}</Text>
-                                <Text style={styles.itemRate}>₹{item.rate?.toLocaleString()}</Text>
-                            </View>
-                        </View>
-                    ))}
-                </View>
-
-                {/* Summary Table */}
-                <View style={styles.summaryContainer}>
-                    <View style={[styles.summaryRow, styles.grandTotalRow]}>
-                        <Text style={styles.grandTotalLabel}>Grand Total</Text>
-                        <Text style={styles.grandTotalValue}>₹{orderData?.totals?.grand_total?.toLocaleString()}</Text>
-                    </View>
-                </View>
-            </ScrollView>
-
-            {/* Action Button */}
-            {/* {details?.workflow_state === 'Pending' && ( */}
-            <View style={styles.footer}>
-                <TouchableOpacity
-                    style={[
-                        styles.approveBtn,
-                        details?.workflow_state === 'Delivered' && { opacity: 0.5 } // Dims if NOT pending
-                    ]}
-                    disabled={details?.workflow_state === 'Delivered'} // Disables if NOT pending
-                    onPress={() => setModalVisible(true)}
-                >
-                    <CheckCircle2 size={20} color={C.white} />
-                    <Text style={styles.approveBtnText}>Approve Order</Text>
-                </TouchableOpacity>
-            </View>
-            {/* )} */}
-
-            {/* Approval Modal */}
-            <Modal visible={modalVisible} animationType="slide" transparent >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Delivery Details</Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <Ionicons name="close" size={24} color={C.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.warningBox}>
-                            <Info size={16} color={C.warning} />
-                            <Text style={styles.warningText}>
-                                Note: Leaving delivery quantity empty will mark the item as fully delivered.
+                            <Text style={styles.detailValue} numberOfLines={2}>
+                                {details?.supplier_name}
                             </Text>
                         </View>
-                        <ScrollView style={styles.modalScroll}>
+                        <View style={[styles.participantItem, { marginTop: 10 }]}>
+                            <Text style={styles.detailLabel}>Distributor</Text>
+                            <Text style={styles.detailValue} numberOfLines={2}>
+                                {details?.distributor_name}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
 
-                            <Text style={styles.inputLabel}>Invoice Number *</Text>
+                {/* ── Delivery Fields ── */}
+                <View style={styles.section}>
+                    <View style={styles.fieldRow}>
+                        {/* Invoice Number */}
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.inputLabel}>Invoice No. *</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Enter Invoice No."
+                                placeholder="INV-0001"
                                 placeholderTextColor={Colors.gray}
                                 value={invoiceNo}
                                 onChangeText={setInvoiceNo}
                             />
+                        </View>
 
-                            <Text style={[styles.inputLabel, { marginTop: 10 }]}>Delivery Quantities</Text>
-                            {items.map((item) => (
-                                <View key={item.item_code} style={styles.qtyInputRow}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={styles.qtyItemName}>{item.item_name}</Text>
-                                        <Text style={styles.qtyItemStock}>Ordered: {item.qty}</Text>
-                                    </View>
-                                    <TextInput
+                        {/* Date */}
+                        <View style={{ flex: 1 }}>
+                            <ReusableDatePicker
+                                label="Date *"
+                                value={date}
+                                onChange={setDate}
+                                marginBottom={0}
+                                labelStyle={styles.inputLabel}
+                                inputStyle={styles.input}
+                            />
+                        </View>
+
+                        {/* Remarks */}
+                        <View style={{ flex: 1.5 }}>
+                            <ReusableDropdown
+                                label="Remarks"
+                                field="value"
+                                value={remarks}
+                                data={REMARKS_OPTIONS}
+                                onChange={(val: string) => setRemarks(val)}
+                                searchText={remarksSearch}
+                                setSearchText={setRemarksSearch}
+                                marginBottom={0}
+                                labelStyle={styles.inputLabel}   // 👈 fontSize: 11
+                                textSize={Size.xxs}
+                                height={35}
+                            />
+                        </View>
+                    </View>
+                </View>
+
+                {/* ── Items Grid ── */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Package size={16} color={C.accent} />
+                        <Text style={styles.sectionTitle}>
+                            Items ({selectedCount}/{items.length} selected)
+                        </Text>
+                    </View>
+
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <View>
+                            {/* Header */}
+                            <View style={gridStyles.headerRow}>
+                                <View style={{ width: COLUMN_WIDTHS.check }} />
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.item }]}>Item</Text>
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.ordered, textAlign: 'center' }]}>Ordered</Text>
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.delQty, textAlign: 'center' }]}>Del. Qty</Text>
+                                <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.amount, textAlign: 'right' }]}>Amount</Text>
+                            </View>
+
+                            {items.map((item: any, index: number) => {
+                                const checked = isItemChecked(item.item_code);
+                                const rowQty = deliveryQtys[item.item_code] ?? String(item.qty);
+                                const amount = checked
+                                    ? (parseFloat(rowQty) || 0) * (item.rate || 0)
+                                    : 0;
+
+                                return (
+                                    <View
+                                        key={item.item_code}
                                         style={[
-                                            styles.qtyInput,
-                                            // Optional: Add red border if user tries to exceed qty
-                                            parseFloat(deliveryQtys[item.item_code]) > item.qty && { borderColor: 'red' }
+                                            gridStyles.row,
+                                            index % 2 === 0 ? gridStyles.evenRow : gridStyles.oddRow,
+                                            checked && gridStyles.checkedRow,
                                         ]}
-                                        keyboardType="numeric"
-                                        placeholderTextColor={C.textMuted} // Ensure this matches your color constant
-                                        placeholder={item.qty.toString()}
-                                        value={deliveryQtys[item.item_code] || ''}
-                                        onChangeText={(val) => {
-                                            const numericVal = parseFloat(val);
+                                    >
+                                        {/* Checkbox */}
+                                        <TouchableOpacity
+                                            style={[gridStyles.cell, { width: COLUMN_WIDTHS.check }]}
+                                            onPress={() => toggleItem(item.item_code)}
+                                            activeOpacity={0.7}
+                                        >
+                                            <View style={[gridStyles.checkbox, checked && gridStyles.checkboxChecked]}>
+                                                {checked && <Text style={gridStyles.checkmark}>✓</Text>}
+                                            </View>
+                                        </TouchableOpacity>
 
-                                            if (numericVal > item.qty) {
-                                                // 1. Show a quick Toast warning
-                                                Toast.show({
-                                                    type: 'error',
-                                                    text1: 'Invalid Quantity',
-                                                    text2: `Cannot exceed ordered quantity (${item.qty})`,
-                                                });
+                                        {/* Item name only — no code */}
+                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}>
+                                            <Text style={gridStyles.itemName} numberOfLines={2}>
+                                                {item.item_name}
+                                            </Text>
+                                        </View>
 
-                                                // 2. Automatically reset to max allowed or keep previous valid
-                                                setDeliveryQtys(prev => ({ ...prev, [item.item_code]: item.qty.toString() }));
-                                            } else {
-                                                // 3. Update normally if within limits
-                                                setDeliveryQtys(prev => ({ ...prev, [item.item_code]: val }));
-                                            }
-                                        }}
-                                    />
-                                </View>
-                            ))}
-                        </ScrollView>
+                                        {/* Ordered Qty */}
+                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
+                                            <Text style={gridStyles.orderedQty}>{item.qty}</Text>
+                                        </View>
 
-                        <TouchableOpacity
-                            style={[styles.approveBtn, { margin: 16 }]}
-                            onPress={handleApprove}
-                            disabled={isApproving}
-                        >
-                            {isApproving ? <ActivityIndicator color={C.white} /> : <Text style={styles.approveBtnText}>Confirm Delivery</Text>}
-                        </TouchableOpacity>
+                                        {/* Delivery Qty Input */}
+                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.delQty, alignItems: 'center' }]}>
+                                            {checked ? (
+                                                <TextInput
+                                                    style={gridStyles.qtyInput}
+                                                    keyboardType="numeric"
+                                                    value={rowQty}
+                                                    onChangeText={v => setQty(item.item_code, v, item.qty)}
+                                                    placeholderTextColor={C.textMuted}
+                                                    selectTextOnFocus
+                                                />
+                                            ) : (
+                                                <Text style={gridStyles.qtyDash}>—</Text>
+                                            )}
+                                        </View>
+
+                                        {/* Amount */}
+                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
+                                            <Text style={[gridStyles.amount, !checked && { color: C.textMuted }]}>
+                                                {checked ? `₹${amount.toLocaleString()}` : '—'}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    </ScrollView>
+
+                    {/* Grand Total */}
+                    <View style={gridStyles.totalRow}>
+                        <View style={gridStyles.totalCol}>
+                            <Text style={gridStyles.totalSubLabel}>Ordered Total</Text>
+                            <Text style={gridStyles.totalValue}>
+                                ₹{items.reduce((acc: number, item: any) => acc + item.qty * (item.rate || 0), 0).toLocaleString()}
+                            </Text>
+                        </View>
+                        <View style={gridStyles.totalDivider} />
+                        <View style={[gridStyles.totalCol, { alignItems: 'flex-end' }]}>
+                            <Text style={gridStyles.totalSubLabel}>Delivery Total</Text>
+                            <Text style={[gridStyles.totalValue, { color: '#16A34A' }]}>
+                                ₹{grandTotal.toLocaleString()}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+                <TouchableOpacity
+                    style={[
+                        styles.approveBtn,
+                        details?.workflow_state === 'Delivered' && { opacity: 0.5 },
+                    ]}
+                    disabled={details?.workflow_state === 'Delivered' || isApproving}
+                    onPress={() => {
+                        if (!invoiceNo.trim()) {
+                            Toast.show({ type: 'error', text1: 'Required', text2: 'Enter an Invoice Number' });
+                            return;
+                        }
+                        if (!date.trim()) {
+                            Toast.show({ type: 'error', text1: 'Required', text2: 'Select a delivery date' });
+                            return;
+                        }
+                        setModalVisible(true);
+                    }}
+                >
+                    {isApproving
+                        ? <ActivityIndicator color={C.white} />
+                        : <>
+                            <CheckCircle2 size={20} color={C.white} />
+                            <Text style={styles.approveBtnText}>Approve Order</Text>
+                        </>
+                    }
+                </TouchableOpacity>
+            </View>
+
+            {/* ── Confirmation Modal ── */}
+            <Modal visible={modalVisible} animationType="fade" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.confirmModal}>
+                        {/* Title */}
+                        <View style={styles.confirmIconRow}>
+                            <CheckCircle2 size={32} color="#16A34A" />
+                        </View>
+                        <Text style={styles.confirmTitle}>Confirm Approval</Text>
+                        <Text style={styles.confirmSubtitle}>
+                            Please review before submitting
+                        </Text>
+
+                        <View style={styles.confirmDivider} />
+
+                        {/* Summary rows */}
+                        <View style={styles.confirmRow}>
+                            <Text style={styles.confirmLabel}>Invoice No.</Text>
+                            <Text style={styles.confirmValue}>{invoiceNo}</Text>
+                        </View>
+                        <View style={styles.confirmRow}>
+                            <Text style={styles.confirmLabel}>Date</Text>
+                            <Text style={styles.confirmValue}>{date}</Text>
+                        </View>
+                        {remarks ? (
+                            <View style={styles.confirmRow}>
+                                <Text style={styles.confirmLabel}>Remarks</Text>
+                                <Text style={styles.confirmValue}>
+                                    {REMARKS_OPTIONS.find(r => r.value === remarks)?.label ?? remarks}
+                                </Text>
+                            </View>
+                        ) : null}
+                        <View style={styles.confirmRow}>
+                            <Text style={styles.confirmLabel}>Items</Text>
+                            <Text style={styles.confirmValue}>{selectedCount} item(s)</Text>
+                        </View>
+                        <View style={styles.confirmRow}>
+                            <Text style={styles.confirmLabel}>Total</Text>
+                            <Text style={[styles.confirmValue, { color: C.accent, fontWeight: '700' }]}>
+                                ₹{grandTotal.toLocaleString()}
+                            </Text>
+                        </View>
+
+                        <View style={styles.confirmDivider} />
+
+                        {/* Actions */}
+                        <View style={styles.confirmActions}>
+                            <TouchableOpacity
+                                style={styles.cancelBtn}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={styles.cancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.confirmBtn}
+                                onPress={handleApprove}
+                                disabled={isApproving}
+                            >
+                                {isApproving
+                                    ? <ActivityIndicator color={C.white} size="small" />
+                                    : <Text style={styles.confirmBtnText}>Approve</Text>
+                                }
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView >
+        </SafeAreaView>
     );
 };
 
 export default PurchaseOrderDetailScreen;
 
+// ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: C.background },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        flexDirection: 'row', alignItems: 'center',
+        paddingHorizontal: 16, paddingVertical: 10,
         backgroundColor: C.white,
-        borderBottomWidth: 1,
-        borderBottomColor: C.border,
+        borderBottomWidth: 0.5, borderBottomColor: C.border,
     },
-    backBtn: { width: 38, height: 38, borderRadius: 10, backgroundColor: C.background, alignItems: 'center', justifyContent: 'center' },
-    headerTitle: { flex: 1, textAlign: 'center', fontSize: 16, fontWeight: '600', color: C.text },
-    scrollContent: { padding: 16 },
-    statusCard: {
+    backBtn: {
+        width: 34, height: 34, borderRadius: 8,
+        backgroundColor: C.background, alignItems: 'center', justifyContent: 'center',
+    },
+    headerTitle: { flex: 1, textAlign: 'center', fontSize: 15, fontWeight: '600', color: C.text },
+    scrollContent: { padding: 10, gap: 10 },   // reduced padding + gap replaces marginBottom
+
+    // top row cards
+    topRow: { flexDirection: 'row', gap: 10 },
+    card: { backgroundColor: C.white, borderRadius: 10, padding: 10 },
+    orderIdText: { fontSize: 13, fontWeight: 'bold', color: C.text },
+    dateText: { fontSize: 11, color: C.textMuted, marginTop: 2 },
+    detailLabel: { fontSize: 10, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase' },
+    detailValue: { fontSize: 12, color: C.text, fontWeight: '500', marginTop: 1 },
+    participantItem: {},
+
+    // section
+    section: {
+        backgroundColor: C.white, borderRadius: 10, padding: 10,
+    },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+    sectionTitle: { fontSize: 13, fontWeight: '600', color: C.text },
+
+    // delivery fields
+    fieldRow: { flexDirection: 'row', gap: 8 },
+    inputLabel: { fontSize: 11, fontWeight: '600', color: C.text, marginBottom: 0 },
+    input: {
+        backgroundColor: C.background,
+        borderRadius: 8, padding: 8,
+        fontSize: 12,
+        borderWidth: 0.5, borderColor: C.border,
+        color: C.text, height: 38,
+    },
+
+    // footer
+    footer: {
+        padding: 12, backgroundColor: C.white,
+        borderTopWidth: 0.5, borderTopColor: C.border,
+    },
+    approveBtn: {
+        backgroundColor: C.accent, padding: 13, borderRadius: 10,
+        flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
+    },
+    approveBtnText: { color: C.white, fontSize: 15, fontWeight: '600' },
+
+    // confirmation modal
+    modalOverlay: {
+        flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center', alignItems: 'center',
+    },
+    confirmModal: {
+        width: '88%', backgroundColor: C.white,
+        borderRadius: 18, padding: 20,
+        elevation: 10,
+    },
+    confirmIconRow: { alignItems: 'center', marginBottom: 8 },
+    confirmTitle: { fontSize: 17, fontWeight: '700', color: C.text, textAlign: 'center' },
+    confirmSubtitle: { fontSize: 12, color: C.textMuted, textAlign: 'center', marginTop: 3 },
+    confirmDivider: { height: 0.5, backgroundColor: C.border, marginVertical: 12 },
+    confirmRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    confirmLabel: { fontSize: 12, color: C.textMuted },
+    confirmValue: { fontSize: 12, fontWeight: '600', color: C.text, flexShrink: 1, textAlign: 'right', marginLeft: 12 },
+    confirmActions: { flexDirection: 'row', gap: 10 },
+    cancelBtn: { flex: 1, paddingVertical: 11, borderRadius: 10, backgroundColor: C.background, alignItems: 'center' },
+    cancelText: { color: C.text, fontWeight: '600', fontSize: 13 },
+    confirmBtn: { flex: 1, paddingVertical: 11, borderRadius: 10, backgroundColor: '#16A34A', alignItems: 'center' },
+    confirmBtnText: { color: C.white, fontWeight: '700', fontSize: 13 },
+
+    // modal shared (keep for backward compat if used)
+    modalContent: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 0.5, borderBottomColor: C.border },
+    modalTitle: { fontSize: 16, fontWeight: 'bold', color: C.text },
+    modalScroll: { padding: 16 },
+    summaryItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: C.border },
+    summaryItemName: { fontSize: 12, color: C.text, flex: 1 },
+    summaryItemQty: { fontSize: 12, color: C.accent, fontWeight: '600' },
+    warningBox: { flexDirection: 'row', backgroundColor: '#FFFBEB', padding: 10, borderRadius: 8, gap: 8, marginBottom: 12 },
+    warningText: { flex: 1, fontSize: 11, color: C.warning },
+});
+
+
+const gridStyles = StyleSheet.create({
+    headerRow: {
+        flexDirection: 'row',
+        backgroundColor: '#F9FAFB',
+        borderRadius: 6,
+        paddingVertical: 6,
+        borderWidth: 0.5, borderColor: C.border,
+    },
+    headerCell: {
+        fontSize: 10, fontWeight: '600',
+        color: C.textMuted, paddingHorizontal: 4,
+    },
+    row: {
+        flexDirection: 'row', alignItems: 'center',
+        paddingVertical: 6,
+        borderLeftWidth: 0.5, borderRightWidth: 0.5,
+        borderBottomWidth: 0.5, borderColor: C.border,
+    },
+    evenRow: { backgroundColor: C.white },
+    oddRow: { backgroundColor: '#F9FAFB' },
+    checkedRow: { backgroundColor: '#F0FDF4' },
+    cell: { paddingHorizontal: 4, justifyContent: 'center' },
+    checkbox: {
+        width: 18, height: 18, borderRadius: 4,
+        borderWidth: 1.5, borderColor: C.border,
+        alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxChecked: { backgroundColor: C.accent, borderColor: C.accent },
+    checkmark: { color: '#fff', fontSize: 11, fontWeight: '700' },
+    itemName: { fontSize: 11, fontWeight: '500', color: C.text, lineHeight: 15 },
+    orderedQty: { fontSize: 12, color: C.text, fontWeight: '500' },
+    qtyInput: {
+        width: 50, height: 30,
+        borderWidth: 0.5, borderColor: C.border,
+        borderRadius: 6, textAlign: 'center',
+        fontSize: 12, color: C.text,
         backgroundColor: C.white,
-        padding: 16,
-        borderRadius: 12,
+        padding: 0,                // removes extra internal padding on Android
+    },
+    qtyDash: { fontSize: 12, color: C.textMuted },
+    amount: { fontSize: 11, fontWeight: '600', color: C.accent },
+    totalLabel: { fontSize: 13, fontWeight: 'bold', color: C.text },
+    totalValue: { fontSize: 13, fontWeight: 'bold', color: C.accent },
+    totalRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        // alignItems: 'center',
-        marginBottom: 16,
+        paddingTop: 5,
+        marginTop: 5,
+        borderTopWidth: 0.5,
+        borderTopColor: C.border,
     },
-    orderIdText: { fontSize: 16, fontWeight: 'bold', color: C.text },
-    dateText: { fontSize: 13, color: C.textMuted, marginTop: 4 },
-    badge: { backgroundColor: '#DCFCE7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-    badgeText: { color: '#1E40AF', fontSize: 12, fontWeight: '700' },
-    section: { backgroundColor: C.white, borderRadius: 12, padding: 16, marginBottom: 16 },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-    sectionTitle: { fontSize: 15, fontWeight: '600', color: C.text },
-    itemRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: C.border, flexDirection: 'row' },
-    itemInfo: { flex: 1 },
-    itemName: { fontSize: 14, fontWeight: '500', color: C.text },
-    itemSub: { fontSize: 12, color: C.textMuted, marginTop: 2 },
-    itemPricing: { alignItems: 'flex-end' },
-    itemQty: { fontSize: 13, fontWeight: '600', color: C.text },
-    itemRate: { fontSize: 13, color: C.accent, marginTop: 2 },
-    summaryContainer: { backgroundColor: C.white, borderRadius: 12, padding: 16 },
-    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-    summaryLabel: { color: C.textMuted, fontSize: 14 },
-    summaryValue: { color: C.text, fontSize: 14, fontWeight: '500' },
-    grandTotalRow: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border },
-    grandTotalLabel: { fontSize: 16, fontWeight: 'bold', color: C.text },
-    grandTotalValue: { fontSize: 16, fontWeight: 'bold', color: C.accent },
-    footer: { padding: 16, backgroundColor: C.white, borderTopWidth: 1, borderTopColor: C.border },
-    approveBtn: { backgroundColor: C.accent, padding: 15, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 },
-    approveBtnText: { color: C.white, fontSize: 16, fontWeight: '600' },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', height: '60%' },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: C.border },
-    modalTitle: { fontSize: 18, fontWeight: 'bold', color: C.text },
-    modalScroll: { padding: 20 },
-    warningBox: { flexDirection: 'row', backgroundColor: '#FFFBEB', padding: 12, borderRadius: 8, gap: 10, marginBottom: 10, marginHorizontal: 10 },
-    warningText: { flex: 1, fontSize: 12, color: C.warning },
-    inputLabel: { fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 8 },
-    input: { backgroundColor: C.background, borderRadius: 8, padding: 12, fontSize: 14, borderWidth: 1, borderColor: C.border },
-    qtyInputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15, paddingBottom: 10, borderBottomWidth: 0.5, borderBottomColor: C.border },
-    qtyItemName: { fontSize: 13, fontWeight: '500', color: C.text },
-    qtyItemStock: { fontSize: 11, color: C.textMuted },
-    qtyInput: { width: 80, backgroundColor: C.background, borderRadius: 6, padding: 8, textAlign: 'center', borderWidth: 1, borderColor: C.border, color: Colors.black },
+    totalCol: {
+        flex: 1,
+        // alignItems: 'center',
+    },
+    totalDivider: {
+        width: 0.5,
+        backgroundColor: C.border,
+        marginVertical: 2,
+    },
+    totalSubLabel: {
+        fontSize: 11,
+        color: C.textMuted,
+        marginBottom: 2,
+    },
+});
 
-    statusCol: { alignItems: 'flex-start' },
-    workflowText: { fontSize: 10, color: C.textMuted, marginTop: 4, textTransform: 'uppercase' },
-
-    detailRow: { flexDirection: 'row', marginTop: 10, gap: 16 },
-    detailCol: { flex: 1 },
-    detailLabel: { fontSize: 11, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase' },
-    detailValue: { fontSize: 14, color: C.text, fontWeight: '500', marginTop: 2 },
-    detailSub: { fontSize: 12, color: C.textMuted },
-
-    progressGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, backgroundColor: C.background, borderRadius: 8, padding: 12 },
-    progressItem: { alignItems: 'center', flex: 1 },
-    progressLabel: { fontSize: 10, color: C.textMuted, marginBottom: 4 },
-    progressValue: { fontSize: 15, fontWeight: '700', color: C.text },
-
-    termsText: { fontSize: 13, color: C.textMuted, marginTop: 8, lineHeight: 18 },
-
-    systemInfo: { padding: 16, marginBottom: 100, alignItems: 'center' },
-    systemText: { fontSize: 11, color: C.textMuted, marginBottom: 2 },
-}); const badgeStyles = StyleSheet.create({
-    badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20 },
+const badgeStyles = StyleSheet.create({
+    badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, height: 22, width: 'auto', justifyContent: 'center', alignItems: 'center' },
     text: { fontSize: 10, fontWeight: '700' },
 });

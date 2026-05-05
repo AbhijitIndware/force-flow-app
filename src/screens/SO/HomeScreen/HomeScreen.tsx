@@ -676,7 +676,7 @@ const HomeScreen = ({ navigation }: Props) => {
                     </View>
                   )}
                 </View>
-                {/* ── ACTIVITY STATUS BLOCK — shown at top when activity is active ── */}
+                {/* ── ACTIVITY STATUS BLOCK ── */}
                 {isActivityCheckedIn && (
                   <View style={{ marginTop: 12, gap: 8 }}>
                     {/* Info card */}
@@ -689,21 +689,96 @@ const HomeScreen = ({ navigation }: Props) => {
                       borderWidth: 1,
                       borderColor: '#E2E8F0',
                     }}>
+                      {/* Location */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="location-sharp" size={16} color={Colors.orange} />
                         <Text style={{
                           color: Colors.darkButton,
                           fontSize: 15,
                           fontFamily: Fonts.semiBold,
+                          flex: 1,
                         }}>
                           {activityStatusData.message.activity_location}
                         </Text>
                       </View>
+
+                      {/* Check-in time */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
                         <Clock size={14} color={Colors.gray} />
                         <Text style={{ color: Colors.gray, fontSize: 12, fontFamily: Fonts.regular }}>
                           Check-in at: {moment(activityStatusData.message.check_in_time, 'HH:mm:ss').format('hh:mm A')}
                         </Text>
+                      </View>
+
+                      <View style={{
+                        height: 0.5,
+                        backgroundColor: '#E2E8F0',
+                        marginVertical: 8,
+                      }} />
+
+                      {/* Activity Type + Remarks row */}
+                      <View style={{ flexDirection: 'row', gap: 12 }}>
+                        {/* Activity Type */}
+                        {activityStatusData.message.activity_type && (
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              fontSize: 10,
+                              color: Colors.gray,
+                              fontFamily: Fonts.regular,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                              marginBottom: 3,
+                            }}>
+                              Activity Type
+                            </Text>
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}>
+                              <Ionicons name="briefcase-outline" size={13} color={Colors.orange} />
+                              <Text style={{
+                                fontSize: 12,
+                                fontFamily: Fonts.medium,
+                                color: Colors.darkButton,
+                                flexShrink: 1,
+                              }}>
+                                {activityStatusData.message.activity_type}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Remarks */}
+                        {activityStatusData.message.remarks && (
+                          <View style={{ flex: 1 }}>
+                            <Text style={{
+                              fontSize: 10,
+                              color: Colors.gray,
+                              fontFamily: Fonts.regular,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5,
+                              marginBottom: 3,
+                            }}>
+                              Remarks
+                            </Text>
+                            <View style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}>
+                              <Ionicons name="chatbox-ellipses-outline" size={13} color={Colors.gray} />
+                              <Text style={{
+                                fontSize: 12,
+                                fontFamily: Fonts.medium,
+                                color: Colors.darkButton,
+                                flexShrink: 1,
+                              }}>
+                                {activityStatusData.message.remarks}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
                       </View>
                     </View>
 
