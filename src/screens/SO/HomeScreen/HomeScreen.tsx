@@ -12,17 +12,19 @@ import {
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol, flexRow, itemsCenter} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Size } from '../../../utils/fontSize';
-import { Divider } from '@rneui/themed';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import {Size} from '../../../utils/fontSize';
+import {Divider} from '@rneui/themed';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import {
   ArrowRight,
   BaggageClaim,
@@ -45,7 +47,7 @@ import {
   Boxes,
   MapPin,
 } from 'lucide-react-native';
-import { useAppDispatch, useAppSelector } from '../../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {
   resetLocation,
   setSelectedStore,
@@ -60,21 +62,22 @@ import {
   useStartPjpMutation,
   useGetEmployeeTargetsQuery,
   useSetEmployeeTargetsMutation,
-  useGetSoStatsQuery, useGetDdnStatsQuery,
+  useGetSoStatsQuery,
+  useGetDdnStatsQuery,
   useGetActivityCheckInStatusQuery,
   useActivityCheckOutMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import { ICheckOut, LocationPayload, StoreData } from '../../../types/baseType';
+import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
 import moment from 'moment';
-import { useIsFocused } from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 import {
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../utils/utils';
-import { TextInput } from 'react-native';
+import {TextInput} from 'react-native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -122,7 +125,10 @@ const C = {
 
 const today = new Date().toISOString().split('T')[0];
 
-const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub }) => (
+const SectionTitle: React.FC<{title: string; sub?: string}> = ({
+  title,
+  sub,
+}) => (
   <View style={styles.sectionTitleRow}>
     <Text style={styles.sectionTitle}>{title}</Text>
     {sub ? <Text style={styles.sectionSub}>{sub}</Text> : null}
@@ -131,18 +137,18 @@ const SectionTitle: React.FC<{ title: string; sub?: string }> = ({ title, sub })
 
 const TargetMetricBox: React.FC<{
   label: string;
-  achieved: string;    // e.g. "48" or "₹185K"
-  target?: string;      // Optional
+  achieved: string; // e.g. "48" or "₹185K"
+  target?: string; // Optional
   rate?: number | string; // Optional
   accentColor: string;
   onPress?: () => void;
-}> = ({ label, achieved, target, rate, accentColor, onPress }) => (
+}> = ({label, achieved, target, rate, accentColor, onPress}) => (
   <TouchableOpacity
     activeOpacity={onPress ? 0.7 : 1}
     onPress={onPress}
     style={targetStyles.card}>
     {/* Left accent stripe */}
-    <View style={[targetStyles.stripe, { backgroundColor: accentColor }]} />
+    <View style={[targetStyles.stripe, {backgroundColor: accentColor}]} />
 
     <View style={targetStyles.body}>
       <Text style={targetStyles.label}>{label}</Text>
@@ -150,7 +156,7 @@ const TargetMetricBox: React.FC<{
       {/* Achieved + target */}
       <View style={targetStyles.numRow}>
         <Text
-          style={[targetStyles.achieved, { color: accentColor }]}
+          style={[targetStyles.achieved, {color: accentColor}]}
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.7}>
@@ -187,7 +193,7 @@ const TargetMetricBox: React.FC<{
 
       {/* Rate */}
       {rate !== undefined && (
-        <Text style={[targetStyles.rate, { color: accentColor }]}>
+        <Text style={[targetStyles.rate, {color: accentColor}]}>
           {rate}% achieved
         </Text>
       )}
@@ -195,7 +201,7 @@ const TargetMetricBox: React.FC<{
   </TouchableOpacity>
 );
 
-const HomeScreen = ({ navigation }: Props) => {
+const HomeScreen = ({navigation}: Props) => {
   const [isStartingPjp, setIsStartingPjp] = useState(false);
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -212,50 +218,78 @@ const HomeScreen = ({ navigation }: Props) => {
   );
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const { data: teamReportData } = useGetSalesRepotsQuery({
+  const {data: teamReportData} = useGetSalesRepotsQuery({
     view_type: 'team_include_self',
   });
   const currentMonth = moment().month() + 1;
   const currentYear = moment().year();
 
   // ── Filters State ──────────────────────────────────────────────────────────
-  const [filterMode, setFilterMode] = useState<'month' | 'month_range' | 'date_range'>('month');
+  const [filterMode, setFilterMode] = useState<
+    'month' | 'month_range' | 'date_range'
+  >('month');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [fromMonth, setFromMonth] = useState(currentMonth > 1 ? currentMonth - 1 : 1);
+  const [fromMonth, setFromMonth] = useState(
+    currentMonth > 1 ? currentMonth - 1 : 1,
+  );
   const [toMonth, setToMonth] = useState(currentMonth);
-  const [startDate, setStartDate] = useState(new Date(currentYear, currentMonth - 1, 1));
+  const [startDate, setStartDate] = useState(
+    new Date(currentYear, currentMonth - 1, 1),
+  );
   const [endDate, setEndDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickingType, setPickingType] = useState<'start' | 'end'>('start');
 
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
-  const [monthPickerTarget, setMonthPickerTarget] = useState<'single' | 'from' | 'to'>('single');
+  const [monthPickerTarget, setMonthPickerTarget] = useState<
+    'single' | 'from' | 'to'
+  >('single');
   const [targetModalVisible, setTargetModalVisible] = useState(false);
   const [editSalesTarget, setEditSalesTarget] = useState('');
   const [editDdnTarget, setEditDdnTarget] = useState('');
 
   const apiParams = useMemo(() => {
-    const base = { employee: employee?.id as string };
+    const base = {employee: employee?.id as string};
     if (filterMode === 'month') {
-      return { ...base, month: selectedMonth, year: selectedYear };
+      return {...base, month: selectedMonth, year: selectedYear};
     }
     if (filterMode === 'month_range') {
-      return { ...base, from_month: fromMonth, to_month: toMonth, year: selectedYear };
+      return {
+        ...base,
+        from_month: fromMonth,
+        to_month: toMonth,
+        year: selectedYear,
+      };
     }
     return {
       ...base,
       from_date: moment(startDate).format('YYYY-MM-DD'),
-      to_date: moment(endDate).format('YYYY-MM-DD')
+      to_date: moment(endDate).format('YYYY-MM-DD'),
     };
-  }, [filterMode, selectedMonth, selectedYear, fromMonth, toMonth, startDate, endDate, employee]);
+  }, [
+    filterMode,
+    selectedMonth,
+    selectedYear,
+    fromMonth,
+    toMonth,
+    startDate,
+    endDate,
+    employee,
+  ]);
 
   const ddnDateParams = useMemo(() => {
     if (filterMode === 'month') {
-      const from = moment({ year: selectedYear, month: selectedMonth - 1, day: 1 }).format('YYYY-MM-DD');
-      const to = moment({ year: selectedYear, month: selectedMonth - 1 }).endOf('month').format('YYYY-MM-DD');
-      return { from_date: from, to_date: to };
+      const from = moment({
+        year: selectedYear,
+        month: selectedMonth - 1,
+        day: 1,
+      }).format('YYYY-MM-DD');
+      const to = moment({year: selectedYear, month: selectedMonth - 1})
+        .endOf('month')
+        .format('YYYY-MM-DD');
+      return {from_date: from, to_date: to};
     }
     if (filterMode === 'date_range') {
       return {
@@ -272,8 +306,14 @@ const HomeScreen = ({ navigation }: Props) => {
   const soDateParams = useMemo(() => {
     if (filterMode === 'month') {
       return {
-        from_date: moment({ year: selectedYear, month: selectedMonth - 1, day: 1 }).format('YYYY-MM-DD'),
-        to_date: moment({ year: selectedYear, month: selectedMonth - 1 }).endOf('month').format('YYYY-MM-DD'),
+        from_date: moment({
+          year: selectedYear,
+          month: selectedMonth - 1,
+          day: 1,
+        }).format('YYYY-MM-DD'),
+        to_date: moment({year: selectedYear, month: selectedMonth - 1})
+          .endOf('month')
+          .format('YYYY-MM-DD'),
       };
     }
     return {
@@ -282,23 +322,28 @@ const HomeScreen = ({ navigation }: Props) => {
     };
   }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
 
-  const { data: attendanceData, refetch: refetchAttendance } = useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
-  const { data: pjpTargetData, refetch: refetchPjpTarget } = useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  const { data: valueTargetData, refetch: refetchValueTarget } = useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  const { data: ddnData, refetch: refetchDdnStats } = useGetDdnStatsQuery(
+  const {data: attendanceData, refetch: refetchAttendance} =
+    useGetAsmAttendanceTabQuery(apiParams, {skip: !employee?.id});
+  const {data: pjpTargetData, refetch: refetchPjpTarget} =
+    useGetAsmPjpTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const {data: valueTargetData, refetch: refetchValueTarget} =
+    useGetAsmTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const {data: ddnData, refetch: refetchDdnStats} = useGetDdnStatsQuery(
     ddnDateParams,
-    { skip: !employee?.id }
+    {skip: !employee?.id},
   );
-  const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
+  const {data: employeeTargetsData, refetch: refetchEmployeeTargets} =
     useGetEmployeeTargetsQuery(
-      { month: selectedMonth, year: selectedYear },  // ← was: undefined
-      { skip: !employee?.id }
+      {month: selectedMonth, year: selectedYear}, // ← was: undefined
+      {skip: !employee?.id},
     );
 
-  const { data: soStatsData, refetch: refetchSoAchievement } =
-    useGetSoStatsQuery(soDateParams, { skip: !employee?.id });
+  const {data: soStatsData, refetch: refetchSoAchievement} = useGetSoStatsQuery(
+    soDateParams,
+    {skip: !employee?.id},
+  );
 
-  const [setEmployeeTargets, { isLoading: isSavingTargets }] =
+  const [setEmployeeTargets, {isLoading: isSavingTargets}] =
     useSetEmployeeTargetsMutation();
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
@@ -306,33 +351,34 @@ const HomeScreen = ({ navigation }: Props) => {
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
-  const { data: prodData, refetch } = useGetProdCountQuery(
-    { date: today },
-    { refetchOnMountOrArgChange: true },
+  const {data: prodData, refetch} = useGetProdCountQuery(
+    {date: today},
+    {refetchOnMountOrArgChange: true},
   );
 
-  const [pjpInitialize, { data }] = usePjpInitializeMutation();
-  const [checkOut, { isLoading }] = useCheckOutMutation();
+  const [pjpInitialize, {data}] = usePjpInitializeMutation();
+  const [checkOut, {isLoading}] = useCheckOutMutation();
   const {
     data: locationTrackerData,
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
-  } = useGetLocationTrackerQuery(undefined, { refetchOnMountOrArgChange: true });
-  const {
-    data: activityStatusData,
-    refetch: refetchActivityStatus
-  } = useGetActivityCheckInStatusQuery(undefined, { refetchOnMountOrArgChange: true });
+  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
+  const {data: activityStatusData, refetch: refetchActivityStatus} =
+    useGetActivityCheckInStatusQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+    });
 
-  const [activityCheckOut, { isLoading: isActivityCheckingOut }] = useActivityCheckOutMutation();
+  const [activityCheckOut, {isLoading: isActivityCheckingOut}] =
+    useActivityCheckOutMutation();
   const [startPjp] = useStartPjpMutation();
 
   // ADD THIS:
-  const isActivityCheckedIn = activityStatusData?.message?.is_checked_in === true;
+  const isActivityCheckedIn =
+    activityStatusData?.message?.is_checked_in === true;
   const isPjpActive = !!(
     selectedStoreValue?.actions?.can_check_out ||
     selectedStoreValue?.actions?.can_mark_activity
   );
-
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -345,7 +391,7 @@ const HomeScreen = ({ navigation }: Props) => {
       refetchValueTarget();
       refetchLocationTracker();
       refetchDdnStats();
-      refetchSoAchievement();       // ← add
+      refetchSoAchievement(); // ← add
       refetchEmployeeTargets();
       refetchActivityStatus();
     }, 2000);
@@ -357,7 +403,7 @@ const HomeScreen = ({ navigation }: Props) => {
     refetchValueTarget,
     refetchLocationTracker,
     refetchDdnStats,
-    refetchSoAchievement,           // ← add
+    refetchSoAchievement, // ← add
     refetchEmployeeTargets,
     refetchActivityStatus,
   ]);
@@ -399,7 +445,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
     if (isNaN(latitude) || isNaN(longitude)) return null;
 
-    return { latitude, longitude };
+    return {latitude, longitude};
   };
   const handleSetValue = async () => {
     const location = await getCurrentLocation();
@@ -565,7 +611,6 @@ const HomeScreen = ({ navigation }: Props) => {
     isLocationTrackerFetching ||
     locationTrackerData?.message?.data?.enabled === false;
 
-
   const pjpSummary = pjpTargetData?.message?.summary;
   const valueSummary = valueTargetData?.message?.summary;
   const attendanceSummary = attendanceData?.message?.summary;
@@ -577,8 +622,14 @@ const HomeScreen = ({ navigation }: Props) => {
   const ddnTarget = employeeTargets?.ddn_target ?? 0;
   const soAchievement = soStatsData?.message?.value ?? 0;
   // ✅ Keep 2 decimal places → 0.10
-  const ddnPct = ddnTarget > 0 ? parseFloat(((ddnStats?.value ?? 0) / ddnTarget * 100).toFixed(2)) : 0;
-  const soPct = salesTarget > 0 ? parseFloat((soAchievement / salesTarget * 100).toFixed(2)) : 0;
+  const ddnPct =
+    ddnTarget > 0
+      ? parseFloat((((ddnStats?.value ?? 0) / ddnTarget) * 100).toFixed(2))
+      : 0;
+  const soPct =
+    salesTarget > 0
+      ? parseFloat(((soAchievement / salesTarget) * 100).toFixed(2))
+      : 0;
 
   const handleSaveTargets = async () => {
     try {
@@ -588,11 +639,14 @@ const HomeScreen = ({ navigation }: Props) => {
         month: selectedMonth,
         year: selectedYear,
       }).unwrap();
-      Toast.show({ type: 'success', text1: '✅ Targets saved successfully' });
+      Toast.show({type: 'success', text1: '✅ Targets saved successfully'});
       setTargetModalVisible(false);
       refetchEmployeeTargets();
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: `❌ ${err?.message || 'Failed to save targets'}` });
+      Toast.show({
+        type: 'error',
+        text1: `❌ ${err?.message || 'Failed to save targets'}`,
+      });
     }
   };
 
@@ -609,7 +663,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
       const location = await getCurrentLocation();
       if (!location) {
-        Toast.show({ type: 'error', text1: 'Unable to fetch location' });
+        Toast.show({type: 'error', text1: 'Unable to fetch location'});
         return;
       }
 
@@ -617,16 +671,16 @@ const HomeScreen = ({ navigation }: Props) => {
         log_id: logId,
         current_location: location,
       }).unwrap();
-      console.log("🚀 ~ handleActivityCheckOut ~ res:", res)
+      console.log('🚀 ~ handleActivityCheckOut ~ res:', res);
 
       if (res.message.success) {
-        Toast.show({ type: 'success', text1: 'Activity Checked Out' });
+        Toast.show({type: 'success', text1: 'Activity Checked Out'});
         refetchActivityStatus();
       }
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to check out'
+        text1: error?.data?.message || 'Failed to check out',
       });
     }
   };
@@ -649,133 +703,163 @@ const HomeScreen = ({ navigation }: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{ position: 'relative', marginBottom: 0 }}>
+            <View style={{position: 'relative', marginBottom: 0}}>
               <View style={styles.welcomBox}>
-                <Text style={styles.welcomeText}>
-                  Hello <Text style={styles.name}>{employee?.full_name}</Text>
-                </Text>
-                <View style={styles.linkBox}>
+                {/* ── Greeting + Date Row ── */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12,
+                  }}>
+                  <Text style={styles.welcomeText}>
+                    Hello <Text style={styles.name}>{employee?.full_name}</Text>
+                  </Text>
                   <DateBox />
-                  {selectedStoreValue && (
-                    <View style={styles.linkContent}>
-
-                      <Text style={styles.paraText}>
-                        Store- {selectedStoreValue?.store_name}
-                      </Text>
-                      {selectedStoreValue?.times?.check_in_time && (
-                        <Text style={styles.paraText}>
-                          Last check-in at{' '}
-                          {moment(
-                            selectedStoreValue?.times.check_in_time,
-                            'HH:mm:ss.SSSSS',
-                          ).format('hh:mm A')}
-                          .
-                        </Text>
-                      )}
-                    </View>
-                  )}
                 </View>
+
+                {/* ── Store info row ── */}
+                {selectedStoreValue && (
+                  <View style={styles.linkContent}>
+                    <Text style={styles.paraText}>
+                      Store — {selectedStoreValue?.store_name}
+                    </Text>
+                    {selectedStoreValue?.times?.check_in_time && (
+                      <Text style={styles.paraText}>
+                        Last check-in at{' '}
+                        {moment(
+                          selectedStoreValue?.times.check_in_time,
+                          'HH:mm:ss.SSSSS',
+                        ).format('hh:mm A')}
+                      </Text>
+                    )}
+                  </View>
+                )}
+
                 {/* ── ACTIVITY STATUS BLOCK ── */}
                 {isActivityCheckedIn && (
-                  <View style={{ marginTop: 12, gap: 8 }}>
-                    {/* Info card */}
-                    <View style={{
-                      backgroundColor: '#F8FAFC',
-                      padding: 12,
-                      borderRadius: 10,
-                      borderLeftWidth: 4,
-                      borderLeftColor: '#4ADE80',
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                    }}>
-                      {/* Location */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                        <Ionicons name="location-sharp" size={16} color={Colors.orange} />
-                        <Text style={{
-                          color: Colors.darkButton,
-                          fontSize: 15,
-                          fontFamily: Fonts.semiBold,
-                          flex: 1,
+                  <View style={{marginTop: 10, gap: 8}}>
+                    {/* Compact activity info card */}
+                    <View
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.22)',
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: 'rgba(255,255,255,0.35)',
+                        paddingVertical: 10,
+                        paddingHorizontal: 12,
+                      }}>
+                      {/* Top row: location + time */}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
                         }}>
-                          {activityStatusData.message.activity_location}
-                        </Text>
-                      </View>
-
-                      {/* Check-in time */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, gap: 6 }}>
-                        <Clock size={14} color={Colors.gray} />
-                        <Text style={{ color: Colors.gray, fontSize: 12, fontFamily: Fonts.regular }}>
-                          Check-in at: {moment(activityStatusData.message.check_in_time, 'HH:mm:ss').format('hh:mm A')}
-                        </Text>
-                      </View>
-
-                      <View style={{
-                        height: 0.5,
-                        backgroundColor: '#E2E8F0',
-                        marginVertical: 8,
-                      }} />
-
-                      {/* Activity Type + Remarks row */}
-                      <View style={{ flexDirection: 'row', gap: 12 }}>
-                        {/* Activity Type */}
-                        {activityStatusData.message.activity_type && (
-                          <View style={{ flex: 1 }}>
-                            <Text style={{
-                              fontSize: 10,
-                              color: Colors.gray,
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 5,
+                            flex: 1,
+                          }}>
+                          <Ionicons
+                            name="location-sharp"
+                            size={13}
+                            color="#fff"
+                          />
+                          <Text
+                            style={{
+                              color: '#fff',
+                              fontSize: 13,
+                              fontFamily: Fonts.semiBold,
+                              flex: 1,
+                            }}
+                            numberOfLines={1}>
+                            {activityStatusData.message.activity_location}
+                          </Text>
+                        </View>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                            marginLeft: 8,
+                          }}>
+                          <Clock size={11} color="rgba(255,255,255,0.75)" />
+                          <Text
+                            style={{
+                              color: 'rgba(255,255,255,0.75)',
+                              fontSize: 11,
                               fontFamily: Fonts.regular,
-                              textTransform: 'uppercase',
-                              letterSpacing: 0.5,
-                              marginBottom: 3,
                             }}>
-                              Activity Type
-                            </Text>
-                            <View style={{
+                            {moment(
+                              activityStatusData.message.check_in_time,
+                              'HH:mm:ss',
+                            ).format('hh:mm A')}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Chips row */}
+                      <View
+                        style={{flexDirection: 'row', gap: 8, marginTop: 8}}>
+                        {activityStatusData.message.activity_type && (
+                          <View
+                            style={{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 4,
+                              backgroundColor: 'rgba(255,255,255,0.2)',
+                              paddingHorizontal: 9,
+                              paddingVertical: 4,
+                              borderRadius: 20,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,255,255,0.3)',
                             }}>
-                              <Ionicons name="briefcase-outline" size={13} color={Colors.orange} />
-                              <Text style={{
-                                fontSize: 12,
+                            <Ionicons
+                              name="briefcase-outline"
+                              size={11}
+                              color="#fff"
+                            />
+                            <Text
+                              style={{
+                                fontSize: 11,
                                 fontFamily: Fonts.medium,
-                                color: Colors.darkButton,
-                                flexShrink: 1,
+                                color: '#fff',
                               }}>
-                                {activityStatusData.message.activity_type}
-                              </Text>
-                            </View>
+                              {activityStatusData.message.activity_type}
+                            </Text>
                           </View>
                         )}
-
-                        {/* Remarks */}
                         {activityStatusData.message.remarks && (
-                          <View style={{ flex: 1 }}>
-                            <Text style={{
-                              fontSize: 10,
-                              color: Colors.gray,
-                              fontFamily: Fonts.regular,
-                              textTransform: 'uppercase',
-                              letterSpacing: 0.5,
-                              marginBottom: 3,
-                            }}>
-                              Remarks
-                            </Text>
-                            <View style={{
+                          <View
+                            style={{
                               flexDirection: 'row',
                               alignItems: 'center',
                               gap: 4,
+                              backgroundColor: 'rgba(255,255,255,0.2)',
+                              paddingHorizontal: 9,
+                              paddingVertical: 4,
+                              borderRadius: 20,
+                              borderWidth: 1,
+                              borderColor: 'rgba(255,255,255,0.3)',
                             }}>
-                              <Ionicons name="chatbox-ellipses-outline" size={13} color={Colors.gray} />
-                              <Text style={{
-                                fontSize: 12,
+                            <Ionicons
+                              name="chatbox-ellipses-outline"
+                              size={11}
+                              color="#fff"
+                            />
+                            <Text
+                              style={{
+                                fontSize: 11,
                                 fontFamily: Fonts.medium,
-                                color: Colors.darkButton,
-                                flexShrink: 1,
-                              }}>
-                                {activityStatusData.message.remarks}
-                              </Text>
-                            </View>
+                                color: '#fff',
+                              }}
+                              numberOfLines={1}>
+                              {activityStatusData.message.remarks}
+                            </Text>
                           </View>
                         )}
                       </View>
@@ -783,45 +867,48 @@ const HomeScreen = ({ navigation }: Props) => {
 
                     {/* Activity Check-Out button */}
                     <TouchableOpacity
-                      style={[styles.checkinButton, { backgroundColor: '#F87171', marginTop: 0 }]}
+                      style={[styles.checkinButton, {marginTop: 0}]}
                       onPress={handleActivityCheckOut}
-                      disabled={isActivityCheckingOut}
-                    >
+                      disabled={isActivityCheckingOut}>
                       <Text style={styles.checkinButtonText}>
-                        {isActivityCheckingOut ? 'Checking Out...' : 'Activity Check-Out'}
+                        {isActivityCheckingOut
+                          ? 'Checking Out...'
+                          : 'Activity Check-Out'}
                       </Text>
                       {isActivityCheckingOut ? (
                         <ActivityIndicator size="small" color={Colors.white} />
                       ) : (
-                        <Ionicons name="log-out-outline" size={20} color={Colors.white} />
+                        <Ionicons
+                          name="log-out-outline"
+                          size={20}
+                          color={Colors.white}
+                        />
                       )}
                     </TouchableOpacity>
-
-                    {/* Disabled PJP hint */}
-                    <Text style={{
-                      fontSize: 11,
-                      color: '#ffeaea',
-                      textAlign: 'center',
-                      fontFamily: Fonts.regular,
-                    }}>
-                      ⚠️ PJP Check-In is disabled while Activity is active
-                    </Text>
                   </View>
                 )}
 
-                {/* ── PJP SECTION — existing logic, unchanged except isDisabled now includes isActivityCheckedIn ── */}
-                {locationTrackerData?.message?.data?.pjp_records?.length === 0 ? (
+                {/* ── PJP SECTION ── */}
+                {locationTrackerData?.message?.data?.pjp_records?.length ===
+                0 ? (
                   <>
-                    <Text style={{
-                      fontSize: 14, color: '#ffeaea', marginBottom: 4, textAlign: 'center',
-                    }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        color: '#ffeaea',
+                        marginBottom: 4,
+                        textAlign: 'center',
+                        marginTop: 8,
+                      }}>
                       You don't have a Daily PJP for this date.
                       {'\n'}Please add one to continue check-in.
                     </Text>
                     <TouchableOpacity
                       style={[styles.checkinButton]}
                       onPress={() => navigation.navigate('AddPjpScreen')}>
-                      <Text style={styles.checkinButtonText}>Add Daily PJP</Text>
+                      <Text style={styles.checkinButtonText}>
+                        Add Daily PJP
+                      </Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -831,14 +918,16 @@ const HomeScreen = ({ navigation }: Props) => {
                         style={[
                           styles.checkinButton,
                           (isStartingPjp ||
-                            locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
-                            isActivityCheckedIn) &&   // ← disabled when activity active
-                          styles.checkinButtonDisabled,
+                            locationTrackerData?.message?.data?.pjp_records
+                              ?.length === 0 ||
+                            isActivityCheckedIn) &&
+                            styles.checkinButtonDisabled,
                         ]}
                         disabled={
                           isStartingPjp ||
-                          locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
-                          isActivityCheckedIn         // ← disabled when activity active
+                          locationTrackerData?.message?.data?.pjp_records
+                            ?.length === 0 ||
+                          isActivityCheckedIn
                         }
                         onPress={handleStartPjp}>
                         <Text style={styles.checkinButtonText}>
@@ -847,59 +936,138 @@ const HomeScreen = ({ navigation }: Props) => {
                         {isStartingPjp ? (
                           <ActivityIndicator color={Colors.white} />
                         ) : (
-                          <Ionicons name="chevron-forward-circle-sharp" size={24} color={Colors.white} />
+                          <Ionicons
+                            name="chevron-forward-circle-sharp"
+                            size={24}
+                            color={Colors.white}
+                          />
                         )}
                       </TouchableOpacity>
                     )}
 
                     {selectedStoreValue?.actions?.can_check_out ||
-                      selectedStoreValue?.actions?.can_mark_activity ? (
-                      <View>
-                        <TouchableOpacity
-                          style={styles.checkinButton}
-                          onPress={handleCheckOut}
-                          disabled={!selectedStoreValue?.actions?.can_check_out || isLoading}>
-                          <Text style={styles.checkinButtonText}>Check Out</Text>
-                          {isLoading ? (
-                            <ActivityIndicator size="small" />
-                          ) : (
-                            <Ionicons name="chevron-forward-circle-sharp" size={24} color={Colors.white} />
-                          )}
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
+                    selectedStoreValue?.actions?.can_mark_activity ? (
                       <TouchableOpacity
-                        style={[
-                          styles.checkinButton,
-                          isDisabled && styles.checkinButtonDisabled,
-                        ]}
-                        disabled={isDisabled}
-                        onPress={() => {
-                          if (errorMessage !== '') {
-                            Toast.show({ type: 'error', text1: `❌ ${errorMessage}`, position: 'top' });
-                          } else {
-                            navigation.navigate('CheckInForm');
-                          }
-                        }}>
-                        <Text style={[
-                          styles.checkinButtonText,
-                          isDisabled && styles.checkinButtonTextDisabled,
-                        ]}>
-                          Check In
-                        </Text>
-                        <Ionicons
-                          name="chevron-forward-circle-sharp"
-                          size={24}
-                          color={isDisabled ? Colors.gray : Colors.white}
-                        />
+                        style={styles.checkinButton}
+                        onPress={handleCheckOut}
+                        disabled={
+                          !selectedStoreValue?.actions?.can_check_out ||
+                          isLoading
+                        }>
+                        <Text style={styles.checkinButtonText}>Check Out</Text>
+                        {isLoading ? (
+                          <ActivityIndicator size="small" />
+                        ) : (
+                          <Ionicons
+                            name="chevron-forward-circle-sharp"
+                            size={24}
+                            color={Colors.white}
+                          />
+                        )}
                       </TouchableOpacity>
+                    ) : (
+                      <>
+                        {/* ── Check In — ghost style when locked by activity ── */}
+                        <TouchableOpacity
+                          style={[
+                            styles.checkinButton,
+                            isDisabled &&
+                              !isActivityCheckedIn &&
+                              styles.checkinButtonDisabled,
+                            isActivityCheckedIn && {
+                              backgroundColor: 'rgba(255,255,255,0.12)',
+                              borderWidth: 1.5,
+                              borderColor: 'rgba(255,255,255,0.4)',
+                            },
+                          ]}
+                          disabled={isDisabled || isActivityCheckedIn}
+                          onPress={() => {
+                            if (errorMessage !== '') {
+                              Toast.show({
+                                type: 'error',
+                                text1: `❌ ${errorMessage}`,
+                                position: 'top',
+                              });
+                            } else {
+                              navigation.navigate('CheckInForm');
+                            }
+                          }}>
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 6,
+                              flex: 1,
+                              justifyContent: 'center',
+                            }}>
+                            {isActivityCheckedIn && (
+                              <Ionicons
+                                name="lock-closed"
+                                size={14}
+                                color="rgba(255,255,255,0.55)"
+                              />
+                            )}
+                            <Text
+                              style={[
+                                styles.checkinButtonText,
+                                isActivityCheckedIn && {
+                                  color: 'rgba(255,255,255,0.55)',
+                                },
+                                isDisabled &&
+                                  !isActivityCheckedIn &&
+                                  styles.checkinButtonTextDisabled,
+                              ]}>
+                              Check In
+                            </Text>
+                          </View>
+                          <Ionicons
+                            name="chevron-forward-circle-sharp"
+                            size={24}
+                            color={
+                              isActivityCheckedIn
+                                ? 'rgba(255,255,255,0.35)'
+                                : isDisabled
+                                ? Colors.gray
+                                : Colors.white
+                            }
+                          />
+                        </TouchableOpacity>
+
+                        {/* Hint text */}
+                        {isActivityCheckedIn && (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              marginTop: -2,
+                            }}>
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={12}
+                              color="#fff"
+                            />
+                            <Text
+                              style={{
+                                fontSize: 11,
+                                color: '#ffff',
+                                fontFamily: Fonts.regular,
+                              }}>
+                              PJP Check-In is disabled while Activity is active
+                            </Text>
+                          </View>
+                        )}
+                      </>
                     )}
                   </>
                 )}
               </View>
+
+              {/* ── Beat plan link ── */}
               <View style={styles.planLink}>
                 <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center' }}
+                  style={{flexDirection: 'row', alignItems: 'center'}}
                   onPress={() => navigation.navigate('AttendanceScreen')}>
                   <Text
                     style={{
@@ -930,7 +1098,7 @@ const HomeScreen = ({ navigation }: Props) => {
               <View
                 style={[
                   styles.countBoxIcon,
-                  { backgroundColor: Colors.holdLight },
+                  {backgroundColor: Colors.holdLight},
                 ]}>
                 <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
               </View>
@@ -945,34 +1113,35 @@ const HomeScreen = ({ navigation }: Props) => {
               <View
                 style={[
                   styles.countBoxIcon,
-                  { backgroundColor: Colors.lightSuccess },
+                  {backgroundColor: Colors.lightSuccess},
                 ]}>
                 <MapPinCheck strokeWidth={1.4} color={Colors.success} />
               </View>
             </View>
           </View>
 
-
           {/* ── Dashboard Filters ── */}
           <View style={styles.filterSection}>
             <View style={styles.filterTabRow}>
               {[
-                { label: 'Monthly', mode: 'month' },
+                {label: 'Monthly', mode: 'month'},
                 // { label: 'Range', mode: 'month_range' },
-                { label: 'Range', mode: 'date_range' }
+                {label: 'Range', mode: 'date_range'},
               ].map(opt => (
                 <TouchableOpacity
                   key={opt.mode}
                   onPress={() => setFilterMode(opt.mode as any)}
                   style={[
                     styles.filterChip,
-                    filterMode === opt.mode && styles.filterChipActive
-                  ]}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    filterMode === opt.mode && styles.filterChipTextActive
-                  ]}>{opt.label}</Text>
+                    filterMode === opt.mode && styles.filterChipActive,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      filterMode === opt.mode && styles.filterChipTextActive,
+                    ]}>
+                    {opt.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -987,13 +1156,17 @@ const HomeScreen = ({ navigation }: Props) => {
                   }}>
                   <Calendar size={14} color={C.accent} />
                   <Text style={styles.filterValueText}>
-                    {moment().month(selectedMonth - 1).format('MMMM')}, {selectedYear}
+                    {moment()
+                      .month(selectedMonth - 1)
+                      .format('MMMM')}
+                    , {selectedYear}
                   </Text>
                   <ChevronDown size={14} color={C.textMuted} />
                 </TouchableOpacity>
               )}
               {filterMode === 'month_range' && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View
+                  style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
                   <Text style={styles.filterLabelSmall}>From:</Text>
                   <TouchableOpacity
                     style={styles.filterValueBtnSmall}
@@ -1002,7 +1175,9 @@ const HomeScreen = ({ navigation }: Props) => {
                       setShowMonthModal(true);
                     }}>
                     <Text style={styles.filterValueTextSmall}>
-                      {moment().month(fromMonth - 1).format('MMM')}
+                      {moment()
+                        .month(fromMonth - 1)
+                        .format('MMM')}
                     </Text>
                   </TouchableOpacity>
 
@@ -1014,34 +1189,47 @@ const HomeScreen = ({ navigation }: Props) => {
                       setShowMonthModal(true);
                     }}>
                     <Text style={styles.filterValueTextSmall}>
-                      {moment().month(toMonth - 1).format('MMM')}
+                      {moment()
+                        .month(toMonth - 1)
+                        .format('MMM')}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     style={styles.filterValueBtnSmall}
                     onPress={() => setShowYearModal(true)}>
-                    <Text style={styles.filterValueTextSmall}>{selectedYear}</Text>
+                    <Text style={styles.filterValueTextSmall}>
+                      {selectedYear}
+                    </Text>
                     <ChevronDown size={10} color={C.textMuted} />
                   </TouchableOpacity>
                 </View>
               )}
               {filterMode === 'date_range' && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View
+                  style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
                   <TouchableOpacity
                     style={styles.filterDateBtn}
-                    onPress={() => { setPickingType('start'); setShowDatePicker(true); }}
-                  >
+                    onPress={() => {
+                      setPickingType('start');
+                      setShowDatePicker(true);
+                    }}>
                     <Text style={styles.filterDateLabel}>From</Text>
-                    <Text style={styles.filterDateVal}>{moment(startDate).format('DD MMM')}</Text>
+                    <Text style={styles.filterDateVal}>
+                      {moment(startDate).format('DD MMM')}
+                    </Text>
                   </TouchableOpacity>
                   <ChevronRight size={14} color={C.textMuted} />
                   <TouchableOpacity
                     style={styles.filterDateBtn}
-                    onPress={() => { setPickingType('end'); setShowDatePicker(true); }}
-                  >
+                    onPress={() => {
+                      setPickingType('end');
+                      setShowDatePicker(true);
+                    }}>
                     <Text style={styles.filterDateLabel}>To</Text>
-                    <Text style={styles.filterDateVal}>{moment(endDate).format('DD MMM')}</Text>
+                    <Text style={styles.filterDateVal}>
+                      {moment(endDate).format('DD MMM')}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1085,27 +1273,34 @@ const HomeScreen = ({ navigation }: Props) => {
                   {moment.months().map((month, index) => {
                     const mValue = index + 1;
                     const isActive =
-                      monthPickerTarget === 'single' ? selectedMonth === mValue :
-                        monthPickerTarget === 'from' ? fromMonth === mValue :
-                          toMonth === mValue;
+                      monthPickerTarget === 'single'
+                        ? selectedMonth === mValue
+                        : monthPickerTarget === 'from'
+                        ? fromMonth === mValue
+                        : toMonth === mValue;
 
                     return (
                       <TouchableOpacity
                         key={month}
                         style={[
                           styles.monthItem,
-                          isActive && styles.monthItemActive
+                          isActive && styles.monthItemActive,
                         ]}
                         onPress={() => {
-                          if (monthPickerTarget === 'single') setSelectedMonth(mValue);
-                          else if (monthPickerTarget === 'from') setFromMonth(mValue);
+                          if (monthPickerTarget === 'single')
+                            setSelectedMonth(mValue);
+                          else if (monthPickerTarget === 'from')
+                            setFromMonth(mValue);
                           else setToMonth(mValue);
                           setShowMonthModal(false);
                         }}>
-                        <Text style={[
-                          styles.monthTextBlack,
-                          isActive && styles.monthTextActive
-                        ]}>{moment().month(index).format('MMM')}</Text>
+                        <Text
+                          style={[
+                            styles.monthTextBlack,
+                            isActive && styles.monthTextActive,
+                          ]}>
+                          {moment().month(index).format('MMM')}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -1132,21 +1327,29 @@ const HomeScreen = ({ navigation }: Props) => {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.yearList}>
-                  {[currentYear - 2, currentYear - 1, currentYear, currentYear + 1].map(year => (
+                  {[
+                    currentYear - 2,
+                    currentYear - 1,
+                    currentYear,
+                    currentYear + 1,
+                  ].map(year => (
                     <TouchableOpacity
                       key={year}
                       style={[
                         styles.yearItem,
-                        selectedYear === year && styles.yearItemActive
+                        selectedYear === year && styles.yearItemActive,
                       ]}
                       onPress={() => {
                         setSelectedYear(year);
                         setShowYearModal(false);
                       }}>
-                      <Text style={[
-                        styles.yearText,
-                        selectedYear === year && styles.yearTextActive
-                      ]}>{year}</Text>
+                      <Text
+                        style={[
+                          styles.yearText,
+                          selectedYear === year && styles.yearTextActive,
+                        ]}>
+                        {year}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -1191,148 +1394,247 @@ const HomeScreen = ({ navigation }: Props) => {
           </Modal>
 
           {/* ── Team Attendance ── */}
-          {attendanceData?.message && attendanceData?.message?.records?.length > 0 && <View style={styles.section}>
-            <SectionTitle
-              title="Team Attendance"
-              sub={
-                filterMode === 'month'
-                  ? `${moment().month(selectedMonth - 1).format('MMMM')} Summary`
-                  : filterMode === 'date_range'
-                    ? `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
-                    : 'Summary'
-              }
-            />
+          {attendanceData?.message &&
+            attendanceData?.message?.records?.length > 0 && (
+              <View style={styles.section}>
+                <SectionTitle
+                  title="Team Attendance"
+                  sub={
+                    filterMode === 'month'
+                      ? `${moment()
+                          .month(selectedMonth - 1)
+                          .format('MMMM')} Summary`
+                      : filterMode === 'date_range'
+                      ? `${moment(startDate).format('DD MMM')} – ${moment(
+                          endDate,
+                        ).format('DD MMM')}`
+                      : 'Summary'
+                  }
+                />
 
+                {/* Horizontal per-user scroll */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{
+                    gap: 8,
+                    paddingVertical: 5,
+                    paddingHorizontal: 2,
+                  }}>
+                  {attendanceData?.message?.records?.map(r => {
+                    const rate = r.attendance_rate;
+                    const color =
+                      rate >= 75
+                        ? '#2E7D32'
+                        : rate >= 50
+                        ? '#F59E0B'
+                        : '#EF4444';
+                    const bgColor =
+                      rate >= 75
+                        ? '#DCFCE7'
+                        : rate >= 50
+                        ? '#FEF3C7'
+                        : '#FEE2E2';
 
+                    return (
+                      <TouchableOpacity
+                        key={r.employee_id}
+                        onPress={() =>
+                          navigation.navigate('TeamDetailScreen', {
+                            employee_id: r.employee_id,
+                            date: today,
+                          })
+                        }
+                        style={{
+                          width: 130,
+                          backgroundColor: C.card,
+                          borderRadius: 14,
+                          borderWidth: 0.5,
+                          borderColor: C.border,
+                          padding: 12,
+                          alignItems: 'center',
+                          gap: 6,
+                        }}>
+                        {/* Avatar */}
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: C.accentSoft,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}>
+                          <Text
+                            style={{
+                              fontSize: 16,
+                              fontWeight: '700',
+                              color: C.accent,
+                            }}>
+                            {r.initials ||
+                              r.employee_name.charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
 
-            {/* Horizontal per-user scroll */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, paddingVertical: 5, paddingHorizontal: 2 }}
-            >
-              {attendanceData?.message?.records?.map((r) => {
-                const rate = r.attendance_rate;
-                const color = rate >= 75 ? '#2E7D32' : rate >= 50 ? '#F59E0B' : '#EF4444';
-                const bgColor = rate >= 75 ? '#DCFCE7' : rate >= 50 ? '#FEF3C7' : '#FEE2E2';
-
-                return (
-                  <TouchableOpacity
-                    key={r.employee_id}
-                    onPress={() => navigation.navigate('TeamDetailScreen', {
-                      employee_id: r.employee_id,
-                      date: today
-                    })}
-                    style={{
-                      width: 130,
-                      backgroundColor: C.card,
-                      borderRadius: 14,
-                      borderWidth: 0.5,
-                      borderColor: C.border,
-                      padding: 12,
-                      alignItems: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    {/* Avatar */}
-                    <View style={{
-                      width: 40, height: 40, borderRadius: 20,
-                      backgroundColor: C.accentSoft,
-                      justifyContent: 'center', alignItems: 'center',
-                    }}>
-                      <Text style={{ fontSize: 16, fontWeight: '700', color: C.accent }}>
-                        {r.initials || r.employee_name.charAt(0).toUpperCase()}
-                      </Text>
-                    </View>
-
-                    {/* Name */}
-                    <Text
-                      numberOfLines={1}
-                      style={{ fontSize: 12, fontWeight: '600', color: C.text, textAlign: 'center' }}
-                    >
-                      {r.employee_name}
-                    </Text>
-
-                    {/* Rate badge */}
-                    <View style={{
-                      paddingHorizontal: 8, paddingVertical: 2,
-                      borderRadius: 20, backgroundColor: bgColor,
-                    }}>
-                      <Text style={{ fontSize: 10, fontWeight: '700', color }}>
-                        {rate}%
-                      </Text>
-                    </View>
-
-                    {/* Progress bar */}
-                    <View style={{
-                      width: '100%', height: 4,
-                      backgroundColor: C.border, borderRadius: 2, overflow: 'hidden',
-                    }}>
-                      <View style={{
-                        width: `${Math.min(rate, 100)}%` as `${number}%`,
-                        height: '100%', backgroundColor: color, borderRadius: 2,
-                      }} />
-                    </View>
-
-                    {/* Stats row */}
-                    <View style={{
-                      flexDirection: 'row', justifyContent: 'space-between',
-                      width: '100%', marginTop: 2,
-                    }}>
-
-
-                      <View style={{ alignItems: 'center', flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: C.text }}>
-                          {r.total_working_days}
+                        {/* Name */}
+                        <Text
+                          numberOfLines={1}
+                          style={{
+                            fontSize: 12,
+                            fontWeight: '600',
+                            color: C.text,
+                            textAlign: 'center',
+                          }}>
+                          {r.employee_name}
                         </Text>
-                        <Text style={{ fontSize: 9, color: C.textMuted }}>Days</Text>
-                      </View>
 
-                      <View style={{ width: 1, backgroundColor: C.border, marginVertical: 2 }} />
+                        {/* Rate badge */}
+                        <View
+                          style={{
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 20,
+                            backgroundColor: bgColor,
+                          }}>
+                          <Text
+                            style={{fontSize: 10, fontWeight: '700', color}}>
+                            {rate}%
+                          </Text>
+                        </View>
 
-                      <View style={{ alignItems: 'center', flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#2E7D32' }}>
-                          {r.days_present}
-                        </Text>
-                        <Text style={{ fontSize: 9, color: C.textMuted }}>Present</Text>
-                      </View>
+                        {/* Progress bar */}
+                        <View
+                          style={{
+                            width: '100%',
+                            height: 4,
+                            backgroundColor: C.border,
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                          }}>
+                          <View
+                            style={{
+                              width: `${Math.min(rate, 100)}%` as `${number}%`,
+                              height: '100%',
+                              backgroundColor: color,
+                              borderRadius: 2,
+                            }}
+                          />
+                        </View>
 
-                      <View style={{ width: 1, backgroundColor: C.border, marginVertical: 2 }} />
+                        {/* Stats row */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            marginTop: 2,
+                          }}>
+                          <View style={{alignItems: 'center', flex: 1}}>
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                fontWeight: '700',
+                                color: C.text,
+                              }}>
+                              {r.total_working_days}
+                            </Text>
+                            <Text style={{fontSize: 9, color: C.textMuted}}>
+                              Days
+                            </Text>
+                          </View>
 
-                      <View style={{ alignItems: 'center', flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#EF4444' }}>
-                          {r.days_absent}
-                        </Text>
-                        <Text style={{ fontSize: 9, color: C.textMuted }}>Absent</Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>}
+                          <View
+                            style={{
+                              width: 1,
+                              backgroundColor: C.border,
+                              marginVertical: 2,
+                            }}
+                          />
+
+                          <View style={{alignItems: 'center', flex: 1}}>
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                fontWeight: '700',
+                                color: '#2E7D32',
+                              }}>
+                              {r.days_present}
+                            </Text>
+                            <Text style={{fontSize: 9, color: C.textMuted}}>
+                              Present
+                            </Text>
+                          </View>
+
+                          <View
+                            style={{
+                              width: 1,
+                              backgroundColor: C.border,
+                              marginVertical: 2,
+                            }}
+                          />
+
+                          <View style={{alignItems: 'center', flex: 1}}>
+                            <Text
+                              style={{
+                                fontSize: 13,
+                                fontWeight: '700',
+                                color: '#EF4444',
+                              }}>
+                              {r.days_absent}
+                            </Text>
+                            <Text style={{fontSize: 9, color: C.textMuted}}>
+                              Absent
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
 
           {/* ── Target vs Achievement ── */}
-          <View style={[styles.section, { marginBottom: 10 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+          <View style={[styles.section, {marginBottom: 10}]}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 8,
+              }}>
               <SectionTitle
                 title="Team Performance"
                 sub={
                   filterMode === 'month'
-                    ? `${moment().month(selectedMonth - 1).format('MMMM')} Performance`
-                    : `${moment(startDate).format('DD MMM')} – ${moment(endDate).format('DD MMM')}`
+                    ? `${moment()
+                        .month(selectedMonth - 1)
+                        .format('MMMM')} Performance`
+                    : `${moment(startDate).format('DD MMM')} – ${moment(
+                        endDate,
+                      ).format('DD MMM')}`
                 }
               />
               {/* Edit targets button */}
               <TouchableOpacity
                 onPress={handleOpenTargetModal}
                 style={{
-                  flexDirection: 'row', alignItems: 'center', gap: 4,
-                  paddingHorizontal: 10, paddingVertical: 5,
-                  borderRadius: 20, borderWidth: 0.5, borderColor: '#534AB7',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 20,
+                  borderWidth: 0.5,
+                  borderColor: '#534AB7',
                   backgroundColor: 'rgba(83,74,183,0.07)',
                 }}>
-                <Text style={{ fontSize: 11, color: '#534AB7', fontFamily: Fonts.medium }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: '#534AB7',
+                    fontFamily: Fonts.medium,
+                  }}>
                   Set Targets
                 </Text>
               </TouchableOpacity>
@@ -1358,21 +1660,35 @@ const HomeScreen = ({ navigation }: Props) => {
                 target={`${pjpSummary?.total_planned ?? 0}`}
                 rate={pjpSummary?.achievement_rate ?? 0}
                 accentColor="#534AB7"
-                onPress={() => navigation.navigate('TeamPerformanceListScreen', { apiParams, today, mode: 'pjp' })}
+                onPress={() =>
+                  navigation.navigate('TeamPerformanceListScreen', {
+                    apiParams,
+                    today,
+                    mode: 'pjp',
+                  })
+                }
               />
 
               <TargetMetricBox
                 label="Orders"
-                achieved={`₹${soAchievement % 1 !== 0 ? soAchievement.toFixed(2) : soAchievement}`}
+                achieved={`₹${
+                  soAchievement % 1 !== 0
+                    ? soAchievement.toFixed(2)
+                    : soAchievement
+                }`}
                 target={`₹${salesTarget}`}
                 rate={soPct}
                 accentColor="#0F6E56"
               />
             </View>
-            <View style={[styles.metricRow, { marginTop: 10 }]}>
+            <View style={[styles.metricRow, {marginTop: 10}]}>
               <TargetMetricBox
                 label="Delivery Note"
-                achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0 ? (ddnStats?.value ?? 0).toFixed(2) : (ddnStats?.value ?? 0)}`}
+                achieved={`₹${
+                  (ddnStats?.value ?? 0) % 1 !== 0
+                    ? (ddnStats?.value ?? 0).toFixed(2)
+                    : ddnStats?.value ?? 0
+                }`}
                 target={`₹${ddnTarget}`}
                 rate={ddnPct}
                 accentColor="#185FA5"
@@ -1390,12 +1706,19 @@ const HomeScreen = ({ navigation }: Props) => {
               style={styles.modalOverlay}
               activeOpacity={1}
               onPress={() => setTargetModalVisible(false)}>
-              <View style={[styles.modalContainer, { gap: 14 }]}>
+              <View style={[styles.modalContainer, {gap: 14}]}>
                 <Text style={styles.modalTitle}>Set Monthly Targets</Text>
 
                 {/* Period info */}
-                <Text style={{ fontSize: 12, color: '#828282', fontFamily: Fonts.regular, marginTop: -8 }}>
-                  {moment().format('MMMM YYYY')} — targets apply to current month only
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: '#828282',
+                    fontFamily: Fonts.regular,
+                    marginTop: -8,
+                  }}>
+                  {moment().format('MMMM YYYY')} — targets apply to current
+                  month only
                 </Text>
 
                 {/* Sales Target */}
@@ -1407,27 +1730,41 @@ const HomeScreen = ({ navigation }: Props) => {
                     keyboardType="numeric"
                     placeholder="e.g. 5000000"
                     style={{
-                      borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10,
-                      paddingHorizontal: 14, paddingVertical: 12,
-                      fontSize: 14, fontFamily: Fonts.medium, color: '#1A1A1A',
-                      backgroundColor: '#FAFAFA', marginTop: 4,
+                      borderWidth: 1,
+                      borderColor: '#E0E0E0',
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 14,
+                      fontFamily: Fonts.medium,
+                      color: '#1A1A1A',
+                      backgroundColor: '#FAFAFA',
+                      marginTop: 4,
                     }}
                   />
                 </View>
 
                 {/* DDN Target */}
                 <View>
-                  <Text style={styles.modalLabel}>Delivery Note Target (₹)</Text>
+                  <Text style={styles.modalLabel}>
+                    Delivery Note Target (₹)
+                  </Text>
                   <TextInput
                     value={editDdnTarget}
                     onChangeText={setEditDdnTarget}
                     keyboardType="numeric"
                     placeholder="e.g. 4000000"
                     style={{
-                      borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 10,
-                      paddingHorizontal: 14, paddingVertical: 12,
-                      fontSize: 14, fontFamily: Fonts.medium, color: '#1A1A1A',
-                      backgroundColor: '#FAFAFA', marginTop: 4,
+                      borderWidth: 1,
+                      borderColor: '#E0E0E0',
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 14,
+                      fontFamily: Fonts.medium,
+                      color: '#1A1A1A',
+                      backgroundColor: '#FAFAFA',
+                      marginTop: 4,
                     }}
                   />
                 </View>
@@ -1440,13 +1777,17 @@ const HomeScreen = ({ navigation }: Props) => {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[styles.confirmButton, isSavingTargets && { opacity: 0.6 }]}
+                    style={[
+                      styles.confirmButton,
+                      isSavingTargets && {opacity: 0.6},
+                    ]}
                     disabled={isSavingTargets}
                     onPress={handleSaveTargets}>
-                    {isSavingTargets
-                      ? <ActivityIndicator size="small" color="#fff" />
-                      : <Text style={styles.confirmText}>Save</Text>
-                    }
+                    {isSavingTargets ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={styles.confirmText}>Save</Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1571,42 +1912,51 @@ const HomeScreen = ({ navigation }: Props) => {
             </View>
           </View> */}
 
-
-          <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
-            <Text style={[styles.SectionHeading, { marginBottom: 10, paddingHorizontal: 20 }]}>
+          <View
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
+            <Text
+              style={[
+                styles.SectionHeading,
+                {marginBottom: 10, paddingHorizontal: 20},
+              ]}>
               Activity Check-In
             </Text>
 
-            <View style={{ paddingHorizontal: 20 }}>
+            <View style={{paddingHorizontal: 20}}>
               <TouchableOpacity
                 style={[
                   styles.checkinButton,
-                  { backgroundColor: Colors.darkButton, marginTop: 5 },
-                  isPjpActive && styles.checkinButtonDisabled,   // ← greyed out when PJP active
+                  {backgroundColor: Colors.darkButton, marginTop: 5},
+                  isPjpActive && styles.checkinButtonDisabled, // ← greyed out when PJP active
                 ]}
-                disabled={isPjpActive}                           // ← blocked when PJP active
-                onPress={() => navigation.navigate('ActivityCheckInScreen')}
-              >
+                disabled={isPjpActive} // ← blocked when PJP active
+                onPress={() => navigation.navigate('ActivityCheckInScreen')}>
                 <View style={[flexRow, itemsCenter]}>
-                  <Text style={[
-                    styles.checkinButtonText,
-                    isPjpActive && styles.checkinButtonTextDisabled,
-                  ]}>
+                  <Text
+                    style={[
+                      styles.checkinButtonText,
+                      isPjpActive && styles.checkinButtonTextDisabled,
+                    ]}>
                     Activity Check-In
                   </Text>
-                  <Ionicons name="chevron-forward-circle-sharp" size={20}
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={20}
                     color={isPjpActive ? Colors.gray : Colors.white}
-                    style={{ marginLeft: 8 }}
+                    style={{marginLeft: 8}}
                   />
                 </View>
               </TouchableOpacity>
 
               {isPjpActive && (
-                <Text style={{
-                  fontSize: 11, color: Colors.gray,
-                  textAlign: 'center', marginTop: 6,
-                  fontFamily: Fonts.regular,
-                }}>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: Colors.gray,
+                    textAlign: 'center',
+                    marginTop: 6,
+                    fontFamily: Fonts.regular,
+                  }}>
                   ⚠️ Activity Check-In is disabled while PJP is active
                 </Text>
               )}
@@ -1614,11 +1964,11 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
             <Text
               style={[
                 styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
+                {marginBottom: 10, paddingHorizontal: 20},
               ]}>
               Quick links
             </Text>
@@ -1638,7 +1988,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add PJP</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1649,7 +1999,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
             <TouchableOpacity
               onPress={() => navigation.navigate('AddStoreScreen')}
@@ -1667,7 +2017,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <Hotel strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add Store</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1678,11 +2028,11 @@ const HomeScreen = ({ navigation }: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('OrdersScreen', { index: 0 })}>
+              onPress={() => navigation.navigate('OrdersScreen', {index: 0})}>
               <View
                 style={[
                   styles.iconbox,
@@ -1696,7 +2046,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Orders</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1707,7 +2057,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
             <TouchableOpacity
               onPress={() => navigation.navigate('AddDistributorScreen')}
@@ -1725,7 +2075,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Add Distributor</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1736,11 +2086,11 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
             <Text
               style={[
                 styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
+                {marginBottom: 10, paddingHorizontal: 20},
               ]}>
               Claims
             </Text>
@@ -1764,7 +2114,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Expense Claim</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1775,7 +2125,7 @@ const HomeScreen = ({ navigation }: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{ marginBottom: 10, borderStyle: 'dashed' }}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
             <TouchableOpacity
               onPress={() => navigation.navigate('VisibilityScreen')}
@@ -1793,7 +2143,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <Eye strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Visibility Claim</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1804,18 +2154,16 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
             <Text
               style={[
                 styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
+                {marginBottom: 10, paddingHorizontal: 20},
               ]}>
               Stock
             </Text>
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('StockManagementScreen')
-              }
+              onPress={() => navigation.navigate('StockManagementScreen')}
               style={styles.IconlinkBox}>
               <View
                 style={[
@@ -1830,7 +2178,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <Boxes strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Stock Management</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1841,18 +2189,16 @@ const HomeScreen = ({ navigation }: Props) => {
           </View>
 
           <View
-            style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+            style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
             <Text
               style={[
                 styles.SectionHeading,
-                { marginBottom: 10, paddingHorizontal: 20 },
+                {marginBottom: 10, paddingHorizontal: 20},
               ]}>
               Activity
             </Text>
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('ActivityLocationScreen')
-              }
+              onPress={() => navigation.navigate('ActivityLocationScreen')}
               style={styles.IconlinkBox}>
               <View
                 style={[
@@ -1867,7 +2213,7 @@ const HomeScreen = ({ navigation }: Props) => {
                 <MapPin strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Activity Location</Text>
-              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -1876,7 +2222,6 @@ const HomeScreen = ({ navigation }: Props) => {
               </View>
             </TouchableOpacity>
           </View>
-
         </ScrollView>
       )}
     </SafeAreaView>
@@ -1916,20 +2261,20 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
     // Android Shadow
     elevation: 2,
-    marginBottom: 10
+    marginBottom: 10,
   },
   welcomeText: {
     fontFamily: Fonts.light,
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
+  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -2001,7 +2346,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -2039,7 +2384,7 @@ const styles = StyleSheet.create({
     height: 80,
     flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
   },
   countBoxIcon: {
     width: 34,
@@ -2086,7 +2431,7 @@ const styles = StyleSheet.create({
     color: Colors.gray,
   },
 
-  dataBoxSection: { paddingTop: 15 },
+  dataBoxSection: {paddingTop: 15},
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -2098,7 +2443,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
+  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -2183,7 +2528,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: { backgroundColor: Colors.white },
+  LinkSection: {backgroundColor: Colors.white},
 
   IconlinkBox: {
     display: 'flex',
@@ -2255,93 +2600,169 @@ const styles = StyleSheet.create({
   },
 
   // ── Sections ────────────────────────────────────────────────────────────────
-  section: { paddingHorizontal: 16, paddingTop: 10 },
+  section: {paddingHorizontal: 16, paddingTop: 10},
 
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, marginBottom: 10 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: C.text },
-  sectionSub: { fontSize: 12, color: C.textMuted },
-
-
-
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+    marginBottom: 10,
+  },
+  sectionTitle: {fontSize: 14, fontWeight: '600', color: C.text},
+  sectionSub: {fontSize: 12, color: C.textMuted},
 
   // ── Metric boxes ─────────────────────────────────────────────────────────────
-  metricRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  metricRow: {flexDirection: 'row', gap: 8, flexWrap: 'wrap'},
   metricBox: {
-    flex: 1, backgroundColor: C.card, borderRadius: 12,
-    borderWidth: 0.5, borderColor: C.border,
-    padding: 12, alignItems: 'center', gap: 4,
+    flex: 1,
+    backgroundColor: C.card,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    padding: 12,
+    alignItems: 'center',
+    gap: 4,
   },
-  metricValue: { fontSize: 15, fontWeight: '600', color: C.text, textAlign: 'center' },
-  metricLabel: { fontSize: 10, color: C.textMuted, textAlign: 'center' },
+  metricValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.text,
+    textAlign: 'center',
+  },
+  metricLabel: {fontSize: 10, color: C.textMuted, textAlign: 'center'},
   metricRatePill: {
-    marginTop: 4, backgroundColor: C.accentSoft,
-    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
+    marginTop: 4,
+    backgroundColor: C.accentSoft,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
-  metricRate: { fontSize: 11, fontWeight: '600', color: C.accent },
+  metricRate: {fontSize: 11, fontWeight: '600', color: C.accent},
 
   // ── Performance Cards ────────────────────────────────────────────────────────
   perfCard: {
-    backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: 12,
-    borderWidth: 0.5, borderColor: C.border,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    backgroundColor: C.card,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 0.5,
+    borderColor: C.border,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  perfTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  perfTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
   perfAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: C.accent,
-    justifyContent: 'center', alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: C.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  perfAvatarText: { color: C.white, fontSize: 16, fontWeight: 'bold' },
-  perfName: { fontSize: 15, fontWeight: '600', color: C.text },
-  perfRole: { fontSize: 12, color: C.textMuted },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  statusBadgeText: { fontSize: 11, fontWeight: '600' },
+  perfAvatarText: {color: C.white, fontSize: 16, fontWeight: 'bold'},
+  perfName: {fontSize: 15, fontWeight: '600', color: C.text},
+  perfRole: {fontSize: 12, color: C.textMuted},
+  statusBadge: {paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6},
+  statusBadgeText: {fontSize: 11, fontWeight: '600'},
 
   perfMetrics: {
-    flexDirection: 'row', alignItems: 'center', borderTopWidth: 0.5,
-    borderTopColor: C.border, paddingTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: C.border,
+    paddingTop: 12,
   },
-  perfMetricCol: { flex: 1, alignItems: 'center' },
-  perfMetricDivider: { width: 1, height: 20, backgroundColor: C.border },
-  perfMetricTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  perfMetricLabel: { fontSize: 10, color: C.textMuted },
-  perfMetricVal: { fontSize: 12, fontWeight: '600', color: C.text },
+  perfMetricCol: {flex: 1, alignItems: 'center'},
+  perfMetricDivider: {width: 1, height: 20, backgroundColor: C.border},
+  perfMetricTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  perfMetricLabel: {fontSize: 10, color: C.textMuted},
+  perfMetricVal: {fontSize: 12, fontWeight: '600', color: C.text},
 
   // ── Attendance Preview ───────────────────────────────────────────────────────
-  attendancePreviewScroll: { paddingLeft: 16, paddingBottom: 10 },
-  attendanceAvatarItem: { alignItems: 'center', marginRight: 16, gap: 4 },
+  attendancePreviewScroll: {paddingLeft: 16, paddingBottom: 10},
+  attendanceAvatarItem: {alignItems: 'center', marginRight: 16, gap: 4},
   attendanceAvatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: C.white,
-    borderWidth: 2, justifyContent: 'center', alignItems: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: C.white,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   attendanceStatusDot: {
-    position: 'absolute', bottom: 0, right: 0, width: 12, height: 12,
-    borderRadius: 6, borderWidth: 2, borderColor: C.white,
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: C.white,
   },
-  attendanceInitial: { fontSize: 14, fontWeight: '600', color: C.text },
-  attendanceShortName: { fontSize: 10, color: C.textMuted, width: 44, textAlign: 'center' },
+  attendanceInitial: {fontSize: 14, fontWeight: '600', color: C.text},
+  attendanceShortName: {
+    fontSize: 10,
+    color: C.textMuted,
+    width: 44,
+    textAlign: 'center',
+  },
 
   // ── Filters ──────────────────────────────────────────────────────────────────
   filterSection: {
-    backgroundColor: C.white, marginHorizontal: 16, marginTop: 0,
-    borderRadius: 16, padding: 12, borderWidth: 0.5, borderColor: C.border,
+    backgroundColor: C.white,
+    marginHorizontal: 16,
+    marginTop: 0,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 0.5,
+    borderColor: C.border,
   },
-  filterTabRow: { flexDirection: 'row', gap: 8, },
+  filterTabRow: {flexDirection: 'row', gap: 8},
   filterChip: {
-    flex: 1, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: C.background, alignItems: 'center',
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: C.background,
+    alignItems: 'center',
   },
-  filterChipActive: { backgroundColor: C.accentSoft, borderWidth: 1, borderColor: C.accent },
-  filterChipText: { fontSize: 12, color: '#000', fontWeight: '500' },
-  filterChipTextActive: { color: C.accent, fontWeight: '700' },
+  filterChipActive: {
+    backgroundColor: C.accentSoft,
+    borderWidth: 1,
+    borderColor: C.accent,
+  },
+  filterChipText: {fontSize: 12, color: '#000', fontWeight: '500'},
+  filterChipTextActive: {color: C.accent, fontWeight: '700'},
 
-  filterPickerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 4 },
-  filterValueBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  filterValueText: { fontSize: 14, fontWeight: '600', color: C.text },
-  filterLabelSmall: { fontSize: 12, color: C.textMuted },
-  filterDateVal: { fontSize: 14, fontWeight: '700', color: C.accent },
-  filterDateBtn: { alignItems: 'center' },
-  filterDateLabel: { fontSize: 9, color: C.textMuted, textTransform: 'uppercase' },
+  filterPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  filterValueBtn: {flexDirection: 'row', alignItems: 'center', gap: 6},
+  filterValueText: {fontSize: 14, fontWeight: '600', color: C.text},
+  filterLabelSmall: {fontSize: 12, color: C.textMuted},
+  filterDateVal: {fontSize: 14, fontWeight: '700', color: C.accent},
+  filterDateBtn: {alignItems: 'center'},
+  filterDateLabel: {
+    fontSize: 9,
+    color: C.textMuted,
+    textTransform: 'uppercase',
+  },
 
   filterValueBtnSmall: {
     flexDirection: 'row',
@@ -2352,12 +2773,12 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 0.5,
     borderColor: C.border,
-    gap: 4
+    gap: 4,
   },
   filterValueTextSmall: {
     fontSize: 12,
     fontWeight: '700',
-    color: C.accent
+    color: C.accent,
   },
 
   pickerModalContainer: {
@@ -2366,7 +2787,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
@@ -2386,7 +2807,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   monthItem: {
     width: '30%',
@@ -2428,13 +2849,18 @@ const styles = StyleSheet.create({
   },
 
   viewMoreBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    marginTop: 12, paddingVertical: 10, gap: 6,
-    backgroundColor: C.white, borderRadius: 10,
-    borderWidth: 1, borderColor: C.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingVertical: 10,
+    gap: 6,
+    backgroundColor: C.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.border,
   },
-  viewMoreText: { fontSize: 13, fontWeight: '700', color: C.accent },
-
+  viewMoreText: {fontSize: 13, fontWeight: '700', color: C.accent},
 });
 const targetStyles = StyleSheet.create({
   card: {

@@ -4,7 +4,7 @@ import {
     TouchableOpacity, ActivityIndicator, TextInput, Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Package, Info, CheckCircle2 } from 'lucide-react-native';
+import { Package, Info, CheckCircle2, FileText, Calendar, MessageSquare, TrendingDown } from 'lucide-react-native';
 import moment from 'moment';
 import { useApproveAndCreateDDNMutation } from '../../../features/base/distributor-api';
 import { useGetPurchaseOrderByIdQuery } from '../../../features/base/base-api';
@@ -29,6 +29,18 @@ type Props = {
     route: any
 };
 
+type LinkedDDN = {
+    name: string;
+    invoice_no: string;
+    date: string;
+    remarks: string;
+    workflow_state: string;
+    del_qty: number;
+    ord_qty: number;
+    grand_total: number;
+    creation: string;
+    created_by: string;
+};
 
 const REMARKS_OPTIONS = [
     { label: 'Credit limit exceed', value: 'credit_limit_exceed' },
@@ -48,7 +60,6 @@ const C = {
     warning: '#92400E',
 };
 
-
 const COLUMN_WIDTHS = {
     check: 32,
     item: 160,
@@ -56,6 +67,7 @@ const COLUMN_WIDTHS = {
     delQty: 64,
     amount: 76,
 };
+
 // ─── Status Badge ──────────────────────────────────────────────────────────────
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -70,6 +82,107 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     return (
         <View style={[badgeStyles.badge, { backgroundColor: colors.bg }]}>
             <Text style={[badgeStyles.text, { color: colors.text }]}>{status}</Text>
+        </View>
+    );
+};
+
+// ─── DDN State Badge ──────────────────────────────────────────────────────────
+
+const DDNStateBadge: React.FC<{ state: string }> = ({ state }) => {
+    const colorMap: Record<string, { bg: string; text: string }> = {
+        Draft: { bg: '#F3F4F6', text: '#374151' },
+        Submitted: { bg: '#DBEAFE', text: '#1D4ED8' },
+        Delivered: { bg: '#D1FAE5', text: '#065F46' },
+        Cancelled: { bg: '#FEE2E2', text: '#991B1B' },
+    };
+    const colors = colorMap[state] ?? { bg: C.background, text: C.textMuted };
+    return (
+        <View style={[ddnStyles.stateBadge, { backgroundColor: colors.bg }]}>
+            <Text style={[ddnStyles.stateBadgeText, { color: colors.text }]}>{state}</Text>
+        </View>
+    );
+};
+
+// ─── Linked DDN Card ──────────────────────────────────────────────────────────
+
+const LinkedDDNCard: React.FC<{ ddn: LinkedDDN }> = ({ ddn }) => {
+    const fulfilledPct = ddn.ord_qty > 0
+        ? Math.min(100, Math.round((ddn.del_qty / ddn.ord_qty) * 100))
+        : 0;
+
+    return (
+        <View style={ddnStyles.card}>
+            {/* Top row: DDN name + state badge */}
+            <View style={ddnStyles.cardHeader}>
+                <View style={{ flex: 1 }}>
+                    <Text style={ddnStyles.ddnName} numberOfLines={1}>{ddn.name}</Text>
+                    <Text style={ddnStyles.createdBy} numberOfLines={1}>by {ddn.created_by}</Text>
+                </View>
+                <DDNStateBadge state={ddn.workflow_state} />
+            </View>
+
+            <View style={ddnStyles.divider} />
+
+            {/* Info grid: Invoice · Date · Remarks */}
+            <View style={ddnStyles.infoGrid}>
+                {/* Invoice No */}
+                <View style={ddnStyles.infoCell}>
+                    <View style={ddnStyles.infoIconRow}>
+                        <FileText size={11} color={C.accent} />
+                        <Text style={ddnStyles.infoLabel}>Invoice No.</Text>
+                    </View>
+                    <Text style={ddnStyles.infoValue} numberOfLines={1}>
+                        {ddn.invoice_no || '—'}
+                    </Text>
+                </View>
+
+                {/* Date */}
+                <View style={ddnStyles.infoCell}>
+                    <View style={ddnStyles.infoIconRow}>
+                        <Calendar size={11} color={C.accent} />
+                        <Text style={ddnStyles.infoLabel}>Date</Text>
+                    </View>
+                    <Text style={ddnStyles.infoValue}>
+                        {ddn.date ? moment(ddn.date).format('DD MMM YYYY') : '—'}
+                    </Text>
+                </View>
+
+                {/* Remarks */}
+                <View style={[ddnStyles.infoCell, { flex: 1.4 }]}>
+                    <View style={ddnStyles.infoIconRow}>
+                        <MessageSquare size={11} color={C.textMuted} />
+                        <Text style={ddnStyles.infoLabel}>Remarks</Text>
+                    </View>
+                    <Text style={[ddnStyles.infoValue, { color: C.textMuted }]} numberOfLines={1}>
+                        {ddn.remarks
+                            ? (REMARKS_OPTIONS.find(r => r.value === ddn.remarks)?.label ?? ddn.remarks)
+                            : '—'}
+                    </Text>
+                </View>
+            </View>
+
+            {/* Bottom row: qty fulfillment + grand total */}
+            <View style={ddnStyles.footerRow}>
+                {/* Qty bar */}
+                <View style={{ flex: 1, gap: 4 }}>
+                    <View style={ddnStyles.qtyLabelRow}>
+                        <TrendingDown size={11} color={C.textMuted} />
+                        <Text style={ddnStyles.qtyLabel}>
+                            {ddn.del_qty} / {ddn.ord_qty} qty delivered
+                        </Text>
+                        <Text style={ddnStyles.qtyPct}>{fulfilledPct}%</Text>
+                    </View>
+                    <View style={ddnStyles.progressTrack}>
+                        <View style={[ddnStyles.progressFill, { width: `${fulfilledPct}%` }]} />
+                    </View>
+                </View>
+
+                {/* Grand total */}
+                <View style={ddnStyles.totalBox}>
+                    <Text style={ddnStyles.totalLabel}>Total</Text>
+                    <Text style={ddnStyles.totalValue}>₹{ddn.grand_total?.toLocaleString()}</Text>
+                </View>
+            </View>
         </View>
     );
 };
@@ -91,18 +204,18 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
     const [remarks, setRemarks] = useState('');
     const [remarksSearch, setRemarksSearch] = useState('');
 
-    // Per-item state: checked + delivery qty
     const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
     const [deliveryQtys, setDeliveryQtys] = useState<Record<string, string>>({});
 
     const orderData = data?.message?.data;
     const details = orderData?.order_details;
     const items = orderData?.items || [];
+    const linkedDDNs: LinkedDDN[] = orderData?.linked_ddns || [];
 
     // ─── Derived ──────────────────────────────────────────────────────────────
 
     const grandTotal = items.reduce((acc: number, item: any) => {
-        const isChecked = checkedItems[item.item_code] !== false; // default checked
+        const isChecked = checkedItems[item.item_code] !== false;
         if (!isChecked) return acc;
         const qty = parseFloat(deliveryQtys[item.item_code] ?? String(item.qty)) || 0;
         return acc + qty * (item.rate || 0);
@@ -112,8 +225,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         (item: any) => checkedItems[item.item_code] !== false
     ).length;
 
-    const isItemChecked = (item_code: string) =>
-        checkedItems[item_code] !== false; // default true
+    const isItemChecked = (item_code: string) => checkedItems[item_code] !== false;
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -209,7 +321,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
             <PageHeader title='Order Details' navigation={() => navigation.goBack()} type='distributor' />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -250,7 +361,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                 {/* ── Delivery Fields ── */}
                 <View style={styles.section}>
                     <View style={styles.fieldRow}>
-                        {/* Invoice Number */}
                         <View style={{ flex: 1 }}>
                             <Text style={styles.inputLabel}>Invoice No. *</Text>
                             <TextInput
@@ -262,7 +372,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                             />
                         </View>
 
-                        {/* Date */}
                         <View style={{ flex: 1 }}>
                             <ReusableDatePicker
                                 label="Date *"
@@ -274,7 +383,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                             />
                         </View>
 
-                        {/* Remarks */}
                         <View style={{ flex: 1.5 }}>
                             <ReusableDropdown
                                 label="Remarks"
@@ -285,13 +393,34 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                 searchText={remarksSearch}
                                 setSearchText={setRemarksSearch}
                                 marginBottom={0}
-                                labelStyle={styles.inputLabel}   // 👈 fontSize: 11
+                                labelStyle={styles.inputLabel}
                                 textSize={Size.xxs}
                                 height={35}
                             />
                         </View>
                     </View>
                 </View>
+
+                {/* ── Linked DDNs ── */}
+                {linkedDDNs.length > 0 && (
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <FileText size={16} color={C.accent} />
+                            <Text style={styles.sectionTitle}>
+                                Linked DDNs
+                            </Text>
+                            <View style={ddnStyles.countPill}>
+                                <Text style={ddnStyles.countPillText}>{linkedDDNs.length}</Text>
+                            </View>
+                        </View>
+
+                        <View style={{ gap: 10 }}>
+                            {linkedDDNs.map((ddn) => (
+                                <LinkedDDNCard key={ddn.name} ddn={ddn} />
+                            ))}
+                        </View>
+                    </View>
+                )}
 
                 {/* ── Items Grid ── */}
                 <View style={styles.section}>
@@ -304,7 +433,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                         <View>
-                            {/* Header */}
                             <View style={gridStyles.headerRow}>
                                 <View style={{ width: COLUMN_WIDTHS.check }} />
                                 <Text style={[gridStyles.headerCell, { width: COLUMN_WIDTHS.item }]}>Item</Text>
@@ -329,7 +457,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             checked && gridStyles.checkedRow,
                                         ]}
                                     >
-                                        {/* Checkbox */}
                                         <TouchableOpacity
                                             style={[gridStyles.cell, { width: COLUMN_WIDTHS.check }]}
                                             onPress={() => toggleItem(item.item_code)}
@@ -340,19 +467,16 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             </View>
                                         </TouchableOpacity>
 
-                                        {/* Item name only — no code */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}>
                                             <Text style={gridStyles.itemName} numberOfLines={2}>
                                                 {item.item_name}
                                             </Text>
                                         </View>
 
-                                        {/* Ordered Qty */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
                                             <Text style={gridStyles.orderedQty}>{item.qty}</Text>
                                         </View>
 
-                                        {/* Delivery Qty Input */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.delQty, alignItems: 'center' }]}>
                                             {checked ? (
                                                 <TextInput
@@ -368,7 +492,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             )}
                                         </View>
 
-                                        {/* Amount */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
                                             <Text style={[gridStyles.amount, !checked && { color: C.textMuted }]}>
                                                 {checked ? `₹${amount.toLocaleString()}` : '—'}
@@ -380,7 +503,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                         </View>
                     </ScrollView>
 
-                    {/* Grand Total */}
                     <View style={gridStyles.totalRow}>
                         <View style={gridStyles.totalCol}>
                             <Text style={gridStyles.totalSubLabel}>Ordered Total</Text>
@@ -433,7 +555,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
             <Modal visible={modalVisible} animationType="fade" transparent>
                 <View style={styles.modalOverlay}>
                     <View style={styles.confirmModal}>
-                        {/* Title */}
                         <View style={styles.confirmIconRow}>
                             <CheckCircle2 size={32} color="#16A34A" />
                         </View>
@@ -444,7 +565,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
 
                         <View style={styles.confirmDivider} />
 
-                        {/* Summary rows */}
                         <View style={styles.confirmRow}>
                             <Text style={styles.confirmLabel}>Invoice No.</Text>
                             <Text style={styles.confirmValue}>{invoiceNo}</Text>
@@ -474,7 +594,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
 
                         <View style={styles.confirmDivider} />
 
-                        {/* Actions */}
                         <View style={styles.confirmActions}>
                             <TouchableOpacity
                                 style={styles.cancelBtn}
@@ -506,20 +625,7 @@ export default PurchaseOrderDetailScreen;
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: C.background },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    header: {
-        flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 16, paddingVertical: 10,
-        backgroundColor: C.white,
-        borderBottomWidth: 0.5, borderBottomColor: C.border,
-    },
-    backBtn: {
-        width: 34, height: 34, borderRadius: 8,
-        backgroundColor: C.background, alignItems: 'center', justifyContent: 'center',
-    },
-    headerTitle: { flex: 1, textAlign: 'center', fontSize: 15, fontWeight: '600', color: C.text },
-    scrollContent: { padding: 10, gap: 10 },   // reduced padding + gap replaces marginBottom
-
-    // top row cards
+    scrollContent: { padding: 10, gap: 10 },
     topRow: { flexDirection: 'row', gap: 10 },
     card: { backgroundColor: C.white, borderRadius: 10, padding: 10 },
     orderIdText: { fontSize: 13, fontWeight: 'bold', color: C.text },
@@ -527,15 +633,9 @@ const styles = StyleSheet.create({
     detailLabel: { fontSize: 10, color: C.textMuted, fontWeight: '600', textTransform: 'uppercase' },
     detailValue: { fontSize: 12, color: C.text, fontWeight: '500', marginTop: 1 },
     participantItem: {},
-
-    // section
-    section: {
-        backgroundColor: C.white, borderRadius: 10, padding: 10,
-    },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+    section: { backgroundColor: C.white, borderRadius: 10, padding: 10 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
     sectionTitle: { fontSize: 13, fontWeight: '600', color: C.text },
-
-    // delivery fields
     fieldRow: { flexDirection: 'row', gap: 8 },
     inputLabel: { fontSize: 11, fontWeight: '600', color: C.text, marginBottom: 0 },
     input: {
@@ -545,8 +645,6 @@ const styles = StyleSheet.create({
         borderWidth: 0.5, borderColor: C.border,
         color: C.text, height: 38,
     },
-
-    // footer
     footer: {
         padding: 12, backgroundColor: C.white,
         borderTopWidth: 0.5, borderTopColor: C.border,
@@ -556,8 +654,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
     },
     approveBtnText: { color: C.white, fontSize: 15, fontWeight: '600' },
-
-    // confirmation modal
     modalOverlay: {
         flex: 1, backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'center', alignItems: 'center',
@@ -579,8 +675,6 @@ const styles = StyleSheet.create({
     cancelText: { color: C.text, fontWeight: '600', fontSize: 13 },
     confirmBtn: { flex: 1, paddingVertical: 11, borderRadius: 10, backgroundColor: '#16A34A', alignItems: 'center' },
     confirmBtnText: { color: C.white, fontWeight: '700', fontSize: 13 },
-
-    // modal shared (keep for backward compat if used)
     modalContent: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderBottomWidth: 0.5, borderBottomColor: C.border },
     modalTitle: { fontSize: 16, fontWeight: 'bold', color: C.text },
@@ -591,7 +685,6 @@ const styles = StyleSheet.create({
     warningBox: { flexDirection: 'row', backgroundColor: '#FFFBEB', padding: 10, borderRadius: 8, gap: 8, marginBottom: 12 },
     warningText: { flex: 1, fontSize: 11, color: C.warning },
 });
-
 
 const gridStyles = StyleSheet.create({
     headerRow: {
@@ -630,7 +723,7 @@ const gridStyles = StyleSheet.create({
         borderRadius: 6, textAlign: 'center',
         fontSize: 12, color: C.text,
         backgroundColor: C.white,
-        padding: 0,                // removes extra internal padding on Android
+        padding: 0,
     },
     qtyDash: { fontSize: 12, color: C.textMuted },
     amount: { fontSize: 11, fontWeight: '600', color: C.accent },
@@ -644,23 +737,108 @@ const gridStyles = StyleSheet.create({
         borderTopWidth: 0.5,
         borderTopColor: C.border,
     },
-    totalCol: {
+    totalCol: { flex: 1 },
+    totalDivider: { width: 0.5, backgroundColor: C.border, marginVertical: 2 },
+    totalSubLabel: { fontSize: 11, color: C.textMuted, marginBottom: 2 },
+});
+
+// ─── DDN Styles ───────────────────────────────────────────────────────────────
+const ddnStyles = StyleSheet.create({
+    countPill: {
+        backgroundColor: C.accent,
+        borderRadius: 99,
+        paddingHorizontal: 7,
+        paddingVertical: 1,
+        marginLeft: 2,
+    },
+    countPillText: { fontSize: 10, color: C.white, fontWeight: '700' },
+
+    card: {
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: C.border,
+        backgroundColor: '#FAFAFA',
+        padding: 12,
+        gap: 10,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 8,
+    },
+    ddnName: { fontSize: 12, fontWeight: '700', color: C.text },
+    createdBy: { fontSize: 10, color: C.textMuted, marginTop: 1 },
+
+    stateBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 99,
+    },
+    stateBadgeText: { fontSize: 10, fontWeight: '700' },
+
+    divider: { height: 0.5, backgroundColor: C.border },
+
+    // Info grid: Invoice · Date · Remarks in a row
+    infoGrid: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    infoCell: {
         flex: 1,
-        // alignItems: 'center',
+        gap: 3,
     },
-    totalDivider: {
-        width: 0.5,
-        backgroundColor: C.border,
-        marginVertical: 2,
+    infoIconRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
     },
-    totalSubLabel: {
-        fontSize: 11,
+    infoLabel: {
+        fontSize: 9,
+        fontWeight: '600',
         color: C.textMuted,
-        marginBottom: 2,
+        textTransform: 'uppercase',
+        letterSpacing: 0.4,
     },
+    infoValue: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: C.text,
+    },
+
+    // Footer: qty bar + total
+    footerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    qtyLabelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    qtyLabel: { fontSize: 11, color: C.textMuted, flex: 1 },
+    qtyPct: { fontSize: 11, fontWeight: '700', color: C.accent },
+    progressTrack: {
+        height: 4,
+        backgroundColor: C.border,
+        borderRadius: 99,
+        overflow: 'hidden',
+    },
+    progressFill: {
+        height: '100%',
+        backgroundColor: C.accent,
+        borderRadius: 99,
+    },
+    totalBox: {
+        alignItems: 'flex-end',
+        minWidth: 80,
+    },
+    totalLabel: { fontSize: 9, color: C.textMuted, textTransform: 'uppercase', letterSpacing: 0.4 },
+    totalValue: { fontSize: 13, fontWeight: '800', color: C.success },
 });
 
 const badgeStyles = StyleSheet.create({
-    badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, height: 22, width: 'auto', justifyContent: 'center', alignItems: 'center' },
+    badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, height: 22, justifyContent: 'center', alignItems: 'center' },
     text: { fontSize: 10, fontWeight: '700' },
 });

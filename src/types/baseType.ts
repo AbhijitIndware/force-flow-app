@@ -570,6 +570,19 @@ export interface Totals {
   grand_total: number;
   rounded_total: number;
 }
+
+type LinkedDDN = {
+  name: string;
+  invoice_no: string;
+  date: string; // or Date if you parse it
+  remarks: string;
+  workflow_state: string;
+  del_qty: number;
+  ord_qty: number;
+  grand_total: number;
+  creation: string; // or Date
+  created_by: string;
+};
 export interface POOrderData {
   order_details: POOrderDetails;
   items: POOrderItem[];
@@ -579,6 +592,9 @@ export interface POOrderData {
     grand_total: number;
   }[]; // can replace `any` with correct type if structure is known
   totals: Totals;
+
+
+  linked_ddns: LinkedDDN[];
 }
 
 export type RPoDetails = {
