@@ -439,6 +439,7 @@ const HomeScreen = ({ navigation }: Props) => {
   };
 
   const confirmCheckOut = async () => {
+    setCheckoutModalVisible(false);
     if (!checkoutPayload) return;
 
     try {
@@ -454,7 +455,6 @@ const HomeScreen = ({ navigation }: Props) => {
         dispatch(setSelectedStore(''));
         dispatch(resetLocation());
         setSelectedStoreValue(null);
-        setCheckoutModalVisible(false);
         setCheckoutPayload(null);
       } else {
         Toast.show({

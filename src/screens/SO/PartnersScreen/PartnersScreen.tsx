@@ -9,21 +9,21 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {CirclePlus, UserRoundPlus} from 'lucide-react-native';
-import {Tab} from '@rneui/themed';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { CirclePlus, UserRoundPlus } from 'lucide-react-native';
+import { Tab } from '@rneui/themed';
 import DistributorTabcontent from '../../../components/SO/Partner/Distributor/DistributorTabcontent';
 import StoreTabContent from '../../../components/SO/Partner/Store/StoreTabContent';
 import PageHeader from '../../../components/ui/PageHeader';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -35,7 +35,9 @@ type Props = {
   route: any;
 };
 
-const OrdersScreen = ({navigation}: Props) => {
+const PartnersScreen = ({ navigation, route }: Props) => {
+  const { index: initialIndex } = route.params || {};
+
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
@@ -47,6 +49,13 @@ const OrdersScreen = ({navigation}: Props) => {
       setRefreshing(false);
     }, 2000);
   }, []);
+
+  useEffect(() => {
+    if (initialIndex !== undefined) {
+      setIndex(initialIndex);
+    }
+  }, [initialIndex]);
+
 
   return (
     <SafeAreaView
@@ -64,12 +73,12 @@ const OrdersScreen = ({navigation}: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
+          contentContainerStyle={{ position: 'relative' }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
@@ -143,7 +152,7 @@ const OrdersScreen = ({navigation}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
               <Tab.Item
                 title="Store"
@@ -160,7 +169,7 @@ const OrdersScreen = ({navigation}: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{paddingHorizontal: 0}}
+                buttonStyle={{ paddingHorizontal: 0 }}
               />
             </Tab>
           </View>
@@ -206,7 +215,7 @@ const OrdersScreen = ({navigation}: Props) => {
   );
 };
 
-export default OrdersScreen;
+export default PartnersScreen;
 
 const styles = StyleSheet.create({
   //header-box-section css start
@@ -221,7 +230,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     paddingBottom: 10,

@@ -39,7 +39,7 @@ export type SoAppStackParamList = {
   SalesScreen: { index?: number } | undefined;
   ActivityScreen: undefined;
   OrdersScreen: { index?: number } | undefined;
-  PartnersScreen: undefined;
+  PartnersScreen: { index?: number } | undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: undefined;
   AddStoreScreen: { storeId?: string } | undefined;

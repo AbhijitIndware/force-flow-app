@@ -12,6 +12,7 @@ import {
     Image,
     Alert,
     Modal,
+    TextInput,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import { Colors } from '../../../utils/colors';
@@ -31,12 +32,34 @@ import { launchCamera } from 'react-native-image-picker';
 
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'ActivityCheckInScreen'>;
 
+const LOCATION_TYPES = [
+    { label: 'Office Visit', value: 'Office Visit' },
+    { label: 'Miscellaneous Visit', value: 'Miscellaneous Visit' },
+    { label: 'Distributor Point', value: 'Distributor Point' },
+    { label: 'Key Account', value: 'Key Account' },
+    { label: 'New Account Opening', value: 'New Account Opening' },
+    { label: 'Distributor Opening', value: 'Distributor Opening' },
+];
+
+const TYPES_WITH_TEXT_INPUT = ['Office Visit', 'Miscellaneous Visit', 'Key Account'];
 const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) => {
     const [selectedLocation, setSelectedLocation] = useState('');
     const [image, setImage] = useState<{ mime: string; data: string } | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [confirmModalVisible, setConfirmModalVisible] = useState(false);
     const [currentLocation, setCurrentLocation] = useState('');
+
+
+    const [locationName, setLocationName] = useState('');
+    const [locationSearch, setLocationSearch] = useState('');
+    const [locationDetail, setLocationDetail] = useState('');
+
+
+    const showDetailInput = TYPES_WITH_TEXT_INPUT.includes(locationName);
+
+    const filteredLocationTypes = LOCATION_TYPES.filter((item) =>
+        item.label.toLowerCase().includes(locationSearch.toLowerCase())
+    );
 
     const { data: locationsData, isLoading: isLocationsLoading } = useGetActivityLocationsQuery();
     const [checkIn] = useActivityCheckInMutation();
@@ -123,7 +146,14 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
             if (res.message.success) {
                 Toast.show({ type: 'success', text1: 'Checked in successfully' });
                 setConfirmModalVisible(false);
-                navigation.goBack();
+
+                if (locationName === 'New Account Opening') {
+                    navigation.navigate('PartnersScreen', { index: 1 });
+                } else if (locationName === 'Distributor Opening') {
+                    navigation.navigate('PartnersScreen', { index: 0 });
+                } else {
+                    navigation.goBack();
+                }
             } else {
                 Alert.alert('Check-In Failed', res.message.message);
             }
@@ -147,6 +177,32 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
             >
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <View style={styles.form}>
+                        {/* Location Name Dropdown */}
+                        <ReusableDropdown
+                            label="Activity Type"
+                            field="value"
+                            value={locationName}
+                            data={filteredLocationTypes}
+                            onChange={(item: any) => {
+                                setLocationName(item)
+                            }}
+                            searchText={locationSearch}
+                            setSearchText={setLocationSearch}
+                            marginBottom={0}
+                        />
+                        {/* Conditional Detail Text Input */}
+                        {showDetailInput && (
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Remarks For {locationName}</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder={`Enter remarks`}
+                                    placeholderTextColor={Colors.gray}
+                                    value={locationDetail}
+                                    onChangeText={setLocationDetail}
+                                />
+                            </View>
+                        )}
                         <View style={styles.inputGroup}>
                             <ReusableDropdown
                                 label="Select Activity Location"
@@ -158,6 +214,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                                 showAddButton={true}
                                 addButtonText="Register New Location"
                                 onAddPress={() => navigation.navigate('AddActivityLocationScreen')}
+                                marginBottom={0}
                             />
                         </View>
 
@@ -264,7 +321,23 @@ const styles = StyleSheet.create({
         gap: 24,
     },
     inputGroup: {
-        marginTop: 10,
+        // marginTop: 10,
+    },
+    label: {
+        fontFamily: Fonts.medium,
+        fontSize: Size.xs,
+        color: '#374151',
+    },
+    input: {
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        padding: 12,
+        fontFamily: Fonts.regular,
+        fontSize: Size.sm,
+        color: Colors.darkButton,
+        marginBottom: 0
     },
     section: {
         alignItems: 'center',
