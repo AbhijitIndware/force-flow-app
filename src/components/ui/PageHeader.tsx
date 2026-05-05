@@ -6,29 +6,28 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors } from '../../utils/colors';
-import { Fonts } from '../../constants';
-import { boxShadow } from '../../utils/styles';
+import {Colors} from '../../utils/colors';
+import {Fonts} from '../../constants';
+import {boxShadow} from '../../utils/styles';
 import Feather from 'react-native-vector-icons/Feather';
-import { Size } from '../../utils/fontSize';
-import { useNavigation } from '@react-navigation/native';
-import { useAppSelector } from '../../store/hook';
-import { getInitials } from '../../utils/utils';
-const { width } = Dimensions.get('window');
+import {Size} from '../../utils/fontSize';
+import {useNavigation} from '@react-navigation/native';
+import {useAppSelector} from '../../store/hook';
+import {getInitials} from '../../utils/utils';
+const {width} = Dimensions.get('window');
 type Props = {
   title: string;
   navigation: () => void;
   type?: string;
 };
 
-const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
+const PageHeader = ({title, navigation, type = 'so'}: Props) => {
   const navigations = useNavigation<any>();
   const handleClick = () => {
     if (type === 'so') {
       navigations.navigate('ProfileScreen');
-    } else if (type = 'distributor') {
+    } else if ((type = 'distributor')) {
       navigations.navigate('DistributorProfileScreen');
-
     }
   };
   const employee = useAppSelector(
@@ -36,7 +35,7 @@ const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
   );
 
   const profileImageSource = employee?.image_base64
-    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
 
   return (
@@ -47,12 +46,14 @@ const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
           <Feather name="arrow-left" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>{title}</Text>
+        <Text style={styles.headerTitle} numberOfLines={2}>
+          {title}
+        </Text>
       </View>
       <View style={styles.alignment}>
         {/* Home Icon */}
         <TouchableOpacity
-          style={[, { marginTop: 5 }]}
+          style={[, {marginTop: 5}]}
           onPress={() => navigations.navigate('Home')}>
           <Feather name="home" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
@@ -107,7 +108,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: Colors.darkButton,
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     marginTop: 5,
     // width: '60%',
   },
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     height: 36,
   },
 
-  notification: { position: 'relative', top: 6 },
+  notification: {position: 'relative', top: 6},
   notificationBatch: {
     width: 26,
     height: 26,
@@ -148,9 +149,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: { color: Colors.white },
+  notificationCount: {color: Colors.white},
 
-  userInfo: { overflow: 'hidden', borderRadius: '50%' },
+  userInfo: {overflow: 'hidden', borderRadius: '50%'},
   avtarImage: {
     width: 40,
     height: 40,
