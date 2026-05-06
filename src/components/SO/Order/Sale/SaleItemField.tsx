@@ -169,7 +169,7 @@ export const SaleItemField: React.FC<Props> = ({
         <TextInput
           style={styles.input}
           keyboardType="numeric"
-          value={item.physical_qty === 0 ? '0' : String(item.physical_qty)}
+          value={item.physical_qty === 0 ? '' : String(item.physical_qty)}
           onChangeText={v => handleChange('physical_qty', v)}
           placeholder="0"
         />
@@ -180,7 +180,7 @@ export const SaleItemField: React.FC<Props> = ({
         <TextInput
           style={styles.input}
           keyboardType="numeric"
-          value={item.qty === 0 ? '0' : String(item.qty)}
+          value={item.qty === 0 ? '' : String(item.qty)}
           onChangeText={v => handleChange('qty', v)}
           placeholder="0"
         />
@@ -192,7 +192,7 @@ export const SaleItemField: React.FC<Props> = ({
           style={[styles.input, !canOrder && styles.inputDisabled]}
           editable={canOrder}
           keyboardType="numeric"
-          value={!item.rate ? '0' : Number(item.rate).toFixed(2)}
+          value={!item.rate ? '' : Number(item.rate).toFixed(2)}
           onChangeText={v => handleChange('rate', v)}
           placeholder="0.00"
         />
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     borderRadius: 4,
     fontSize: Size.xxs,
+    color: '#000'
   },
   inputDisabled: { backgroundColor: '#f3f4f6' },
   amountText: { fontSize: 12, fontFamily: Fonts.semiBold },

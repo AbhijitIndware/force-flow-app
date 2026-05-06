@@ -128,9 +128,19 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
+        // Transform 0 to empty string for submission as per user request
+        const payload = {
+          ...formValues,
+          items: formValues.items.map(it => ({
+            ...it,
+            qty: it.qty === 0 ? '' : it.qty,
+            physical_qty: it.physical_qty === 0 ? '' : it.physical_qty,
+          })),
+        };
+
         const res = orderId
-          ? await updateSaleOrder({ ...formValues, order_id: orderId }).unwrap()
-          : await addSalesOrder(formValues).unwrap();
+          ? await updateSaleOrder({ ...payload, order_id: orderId } as any).unwrap()
+          : await addSalesOrder(payload as any).unwrap();
 
         if (res?.message?.success) {
           Toast.show({
@@ -176,7 +186,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         item_code: i.item_code,
         qty: 0,
         rate: i.item_rate ?? 0,
-        physical_qty: i.physical_count ?? 0,
+        physical_qty: 0,
         delivery_date: defaultDate,
       }));
       setFieldValue('items', [...seededItems]);
@@ -192,8 +202,8 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   // ── Existing order → populate form (merge salesDetails + stockData physical_qty) ──
   useEffect(() => {
     if (!orderId || !salesDetails?.message?.data) return;
-    setFieldValue('custom_warehouse', salesDetails?.message?.data?.store_details?.warehouse_name);
-    setSelectedStoreName(salesDetails?.message?.data?.store_details?.warehouse_name);
+    setFieldValue('custom_warehouse', salesDetails?.message?.data?.order_details?.custom_warehouse);
+    setSelectedStoreName(salesDetails?.message?.data?.store_details?.store);
     setSelectedStoreId(salesDetails?.message?.data?.store_details?.store);
 
     const detail = salesDetails.message.data;
@@ -206,7 +216,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         qty: it.qty,
         rate: it.rate,
         delivery_date: it.delivery_date,
-        physical_qty: stockItem?.physical_count ?? it.physical_qty ?? 0,
+        physical_qty: 0,
       };
     });
 
