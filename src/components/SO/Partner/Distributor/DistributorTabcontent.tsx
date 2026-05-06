@@ -159,7 +159,7 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
             flex: 1,
             backgroundColor: Colors.lightBg,
           }}>
-          {isLoading || isFetching ? (
+          {isLoading ? (
             <View
               style={{
                 height: windowHeight * 0.5,
@@ -186,7 +186,7 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
               ) : (
                 <FlatList
                   data={orders}
-                  nestedScrollEnabled={true}
+
                   refreshControl={
                     <RefreshControl
                       refreshing={refreshing}
@@ -194,7 +194,7 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
                     />
                   }
                   renderItem={renderItem}
-                  keyExtractor={(item, index) => index?.toString()}
+                  keyExtractor={(item, index) => item.name || index?.toString()}
                   showsVerticalScrollIndicator={false}
                   onEndReached={loadMore}
                   onEndReachedThreshold={0.5}

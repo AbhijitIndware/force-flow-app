@@ -71,17 +71,8 @@ const PartnersScreen = ({ navigation, route }: Props) => {
       {refreshing ? (
         <LoadingScreen />
       ) : (
-        <Animated.ScrollView
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false },
-          )}
-          stickyHeaderIndices={[1]} // Index of the Tab header
-          scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
+        <View style={{ flex: 1 }}>
+
           <View style={styles.headerSec}>
             <View
               style={{
@@ -185,7 +176,7 @@ const PartnersScreen = ({ navigation, route }: Props) => {
               setTotalCount={setTotalCount}
             />
           )}
-        </Animated.ScrollView>
+          </View>
       )}
 
       <View

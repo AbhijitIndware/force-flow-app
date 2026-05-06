@@ -7,14 +7,9 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  Modal,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Animated,
+  FlatList,
 } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
 import { Colors } from '../../../../utils/colors';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
@@ -32,11 +27,9 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
   const [refreshing, setRefreshing] = useState(false);
 
   // Filter / search state
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
-
-  const slideAnim = useRef(new Animated.Value(300)).current;
 
   const { data, isFetching, isLoading, refetch } = useGetStoreListQuery({
     page: String(page),
@@ -46,12 +39,27 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
     ...(appliedSearch ? { search: appliedSearch } : {}),
   });
 
+
+
   const stores = data?.message?.data?.stores ?? [];
   const pagination = data?.message?.data?.pagination;
   const hasNextPage =
     pagination &&
     pagination?.page < pagination?.total_pages &&
     stores.length > 0;
+
+  // Debounce search input
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      const trimmed = searchInput.trim();
+      if (trimmed !== appliedSearch) {
+        setPage(1);
+        setAppliedSearch(trimmed);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
 
   useEffect(() => {
     if (data?.message?.data) {
@@ -75,40 +83,32 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
     }
   }, [data, page]);
 
-  // Reset page when search changes
-  useEffect(() => {
-    setPage(1);
-    // Note: Do not manually clear orders here to avoid race conditions with RTK Query cache.
-    // The data effect above handles the page 1 reset correctly.
-  }, [appliedSearch]);
 
-  const openModal = () => {
-    setFilterModalVisible(true);
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      useNativeDriver: true,
-      tension: 65,
-      friction: 11,
-    }).start();
+
+  const toggleSearch = () => {
+    if (isSearchVisible) {
+      // Closing search: clear search and hide input
+      setSearchInput('');
+      setAppliedSearch('');
+      setPage(1);
+      setIsSearchVisible(false);
+    } else {
+      setIsSearchVisible(true);
+    }
   };
 
-  const closeModal = () => {
-    Animated.timing(slideAnim, {
-      toValue: 300,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => setFilterModalVisible(false));
+  const handleSearchSubmit = () => {
+    const trimmed = searchInput.trim();
+    if (trimmed !== appliedSearch) {
+      setPage(1);
+      setAppliedSearch(trimmed);
+    }
   };
 
-  const handleApplyFilter = () => {
-    setAppliedSearch(searchInput.trim());
-    closeModal();
-  };
-
-  const handleClearFilter = () => {
+  const handleClearSearch = () => {
     setSearchInput('');
     setAppliedSearch('');
-    closeModal();
+    setPage(1);
   };
 
   const onRefresh = useCallback(() => {
@@ -207,33 +207,43 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 15, paddingTop: 10, paddingBottom: 70 },
+          { paddingHorizontal: 15, paddingTop: 5, paddingBottom: 70 },
         ]}>
         <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>All Store</Text>
-          <View style={styles.bodyHeaderIcon}>
-            {/* <Search size={20} color="#4A4A4A" strokeWidth={1.7} /> */}
-            <TouchableOpacity onPress={openModal}>
-              <View>
-                <Funnel size={22} color="#4A4A4A" strokeWidth={1.7} />
-                {/* Active filter indicator dot */}
-                {appliedSearch ? <View style={styles.filterActiveDot} /> : null}
+          {isSearchVisible ? (
+            <View style={styles.headerSearchContainer}>
+              <View style={styles.searchIconWrapper}>
+                <Search size={18} color="#64748B" strokeWidth={2} />
               </View>
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                style={styles.headerSearchInput}
+                placeholder="Search by name, ID, city..."
+                placeholderTextColor="#94A3B8"
+                value={searchInput}
+                onChangeText={setSearchInput}
+                onSubmitEditing={handleSearchSubmit}
+                returnKeyType="search"
+                autoFocus
+              />
+              {searchInput.length > 0 && (
+                <TouchableOpacity onPress={handleClearSearch} style={styles.clearIconWrapper}>
+                  <X size={16} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={toggleSearch} style={styles.closeSearchBtn}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.bodyHeaderTitle}>All Store</Text>
+              <TouchableOpacity onPress={toggleSearch} style={styles.bodyHeaderIcon}>
+                <Search size={22} color="#4A4A4A" strokeWidth={1.7} />
+                {appliedSearch ? <View style={styles.filterActiveDot} /> : null}
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-
-        {/* Active search chip */}
-        {appliedSearch ? (
-          <View style={styles.activeFilterChip}>
-            <Text style={styles.activeFilterChipText}>
-              Search: "{appliedSearch}"
-            </Text>
-            <TouchableOpacity onPress={handleClearFilter}>
-              <X size={16} color={Colors.darkButton} />
-            </TouchableOpacity>
-          </View>
-        ) : null}
 
         <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
           {isLoading ? (
@@ -246,12 +256,13 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
               <ActivityIndicator size="large" />
             </View>
           ) : (
-            <FlashList
+            <FlatList
               data={orders}
               renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(item, index) => item.name || index.toString()}
               onEndReached={loadMore}
               onEndReachedThreshold={0.2}
+              showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingVertical: 5 }}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -281,71 +292,6 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
           )}
         </View>
       </View>
-
-      {/* ── Filter Modal ── */}
-      <Modal
-        visible={filterModalVisible}
-        transparent
-        animationType="none"
-        onRequestClose={closeModal}>
-        <TouchableWithoutFeedback onPress={closeModal}>
-          <View style={styles.modalOverlay} />
-        </TouchableWithoutFeedback>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalWrapper}
-          pointerEvents="box-none">
-          <Animated.View
-            style={[styles.modalSheet, { transform: [{ translateY: slideAnim }] }]}>
-            {/* Handle bar */}
-            <View style={styles.handleBar} />
-
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter Stores</Text>
-              <TouchableOpacity onPress={closeModal} style={styles.closeBtn}>
-                <X size={20} color="#4A4A4A" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Search Input */}
-            <Text style={styles.inputLabel}>Search</Text>
-            <View style={styles.searchInputWrapper}>
-              <Search size={16} color="#9CA3AF" strokeWidth={1.8} />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search by name, ID, city, zone..."
-                placeholderTextColor="#9CA3AF"
-                value={searchInput}
-                onChangeText={setSearchInput}
-                returnKeyType="search"
-                onSubmitEditing={handleApplyFilter}
-                autoFocus
-              />
-              {searchInput.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchInput('')}>
-                  <X size={16} color="#9CA3AF" />
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Action Buttons */}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.clearButton}
-                onPress={handleClearFilter}>
-                <Text style={styles.clearButtonText}>Clear</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.applyButton}
-                onPress={handleApplyFilter}>
-                <Text style={styles.applyButtonText}>Apply Filter</Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </Modal>
     </View>
   );
 };
@@ -516,103 +462,36 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: Colors.darkButton,
   },
-  // Modal styles 
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalWrapper: {
+  // Search Header Styles
+  headerSearchContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
-    paddingTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  handleBar: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#E2E4E9',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    color: Colors.darkButton,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  inputLabel: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    marginBottom: 8,
-  },
-  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#E2E4E9',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: Colors.lightBg,
-    marginBottom: 24,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 30,
   },
-  searchInput: {
+  searchIconWrapper: {
+    marginRight: 8,
+  },
+  headerSearchInput: {
     flex: 1,
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.darkButton,
     padding: 0,
-    margin: 0,
   },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
+  clearIconWrapper: {
+    padding: 4,
   },
-  clearButton: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#E2E4E9',
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
+  closeSearchBtn: {
+    marginLeft: 10,
+    paddingVertical: 4,
   },
-  clearButtonText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-  },
-  applyButton: {
-    flex: 2,
-    backgroundColor: Colors.darkButton,
-    borderRadius: 12,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.white,
+  cancelText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: '#64748B',
   },
 });
