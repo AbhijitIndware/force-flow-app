@@ -1,5 +1,5 @@
 // AddDistributorForm.tsx
-import React, { useEffect, useRef, useState, memo } from 'react';
+import React, { useEffect, useRef, useState, memo, useCallback } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
@@ -73,6 +73,7 @@ interface Props {
   setBeatSearchText?: (text: string) => void;
   isNewCity?: boolean;
   isEdit?: boolean;
+  navigation: any
 }
 
 const AddStoreForm: React.FC<Props> = memo(({
@@ -126,7 +127,7 @@ const AddStoreForm: React.FC<Props> = memo(({
   loadingMoreDistributor,
   onLoadMoreBeat,
   loadingMoreBeat,
-  isNewCity,
+  isNewCity, navigation
 }) => {
   const scrollViewRef = useRef<any>(null);
 
@@ -174,6 +175,11 @@ const AddStoreForm: React.FC<Props> = memo(({
       });
     });
   };
+
+  const handleAddStore = useCallback(() => {
+    navigation.navigate('AddDistributorScreen');
+  }, [navigation]);
+
 
   return (
     <Animated.ScrollView
@@ -354,6 +360,9 @@ const AddStoreForm: React.FC<Props> = memo(({
         setSearchText={setDistributorSearchText}
         onOpen={() => scrollUpOnFocus(400)}
         marginBottom={5}
+        showAddButton={true}
+        addButtonText="Add New Distributor"
+        onAddPress={handleAddStore}
       />
 
       {/* <View style={styles.inputWrapper}>

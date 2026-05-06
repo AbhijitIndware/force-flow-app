@@ -168,7 +168,7 @@ export const baseApi = createApi({
     }),
     updateSaleOrder: builder.mutation<RAddSalesOrder, IUpdateSalesOrder>({
       query: body => ({
-        url: '/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.update_sales_order',
+        url: '/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.update_sales_order_with_stock',
         method: 'POST',
         body,
       }),

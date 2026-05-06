@@ -450,15 +450,17 @@ export type RAddSalesOrderV2 = {
 // 🔹 Update type
 type OrderItem = {
   item_code: string;
-  qty: number;
-  physical_qty: number;
+  qty: number | string;
+  physical_qty?: number | string;
+  delivery_date?: string;             // order quantity
+  rate: number;
 };
 export type IUpdateSalesOrder = {
   order_id: string;
   custom_warehouse: string;
-  submit_order: boolean;
-  delivery_date: string; // ISO date
-  terms: string;
+  submit_order?: any;
+  delivery_date?: string; // ISO date
+  terms?: any;
   items: OrderItem[];
 };
 

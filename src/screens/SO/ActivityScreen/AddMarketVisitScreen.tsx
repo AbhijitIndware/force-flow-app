@@ -5,15 +5,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import {useMemo, useRef, useState} from 'react';
-import {useFormik} from 'formik';
+import { useMemo, useRef, useState } from 'react';
+import { useFormik } from 'formik';
 import Toast from 'react-native-toast-message';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {storeSchema} from '../../../types/schema';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { storeSchema } from '../../../types/schema';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   useGetCityQuery,
   useGetDistributorQuery,
@@ -22,11 +22,11 @@ import {
   useGetStoreTypeQuery,
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {useAddStoreMutation} from '../../../features/base/base-api';
+import { useAddStoreMutation } from '../../../features/base/base-api';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
-import {useAppSelector} from '../../../store/hook';
-import {Animated} from 'react-native';
+import { useAppSelector } from '../../../store/hook';
+import { Animated } from 'react-native';
 import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import AddMarketForm from '../../../components/SO/Activity/MarketVisit/AddMarketForm';
 
@@ -53,13 +53,13 @@ const initial = {
 };
 
 const weekOffList = [
-  {label: 'Monday', value: 'Monday'},
-  {label: 'Tuesday', value: 'Tuesday'},
-  {label: 'Wednesday', value: 'Wednesday'},
-  {label: 'Thursday', value: 'Thursday'},
-  {label: 'Friday', value: 'Friday'},
-  {label: 'Saturday', value: 'Saturday'},
-  {label: 'Sunday', value: 'Sunday'},
+  { label: 'Monday', value: 'Monday' },
+  { label: 'Tuesday', value: 'Tuesday' },
+  { label: 'Wednesday', value: 'Wednesday' },
+  { label: 'Thursday', value: 'Thursday' },
+  { label: 'Friday', value: 'Friday' },
+  { label: 'Saturday', value: 'Saturday' },
+  { label: 'Sunday', value: 'Sunday' },
 ];
 
 const AddMarketVisitScreen = ({
@@ -99,12 +99,13 @@ const AddMarketVisitScreen = ({
         setLoading(true);
         let value = {
           ...formValues,
+          store_owner_name: '',
           created_by_employee: employee?.id as string, // Replace with actual user ID
           created_by_employee_name: user?.full_name, // Replace with actual user name
           created_by_employee_designation: employee?.designation as string, // Replace with actual designation
         };
 
-        const payload = {data: value};
+        const payload = { data: value };
         console.log('🚀 ~ onSubmit: ~ payload:', payload);
         const res = await addStore(payload).unwrap();
         console.log('Store API Response:', res);
@@ -138,24 +139,24 @@ const AddMarketVisitScreen = ({
       }
     },
   });
-  const transformList = (arr: {name: string}[] = []) =>
-    arr.map(i => ({label: i.name, value: i.name}));
+  const transformList = (arr: { name: string }[] = []) =>
+    arr.map(i => ({ label: i.name, value: i.name }));
 
   const [addStore] = useAddStoreMutation();
-  const {data: cityData} = useGetCityQuery({}, {refetchOnFocus: true});
-  const {data: stateData} = useGetStateQuery(
-    {zone: values.zone},
-    {refetchOnFocus: true},
+  const { data: cityData } = useGetCityQuery({}, { refetchOnFocus: true });
+  const { data: stateData } = useGetStateQuery(
+    { zone: values.zone },
+    { refetchOnFocus: true },
   );
-  const {data: zoneData} = useGetZoneQuery({}, {refetchOnFocus: true});
-  const {data: distributorData} = useGetDistributorQuery(
+  const { data: zoneData } = useGetZoneQuery({}, { refetchOnFocus: true });
+  const { data: distributorData } = useGetDistributorQuery(
     {},
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
-  const {data: typeData} = useGetStoreTypeQuery({}, {refetchOnFocus: true});
-  const {data: categoryData} = useGetStoreCategoryQuery(
+  const { data: typeData } = useGetStoreTypeQuery({}, { refetchOnFocus: true });
+  const { data: categoryData } = useGetStoreCategoryQuery(
     {},
-    {refetchOnFocus: true},
+    { refetchOnFocus: true },
   );
 
   const zoneList = useMemo(
@@ -177,7 +178,7 @@ const AddMarketVisitScreen = ({
   const storeCategoryList = transformList(categoryData?.message?.data);
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Add Market Vist"
         navigation={() => navigation.goBack()}
@@ -215,7 +216,7 @@ const AddMarketVisitScreen = ({
         }}
       />
       <TouchableOpacity
-        style={[styles.submitBtn, loading && {opacity: 0.7}]}
+        style={[styles.submitBtn, loading && { opacity: 0.7 }]}
         onPress={() => handleSubmit()}
         disabled={loading}>
         {loading ? (

@@ -101,8 +101,6 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
-  console.log("🚀 ~ AddSaleScreen ~ salesDetails:", salesDetails)
-
   // ── Single stock fetch — results flow down as plain props ─────────────────
   const { data: stockData, isFetching: isStockFetching } =
     useGetStoreStockStatusQuery(
@@ -138,9 +136,17 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
             physical_qty: it.physical_qty === 0 ? '' : it.physical_qty,
           })),
         };
-
+        const updatePayload = {
+          ...formValues,
+          order_id: orderId,
+          items: formValues.items.map(it => ({
+            ...it,
+            qty: it.qty === 0 ? '' : it.qty,
+            physical_qty: it.physical_qty === 0 ? '' : it.physical_qty,
+          })),
+        };
         const res = orderId
-          ? await updateSaleOrder({ ...payload, order_id: orderId } as any).unwrap()
+          ? await updateSaleOrder(updatePayload).unwrap()
           : await addSalesOrder(payload as any).unwrap();
 
         if (res?.message?.success) {

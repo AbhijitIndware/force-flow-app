@@ -768,6 +768,7 @@ const AddStoreScreen = ({ navigation, route }: Props) => {
             setBeatSearchText={(text: string) =>
               handleSearchChange('beat', text)
             }
+            navigation={navigation}
           />
           <View
             style={{

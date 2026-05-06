@@ -9,14 +9,14 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import {useEffect, useMemo, useRef, useState} from 'react';
-import {useFormik} from 'formik';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFormik } from 'formik';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {distributorSchema} from '../../../types/schema';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { distributorSchema } from '../../../types/schema';
 import {
   useGetCityQuery,
   useGetDesignationQuery,
@@ -25,18 +25,18 @@ import {
   useGetStateQuery,
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {REmployee} from '../../../types/dropdownType';
-import {useAddDistributorMutation} from '../../../features/base/base-api';
+import { REmployee } from '../../../types/dropdownType';
+import { useAddDistributorMutation } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddDistributorForm from '../../../components/SO/Partner/Distributor/AddDistributorForm';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {uniqueByValue} from '../../../utils/utils';
-const {width} = Dimensions.get('window');
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { uniqueByValue } from '../../../utils/utils';
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
-  'AttendanceScreen'
+  'AddDistributorScreen'
 >;
 
 type Props = {
@@ -59,36 +59,36 @@ let initial = {
   designation: '',
 };
 
-const AddDistributorScreen = ({navigation}: Props) => {
+const AddDistributorScreen = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const [listConfig, setListConfig] = useState({
-    zone: {page: 1, search: ''},
-    state: {page: 1, search: ''},
-    city: {page: 1, search: ''},
-    employee: {page: 1, search: ''},
-    designation: {page: 1, search: ''},
-    distributorGroup: {page: 1, search: ''},
+    zone: { page: 1, search: '' },
+    state: { page: 1, search: '' },
+    city: { page: 1, search: '' },
+    employee: { page: 1, search: '' },
+    designation: { page: 1, search: '' },
+    distributorGroup: { page: 1, search: '' },
   });
 
   const [stateListData, setStateListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [employeeListData, setEmployeeListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [zoneListData, setZoneListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [cityListData, setCityListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [designationListData, setDesignationListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
   const [distributorGroupListData, setDistributorGroupListData] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
 
   const [loadingMoreState, setLoadingMoreState] = useState(false);
@@ -116,7 +116,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
-        const payload = {data: formValues};
+        const payload = { data: formValues };
         const res = await addDistributor(payload).unwrap();
 
         if (res?.message?.status === 'success') {
@@ -150,8 +150,8 @@ const AddDistributorScreen = ({navigation}: Props) => {
     },
   });
 
-  const transformToDropdownList = (arr: {name: string}[] = []) =>
-    arr.map(item => ({label: item.name, value: item.name}));
+  const transformToDropdownList = (arr: { name: string }[] = []) =>
+    arr.map(item => ({ label: item.name, value: item.name }));
 
   const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
     arr.map(item => ({
@@ -159,40 +159,40 @@ const AddDistributorScreen = ({navigation}: Props) => {
       value: item.name,
     }));
 
-  const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
+  const { data: cityData, isFetching: cityFetching } = useGetCityQuery({
     state: values.state,
     page_size: '20',
     page: String(listConfig.city.page),
     search: listConfig.city.search,
   });
-  const {data: stateData, isFetching: stateFetching} = useGetStateQuery({
+  const { data: stateData, isFetching: stateFetching } = useGetStateQuery({
     zone: values.zone,
     page_size: '20',
     page: String(listConfig.state.page),
     search: listConfig.state.search,
   });
 
-  const {data: employeeData, isFetching: employeeFetching} =
+  const { data: employeeData, isFetching: employeeFetching } =
     useGetEmployeeQuery({
       name: listConfig.employee.search,
       page_size: '20',
       page: String(listConfig.employee.page),
     });
 
-  const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
+  const { data: zoneData, isFetching: zoneFetching } = useGetZoneQuery({
     page_size: '20',
     page: String(listConfig.zone.page),
     search: listConfig.zone.search as string,
   });
 
-  const {data: designationData, isFetching: designationFetching} =
+  const { data: designationData, isFetching: designationFetching } =
     useGetDesignationQuery({
       page_size: '20',
       page: String(listConfig.designation.page),
       search: listConfig.designation.search,
     });
 
-  const {data: distributorGroupData, isFetching: distributorGroupFetching} =
+  const { data: distributorGroupData, isFetching: distributorGroupFetching } =
     useGetDistributorGroupQuery({
       page_size: '20',
       page: String(listConfig.distributorGroup.page),
@@ -308,8 +308,8 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setStateListData([]);
       setListConfig(prev => ({
         ...prev,
-        state: {page: 1, search: ''}, // reset state pagination & search
-        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
+        state: { page: 1, search: '' }, // reset state pagination & search
+        city: { page: 1, search: '' }, // also reset city (because state depends on zone)
       }));
     }
   }, [values.zone]);
@@ -319,7 +319,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setCityListData([]);
       setListConfig(prev => ({
         ...prev,
-        city: {page: 1, search: ''}, // reset city pagination & search
+        city: { page: 1, search: '' }, // reset city pagination & search
       }));
     }
   }, [values.state]);
@@ -329,7 +329,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setLoadingMoreCity(true);
       setListConfig(prev => ({
         ...prev,
-        city: {page: prev.city.page + 1, search: prev.city.search},
+        city: { page: prev.city.page + 1, search: prev.city.search },
       }));
       setLoadingMoreCity(false);
     }
@@ -345,7 +345,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setLoadingMoreState(true);
       setListConfig(prev => ({
         ...prev,
-        state: {page: prev.state.page + 1, search: prev.state.search},
+        state: { page: prev.state.page + 1, search: prev.state.search },
       }));
       setLoadingMoreState(false);
     }
@@ -361,7 +361,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setLoadingMoreEmployee(true);
       setListConfig(prev => ({
         ...prev,
-        state: {page: prev.employee.page + 1, search: prev.employee.search},
+        state: { page: prev.employee.page + 1, search: prev.employee.search },
       }));
       setLoadingMoreEmployee(false);
     }
@@ -377,7 +377,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setLoadingMoreZone(true);
       setListConfig(prev => ({
         ...prev,
-        zone: {page: prev.zone.page + 1, search: prev.zone.search},
+        zone: { page: prev.zone.page + 1, search: prev.zone.search },
       }));
       setLoadingMoreZone(false);
     }
@@ -435,18 +435,18 @@ const AddDistributorScreen = ({navigation}: Props) => {
     // Reset pagination & trigger new search query
     setListConfig(prev => ({
       ...prev,
-      [type]: {page: 1, search: text},
+      [type]: { page: 1, search: text },
     }));
   };
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Add Distributor"
         navigation={() => navigation.goBack()}
       />
       <AddDistributorForm
-        {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
+        {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
         scrollY={scrollY}
         distributorGroupList={distributorGroupListData}
         employeeList={employeeListData}
@@ -500,7 +500,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
           height: 80,
         }}>
         <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
+          style={[styles.submitBtn, loading && { opacity: 0.7 }]}
           onPress={() => handleSubmit()}
           disabled={loading}>
           {loading ? (
