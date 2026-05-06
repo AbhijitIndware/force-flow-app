@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
-    TouchableOpacity, ActivityIndicator, TextInput, Modal,
+    TouchableOpacity, ActivityIndicator, TextInput, Modal, Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { Package, Info, CheckCircle2, FileText, Calendar, MessageSquare, TrendingDown } from 'lucide-react-native';
 import moment from 'moment';
 import { useApproveAndCreateDDNMutation } from '../../../features/base/distributor-api';
@@ -16,6 +16,7 @@ import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import PageHeader from '../../../components/ui/PageHeader';
 import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
 import { Size } from '../../../utils/fontSize';
+import { useEffect, useState } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,7 +95,6 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         skip: !order_id,
         refetchOnMountOrArgChange: true,
     });
-    console.log("🚀 ~ PurchaseOrderDetailScreen ~ data:", data)
     const [approveDDN, { isLoading: isApproving }] = useApproveAndCreateDDNMutation();
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -102,6 +102,9 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
     const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
     const [remarks, setRemarks] = useState('');
     const [remarksSearch, setRemarksSearch] = useState('');
+    const [invoiceImage, setInvoiceImage] = useState<{ mime: string; data: string } | null>(null);
+    const [previewVisible, setPreviewVisible] = useState(false);
+
 
     const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
     const [deliveryQtys, setDeliveryQtys] = useState<Record<string, string>>({});
@@ -153,6 +156,28 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
             setDeliveryQtys(prev => ({ ...prev, [item_code]: val }));
         }
     };
+    const handlePickImage = () => {
+        launchCamera({
+            mediaType: 'photo',
+            includeBase64: true,
+            quality: 0.5,
+        }, (response) => {
+            if (response.didCancel) return;
+            if (response.errorCode) {
+                Toast.show({ type: 'error', text1: 'Error', text2: response.errorMessage });
+                return;
+            }
+            if (response.assets && response.assets.length > 0) {
+                const asset = response.assets[0];
+                setInvoiceImage({
+                    mime: asset.type || 'image/jpeg',
+                    data: asset.base64 || '',
+                });
+            }
+        });
+    };
+
+    const imageName = `IMG_${moment().format('YYYY-MM-DD')}_1`;
 
     const handleApprove = async () => {
         if (!invoiceNo.trim()) {
@@ -161,6 +186,10 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         }
         if (!date) {
             Toast.show({ type: 'error', text1: 'Required', text2: 'Select a delivery date' });
+            return;
+        }
+        if (!invoiceImage) {
+            Toast.show({ type: 'error', text1: 'Required', text2: 'Please capture an invoice image' });
             return;
         }
 
@@ -187,6 +216,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                 date,
                 remarks,
                 delivered_items,
+                invoice_image: invoiceImage,
             }).unwrap();
 
             if (res?.message?.success === false) {
@@ -320,7 +350,35 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                             />
                         </View>
                     </View>
+
+                    {/* Image Upload Row */}
+                    <View style={[styles.imageRow, { marginTop: 2 }, details?.workflow_state === 'Delivered' && { opacity: 0.5 }]}>
+                        <TouchableOpacity
+                            style={styles.imageBtn}
+                            onPress={handlePickImage}
+                            disabled={details?.workflow_state === 'Delivered'}
+                        >
+                            <Ionicons name="camera" size={18} color={C.accent} />
+                            <Text style={styles.imageBtnText}>Capture Invoice *</Text>
+                        </TouchableOpacity>
+
+                        {invoiceImage ? (
+                            <View style={styles.imageInfoContainer}>
+                                <Text style={styles.imageNameText} numberOfLines={1}>{imageName}</Text>
+                                <TouchableOpacity onPress={() => setPreviewVisible(true)} style={styles.previewBtn}>
+                                    <Ionicons name="eye" size={16} color={C.accent} />
+                                    <Text style={styles.previewText}>Preview</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => setInvoiceImage(null)} style={styles.removeBtn}>
+                                    <Ionicons name="close-circle" size={18} color="#dc2626" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <Text style={styles.noImageText}>No image captured</Text>
+                        )}
+                    </View>
                 </View>
+
                 {/* ── Items Grid ── */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -398,7 +456,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                             </View>
 
                                             {/* Amount based on received */}
-                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
+                                            <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'center' }]}>
                                                 <Text style={[gridStyles.amount, { color: C.success }]}>
                                                     ₹{receivedAmount.toLocaleString()}
                                                 </Text>
@@ -430,11 +488,12 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                         </TouchableOpacity>
 
                                         {/* Item Name */}
-                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}>
+                                        <TouchableOpacity style={[gridStyles.cell, { width: COLUMN_WIDTHS.item }]}
+                                            onPress={() => toggleItem(item.item_code, remainingQty)}>
                                             <Text style={gridStyles.itemName} numberOfLines={2}>
                                                 {item.item_name}
                                             </Text>
-                                        </View>
+                                        </TouchableOpacity>
 
                                         {/* Ordered (remaining) */}
                                         <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.ordered, alignItems: 'center' }]}>
@@ -468,7 +527,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                         </View>
 
                                         {/* Amount */}
-                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'flex-end' }]}>
+                                        <View style={[gridStyles.cell, { width: COLUMN_WIDTHS.amount, alignItems: 'center' }]}>
                                             <Text style={[gridStyles.amount, !checked && { color: C.textMuted }]}>
                                                 {checked ? `₹${amount.toLocaleString()}` : '—'}
                                             </Text>
@@ -518,6 +577,10 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                         }
                         if (!date.trim()) {
                             Toast.show({ type: 'error', text1: 'Required', text2: 'Select a delivery date' });
+                            return;
+                        }
+                        if (!invoiceImage) {
+                            Toast.show({ type: 'error', text1: 'Required', text2: 'Please capture an invoice image' });
                             return;
                         }
                         setModalVisible(true);
@@ -597,6 +660,29 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                     </View>
                 </View>
             </Modal>
+
+            {/* ── Image Preview Modal ── */}
+            <Modal visible={previewVisible} transparent animationType="fade">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.previewModalContainer}>
+                        <View style={styles.previewHeader}>
+                            <Text style={styles.previewTitle}>Invoice Preview</Text>
+                            <TouchableOpacity onPress={() => setPreviewVisible(false)}>
+                                <Ionicons name="close" size={24} color={C.text} />
+                            </TouchableOpacity>
+                        </View>
+                        {invoiceImage?.data ? (
+                            <Image
+                                source={{ uri: `data:${invoiceImage.mime};base64,${invoiceImage.data}` }}
+                                style={styles.previewImage}
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <View style={styles.center}><Text>No image to preview</Text></View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -666,6 +752,63 @@ const styles = StyleSheet.create({
     summaryItemQty: { fontSize: 12, color: C.accent, fontWeight: '600' },
     warningBox: { flexDirection: 'row', backgroundColor: '#FFFBEB', padding: 10, borderRadius: 8, gap: 8, marginBottom: 12 },
     warningText: { flex: 1, fontSize: 11, color: C.warning },
+    imageRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        paddingTop: 3,
+        borderTopWidth: 0.5,
+        borderTopColor: C.border,
+    },
+    imageBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#EEF2FF',
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: '#C7D2FE',
+    },
+    imageBtnText: { fontSize: 11, fontWeight: '600', color: C.accent },
+    imageInfoContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    imageNameText: { fontSize: 11, color: C.textMuted, flex: 1 },
+    previewBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+    },
+    previewText: { fontSize: 11, fontWeight: '600', color: C.accent },
+    removeBtn: { padding: 2 },
+    noImageText: { fontSize: 11, color: C.textMuted, fontStyle: 'italic' },
+    previewModalContainer: {
+        width: '90%',
+        height: '70%',
+        backgroundColor: C.white,
+        borderRadius: 16,
+        padding: 16,
+    },
+    previewHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    previewTitle: { fontSize: 16, fontWeight: 'bold', color: C.text },
+    previewImage: {
+        flex: 1,
+        width: '100%',
+        borderRadius: 8,
+        backgroundColor: '#f1f5f9',
+    },
 });
 
 const gridStyles = StyleSheet.create({

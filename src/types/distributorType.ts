@@ -149,6 +149,10 @@ export interface IApproveAndCreateDDNRequest {
     date: string;
     remarks: string;
     delivered_items?: DeliveredItem[];
+    invoice_image: {
+        mime: string;
+        data: string
+    } | null
 }
 
 export interface RApproveAndCreateDDN {
