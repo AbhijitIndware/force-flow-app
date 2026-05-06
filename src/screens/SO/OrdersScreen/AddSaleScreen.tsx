@@ -43,17 +43,17 @@ type NavigationProp = NativeStackNavigationProp<
 type Props = { navigation: NavigationProp; route: any };
 
 const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrderV2 => ({
-  transaction_date: detail.order_details.transaction_date,
-  delivery_date: detail.order_details.delivery_date,
-  custom_warehouse: detail.order_details.custom_warehouse || '',
-  items: detail.items.map(it => ({
+  transaction_date: detail?.order_details?.transaction_date,
+  delivery_date: detail?.order_details?.delivery_date,
+  custom_warehouse: detail?.order_details?.custom_warehouse || '',
+  items: detail?.items?.map(it => ({
     item_code: it.item_code,
     qty: it.qty,
     rate: it.rate,
     delivery_date: it.delivery_date,
     physical_qty: it.physical_qty,
   })),
-  terms: detail.order_details.terms,
+  terms: detail?.order_details.terms,
   submit_order: false,
 });
 
@@ -101,6 +101,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   const { data: salesDetails, isFetching } = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
+  console.log("🚀 ~ AddSaleScreen ~ salesDetails:", salesDetails)
 
   // ── Single stock fetch — results flow down as plain props ─────────────────
   const { data: stockData, isFetching: isStockFetching } =
@@ -216,7 +217,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
         qty: it.qty,
         rate: it.rate,
         delivery_date: it.delivery_date,
-        physical_qty: 0,
+        physical_qty: it?.physical_qty ?? 0,
       };
     });
 
@@ -291,7 +292,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title="Create Order"
+        title={orderId ? "Update Order" : "Create Order"}
         navigation={() => navigation.navigate('OrdersScreen', { index: 1 })}
       />
 
@@ -361,7 +362,7 @@ const AddSaleScreen = ({ navigation, route }: Props) => {
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
             <Text style={styles.submitText}>
-              {isStockFetching && !orderId ? 'Loading items…' : 'Create Order'}
+              {isStockFetching && !orderId ? 'Loading items…' : orderId ? 'Update Order' : 'Create Order'}
             </Text>
           )}
         </TouchableOpacity>

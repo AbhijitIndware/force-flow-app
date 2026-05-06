@@ -448,14 +448,18 @@ export type RAddSalesOrderV2 = {
 }
 
 // 🔹 Update type
-export type IUpdateSalesOrder = Pick<
-  IAddSalesOrderV2,
-  'transaction_date' | 'delivery_date' | 'items'
-> & {
+type OrderItem = {
+  item_code: string;
+  qty: number;
+  physical_qty: number;
+};
+export type IUpdateSalesOrder = {
   order_id: string;
-  items: (Omit<IAddSalesOrder['items'][number], 'delivery_date'> & {
-    delivery_date?: string; // make it optional
-  })[];
+  custom_warehouse: string;
+  submit_order: boolean;
+  delivery_date: string; // ISO date
+  terms: string;
+  items: OrderItem[];
 };
 
 export type IUpdateSOAction = {

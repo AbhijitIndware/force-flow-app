@@ -26,9 +26,10 @@ type Props = {
 };
 const SaleDetailScreen = ({ navigation, route }: Props) => {
   const { id } = route.params;
-  const { data, isFetching, refetch } = useGetSalesOrderByIdQuery(id, {
+  const { data, isFetching, isError, refetch } = useGetSalesOrderByIdQuery(id, {
     refetchOnMountOrArgChange: true,
   });
+  console.log("🚀 ~ SaleDetailScreen ~ data:", data)
 
   const isDraft = data?.message?.data?.order_details?.status === 'Draft';
   const orderId = data?.message?.data?.order_details?.order_id;
@@ -42,7 +43,15 @@ const SaleDetailScreen = ({ navigation, route }: Props) => {
 
       {isFetching ? (
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
-      ) : (
+      ) : (isError || (data as any)?.success === false) && !data?.message?.data ? (
+        <View style={styles.centerContainer}>
+          <Icon name="error-outline" size={48} color={Colors.error || '#dc2626'} />
+          <Text style={styles.errorText}>Failed to load order details</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => refetch()}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : data?.message?.data ? (
         <>
           {isDraft && (
             <TouchableOpacity
@@ -64,6 +73,10 @@ const SaleDetailScreen = ({ navigation, route }: Props) => {
             refetch={refetch}
           />
         </>
+      ) : (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>No order details found</Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -97,5 +110,30 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: Fonts.semiBold,
     color: '#534AB7',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  errorText: {
+    fontSize: 16,
+    fontFamily: Fonts.medium,
+    color: '#4B5563',
+    textAlign: 'center',
+  },
+  retryBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  retryText: {
+    color: '#FFF',
+    fontFamily: Fonts.semiBold,
+    fontSize: 14,
   },
 });
