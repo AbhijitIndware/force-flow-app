@@ -37,8 +37,8 @@ const LOCATION_TYPES = [
     { label: 'Miscellaneous Visit', value: 'Miscellaneous Visit' },
     { label: 'Distributor Point', value: 'Distributor Point' },
     { label: 'Key Account', value: 'Key Account' },
-    { label: 'New Account Opening', value: 'New Account Opening' },
-    { label: 'Distributor Opening', value: 'Distributor Opening' },
+    { label: 'New Store Opening', value: 'New Store Opening' },
+    { label: 'New Distributor Opening', value: 'New Distributor Opening' },
 ];
 
 const TYPES_WITH_TEXT_INPUT = ['Office Visit', 'Miscellaneous Visit', 'Key Account'];

@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,20 +13,20 @@ import {
   Animated,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import {flexCol, flexRow} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { flexCol, flexRow } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   useCreateStockBalanceMutation,
   useGetStoreStockStatusQuery,
 } from '../../../features/base/base-api';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {Save} from 'lucide-react-native';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { Save } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
-import {StockDashboardItem} from '../../../types/baseType';
+import { StockDashboardItem } from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -49,8 +49,8 @@ interface StockItemEntry {
 // ─── Column widths — mirrors SaleItemField ────────────────────────────────────
 const COL = {
   item: 190,
-  stock: 150,
-  qty: 90,
+  stock: 130,
+  qty: 70,
   action: 40,
 };
 
@@ -59,7 +59,7 @@ const COL = {
 interface StockRowProps {
   index: number;
   entry: StockItemEntry;
-  allItemsDropdown: {label: string; value: string}[];
+  allItemsDropdown: { label: string; value: string }[];
   onQtyChange: (index: number, val: string) => void;
   onItemChange: (index: number, itemCode: string, itemName: string) => void;
   onRemove: (index: number) => void;
@@ -94,7 +94,7 @@ const StockRow: React.FC<StockRowProps> = ({
         isFilled && !entry.isPrev && styles.filledRow,
       ]}>
       {/* ── Item column ── */}
-      <View style={[styles.col, {width: COL.item}]}>
+      <View style={[styles.col, { width: COL.item }]}>
         {entry.isPrev ? (
           // Locked previous item — mirrors SaleItemField locked text display
           <View style={styles.prevItemWrap}>
@@ -120,7 +120,7 @@ const StockRow: React.FC<StockRowProps> = ({
       </View>
 
       {/* --- Stock --- */}
-      <View style={[flexRow, {width: COL.stock}]}>
+      <View style={[flexRow, { width: COL.stock }]}>
         <View style={styles.col}>
           <Text style={styles.stockLabel}>
             Opening:{' '}
@@ -145,7 +145,7 @@ const StockRow: React.FC<StockRowProps> = ({
       </View>
 
       {/* ── Stock Count Input ── */}
-      <View style={[styles.col, {width: COL.qty, alignItems: 'center'}]}>
+      <View style={[styles.col, { width: COL.qty, alignItems: 'center' }]}>
         <TextInput
           style={styles.qtyInput}
           keyboardType="numeric"
@@ -159,7 +159,7 @@ const StockRow: React.FC<StockRowProps> = ({
       {/* ── Delete ── */}
       <TouchableOpacity
         onPress={() => onRemove(index)}
-        style={[styles.col, {width: COL.action, alignItems: 'center'}]}
+        style={[styles.col, { width: COL.action, alignItems: 'center' }]}
         disabled={entry.isPrev}>
         <Ionicons name="trash-outline" size={18} color="#dc2626" />
       </TouchableOpacity>
@@ -169,14 +169,14 @@ const StockRow: React.FC<StockRowProps> = ({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-const StockManagementFormScreen = ({navigation, route}: Props) => {
-  const {store, storeName} = route.params;
+const StockManagementFormScreen = ({ navigation, route }: Props) => {
+  const { store, storeName } = route.params;
   // All items from stock status for dropdowns + stock info
-  const {data: stockStatusData} = useGetStoreStockStatusQuery(
-    {store},
-    {refetchOnMountOrArgChange: true},
+  const { data: stockStatusData } = useGetStoreStockStatusQuery(
+    { store },
+    { refetchOnMountOrArgChange: true },
   );
-  const [createStockBalance, {isLoading: isSubmitting}] =
+  const [createStockBalance, { isLoading: isSubmitting }] =
     useCreateStockBalanceMutation();
 
   const [entries, setEntries] = useState<StockItemEntry[]>([]);
@@ -207,7 +207,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
   const handleAddItem = () => {
     setEntries(prev => [
       ...prev,
-      {itemCode: '', itemName: '', quantity: '', isPrev: false},
+      { itemCode: '', itemName: '', quantity: '', isPrev: false },
     ]);
   };
 
@@ -217,7 +217,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
 
   const handleQtyChange = (index: number, val: string) => {
     setEntries(prev =>
-      prev.map((e, i) => (i === index ? {...e, quantity: val} : e)),
+      prev.map((e, i) => (i === index ? { ...e, quantity: val } : e)),
     );
   };
 
@@ -227,7 +227,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
     itemName: string,
   ) => {
     setEntries(prev =>
-      prev.map((e, i) => (i === index ? {...e, itemCode, itemName} : e)),
+      prev.map((e, i) => (i === index ? { ...e, itemCode, itemName } : e)),
     );
   };
 
@@ -256,7 +256,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
       }).unwrap();
 
       if (response.message) {
-        Toast.show({type: 'success', text1: 'Stock updated successfully'});
+        Toast.show({ type: 'success', text1: 'Stock updated successfully' });
         navigation.goBack();
       }
     } catch (error: any) {
@@ -282,13 +282,13 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
     }
   }, [stockStatusData]);
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: '#ffffff'}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: '#ffffff' }]}>
       <PageHeader title={storeName} navigation={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
-        <ScrollView contentContainerStyle={{paddingBottom: 100}}>
+        style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* ── Table ── */}
           <ScrollView
             horizontal
@@ -297,22 +297,22 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
             <View>
               {/* Header — matches AddSaleForm headerRow */}
               <View style={styles.headerRow}>
-                <Text style={[styles.headerText, {width: COL.item}]}>Item</Text>
+                <Text style={[styles.headerText, { width: COL.item }]}>Item</Text>
                 <Text
                   style={[
                     styles.headerText,
-                    {width: COL.stock, textAlign: 'center'},
+                    { width: COL.stock, textAlign: 'center' },
                   ]}>
                   Stock
                 </Text>
                 <Text
                   style={[
                     styles.headerText,
-                    {width: COL.qty, textAlign: 'center'},
+                    { width: COL.qty, textAlign: 'center' },
                   ]}>
                   Stock Count
                 </Text>
-                <View style={{width: COL.action}} />
+                <View style={{ width: COL.action }} />
               </View>
 
               {/* Previous items section label */}
@@ -344,7 +344,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
                         <Text
                           style={[
                             styles.sectionDividerText,
-                            {color: Colors.orange},
+                            { color: Colors.orange },
                           ]}>
                           New items
                         </Text>
@@ -381,7 +381,7 @@ const StockManagementFormScreen = ({navigation, route}: Props) => {
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && {opacity: 0.7}]}
+          style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
           onPress={handleSubmit}
           disabled={isSubmitting}>
           <Save size={18} color={Colors.white} />
@@ -445,11 +445,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
   },
-  evenRow: {backgroundColor: '#fff'},
-  oddRow: {backgroundColor: '#f9fafb'},
-  prevRow: {backgroundColor: '#fffbeb'}, // yellow tint — matches lockedRow
-  filledRow: {backgroundColor: '#f0fdf4'}, // green tint when qty filled
-  col: {paddingHorizontal: 6, justifyContent: 'center'},
+  evenRow: { backgroundColor: '#fff' },
+  oddRow: { backgroundColor: '#f9fafb' },
+  prevRow: { backgroundColor: '#fffbeb' }, // yellow tint — matches lockedRow
+  filledRow: { backgroundColor: '#f0fdf4' }, // green tint when qty filled
+  col: { paddingHorizontal: 6, justifyContent: 'center' },
 
   // ── Prev item display — mirrors SaleItemField itemTextContainer ──
   prevItemWrap: {
@@ -498,8 +498,8 @@ const styles = StyleSheet.create({
     fontSize: Size.xxs,
   },
 
-  deleteIcon: {fontSize: 15},
-  deleteIconDisabled: {color: '#9ca3af'},
+  deleteIcon: { fontSize: 15 },
+  deleteIconDisabled: { color: '#9ca3af' },
 
   // ── Add row — matches AddSaleForm tableAddBtn ──
   tableAddBtn: {
@@ -549,5 +549,5 @@ const styles = StyleSheet.create({
   boldText: {
     fontWeight: 'bold',
   },
-  stockLabel: {fontSize: 10, color: '#6b7280'},
+  stockLabel: { fontSize: 10, color: '#6b7280' },
 });

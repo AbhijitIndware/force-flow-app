@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Animated,
   StyleSheet,
@@ -9,18 +9,18 @@ import {
 } from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import moment from 'moment';
-import {Colors} from '../../../../utils/colors';
-import {IAddSalesOrderV2, StockDashboardItem} from '../../../../types/baseType';
-import {Size} from '../../../../utils/fontSize';
-import {Fonts} from '../../../../constants';
-import {SaleItemField} from './SaleItemField';
+import { Colors } from '../../../../utils/colors';
+import { IAddSalesOrderV2, StockDashboardItem } from '../../../../types/baseType';
+import { Size } from '../../../../utils/fontSize';
+import { Fonts } from '../../../../constants';
+import { SaleItemField } from './SaleItemField';
 
 const COLUMN_WIDTHS = {
-  item: 180,
-  stock: 130,
-  qty: 90,
-  rate: 75,
-  amount: 85,
+  item: 170,
+  // stock: 130,
+  qty: 70,
+  rate: 70,
+  amount: 70,
   action: 40,
 };
 
@@ -32,7 +32,7 @@ interface Props {
   handleChange: any;
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
-  warehouseList: {label: string; value: string; outstanding_amount?: number}[];
+  warehouseList: { label: string; value: string; outstanding_amount?: number }[];
   onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
   onAnyItemLocked: (locked: boolean) => void;
   seededCount?: number;
@@ -64,7 +64,7 @@ const AddSaleForm: React.FC<Props> = ({
 
   const handleLockChange = (index: number, isLocked: boolean) => {
     setItemLockMap(prev => {
-      const next = {...prev, [index]: isLocked};
+      const next = { ...prev, [index]: isLocked };
       onAnyItemLocked(Object.values(next).some(Boolean));
       return next;
     });
@@ -93,7 +93,7 @@ const AddSaleForm: React.FC<Props> = ({
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
+      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
@@ -151,45 +151,45 @@ const AddSaleForm: React.FC<Props> = ({
           <View>
             {/* Table Header - Light Theme */}
             <View style={styles.headerRow}>
-              <Text style={[styles.headerText, {width: COLUMN_WIDTHS.item}]}>
+              <Text style={[styles.headerText, { width: COLUMN_WIDTHS.item }]}>
                 Item
               </Text>
+              {/*  <Text
+                style={[
+                  styles.headerText,
+                  { width: COLUMN_WIDTHS.stock, textAlign: 'right' },
+                ]}>
+                Stock
+              </Text>*/}
               <Text
                 style={[
                   styles.headerText,
-                  {width: COLUMN_WIDTHS.stock, textAlign: 'right'},
+                  { width: COLUMN_WIDTHS.qty, textAlign: 'center' },
                 ]}>
                 Stock
               </Text>
               <Text
                 style={[
                   styles.headerText,
-                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
+                  { width: COLUMN_WIDTHS.qty, textAlign: 'center' },
                 ]}>
-                Phys. Count
+                Order Qty
               </Text>
               <Text
                 style={[
                   styles.headerText,
-                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
-                ]}>
-                Order qty
-              </Text>
-              <Text
-                style={[
-                  styles.headerText,
-                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
+                  { width: COLUMN_WIDTHS.qty, textAlign: 'center' },
                 ]}>
                 Rate
               </Text>
               <Text
                 style={[
                   styles.headerText,
-                  {width: COLUMN_WIDTHS.amount, textAlign: 'left'},
+                  { width: COLUMN_WIDTHS.amount, textAlign: 'left' },
                 ]}>
                 Amount
               </Text>
-              <View style={{width: COLUMN_WIDTHS.action}} />
+              <View style={{ width: COLUMN_WIDTHS.action }} />
             </View>
 
             {/* List of Rows */}
@@ -230,12 +230,12 @@ const AddSaleForm: React.FC<Props> = ({
 export default AddSaleForm;
 
 const styles = StyleSheet.create({
-  mainContainer: {paddingTop: 10, backgroundColor: '#ffffff'},
-  topSection: {paddingHorizontal: 21, marginBottom: 0},
-  tableSection: {padding: 10, paddingVertical: 0},
-  row: {flexDirection: 'row', gap: 10, marginBottom: 10},
-  flex1: {flex: 1},
-  label: {fontSize: Size.xs, color: '#374151', fontFamily: Fonts.regular},
+  mainContainer: { paddingTop: 10, backgroundColor: '#ffffff' },
+  topSection: { paddingHorizontal: 21, marginBottom: 0 },
+  tableSection: { padding: 10, paddingVertical: 0 },
+  row: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  flex1: { flex: 1 },
+  label: { fontSize: Size.xs, color: '#374151', fontFamily: Fonts.regular },
   timeInput: {
     backgroundColor: '#ffffff',
     borderRadius: 8,
@@ -246,8 +246,8 @@ const styles = StyleSheet.create({
     height: 45,
     marginTop: 4,
   },
-  timeText: {color: '#111827', fontFamily: Fonts.regular, fontSize: Size.xs},
-  disabledInput: {backgroundColor: '#f9fafb', borderColor: '#e5e7eb'},
+  timeText: { color: '#111827', fontFamily: Fonts.regular, fontSize: Size.xs },
+  disabledInput: { backgroundColor: '#f9fafb', borderColor: '#e5e7eb' },
   disabledText: {
     color: '#6b7280',
     fontFamily: Fonts.regular,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     backgroundColor: '#ffffff',
   },
-  addMoreText: {color: Colors.orange, fontFamily: Fonts.semiBold, fontSize: 13},
+  addMoreText: { color: Colors.orange, fontFamily: Fonts.semiBold, fontSize: 13 },
   outstandingCard: {
     marginBottom: 12,
     paddingHorizontal: 12,
@@ -315,6 +315,6 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     // marginTop: 20,
   },
-  summaryText: {color: '#6b7280', fontSize: 13},
-  totalAmount: {color: '#111827', fontSize: 16, fontFamily: Fonts.semiBold},
+  summaryText: { color: '#6b7280', fontSize: 13 },
+  totalAmount: { color: '#111827', fontSize: 16, fontFamily: Fonts.semiBold },
 });

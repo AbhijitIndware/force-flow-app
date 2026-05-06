@@ -14,11 +14,11 @@ import SaleItemDropdown from '../../../ui-lib/sale-item-dropdown';
 import { Size } from '../../../../utils/fontSize';
 
 const COLUMN_WIDTHS = {
-  item: 180,
-  stock: 130,
-  qty: 90,
-  rate: 75,
-  amount: 85,
+  item: 170,
+  // stock: 130,
+  qty: 70,
+  rate: 70,
+  amount: 70,
   action: 40,
 };
 
@@ -115,10 +115,33 @@ export const SaleItemField: React.FC<Props> = ({
             setSearchText={setSearch}
           />
         )}
+        <View style={[flexRow]}>
+          <View style={styles.col}>
+            <Text style={styles.stockLabel}>
+              Opening:{' '}
+              <Text style={styles.boldText}>{stockInfo?.opening_stock ?? 0}</Text>
+            </Text>
+            <Text style={styles.stockLabel}>
+              Current:{' '}
+              <Text style={styles.boldText}>{stockInfo?.current_stock ?? 0}</Text>
+            </Text>
+          </View>
+
+          <View style={styles.col}>
+            <Text style={styles.stockLabel}>
+              MTD:{' '}
+              <Text style={styles.boldText}>{stockInfo?.mtd_territory ?? 0}</Text>
+            </Text>
+            <Text style={styles.stockLabel}>
+              New:{' '}
+              <Text style={styles.boldText}>{stockInfo?.new_orders ?? 0}</Text>
+            </Text>
+          </View>
+        </View>
       </View>
 
       {/* --- Stock --- */}
-      <View style={[flexRow, { width: COLUMN_WIDTHS.stock }]}>
+      {/*  <View style={[flexRow, { width: COLUMN_WIDTHS.stock }]}>
         <View style={styles.col}>
           <Text style={styles.stockLabel}>
             Opening:{' '}
@@ -140,7 +163,7 @@ export const SaleItemField: React.FC<Props> = ({
             <Text style={styles.boldText}>{stockInfo?.new_orders ?? 0}</Text>
           </Text>
         </View>
-      </View>
+      </View>*/}
       {/* --- Physical Qty --- */}
       <View style={[styles.col, { width: COLUMN_WIDTHS.qty }]}>
         <TextInput
@@ -210,7 +233,7 @@ const styles = StyleSheet.create({
   col: { paddingHorizontal: 6 },
   floatingBadge: {
     position: 'absolute',
-    top: -2,
+    top: -7,
     right: 6,
     backgroundColor: '#2563eb',
     paddingHorizontal: 4,
@@ -219,11 +242,11 @@ const styles = StyleSheet.create({
   badgeText: { color: '#fff', fontSize: 9 },
   stockLabel: { fontSize: 10, color: '#6b7280' },
   itemTextContainer: {
-    paddingVertical: 8,
+    paddingVertical: 2,
     paddingHorizontal: 4,
   },
   itemTextLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: Fonts.semiBold,
     color: '#111827',
   },
