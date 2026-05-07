@@ -6,25 +6,38 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
 import { useAppDispatch, useAppSelector } from '../../store/hook';
-import { Text, View } from 'react-native';
+import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  logout,
   useCheckSessionQuery,
   useGetProfileDataQuery,
+  setGlobalError,
+  setSessionExpired,
+  logout,
 } from '../../features/auth/auth';
-import { ActivityIndicator } from 'react-native';
-import { StyleSheet } from 'react-native';
 import DistributorNavigation from '../Distributor/DistributorNavigation/DistributorNavigation';
+import NetInfo from '@react-native-community/netinfo';
+import ApiErrorBanner from '../../components/ui-lib/api-error-banner';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
 
 const MainNavigation = () => {
   const dispatch = useAppDispatch();
-  const [sessionExpired, setSessionExpired] = React.useState(false);
+  const [isConnected, setIsConnected] = React.useState<boolean>(true);
 
-  const sId = useAppSelector(state => state?.persistedReducer?.authSlice?.sId);
+  // ── Global session-expired flag (set by any 401 across all API slices) ──
+  const sessionExpired = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.sessionExpired,
+  );
+  const globalError = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.globalError,
+  );
+
+  const sId = useAppSelector(state => {
+    return state?.persistedReducer?.authSlice?.sId;
+  });
+  console.log("🚀 ~ MainNavigation ~ sId:", sId)
   const isAuthenticated = !!sId;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -49,6 +62,7 @@ const MainNavigation = () => {
   }
 
   const insets = useSafeAreaInsets();
+
   useGetProfileDataQuery(
     { emp_id: employeeId as string },
     {
@@ -79,14 +93,27 @@ const MainNavigation = () => {
     }
   }, [sessionError, data]);
 
-  // 🔥 Show loader while validating session
+  // ── Network connectivity listener ─────────────────────────────────────────
+  React.useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected ?? true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Show loader while validating session
   if (isLoading) {
     return <FullScreenLoader />;
   }
 
   return (
     <View style={{ flex: 1 }}>
+      {!isConnected && <NoInternetBanner />}
       {sessionExpired && <SessionExpiredBanner />}
+      <ApiErrorBanner
+        errors={[globalError]}
+        onDismiss={() => dispatch(setGlobalError(null))}
+      />
       {isAuthenticated && userType ? (
         <AppStackNavigator userType={userType} insets={insets} />
       ) : (
@@ -95,14 +122,24 @@ const MainNavigation = () => {
     </View>
   );
 };
+
+// ── No Internet Banner ────────────────────────────────────────────────────────
+const NoInternetBanner = () => (
+  <View style={styles.noInternetBanner}>
+    <Text style={styles.bannerText}>📡  No internet connection</Text>
+  </View>
+);
+
+// ── Session Expired Banner ────────────────────────────────────────────────────
 const SessionExpiredBanner = () => (
-  <View style={styles.banner}>
+  <View style={styles.sessionBanner}>
     <Text style={styles.bannerText}>
-      ⚠️ Session expired — please log in again
+      ⚠️  Session expired — please log in again
     </Text>
   </View>
 );
 
+// ── Auth Stack ────────────────────────────────────────────────────────────────
 const AuthStackNavigator = ({ insets }: any) => (
   <View
     style={{
@@ -119,11 +156,12 @@ const AuthStackNavigator = ({ insets }: any) => (
   </View>
 );
 
+// ── App Stack ─────────────────────────────────────────────────────────────────
 const AppStackNavigator = ({
   userType,
   insets,
 }: {
-  userType: "PROMOTER" | "SALES_OFFICER" | "DISTRIBUTOR";
+  userType: 'PROMOTER' | 'SALES_OFFICER' | 'DISTRIBUTOR';
   insets: any;
 }) => (
   <View
@@ -139,14 +177,9 @@ const AppStackNavigator = ({
           component={PromoterNavigation}
         />
       )}
-
       {userType === 'SALES_OFFICER' && (
-        <AppStack.Screen
-          name="SoNavigation"
-          component={SoNavigation}
-        />
+        <AppStack.Screen name="SoNavigation" component={SoNavigation} />
       )}
-
       {userType === 'DISTRIBUTOR' && (
         <AppStack.Screen
           name="DistributorNavigation"
@@ -157,26 +190,35 @@ const AppStackNavigator = ({
   </View>
 );
 
+// ── Full Screen Loader ────────────────────────────────────────────────────────
 const FullScreenLoader = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <ActivityIndicator size="large" color="#000" />
   </View>
 );
 
+// ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: '#B91C1C',
+  noInternetBanner: {
+    backgroundColor: '#92400E', // deep amber
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 999,
+  },
+  sessionBanner: {
+    backgroundColor: '#B91C1C', // deep red
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   bannerText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
 });
 

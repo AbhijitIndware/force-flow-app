@@ -1,5 +1,5 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import {apiBaseUrl} from '../apiBaseUrl';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { apiBaseUrl } from '../apiBaseUrl';
 import {
   IDailyStore,
   RActivityPjp,
@@ -14,26 +14,25 @@ import {
   RState,
   RStore,
 } from '../../types/dropdownType';
-import {LocationResponse} from '../../types/baseType';
+import { LocationResponse } from '../../types/baseType';
+import { baseQueryWithAuthGuard } from '../utility';
 
 //Dropdown api calling ---
 export const dropdownApi = createApi({
   reducerPath: 'dropdownApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: apiBaseUrl,
-  }),
+  baseQuery: baseQueryWithAuthGuard,
   tagTypes: [''],
   endpoints: builder => ({
     getState: builder.query<
       RState,
-      {zone?: string; page_size?: string; page?: string; search?: string}
+      { zone?: string; page_size?: string; page?: string; search?: string }
     >({
-      query: ({zone, page_size, page, search}) => {
+      query: ({ zone, page_size, page, search }) => {
         const params = {
           search,
           page_size,
           page,
-          filters: JSON.stringify({zone}),
+          filters: JSON.stringify({ zone }),
         };
 
         return {
@@ -45,9 +44,9 @@ export const dropdownApi = createApi({
     }),
     getZone: builder.query<
       RResponse,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_zone',
         method: 'GET',
         params: {
@@ -60,14 +59,14 @@ export const dropdownApi = createApi({
 
     getCity: builder.query<
       RCity,
-      {state?: string; page_size?: string; page?: string; search?: string}
+      { state?: string; page_size?: string; page?: string; search?: string }
     >({
-      query: ({state, page_size, page, search}) => {
+      query: ({ state, page_size, page, search }) => {
         const params = {
           search, // ✅ Text search for city name
           page_size,
           page,
-          filters: JSON.stringify(state ? {state} : {}), // ✅ Filter cities by selected state
+          filters: JSON.stringify(state ? { state } : {}), // ✅ Filter cities by selected state
         };
         return {
           url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_city',
@@ -78,9 +77,9 @@ export const dropdownApi = createApi({
     }),
     getEmployee: builder.query<
       REmployee,
-      {name?: string; page_size?: string; page?: string}
+      { name?: string; page_size?: string; page?: string }
     >({
-      query: ({name, page_size, page}) => ({
+      query: ({ name, page_size, page }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_employee',
         method: 'GET',
         params: {
@@ -92,9 +91,9 @@ export const dropdownApi = createApi({
     }),
     getDesignation: builder.query<
       RResponse,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_designation',
         method: 'GET',
         params: {
@@ -106,9 +105,9 @@ export const dropdownApi = createApi({
     }),
     getDistributorGroup: builder.query<
       RResponse,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_group',
         method: 'GET',
         params: {
@@ -120,9 +119,9 @@ export const dropdownApi = createApi({
     }),
     getDistributor: builder.query<
       RDistributor,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor',
         method: 'GET',
         params: {
@@ -134,9 +133,9 @@ export const dropdownApi = createApi({
     }),
     getStoreType: builder.query<
       RResponse,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_type',
         method: 'GET',
         params: {
@@ -155,7 +154,7 @@ export const dropdownApi = createApi({
         filters?: string;
       }
     >({
-      query: ({page_size, page, search, filters}) => ({
+      query: ({ page_size, page, search, filters }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_category',
         method: 'GET',
         params: {
@@ -174,9 +173,9 @@ export const dropdownApi = createApi({
     }),
     getItems: builder.query<
       RItems,
-      {search?: string; page_size?: string; page?: string}
+      { search?: string; page_size?: string; page?: string }
     >({
-      query: ({search, page_size, page}) => ({
+      query: ({ search, page_size, page }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_items',
         method: 'GET',
         params: {
@@ -189,9 +188,9 @@ export const dropdownApi = createApi({
 
     getBeat: builder.query<
       RBeat,
-      {page_size?: string; page?: string; search?: string}
+      { page_size?: string; page?: string; search?: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_beat',
         method: 'GET',
         params: {
@@ -203,9 +202,9 @@ export const dropdownApi = createApi({
     }),
     getStore: builder.query<
       RStore,
-      {page_size?: string; page?: string; search: string}
+      { page_size?: string; page?: string; search: string }
     >({
-      query: ({page_size, page, search}) => ({
+      query: ({ page_size, page, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_stores_safe',
         method: 'GET',
         params: {
@@ -216,7 +215,7 @@ export const dropdownApi = createApi({
       }),
     }),
     getDailyStore: builder.query<RDailyStore, IDailyStore>({
-      query: ({date, user}) => ({
+      query: ({ date, user }) => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_stores',
         method: 'GET',
         params: {
@@ -243,9 +242,9 @@ export const dropdownApi = createApi({
     //Location by lat long
     getLocationByLatLong: builder.query<
       LocationResponse,
-      {latitude: string; longitude: string}
+      { latitude: string; longitude: string }
     >({
-      query: ({latitude, longitude}) => ({
+      query: ({ latitude, longitude }) => ({
         url: '/method/salesforce_management.mobile_app_apis.location.location.set_current_location',
         method: 'GET',
         params: {

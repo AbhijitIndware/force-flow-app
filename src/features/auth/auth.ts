@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { createSlice } from '@reduxjs/toolkit';
 import { apiBaseUrl } from '../apiBaseUrl.js';
+import { baseQueryWithAuthGuard } from '../utility';
 import {
   Employee,
   EmployeeProfileResponse,
@@ -13,9 +14,7 @@ import { Distributor } from '../../types/baseType.js';
 //Auth api calling
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: apiBaseUrl,
-  }),
+  baseQuery: baseQueryWithAuthGuard,
   tagTypes: ['Login'],
   endpoints: builder => ({
     login: builder.mutation<RLogin, ILogin>({
@@ -53,6 +52,8 @@ interface InitialState {
   sId: string | null;
   empId: string | null;
   distributor: Distributor | null | undefined;
+  sessionExpired: boolean;
+  globalError: any | null;
 }
 const initialState: InitialState = {
   status: null,
@@ -63,7 +64,9 @@ const initialState: InitialState = {
   employee: null,
   sId: null,
   empId: null,
-  distributor: null
+  distributor: null,
+  sessionExpired: false,
+  globalError: null,
 };
 
 //auth api response handling(saving the token)
@@ -80,6 +83,13 @@ export const authSlice = createSlice({
       state.employee = null;
       state.sId = null;
       state.empId = null;
+      state.sessionExpired = false;
+    },
+    setSessionExpired: (state, action) => {
+      state.sessionExpired = action.payload;
+    },
+    setGlobalError: (state, action) => {
+      state.globalError = action.payload;
     },
   },
   extraReducers: builder => {
@@ -127,7 +137,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setSessionExpired, setGlobalError } = authSlice.actions;
 export default authSlice.reducer;
 export const { useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery } =
   authApi;
