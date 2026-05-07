@@ -10,6 +10,7 @@ import {
   promoterSlice,
 } from '../features/base/promoter-base-api';
 import { distributorBaseApi, distributorSlice } from '../features/base/distributor-api';
+import { tadaApiV2, tadaV2Slice } from '../features/tada/tadaApiv2';
 
 const persistConfig = {
   key: 'root',
@@ -21,7 +22,8 @@ const authReducer = combineReducers({
   pjpSlice: pjpSlice.reducer,
   tadaSlice: tadaSlice.reducer,
   promoterSlice: promoterSlice.reducer,
-  distributorSlice: distributorSlice.reducer
+  distributorSlice: distributorSlice.reducer,
+  tadaV2Slice: tadaV2Slice.reducer
 });
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
@@ -35,6 +37,7 @@ export const store = configureStore({
     [promoterBaseApi.reducerPath]: promoterBaseApi.reducer,
     [tadaApi.reducerPath]: tadaApi.reducer,
     [distributorBaseApi.reducerPath]: distributorBaseApi.reducer,
+    [tadaApiV2.reducerPath]: tadaApiV2.reducer
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({ serializableCheck: false }).concat([
@@ -43,7 +46,8 @@ export const store = configureStore({
       baseApi.middleware,
       tadaApi.middleware,
       promoterBaseApi.middleware,
-      distributorBaseApi.middleware
+      distributorBaseApi.middleware,
+      tadaApiV2.middleware
     ]),
 });
 

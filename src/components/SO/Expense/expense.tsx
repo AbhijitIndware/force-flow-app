@@ -6,12 +6,16 @@ import {
   Text,
   View,
 } from 'react-native';
-import React from 'react';
-import {TouchableOpacity} from 'react-native';
+import React, { useMemo } from 'react';
+import { TouchableOpacity, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import {
+  useGetMyExpenseClaimsQuery,
+  useGetMyTadaSummaryQuery,
+} from '../../../features/tada/tadaApiv2';
 import {
   BanknoteArrowDown,
   BriefcaseConveyorBelt,
@@ -25,38 +29,112 @@ import {
   Wallet,
 } from 'lucide-react-native';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const ExpenseComponent = ({navigation}: any) => {
+const ExpenseComponent = ({ navigation }: any) => {
+  const currentMonth = new Date().getMonth() + 1;
+  const currentYear = new Date().getFullYear();
+
+  const { data: claimsData, isLoading: claimsLoading } =
+    useGetMyExpenseClaimsQuery({
+      month: currentMonth,
+      year: currentYear,
+    });
+
+  const { data: summaryData, isLoading: summaryLoading } = useGetMyTadaSummaryQuery(
+    {
+      month: currentMonth,
+      year: currentYear,
+    },
+  );
+
+  const claims = claimsData?.message?.data || [];
+
+  const counts = useMemo(() => {
+    return claims.reduce(
+      (acc, claim) => {
+        const status = (claim.approval_status || '').toLowerCase();
+        if (status === 'pending' || status === 'submitted') {
+          acc.pending++;
+        } else if (status === 'approved') {
+          acc.approved++;
+        } else if (status === 'rejected') {
+          acc.rejected++;
+        }
+        return acc;
+      },
+      { pending: 0, approved: 0, rejected: 0 },
+    );
+  }, [claims]);
+
+  const totalConsumed = useMemo(() => {
+    const consumed = summaryData?.message?.data?.consumed;
+    if (!consumed) {
+      return 0;
+    }
+    return (
+      (consumed.DA || 0) +
+      (consumed.Lodging || 0) +
+      (consumed.TA || 0) +
+      (consumed.Telecom || 0) +
+      (consumed.Incidental || 0)
+    );
+  }, [summaryData]);
+
+  if (claimsLoading || summaryLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.orange} />
+        <Text style={styles.loadingText}>Loading Expense Data...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView>
       <View style={styles.countBoxSection}>
         <View style={styles.countBox}>
           <View
-            style={[styles.countBoxIcon, {backgroundColor: Colors.holdLight}]}>
+            style={[styles.countBoxIcon, { backgroundColor: Colors.holdLight }]}>
             <RotateCw strokeWidth={1.4} color={Colors.orange} />
           </View>
-          <Text style={styles.countBoxDay}>0</Text>
+          <Text style={styles.countBoxDay}>{counts.pending}</Text>
           <Text style={styles.countBoxTitle}>Pending</Text>
         </View>
         <View style={styles.countBox}>
           <View
             style={[
               styles.countBoxIcon,
-              {backgroundColor: Colors.lightSuccess},
+              { backgroundColor: Colors.lightSuccess },
             ]}>
             <CircleCheckBig strokeWidth={1.4} color={Colors.success} />
           </View>
-          <Text style={styles.countBoxDay}>0</Text>
+          <Text style={styles.countBoxDay}>{counts.approved}</Text>
           <Text style={styles.countBoxTitle}>Approve</Text>
         </View>
         <View style={styles.countBox}>
           <View
-            style={[styles.countBoxIcon, {backgroundColor: Colors.lightRed}]}>
+            style={[styles.countBoxIcon, { backgroundColor: Colors.lightRed }]}>
             <CircleX strokeWidth={1.4} color={Colors.error} />
           </View>
-          <Text style={styles.countBoxDay}>0</Text>
+          <Text style={styles.countBoxDay}>{counts.rejected}</Text>
           <Text style={styles.countBoxTitle}>Reject</Text>
+        </View>
+      </View>
+
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryHeader}>
+            <Wallet size={20} color={Colors.orange} />
+            <Text style={styles.summaryTitle}>Monthly Consumption</Text>
+          </View>
+          <Text style={styles.summaryAmount}>
+            ₹ {totalConsumed.toLocaleString()}
+          </Text>
+          <Text style={styles.summarySubtext}>
+            For {new Date().toLocaleString('default', { month: 'long' })}{' '}
+            {currentYear}
+          </Text>
         </View>
       </View>
 
@@ -71,7 +149,7 @@ const ExpenseComponent = ({navigation}: any) => {
         />
       </TouchableOpacity>
 
-      <View style={[styles.quick, {paddingTop: 0}]}>
+      <View style={[styles.quick, { paddingTop: 0 }]}>
         <View style={styles.HeadingHead}>
           <Text style={styles.SectionHeading}>Quick Create</Text>
           <TouchableOpacity
@@ -82,7 +160,7 @@ const ExpenseComponent = ({navigation}: any) => {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.dataBox, {marginTop: 2}]}>
+        <View style={[styles.dataBox, { marginTop: 2 }]}>
           <TouchableOpacity
             onPress={() => navigation.navigate('ExpenseListScreen')}
             style={[styles.positionValue]}>
@@ -138,7 +216,7 @@ const ExpenseComponent = ({navigation}: any) => {
         </View>
       </View>
 
-      <View style={[styles.quick, {paddingTop: 0}]}>
+      <View style={[styles.quick, { paddingTop: 0 }]}>
         <Text style={styles.SectionHeading}>Pending Approval</Text>
         <View style={[styles.paBox]}>
           <TouchableOpacity
@@ -213,7 +291,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -225,7 +303,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
+  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -292,7 +370,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -384,7 +462,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: {paddingTop: 15},
+  dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -409,7 +487,7 @@ const styles = StyleSheet.create({
     //alignItems: 'center',
     gap: 12,
   },
-  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
+  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -505,7 +583,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: {backgroundColor: Colors.white},
+  LinkSection: { backgroundColor: Colors.white },
 
   IconlinkBox: {
     display: 'flex',
@@ -519,5 +597,54 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.sm,
     fontFamily: Fonts.medium,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: Colors.lightBg,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+  },
+  summaryContainer: {
+    paddingHorizontal: 20,
+    marginTop: 15,
+  },
+  summaryCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 15,
+    padding: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  summaryTitle: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+  },
+  summaryAmount: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.Xl,
+    color: Colors.orange,
+    marginVertical: 4,
+  },
+  summarySubtext: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.gray,
   },
 });
