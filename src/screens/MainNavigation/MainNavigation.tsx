@@ -83,12 +83,12 @@ const MainNavigation = () => {
       (sessionError as any)?.data?.message?.valid === false &&
       (sessionError as any)?.status === 401
     ) {
-      setSessionExpired(true);
+      dispatch(setSessionExpired(true));
       // Small delay so the user can read the banner before being logged out
       const timer = setTimeout(() => {
-        setSessionExpired(false);
+        dispatch(setSessionExpired(false));
         dispatch(logout());
-      }, 2000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [sessionError, data]);

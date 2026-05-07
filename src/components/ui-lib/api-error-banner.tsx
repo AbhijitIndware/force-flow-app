@@ -57,8 +57,13 @@ export function extractApiErrorMessage(error: RtkError): string | null {
       try {
         const msgs = JSON.parse(data._server_messages);
         if (Array.isArray(msgs) && msgs.length > 0) {
-          const parsed = JSON.parse(msgs[0]);
-          return parsed?.message || msgs[0];
+          // Some messages are strings, some are JSON strings
+          try {
+            const parsed = JSON.parse(msgs[0]);
+            return parsed?.message || msgs[0];
+          } catch {
+            return msgs[0];
+          }
         }
       } catch {}
     }
