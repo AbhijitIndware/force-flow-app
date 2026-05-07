@@ -9,10 +9,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Colors} from '../../../utils/colors';
-import React, {useCallback, useEffect, useState} from 'react';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   AlarmClockMinus,
   CalendarCheck,
@@ -22,18 +22,18 @@ import {
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react-native';
-import {FlatList} from 'react-native';
-import {windowHeight} from '../../../utils/utils';
-import {PromoterAttendanceRecord} from '../../../types/baseType';
+import { FlatList } from 'react-native';
+import { windowHeight } from '../../../utils/utils';
+import { PromoterAttendanceRecord } from '../../../types/baseType';
 import moment from 'moment';
-import {useGetAttendanceHistoryQuery} from '../../../features/base/promoter-base-api';
+import { useGetAttendanceHistoryQuery } from '../../../features/base/promoter-base-api';
 import DateTimePicker from 'react-native-modal-datetime-picker';
-import {useAppSelector} from '../../../store/hook';
+import { useAppSelector } from '../../../store/hook';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const RecentPromoterAttendanceScreen = ({navigation}: any) => {
+const RecentPromoterAttendanceScreen = ({ navigation }: any) => {
   const [page, setPage] = useState<number>(1);
   const [attendance, setAttendance] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -49,14 +49,13 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
     state => state?.persistedReducer?.promoterSlice?.promoterStatus,
   );
 
-  const {data, isLoading, isUninitialized, isFetching, refetch} =
+  const { data, isLoading, isUninitialized, isFetching, refetch } =
     useGetAttendanceHistoryQuery({
       page,
       page_size: PAGE_SIZE,
       from_date: moment(fromDate).format('YYYY-MM-DD'),
       to_date: moment(toDate).format('YYYY-MM-DD'),
     });
-  console.log('🚀 ~ RecentPromoterAttendanceScreen ~ data:', data);
 
   // append new data when page changes
   useEffect(() => {
@@ -89,7 +88,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
     }
   };
 
-  const renderItem = ({item}: {item: PromoterAttendanceRecord}) => {
+  const renderItem = ({ item }: { item: PromoterAttendanceRecord }) => {
     const inTime = item.in_time
       ? moment(item.in_time, 'YYYY-MM-DD HH:mm:ss.SSSSSS').format('hh:mm A')
       : '--';
@@ -161,7 +160,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
         <View style={styles.countCard}>
           <View>
             <View
-              style={[styles.boxIcon, {backgroundColor: Colors.lightDenger}]}>
+              style={[styles.boxIcon, { backgroundColor: Colors.lightDenger }]}>
               <UserRoundX size={22} color={Colors.denger} />
             </View>
           </View>
@@ -174,7 +173,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
         </View>
         <View style={styles.countCard}>
           <View>
-            <View style={[styles.boxIcon, {backgroundColor: Colors.holdLight}]}>
+            <View style={[styles.boxIcon, { backgroundColor: Colors.holdLight }]}>
               <AlarmClockMinus size={22} color={Colors.orange} />
             </View>
           </View>
@@ -212,7 +211,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
                   borderTopRightRadius: 16,
                 }}>
                 <Text
-                  style={{fontSize: 18, fontWeight: '800', marginBottom: 15}}>
+                  style={{ fontSize: 18, fontWeight: '800', marginBottom: 15 }}>
                   Filter Attendance
                 </Text>
 
@@ -249,8 +248,8 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
                   }}>
                   <TouchableOpacity
                     onPress={() => setFilterVisible(false)}
-                    style={{marginRight: 15}}>
-                    <Text style={{color: 'gray'}}>Cancel</Text>
+                    style={{ marginRight: 15 }}>
+                    <Text style={{ color: 'gray' }}>Cancel</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -260,7 +259,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
                       refetch();
                       setFilterVisible(false);
                     }}>
-                    <Text style={{color: Colors.primary, fontWeight: '600'}}>
+                    <Text style={{ color: Colors.primary, fontWeight: '600' }}>
                       Apply
                     </Text>
                   </TouchableOpacity>
@@ -319,7 +318,7 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{fontSize: 16, color: 'gray'}}>
+              <Text style={{ fontSize: 16, color: 'gray' }}>
                 No Recent Attendance Found
               </Text>
             </View>
@@ -439,7 +438,7 @@ const styles = StyleSheet.create({
   },
 
   //bodyContent section css
-  bodyContent: {flex: 1, paddingBottom: 20},
+  bodyContent: { flex: 1, paddingBottom: 20 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',

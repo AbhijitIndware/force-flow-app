@@ -37,7 +37,6 @@ const MainNavigation = () => {
   const sId = useAppSelector(state => {
     return state?.persistedReducer?.authSlice?.sId;
   });
-  console.log("🚀 ~ MainNavigation ~ sId:", sId)
   const isAuthenticated = !!sId;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -76,7 +75,7 @@ const MainNavigation = () => {
     data,
     isLoading,
     error: sessionError,
-  } = useCheckSessionQuery({ sId: sId as string }, { skip: !sId });
+  } = useCheckSessionQuery({ sId: sId as string }, { refetchOnFocus: true, refetchOnMountOrArgChange: true });
 
   React.useEffect(() => {
     if (
