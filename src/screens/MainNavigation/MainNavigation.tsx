@@ -10,7 +10,6 @@ import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   useCheckSessionQuery,
-  useGetProfileDataQuery,
   setGlobalError,
   setSessionExpired,
   logout,
@@ -38,11 +37,9 @@ const MainNavigation = () => {
     return state?.persistedReducer?.authSlice?.sId;
   });
   const isAuthenticated = !!sId;
+  console.log("🚀 ~ MainNavigation ~ isAuthenticated:", isAuthenticated)
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
-  );
-  const employeeId = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.empId,
   );
   const designation = employee?.designation;
 
@@ -58,18 +55,14 @@ const MainNavigation = () => {
     userType = 'SALES_OFFICER';
   } else if (designation === 'Distributor') {
     userType = 'DISTRIBUTOR';
+  } else {
+    userType = 'SALES_OFFICER';
+
   }
 
   const insets = useSafeAreaInsets();
 
-  useGetProfileDataQuery(
-    { emp_id: employeeId as string },
-    {
-      refetchOnFocus: true,
-      refetchOnMountOrArgChange: true,
-      skip: !employeeId,
-    },
-  );
+
 
   const {
     data,

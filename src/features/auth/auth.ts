@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { apiBaseUrl } from '../apiBaseUrl.js';
 import { baseQueryWithAuthGuard } from '../utility';
 import {
+  ApiCredentials,
   Employee,
   EmployeeProfileResponse,
   ILogin,
@@ -47,7 +48,7 @@ interface InitialState {
   loading?: Boolean;
   error?: Boolean;
   user: any | null;
-  api_credentials: any | null;
+  api_credentials: ApiCredentials | null;
   employee: Employee | null;
   sId: string | null;
   empId: string | null;

@@ -271,7 +271,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {/* East */}N/A
+                  {employee?.zone || 'N/A'}
                 </Text>
               </View>
               <Divider

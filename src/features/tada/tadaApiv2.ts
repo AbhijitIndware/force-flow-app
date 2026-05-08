@@ -1,5 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { apiBaseUrl } from '../apiBaseUrl';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { createSlice } from '@reduxjs/toolkit';
 import {
   AddExpenseRowPayload,
@@ -25,11 +24,7 @@ import {
   TadaSummary,
   VisibilityClaim,
 } from '../../types/tadaType';
-
-const API_KEY = '285c385e121b704a272d2e1a7ab4f625';
-const API_SECRET = '7318e8c56882e6403c69da5330f95856';
-
-const encodedAuth = btoa(`${API_KEY}:${API_SECRET}`);
+import { baseQueryForTadaWithAuthGuard } from '../utility';
 
 // ─── API Definition ────────────────────────────────────────────────────────
 
@@ -39,13 +34,7 @@ const SOFTSENS_BASE = '/method/softsens.api';
 
 export const tadaApiV2 = createApi({
   reducerPath: 'tadaApiV2',
-  baseQuery: fetchBaseQuery({
-    baseUrl: apiBaseUrl,
-    prepareHeaders: headers => {
-      headers.set('Authorization', `Basic ${encodedAuth}`);
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryForTadaWithAuthGuard,
   tagTypes: ['Expense', 'Approval', 'VisibilityClaim', 'Dashboard'],
   endpoints: builder => ({
 
