@@ -128,7 +128,15 @@ const AddVisibilityComponent = ({
           field="value"
           value={values.store}
           data={storeDailyList}
-          onChange={(val: string) => setFieldValue('store', val)}
+          onChange={(val: string) => {
+            setFieldValue('store', val);
+            if (storeData?.message?.pjp_daily_store_doc) {
+              setFieldValue(
+                'pjp_store_id',
+                storeData.message.pjp_daily_store_doc,
+              );
+            }
+          }}
           error={touched.store && errors.store}
         />
       </View>
@@ -141,8 +149,8 @@ const AddVisibilityComponent = ({
           value={values.payment_type}
           data={[
             {label: 'Cash', value: 'Cash'},
-            {label: 'Upi', value: 'Upi'},
-            {label: 'Bank', value: 'Bank'},
+            {label: 'Cheque', value: 'Cheque'},
+            {label: 'Online', value: 'Online'},
           ]}
           onChange={(val: string) => setFieldValue('payment_type', val)}
           error={touched.payment_type && errors.payment_type}
@@ -177,10 +185,10 @@ const AddVisibilityComponent = ({
       <View style={styles.inputWrapper}>
         <ReusableInput
           label="Damage Amount"
-          value={values.damage_amount}
-          onChangeText={handleChange('damage_amount')}
-          onBlur={() => handleBlur('damage_amount')}
-          error={touched.damage_amount && errors.damage_amount}
+          value={values.damage_claim}
+          onChangeText={handleChange('damage_claim')}
+          onBlur={() => handleBlur('damage_claim')}
+          error={touched.damage_claim && errors.damage_claim}
         />
       </View>
 

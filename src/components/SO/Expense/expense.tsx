@@ -1,66 +1,61 @@
 import {
   Dimensions,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import React, { useMemo } from 'react';
-import { TouchableOpacity, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import moment from 'moment';
+import LinearGradient from 'react-native-linear-gradient';
 import {
   useGetMyExpenseClaimsQuery,
   useGetMyTadaSummaryQuery,
 } from '../../../features/tada/tadaApiv2';
 import {
-  BanknoteArrowDown,
-  BriefcaseConveyorBelt,
-  Calculator,
-  ChevronRight,
-  CircleCheck,
   CircleCheckBig,
   CircleX,
-  FileText,
   RotateCw,
   Wallet,
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
+const MONTHS = moment.months().map((label, i) => ({ label, short: moment().month(i).format('MMM'), value: i + 1 }));
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
+
 const ExpenseComponent = ({ navigation }: any) => {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
+  const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR);
+  const [showMonthModal, setShowMonthModal] = React.useState(false);
+  const [showYearModal, setShowYearModal] = React.useState(false);
 
-  const { data: claimsData, isLoading: claimsLoading } =
-    useGetMyExpenseClaimsQuery({
-      month: currentMonth,
-      year: currentYear,
-    });
+  const { data: claimsData, isLoading: claimsLoading, isFetching: claimsFetching } =
+    useGetMyExpenseClaimsQuery({ month: selectedMonth, year: selectedYear });
 
-  const { data: summaryData, isLoading: summaryLoading } = useGetMyTadaSummaryQuery(
-    {
-      month: currentMonth,
-      year: currentYear,
-    },
-  );
+  const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useGetMyTadaSummaryQuery({
+    month: selectedMonth,
+    year: selectedYear,
+  });
 
   const claims = claimsData?.message?.data || [];
 
   const counts = useMemo(() => {
     return claims.reduce(
-      (acc, claim) => {
+      (acc: any, claim: any) => {
         const status = (claim.approval_status || '').toLowerCase();
-        if (status === 'pending' || status === 'submitted') {
-          acc.pending++;
-        } else if (status === 'approved') {
-          acc.approved++;
-        } else if (status === 'rejected') {
-          acc.rejected++;
-        }
+        if (status === 'pending' || status === 'submitted') acc.pending++;
+        else if (status === 'approved') acc.approved++;
+        else if (status === 'rejected') acc.rejected++;
         return acc;
       },
       { pending: 0, approved: 0, rejected: 0 },
@@ -69,9 +64,7 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   const totalConsumed = useMemo(() => {
     const consumed = summaryData?.message?.data?.consumed;
-    if (!consumed) {
-      return 0;
-    }
+    if (!consumed) return 0;
     return (
       (consumed.DA || 0) +
       (consumed.Lodging || 0) +
@@ -80,6 +73,8 @@ const ExpenseComponent = ({ navigation }: any) => {
       (consumed.Incidental || 0)
     );
   }, [summaryData]);
+
+  const selectedMonthLabel = MONTHS.find(m => m.value === selectedMonth)?.label || '';
 
   if (claimsLoading || summaryLoading) {
     return (
@@ -91,519 +86,253 @@ const ExpenseComponent = ({ navigation }: any) => {
   }
 
   return (
-    <ScrollView>
-      <View style={styles.countBoxSection}>
-        <View style={styles.countBox}>
-          <View
-            style={[styles.countBoxIcon, { backgroundColor: Colors.holdLight }]}>
-            <RotateCw strokeWidth={1.4} color={Colors.orange} />
-          </View>
-          <Text style={styles.countBoxDay}>{counts.pending}</Text>
-          <Text style={styles.countBoxTitle}>Pending</Text>
-        </View>
-        <View style={styles.countBox}>
-          <View
-            style={[
-              styles.countBoxIcon,
-              { backgroundColor: Colors.lightSuccess },
-            ]}>
-            <CircleCheckBig strokeWidth={1.4} color={Colors.success} />
-          </View>
-          <Text style={styles.countBoxDay}>{counts.approved}</Text>
-          <Text style={styles.countBoxTitle}>Approve</Text>
-        </View>
-        <View style={styles.countBox}>
-          <View
-            style={[styles.countBoxIcon, { backgroundColor: Colors.lightRed }]}>
-            <CircleX strokeWidth={1.4} color={Colors.error} />
-          </View>
-          <Text style={styles.countBoxDay}>{counts.rejected}</Text>
-          <Text style={styles.countBoxTitle}>Reject</Text>
-        </View>
-      </View>
+    <View style={{ flex: 1 }}>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
-      <View style={styles.summaryContainer}>
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryHeader}>
-            <Wallet size={20} color={Colors.orange} />
-            <Text style={styles.summaryTitle}>Monthly Consumption</Text>
-          </View>
-          <Text style={styles.summaryAmount}>
-            ₹ {totalConsumed.toLocaleString()}
-          </Text>
-          <Text style={styles.summarySubtext}>
-            For {new Date().toLocaleString('default', { month: 'long' })}{' '}
-            {currentYear}
-          </Text>
-        </View>
-      </View>
+        {/* ── Filter Row: Year + Month Dropdowns ── */}
+        <View style={styles.filterRow}>
+          {/* Year Dropdown Trigger */}
+          <TouchableOpacity
+            style={styles.yearTrigger}
+            onPress={() => setShowYearModal(true)}
+            activeOpacity={0.8}>
+            <Text style={styles.yearTriggerText}>{selectedYear}</Text>
+            <Ionicons name="chevron-down" size={14} color={Colors.white} />
+          </TouchableOpacity>
 
+          {/* Month Dropdown Trigger */}
+          <TouchableOpacity
+            style={styles.monthTrigger}
+            onPress={() => setShowMonthModal(true)}
+            activeOpacity={0.8}>
+            <Ionicons name="calendar-outline" size={16} color={Colors.orange} />
+            <Text style={styles.monthTriggerText}>{selectedMonthLabel}</Text>
+            <Ionicons name="chevron-down" size={14} color={Colors.gray} />
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Minimal Summary Card: Breakdown + Total ── */}
+        <View style={styles.summaryContainer}>
+          <LinearGradient
+            colors={['#2D3748', '#1A202C']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.summaryCard}>
+            <View style={styles.summaryContent}>
+              <View style={styles.breakdownRow}>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>DA</Text>
+                  <Text style={styles.breakdownValue}>₹{summaryData?.message?.data?.consumed?.DA || 0}</Text>
+                </View>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>TA</Text>
+                  <Text style={styles.breakdownValue}>₹{summaryData?.message?.data?.consumed?.TA || 0}</Text>
+                </View>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>Lodging</Text>
+                  <Text style={styles.breakdownValue}>₹{summaryData?.message?.data?.consumed?.Lodging || 0}</Text>
+                </View>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>Telecom</Text>
+                  <Text style={styles.breakdownValue}>₹{summaryData?.message?.data?.consumed?.Telecom || 0}</Text>
+                </View>
+                <View style={styles.breakdownItem}>
+                  <Text style={styles.breakdownLabel}>Incid</Text>
+                  <Text style={styles.breakdownValue}>₹{summaryData?.message?.data?.consumed?.Incidental || 0}</Text>
+                </View>
+              </View>
+
+              <View style={styles.hSeparator} />
+
+              <View style={styles.totalRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Wallet size={16} color={Colors.orange} />
+                  <Text style={styles.totalLabel}>Total Consumption</Text>
+                </View>
+                <Text style={styles.totalAmount}>₹ {totalConsumed.toLocaleString()}</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* ── Consolidated Status Card ── */}
+        <View style={styles.overviewContainer}>
+          <View style={styles.overviewCard}>
+            <View style={styles.overviewItem}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#FFF7ED' }]}>
+                <RotateCw size={14} color={Colors.orange} />
+              </View>
+              <View>
+                <Text style={[styles.overviewCount, { color: Colors.orange }]}>{counts.pending}</Text>
+                <Text style={styles.overviewLabel}>Pending</Text>
+              </View>
+            </View>
+            <View style={styles.vSeparator} />
+            <View style={styles.overviewItem}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#F0FDF4' }]}>
+                <CircleCheckBig size={14} color={Colors.success} />
+              </View>
+              <View>
+                <Text style={[styles.overviewCount, { color: Colors.success }]}>{counts.approved}</Text>
+                <Text style={styles.overviewLabel}>Approved</Text>
+              </View>
+            </View>
+            <View style={styles.vSeparator} />
+            <View style={styles.overviewItem}>
+              <View style={[styles.miniIconBox, { backgroundColor: '#FEF2F2' }]}>
+                <CircleX size={14} color={Colors.error} />
+              </View>
+              <View>
+                <Text style={[styles.overviewCount, { color: Colors.error }]}>{counts.rejected}</Text>
+                <Text style={styles.overviewLabel}>Rejected</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* ── Recent Claims ── */}
+        <View style={styles.listContainer}>
+          <View style={styles.listHeader}>
+            <Text style={styles.SectionHeading}>Recent Claims</Text>
+            {claimsFetching && <ActivityIndicator size="small" color={Colors.orange} />}
+          </View>
+
+          {claims.length === 0 ? (
+            <View style={styles.emptyBox}>
+              <Text style={styles.emptyText}>No claims found for this month</Text>
+            </View>
+          ) : (
+            claims.map((claim: any) => {
+              const statusColor = claim.approval_status === 'Approved' ? Colors.success :
+                claim.approval_status === 'Rejected' ? Colors.error :
+                  Colors.orange;
+              return (
+                <TouchableOpacity
+                  key={claim.claim_id}
+                  style={[styles.claimCard, { borderLeftColor: statusColor }]}
+                  activeOpacity={0.7}
+                  onPress={() =>
+                    navigation.navigate('ExpenseClaimDetails', { claimId: claim.claim_id })
+                  }>
+                  <View style={styles.claimLeft}>
+                    <Text style={styles.claimId}>{claim.claim_id}</Text>
+                    <Text style={styles.claimDate}>{moment(claim.date).format('DD MMM YYYY')}</Text>
+                  </View>
+                  <View style={styles.claimRight}>
+                    <View style={[styles.statusPill, { backgroundColor: statusColor + '15' }]}>
+                      <Text style={[styles.claimStatus, { color: statusColor }]}>
+                        {claim.approval_status}
+                      </Text>
+                    </View>
+                    <Text style={styles.claimAmount}>₹ {claim.total_amount}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+        </View>
+
+        <View style={{ height: 80 }} />
+      </ScrollView>
+
+      {/* ── Floating Claim Button ── */}
       <TouchableOpacity
         onPress={() => navigation.navigate('AddExpenseScreen')}
-        style={styles.checkinButton}>
-        <Text style={styles.checkinButtonText}>Claim an Expense</Text>
-        <Ionicons
-          name="chevron-forward-circle-sharp"
-          size={24}
-          color={Colors.white}
-        />
+        style={styles.floatingButton}
+        activeOpacity={0.8}>
+        <Ionicons name="add" size={28} color={Colors.white} />
+        <Text style={styles.floatingButtonText}>Add Claim</Text>
       </TouchableOpacity>
 
-      <View style={[styles.quick, { paddingTop: 0 }]}>
-        <View style={styles.HeadingHead}>
-          <Text style={styles.SectionHeading}>Quick Create</Text>
-          <TouchableOpacity
-            style={styles.viewallButton}
-            onPress={() => navigation.navigate('AddExpenseScreen')}>
-            <Text style={styles.viewaText}>View All</Text>
-            <ChevronRight size={24} color={Colors.black} />
-          </TouchableOpacity>
-        </View>
+      {/* ── Month Picker Modal ── */}
+      <Modal
+        visible={showMonthModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMonthModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMonthModal(false)}>
+          <View style={styles.pickerModalContainer}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Select Month</Text>
+              <TouchableOpacity onPress={() => setShowMonthModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.darkButton} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.monthGrid}>
+              {MONTHS.map(m => {
+                const isActive = selectedMonth === m.value;
+                return (
+                  <TouchableOpacity
+                    key={m.value}
+                    style={[styles.monthItem, isActive && styles.monthItemActive]}
+                    onPress={() => {
+                      setSelectedMonth(m.value);
+                      setShowMonthModal(false);
+                    }}>
+                    <Text style={[styles.monthItemText, isActive && styles.monthItemTextActive]}>
+                      {m.short}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
-        <View style={[styles.dataBox, { marginTop: 2 }]}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseListScreen')}
-            style={[styles.positionValue]}>
-            <View style={styles.incentiveContent}>
-              <View style={styles.iconbox}>
-                <Calculator strokeWidth={2} color={Colors.white} size={30} />
-              </View>
-              <View>
-                <Text style={styles.quantitytime}>Expenses</Text>
-              </View>
+      {/* ── Year Picker Modal ── */}
+      <Modal
+        visible={showYearModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowYearModal(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowYearModal(false)}>
+          <View style={styles.pickerModalContainer}>
+            <View style={styles.pickerHeader}>
+              <Text style={styles.pickerTitle}>Select Year</Text>
+              <TouchableOpacity onPress={() => setShowYearModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.darkButton} />
+              </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}
-            style={[styles.positionValue]}>
-            <View style={styles.incentiveContent}>
-              <View style={styles.iconbox}>
-                <FileText strokeWidth={2} color={Colors.white} size={30} />
-              </View>
-              <View>
-                <Text style={styles.quantitytime}>Report</Text>
-              </View>
+            <View style={styles.yearGrid}>
+              {YEARS.map(y => {
+                const isActive = selectedYear === y;
+                return (
+                  <TouchableOpacity
+                    key={y}
+                    style={[styles.yearItem, isActive && styles.yearItemActive]}
+                    onPress={() => {
+                      setSelectedYear(y);
+                      setShowYearModal(false);
+                    }}>
+                    <Text style={[styles.yearItemText, isActive && styles.yearItemTextActive]}>
+                      {y}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}
-            style={[styles.positionValue]}>
-            <View style={styles.incentiveContent}>
-              <View style={styles.iconbox}>
-                <BriefcaseConveyorBelt
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={30}
-                />
-              </View>
-              <View>
-                <Text style={styles.quantitytime}>Trip</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}
-            style={[styles.positionValue]}>
-            <View style={styles.incentiveContent}>
-              <View style={styles.iconbox}>
-                <Wallet strokeWidth={2} color={Colors.white} size={30} />
-              </View>
-              <View>
-                <Text style={styles.quantitytime}>Advance</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={[styles.quick, { paddingTop: 0 }]}>
-        <Text style={styles.SectionHeading}>Pending Approval</Text>
-        <View style={[styles.paBox]}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}>
-            <View style={styles.pendappContent}>
-              <View>
-                <FileText strokeWidth={2} color={Colors.black} size={30} />
-              </View>
-              <View>
-                <Text style={styles.quantityCount}>Reports</Text>
-              </View>
-              <View>
-                <CircleCheck strokeWidth={2} color={Colors.black} size={30} />
-              </View>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('ExpenseScreen')}>
-            <View style={styles.pendappContent}>
-              <View>
-                <BriefcaseConveyorBelt
-                  strokeWidth={2}
-                  color={Colors.black}
-                  size={30}
-                />
-              </View>
-              <View>
-                <Text style={styles.quantityCount}>Trips</Text>
-              </View>
-              <View>
-                <CircleCheck strokeWidth={2} color={Colors.black} size={30} />
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 };
 
 export default ExpenseComponent;
 
-// const styles = StyleSheet.create({});
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.transparent,
-    position: 'relative',
-    paddingHorizontal: 20,
-  },
-  quick: {
-    backgroundColor: Colors.transparent,
-    position: 'relative',
-    paddingHorizontal: 20,
-  },
-  HeadingHead: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 15,
-  },
-  //header-box-section css start
-  headerSec: {
-    backgroundColor: Colors.white,
-    minHeight: 200,
-    width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    // iOS Shadow
-    shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-
-    // Android Shadow
-    elevation: 2,
-  },
-  welcomeText: {
-    fontFamily: Fonts.light,
-    color: Colors.white,
-    fontSize: Size.sm,
-  },
-  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
-  welcomBox: {
-    padding: 15,
-    backgroundColor: Colors.orange,
-    borderRadius: 15,
-    paddingVertical: 20,
-    marginTop: 10,
-    borderBottomRightRadius: 0,
-    borderBottomLeftRadius: 0,
-    position: 'relative',
-  },
-
-  linkBox: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    borderRadius: 15,
-    marginTop: 8,
-    gap: 10,
-  },
-
-  dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.white,
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.white,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
-  },
-  monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.white,
-    fontSize: Size.xs,
-  },
-
-  linkContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    color: Colors.white,
-    gap: 1,
-    alignItems: 'flex-start',
-    width: '80%',
-  },
-
-  planLink: {
-    backgroundColor: Colors.white,
-    padding: 20,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
-  },
-
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
-  checkinButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'relative',
-    gap: 5,
-    marginTop: 15,
-    marginRight: 15,
-    marginLeft: 15,
-  },
-  viewallButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    //backgroundColor: Colors.darkButton,
-    //borderRadius: 8,
-    //paddingHorizontal: 10,
-    //paddingVertical: 3,
-    position: 'relative',
-    gap: 3,
-  },
-  checkinButtonText: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.md,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-  viewaText: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.sm,
-    color: Colors.black,
-    lineHeight: 22,
-  },
-
-  //header-box-section css end
-  //countBox-section css start
-  countBoxSection: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 10,
-    flexDirection: 'row',
-  },
-  countBox: {
-    backgroundColor: Colors.white,
-    width: width * 0.28,
-    borderRadius: 15,
-    padding: 10,
-    minHeight: 110,
-  },
-  countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
-  },
-  countBoxTitle: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xsmd,
-  },
-  countBoxDay: {
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    fontSize: Size.md,
-    lineHeight: 20,
-    position: 'relative',
-    marginTop: 0,
-  },
-  //countBox-section css end
-
-  //target&achivement section css start
-  SectionHeading: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-  },
-  dataBoxSection: { paddingTop: 15 },
-  dataBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 18,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
-  paBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 18,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    display: 'flex',
-    flexDirection: 'column',
-    //justifyContent: 'center',
-    //alignItems: 'center',
-    gap: 12,
-  },
-  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
-  incressValu: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    color: Colors.sucess,
-    paddingHorizontal: 15,
-    paddingVertical: 4,
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    borderRadius: 8,
-  },
-  quantityCount: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-    lineHeight: 22,
-  },
-  quantitytime: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
-    lineHeight: 20,
-  },
-
-  decriseValu: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.lightDenger,
-    color: Colors.denger,
-    paddingHorizontal: 15,
-    paddingVertical: 4,
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    borderRadius: 8,
-  },
-
-  //incentive section css start
-  incentiveContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-  },
-  pendappContent: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 6,
-    width: '100%',
-    backgroundColor: Colors.lightYellow,
-    padding: 10,
-    borderRadius: 6,
-  },
-  iconbox: {
-    width: 60,
-    height: 60,
-    backgroundColor: Colors.sucess,
-    borderRadius: 12,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  listLink: {
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: width * 0.9,
-  },
-  listLinkText: {
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    fontFamily: Fonts.regular,
-  },
-  arrobox: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#F0F2F6',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 100,
-  },
-
-  //incentive section css start
-  LinkSection: { backgroundColor: Colors.white },
-
-  IconlinkBox: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-    paddingHorizontal: 20,
-  },
-  linkTitle: {
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    fontFamily: Fonts.medium,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: Colors.lightBg,
   },
   loadingText: {
     marginTop: 10,
@@ -611,40 +340,312 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.darkButton,
   },
-  summaryContainer: {
-    paddingHorizontal: 20,
-    marginTop: 15,
+
+  // ── Filter Row ──
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 4,
   },
-  summaryCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 15,
-    padding: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  yearTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.darkButton,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
-  summaryHeader: {
+  yearTriggerText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.white,
+  },
+  monthTrigger: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
-  summaryTitle: {
+  monthTriggerText: {
+    flex: 1,
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
     color: Colors.darkButton,
   },
-  summaryAmount: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.Xl,
-    color: Colors.orange,
-    marginVertical: 4,
+
+  // ── Minimal Summary Card ──
+  summaryContainer: {
+    paddingHorizontal: 16,
+    marginTop: 8,
   },
-  summarySubtext: {
-    fontFamily: Fonts.regular,
+  summaryCard: {
+    borderRadius: 16,
+    padding: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  summaryContent: {
+    gap: 12,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  breakdownItem: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  breakdownLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    textTransform: 'uppercase',
+  },
+  breakdownValue: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.xs,
+    color: Colors.white,
+  },
+  hSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  totalAmount: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: Colors.orange,
+  },
+
+  // ── Overview Card ──
+  overviewContainer: {
+    paddingHorizontal: 16,
+    marginTop: 12,
+  },
+  overviewCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  overviewItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  miniIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overviewCount: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.sm,
+    lineHeight: 16,
+  },
+  overviewLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: Colors.gray,
+    textTransform: 'uppercase',
+  },
+  vSeparator: {
+    width: 1,
+    height: '60%',
+    backgroundColor: '#F0F2F6',
+  },
+
+  // ── Floating Action Button ──
+  floatingButton: {
+    position: 'absolute',
+    bottom: 25,
+    right: 20,
+    backgroundColor: Colors.orange,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 30,
+    gap: 6,
+    elevation: 10,
+    shadowColor: Colors.orange,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    zIndex: 999,
+  },
+  floatingButtonText: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.sm,
+    color: Colors.white,
+  },
+
+  // ── Claims List ──
+  listContainer: {
+    paddingHorizontal: 16,
+    marginTop: 20,
+  },
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  SectionHeading: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: '#1E293B',
+    letterSpacing: 0.5,
+  },
+  claimCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  claimLeft: { gap: 6 },
+  claimId: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.sm,
+    color: '#1E293B',
+  },
+  claimDate: {
+    fontFamily: Fonts.medium,
     fontSize: Size.xs,
     color: Colors.gray,
+  },
+  claimRight: { alignItems: 'flex-end', gap: 8 },
+  statusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  claimStatus: {
+    fontFamily: Fonts.bold,
+    fontSize: 11,
+    textTransform: 'uppercase',
+  },
+  claimAmount: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.sm,
+    color: '#1E293B',
+  },
+  emptyBox: { padding: 30, alignItems: 'center' },
+  emptyText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.gray,
+  },
+
+  // ── Modals ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  pickerModalContainer: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  pickerTitle: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+  },
+  monthGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  monthItem: {
+    width: (width - 40 - 24) / 4,
+    paddingVertical: 11,
+    borderRadius: 10,
+    backgroundColor: '#F5F4F1',
+    alignItems: 'center',
+  },
+  monthItemActive: {
+    backgroundColor: Colors.orange,
+  },
+  monthItemText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: '#444',
+  },
+  monthItemTextActive: {
+    fontFamily: Fonts.medium,
+    color: Colors.white,
+  },
+  yearGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  yearItem: {
+    width: (width - 40 - 16) / 3,
+    paddingVertical: 11,
+    borderRadius: 10,
+    backgroundColor: '#F5F4F1',
+    alignItems: 'center',
+  },
+  yearItemActive: {
+    backgroundColor: Colors.darkButton,
+  },
+  yearItemText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: '#444',
+  },
+  yearItemTextActive: {
+    fontFamily: Fonts.medium,
+    color: Colors.white,
   },
 });

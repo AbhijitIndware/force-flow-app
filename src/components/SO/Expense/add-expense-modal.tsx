@@ -19,6 +19,11 @@ const initialValues = {
   description: '',
   amount: '',
   attachment: null,
+  ta_mode: '',
+  ta_rail_class: '',
+  is_local: 0,
+  telecom_bill_month: '',
+  mobile_number: '',
 };
 
 const AddExpenseModal = ({visible, onClose, onAddExpense}: any) => {
@@ -44,6 +49,11 @@ const AddExpenseModal = ({visible, onClose, onAddExpense}: any) => {
         custom_claim_description: formValues.description,
         amount: Number(formValues.amount),
         attachment: formValues.attachment,
+        ta_mode: formValues.ta_mode,
+        ta_rail_class: formValues.ta_rail_class,
+        is_local: formValues.is_local,
+        telecom_bill_month: formValues.telecom_bill_month,
+        mobile_number: formValues.mobile_number,
       });
 
       Toast.show({

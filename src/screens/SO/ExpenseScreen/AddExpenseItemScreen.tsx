@@ -4,25 +4,29 @@ import {
   Animated,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
+  View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {flexCol} from '../../../utils/styles';
+import React, {useRef, useState, useEffect} from 'react';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { flexCol } from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Colors} from '../../../utils/colors';
-import AddExpenseItem from '../../../components/SO/Expense/add-expense-item';
+import { Colors } from '../../../utils/colors';
+import AddExpenseItem from '../../../components/SO/Expense/add-expense-item-v2';
 import Toast from 'react-native-toast-message';
-import {useFormik} from 'formik';
-import {expenseItemSchema} from '../../../types/schema';
-import {ActivityIndicator} from 'react-native';
+import { useFormik } from 'formik';
+import { expenseItemSchema } from '../../../types/schema';
 import {
-  useCreateExpenseClaimMutation,
-  useUploadAttachmentForClaimMutation,
-} from '../../../features/tada/tadaApi';
-import {ExpenseClaimPayload} from '../../../types/baseType';
-import {useAppSelector} from '../../../store/hook';
-import RNFS from 'react-native-fs';
+  useCreateExpenseDraftMutation,
+  useAddExpenseRowMutation,
+  useSubmitExpenseClaimMutation,
+} from '../../../features/tada/tadaApiv2';
+import { useAppSelector } from '../../../store/hook';
+import { fileToBase64 } from '../../../utils/fileUtils';
+import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import moment from 'moment';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -40,20 +44,21 @@ const initialValues = {
   description: '',
   amount: '',
   attachment: null,
+  ta_mode: '',
+  ta_rail_class: '',
+  is_local: 0,
+  telecom_bill_month: '',
+  mobile_number: '',
+  pjp_store_id: '',
 };
 
-const AddExpenseItemScreen = ({navigation}: Props) => {
+const AddExpenseItemScreen = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
-  const [claimId, setClaimId] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const [createExpenseClaim, {isSuccess}] = useCreateExpenseClaimMutation();
-  const [uploadAttachmentForClaim, {isSuccess: attachmentSucess}] =
-    useUploadAttachmentForClaimMutation();
-
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
+  const [createExpenseDraft] = useCreateExpenseDraftMutation();
+  const [addExpenseRow] = useAddExpenseRowMutation();
+  const [submitExpenseClaim] = useSubmitExpenseClaimMutation();
 
   const {
     values,
@@ -71,47 +76,70 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
       try {
         setLoading(true);
 
-        // ---------------------
-        // 1️⃣ CREATE CLAIM
-        // ---------------------
-        const payload: ExpenseClaimPayload = {
-          employee: employee?.id as string,
-          posting_date: formValues.date,
-          custom_travel_start_date: formValues.date,
-          custom_travel_end_date: formValues.date,
-          expenses: [
-            {
-              expense_type: formValues.claim_type,
-              expense_date: formValues.date,
-              custom_claim_description: formValues.description,
-              amount: Number(formValues.amount),
-            },
-          ],
-        };
+        // 1. Create Draft
+        const pjpId =
+          formValues.pjp_store_id;
 
-        const res = await createExpenseClaim(payload).unwrap();
-        const createdId = res?.data?.name;
-        setClaimId(createdId);
-
-        // If no attachment, skip upload
-        if (!formValues.attachment) {
+        if (!pjpId) {
           Toast.show({
-            type: 'success',
-            text1: 'Expense saved successfully',
-            position: 'top',
+            type: 'error',
+            text1: 'Please select a PJP',
           });
-
-          resetForm();
           setLoading(false);
-          return navigation.goBack();
+          return;
         }
 
-        // Continue to upload in useEffect
+        const draftRes = await createExpenseDraft({
+          pjp_store_id: pjpId,
+        }).unwrap();
+
+        const claim_id = draftRes?.message?.data?.claim_id as string;
+
+        // 2. Add Row
+        let imageData = undefined;
+
+        if (formValues.attachment) {
+          const base64 = await fileToBase64(
+            formValues.attachment.uri,
+            formValues.attachment.type,
+          );
+          imageData = {
+            mime: formValues.attachment.type,
+            data: base64,
+          };
+        }
+
+        await addExpenseRow({
+          claim_id,
+          expense_type: formValues.claim_type as any,
+          amount: Number(formValues.amount),
+          date: formValues.date,
+          description: formValues.description,
+          image: imageData,
+          ta_mode: formValues.ta_mode as any,
+          ta_rail_class: formValues.ta_rail_class as any,
+          is_local: formValues.is_local as any,
+          telecom_bill_month: formValues.telecom_bill_month,
+          mobile_number: formValues.mobile_number,
+        }).unwrap();
+
+        // 3. Submit Claim
+        await submitExpenseClaim({ claim_id }).unwrap();
+
+        Toast.show({
+          type: 'success',
+          text1: 'Expense claim submitted successfully',
+          position: 'top',
+        });
+
+        resetForm();
+        setLoading(false);
+        navigation.goBack();
       } catch (error: any) {
-        console.log('🚀 ~ AddExpenseItemScreen ~ error:', error);
+        console.error('Expense Submission Error:', error);
         Toast.show({
           type: 'error',
-          text1: error?.data?.message?.message || 'Internal Server Error',
+          text1: error?.data?.message?.message || 'Failed to submit expense',
           position: 'top',
         });
         setLoading(false);
@@ -119,63 +147,8 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
     },
   });
 
-  // ---------------------
-  // 2️⃣ WHEN CLAIM CREATED → UPLOAD FILE
-  // ---------------------
-  useEffect(() => {
-    if (isSuccess && claimId && values.attachment) {
-      uploadAttachment();
-    }
-  }, [isSuccess]);
-
-  const uploadAttachment = async () => {
-    try {
-      const file = values.attachment;
-
-      const formData = new FormData();
-
-      formData.append('file', {
-        uri: file.uri,
-        name: file.name,
-        type: file.type || 'application/octet-stream',
-      } as any);
-      formData.append('filename', file.name);
-      formData.append('is_private', '0');
-      formData.append('doctype', 'Expense Claim');
-      formData.append('docname', claimId as string);
-
-      const res = await uploadAttachmentForClaim(formData).unwrap();
-    } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: err?.error || 'Internal Server Error',
-        position: 'top',
-      });
-      setLoading(false);
-      throw err;
-    }
-  };
-
-  // ---------------------
-  // 3️⃣ WHEN ATTACHMENT SUCCESS → TOAST + NAVIGATE
-  // ---------------------
-  useEffect(() => {
-    if (attachmentSucess) {
-      Toast.show({
-        type: 'success',
-        text1: 'Expense & attachment uploaded successfully',
-        position: 'top',
-      });
-
-      resetForm();
-      setLoading(false);
-
-      setTimeout(() => navigation.goBack(), 500);
-    }
-  }, [attachmentSucess]);
-
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Expense Item"
         navigation={() => navigation.navigate('AddExpenseScreen')}
@@ -192,8 +165,14 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
         }}
         scrollY={scrollY}
       />
+
+      <PjpSelectionDropdown
+        value={values.pjp_store_id}
+        onSelect={(val: any) => setFieldValue('pjp_store_id', val)}
+        error={touched.pjp_store_id && errors.pjp_store_id}
+      />
       <TouchableOpacity
-        style={[styles.submitBtn, loading && {opacity: 0.7}]}
+        style={[styles.submitBtn, loading && { opacity: 0.7 }]}
         onPress={() => handleSubmit()}
         disabled={loading}>
         {loading ? (
@@ -203,6 +182,33 @@ const AddExpenseItemScreen = ({navigation}: Props) => {
         )}
       </TouchableOpacity>
     </SafeAreaView>
+  );
+};
+
+const PjpSelectionDropdown = ({ value, onSelect, error }: any) => {
+  const { data } = useGetDailyPjpListQuery({
+    page: 1,
+    page_size: 20,
+    status: 'All',
+    date: moment().format('YYYY-MM-DD'),
+  });
+
+  const pjpOptions = (data?.message?.data?.pjp_daily_stores || [])?.map((item: any) => ({
+    label: `${item.store_name} (${item.name})`,
+    value: item.name,
+  }));
+
+  return (
+    <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+      <ReusableDropdown
+        label="Select PJP Store"
+        field="value"
+        value={value}
+        data={pjpOptions}
+        onChange={onSelect}
+        error={error}
+      />
+    </View>
   );
 };
 

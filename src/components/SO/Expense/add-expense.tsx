@@ -9,102 +9,155 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
-import {CirclePlus, Upload} from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Colors } from '../../../utils/colors';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { CirclePlus, Upload } from 'lucide-react-native';
 import moment from 'moment';
 import AddExpenseModal from './add-expense-modal';
 import Toast from 'react-native-toast-message';
 import {
-  useCreateExpenseClaimMutation,
-  useUploadAttachmentForClaimMutation,
-} from '../../../features/tada/tadaApi';
-import {ExpenseClaimPayload} from '../../../types/baseType';
-import {useAppSelector} from '../../../store/hook';
-import {pick} from '@react-native-documents/picker';
-import {launchCamera} from 'react-native-image-picker';
-import {windowWidth} from '../../../utils/utils';
+  useCreateExpenseDraftMutation,
+  useAddExpenseRowMutation,
+  useSubmitExpenseClaimMutation,
+} from '../../../features/tada/tadaApiv2';
+import { fileToBase64 } from '../../../utils/fileUtils';
+import { ExpenseClaimPayload } from '../../../types/baseType';
+import { useAppSelector } from '../../../store/hook';
+import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
+import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import { pick } from '@react-native-documents/picker';
+import { launchCamera } from 'react-native-image-picker';
+import { windowWidth } from '../../../utils/utils';
 
 type LocalExpenseItem = {
   expense_type: string;
   expense_date: string;
   custom_claim_description: string;
   amount: number;
+  attachment?: any;
+  ta_mode?: string;
+  ta_rail_class?: string;
+  is_local?: 0 | 1;
+  telecom_bill_month?: string;
+  mobile_number?: string;
 };
 
-const AddExpenseComponent = ({navigation}: any) => {
+const AddExpenseComponent = ({ navigation }: any) => {
   const [total, setTotal] = useState<number>(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
   const [claimId, setClaimId] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<any | null>(null);
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadStep, setUploadStep] = useState('');
+  const [pjpStoreId, setPjpStoreId] = useState<string>('');
 
-  const [uploadAttachmentForClaim, {isLoading: isUploading}] =
-    useUploadAttachmentForClaimMutation();
-  const [createExpenseClaim, {isSuccess, isLoading}] =
-    useCreateExpenseClaimMutation();
+  const [createExpenseDraft, { isLoading: isCreatingDraft }] =
+    useCreateExpenseDraftMutation();
+  const [addExpenseRow, { isLoading: isAddingRow }] = useAddExpenseRowMutation();
+  const [submitExpenseClaim, { isLoading: isSubmitting }] =
+    useSubmitExpenseClaimMutation();
+
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
-
-  const uploadAttachment = async () => {
-    try {
-      const formData = new FormData();
-      formData.append('file', {
-        uri: attachment.uri,
-        name: attachment.name,
-        type: attachment.type || 'application/octet-stream',
-      });
-
-      formData.append('filename', attachment.name);
-      formData.append('is_private', '0');
-      formData.append('doctype', 'Expense Claim');
-      formData.append('docname', claimId as string);
-
-      const res = await uploadAttachmentForClaim(formData).unwrap();
-
-      // Toast.show({
-      //   type: 'success',
-      //   text1: 'Attachment uploaded successfully',
-      // });
-    } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: err?.data?.message || 'Attachment upload failed',
-      });
-    }
-  };
-
   const handleSaveExpenseToServer = async () => {
-    try {
-      // ---------------------
-      // 1️⃣ CREATE CLAIM
-      // ---------------------
-      const payload: ExpenseClaimPayload = {
-        employee: employee?.id as string,
-        posting_date: expenses[0].expense_date,
-        custom_travel_start_date: expenses[0].expense_date,
-        custom_travel_end_date: expenses[0].expense_date,
-        expenses: expenses,
-      };
-
-      const res = await createExpenseClaim(payload).unwrap();
-      const createdId = res?.data?.name;
-      setClaimId(createdId);
-
-      // Continue to upload in useEffect
-    } catch (error: any) {
+    if (expenses.length === 0) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.exception || 'Internal Server Error',
+        text1: 'Please add at least one expense item',
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1. Create Draft
+      setUploadStep('Initializing draft...');
+      const pjpId = pjpStoreId;
+
+      if (!pjpId) {
+        Toast.show({
+          type: 'error',
+          text1: 'Please select a PJP',
+        });
+        setLoading(false);
+        return;
+      }
+
+      const draftRes = await createExpenseDraft({
+        pjp_store_id: pjpId,
+      }).unwrap();
+      console.log("🚀 ~ handleSaveExpenseToServer ~ draftRes:", draftRes)
+
+      const claim_id = draftRes.message.data?.claim_id;
+
+      if (!claim_id) {
+        throw new Error('Failed to obtain claim ID from server');
+      }
+
+      // 2. Add Rows Sequentially
+      for (let i = 0; i < expenses.length; i++) {
+        const expense = expenses[i];
+        setUploadStep(`Uploading item ${i + 1} of ${expenses.length}...`);
+
+        let imageData = undefined;
+
+        if (expense.attachment) {
+          const base64 = await fileToBase64(
+            expense.attachment.uri,
+            expense.attachment.type,
+          );
+          imageData = {
+            mime: expense.attachment.type,
+            data: base64,
+          };
+        }
+
+        await addExpenseRow({
+          claim_id,
+          expense_type: expense.expense_type as any,
+          amount: expense.amount,
+          date: expense.expense_date,
+          description: expense.custom_claim_description,
+          image: imageData,
+          ta_mode: expense.ta_mode as any,
+          ta_rail_class: expense.ta_rail_class as any,
+          is_local: expense.is_local as any,
+          telecom_bill_month: expense.telecom_bill_month,
+          mobile_number: expense.mobile_number,
+        }).unwrap();
+      }
+
+      // 3. Submit Claim
+      setUploadStep('Finalizing submission...');
+      await submitExpenseClaim({ claim_id }).unwrap();
+
+      Toast.show({
+        type: 'success',
+        text1: 'Expense claim submitted successfully',
         position: 'top',
       });
+
+      clearFormData();
+      navigation.goBack();
+    } catch (error: any) {
+      console.error('Expense Submission Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message?.message || 'Failed to submit expense',
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+      setUploadStep('');
     }
   };
 
@@ -113,85 +166,17 @@ const AddExpenseComponent = ({navigation}: any) => {
     setTotal(prev => prev + item.amount);
   };
 
-  const isImage = (type?: string) => {
-    return !!type && type.startsWith('image/');
-  };
-
-  const handlePickDocument = async () => {
-    try {
-      const doc = await pick({
-        allowMultiSelection: false,
-      });
-
-      if (!doc || !doc[0]) return;
-
-      const {uri, name, type} = doc[0];
-
-      setAttachment({
-        uri,
-        name,
-        type: type || 'application/octet-stream',
-      });
-    } catch (err) {
-      console.warn('Document picker error:', err);
-    }
-  };
-
-  const handleOpenCamera = async () => {
-    setShowAttachmentOptions(false);
-
-    const result = await launchCamera({
-      mediaType: 'photo',
-      cameraType: 'back',
-      quality: 0.8,
-    });
-
-    if (result.didCancel || !result.assets?.[0]) return;
-
-    const asset = result.assets[0];
-
-    setAttachment({
-      uri: asset.uri,
-      name: asset.fileName || `photo_${moment().format('YYYY-MM-DD')}.jpg`,
-      type: asset.type || 'image/jpeg',
-    });
-  };
-
   const clearFormData = () => {
     setExpenses([]);
     setTotal(0);
-    setAttachment(null);
-    setClaimId(null);
+    setPjpStoreId('');
   };
 
-  useEffect(() => {
-    if (isSuccess && claimId) {
-      // Upload attachment if exists
-      if (attachment) {
-        uploadAttachment().then(() => {
-          Toast.show({
-            type: 'success',
-            text1: 'Expense saved successfully',
-            position: 'top',
-          });
-
-          // Clear all local data
-          clearFormData();
-          navigation.goBack();
-        });
-      } else {
-        Toast.show({
-          type: 'success',
-          text1: 'Expense saved successfully',
-          position: 'top',
-        });
-
-        // Clear local data
-        clearFormData();
-        navigation.goBack();
-      }
-    }
-  }, [isSuccess, claimId]);
+  const handleRemoveItem = (index: number) => {
+    const item = expenses[index];
+    setExpenses(prev => prev.filter((_, i) => i !== index));
+    setTotal(prev => prev - item.amount);
+  };
 
   return (
     <View style={styles.container}>
@@ -204,14 +189,19 @@ const AddExpenseComponent = ({navigation}: any) => {
           </Text>
         </View>
       </View>
+
+      <PjpSelectionDropdown
+        value={pjpStoreId}
+        onSelect={setPjpStoreId}
+      />
       <View style={styles.HeadingHead}>
         <Text style={styles.SectionHeading}>Expense</Text>
 
         <TouchableOpacity
-          disabled={isLoading || isUploading}
+          disabled={loading}
           onPress={() => setShowModal(true)}>
-          <View style={{flexDirection: 'row', gap: 10}}>
-            <Text style={{fontSize: Size.sm, fontFamily: Fonts.medium}}>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Text style={{ fontSize: Size.sm, fontFamily: Fonts.medium }}>
               ₹ {total}
             </Text>
             <CirclePlus size={20} color={Colors.black} />
@@ -226,125 +216,94 @@ const AddExpenseComponent = ({navigation}: any) => {
       />
 
       <Animated.ScrollView contentContainerStyle={styles.dataBoxSection}>
-        {expenses.map((expense, index) => (
-          <View key={index} style={styles.dataBox}>
-            <View>
-              <Text style={styles.quantityCount}>{expense.expense_type}</Text>
-              <Text style={styles.quantitytime}>
-                Date: {moment(expense.expense_date).format('LL')}
-              </Text>
-            </View>
-
-            <View>
-              <Text style={styles.incressValu}>₹ {expense.amount}</Text>
-            </View>
-          </View>
-        ))}
-      </Animated.ScrollView>
-
-      {/* ----------------------- */}
-      {/*  ATTACHMENT UPLOAD BTN */}
-      {/* ----------------------- */}
-      {expenses.length >= 1 && (
-        <View style={{marginVertical: 20}}>
-          {/* <Text style={styles.label}>Attachment</Text> */}
-
-          <TouchableOpacity
-            onPress={() => setShowAttachmentOptions(true)}
-            style={{
-              marginTop: 5,
-              height: 100,
-              backgroundColor: '#fff',
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              borderWidth: 1,
-              borderColor: Colors.borderLight,
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 10,
-            }}>
-            <Upload size={28} color={Colors.black} />
-            <Text
-              style={{color: '#000', textAlign: 'center', fontWeight: '600'}}>
-              Upload images or documennts
+        {expenses.length === 0 ? (
+          <View style={styles.emptyState}>
+            {/* <Image
+              source={require('../../../assets/images/emptyState.png')}
+              style={styles.emptyImage}
+            /> */}
+            <Text style={styles.emptyTitle}>No Items Added</Text>
+            <Text style={styles.emptySubtitle}>
+              Select a PJP store and tap the '+' icon to add your expenses.
             </Text>
-          </TouchableOpacity>
-          <Modal
-            visible={showAttachmentOptions}
-            transparent
-            animationType="slide"
-            onRequestClose={() => setShowAttachmentOptions(false)}>
-            <Pressable
-              style={styles.modalOverlay}
-              onPress={() => setShowAttachmentOptions(false)}
-            />
-
-            <View style={styles.bottomSheet}>
-              <Pressable
-                style={styles.optionBtn}
-                onPress={() => {
-                  setShowAttachmentOptions(false);
-                  handlePickDocument();
-                }}>
-                <Text style={styles.optionText}>📁 Select from Drive</Text>
-              </Pressable>
-
-              <Pressable style={styles.optionBtn} onPress={handleOpenCamera}>
-                <Text style={styles.optionText}>📷 Click Photo</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.optionBtn, {borderTopWidth: 1}]}
-                onPress={() => setShowAttachmentOptions(false)}>
-                <Text style={[styles.optionText, {color: 'red'}]}>Cancel</Text>
-              </Pressable>
-            </View>
-          </Modal>
-          {attachment && (
-            <View style={[{flexDirection: 'column', gap: 10}]}>
-              <View style={styles.previewContainer}>
-                {isImage(attachment.type) ? (
-                  <Image
-                    source={{uri: attachment.uri}}
-                    style={[styles.fullWidthImage, {height: 200}]}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View style={styles.fileCard}>
-                    <View style={styles.fileIconContainer}>
-                      <Text style={styles.fileIcon}>📄</Text>
-                    </View>
-                    <View style={styles.fileInfo}>
-                      <Text numberOfLines={1} style={styles.fileName}>
-                        {attachment.name}
-                      </Text>
-                      <Text style={styles.fileType}>PDF Document</Text>
-                    </View>
+          </View>
+        ) : (
+          expenses.map((expense, index) => (
+            <View key={index} style={styles.dataBox}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.quantityCount}>{expense.expense_type}</Text>
+                <Text style={styles.quantitytime}>
+                  {moment(expense.expense_date).format('LL')}
+                </Text>
+                {expense.attachment && (
+                  <View style={styles.attachmentPreview}>
+                    <Upload size={12} color={Colors.gray} />
+                    <Text style={styles.attachmentText} numberOfLines={1}>
+                      {expense.attachment.name}
+                    </Text>
                   </View>
                 )}
               </View>
 
-              <TouchableOpacity onPress={() => setAttachment(null)}>
-                <Text style={{color: 'red', fontSize: 15, fontWeight: '700'}}>
-                  Remove
-                </Text>
-              </TouchableOpacity>
+              <View style={{ alignItems: 'flex-end', gap: 8 }}>
+                <Text style={styles.incressValu}>₹ {expense.amount}</Text>
+                <TouchableOpacity onPress={() => handleRemoveItem(index)}>
+                  <Text style={styles.deleteText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
+          ))
+        )}
+      </Animated.ScrollView>
+
+      <TouchableOpacity
+        style={[
+          styles.submitBtn,
+          (loading || expenses.length === 0 || !pjpStoreId) && { opacity: 0.6 }
+        ]}
+        onPress={() => handleSaveExpenseToServer()}
+        disabled={loading || expenses.length === 0 || !pjpStoreId}>
+        <Text style={styles.submitText}>Submit Claim</Text>
+      </TouchableOpacity>
+
+      {/* ── Progress Overlay ── */}
+      {loading && (
+        <View style={styles.overlay}>
+          <View style={styles.overlayCard}>
+            <ActivityIndicator size="large" color={Colors.orange} />
+            <Text style={styles.overlayTitle}>Submitting Claim</Text>
+            <Text style={styles.overlaySubtitle}>{uploadStep}</Text>
+          </View>
         </View>
       )}
-      <TouchableOpacity
-        style={[styles.submitBtn, (isLoading || isUploading) && {opacity: 0.7}]}
-        onPress={() => handleSaveExpenseToServer()}
-        disabled={isLoading || isUploading}>
-        {isLoading || isUploading ? (
-          <ActivityIndicator size="small" color={Colors.white} />
-        ) : (
-          <Text style={styles.submitText}>Submit</Text>
-        )}
-      </TouchableOpacity>
+    </View>
+  );
+};
+
+const PjpSelectionDropdown = ({ value, onSelect, error }: any) => {
+  const { data } = useGetDailyPjpListQuery({
+    page: 1,
+    page_size: 20,
+    status: 'All',
+    date: moment().format('YYYY-MM-DD'),
+  });
+  console.log("🚀 ~ PjpSelectionDropdown ~ data:", data)
+
+  const pjpOptions = (data?.message?.data?.pjp_daily_stores || []).map((item) => ({
+    label: `${item.date} (${item.pjp_daily_store_id})`,
+    value: item.pjp_daily_store_id,
+  }));
+
+  return (
+    <View style={{ marginBottom: 15 }}>
+      <ReusableDropdown
+        label="Select PJP Store"
+        field="value"
+        value={value}
+        data={pjpOptions}
+        onChange={onSelect}
+        error={error}
+      />
     </View>
   );
 };
@@ -393,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: {paddingTop: 15},
+  dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -424,11 +383,91 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     color: '#333',
   },
-  uploadBtn: {
-    padding: 12,
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
+  emptyState: {
+    padding: 40,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  emptyImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 20,
+    opacity: 0.8,
+  },
+  emptyTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.gray,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  attachmentPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    gap: 4,
+    backgroundColor: '#F0F2F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  attachmentText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: Colors.gray,
+    maxWidth: 120,
+  },
+  deleteText: {
+    fontFamily: Fonts.medium,
+    fontSize: 11,
+    color: Colors.error,
+  },
+  submitBtn: {
+    backgroundColor: Colors.darkButton,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  submitText: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: Colors.white,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1000,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overlayCard: {
+    width: '80%',
+    backgroundColor: Colors.white,
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    gap: 15,
+  },
+  overlayTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+  },
+  overlaySubtitle: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.gray,
+    textAlign: 'center',
   },
   uploadText: {
     color: '#fff',
@@ -538,17 +577,17 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 2,
   },
-  submitBtn: {
-    backgroundColor: Colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 6,
-    // marginHorizontal: 16,
-  },
-  submitText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  // submitBtn: {
+  //   backgroundColor: Colors.primary,
+  //   paddingVertical: 12,
+  //   borderRadius: 8,
+  //   alignItems: 'center',
+  //   marginVertical: 6,
+  //   // marginHorizontal: 16,
+  // },
+  // submitText: {
+  //   color: Colors.white,
+  //   fontSize: 16,
+  //   fontWeight: 'bold',
+  // },
 });

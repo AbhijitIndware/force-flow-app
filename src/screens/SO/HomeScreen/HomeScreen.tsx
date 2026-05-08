@@ -218,9 +218,6 @@ const HomeScreen = ({ navigation }: Props) => {
   );
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
-  const { data: teamReportData } = useGetSalesRepotsQuery({
-    view_type: 'team_include_self',
-  });
   const currentMonth = moment().month() + 1;
   const currentYear = moment().year();
 
@@ -357,7 +354,6 @@ const HomeScreen = ({ navigation }: Props) => {
   );
 
   const [pjpInitialize, { data, error }] = usePjpInitializeMutation();
-  console.log("🚀 ~ HomeScreen ~ error:", error)
   const [checkOut, { isLoading }] = useCheckOutMutation();
   const {
     data: locationTrackerData,
@@ -429,6 +425,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
     return await handleSetValue();
   };
+
   const getParsedLocation = async () => {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
@@ -448,10 +445,12 @@ const HomeScreen = ({ navigation }: Props) => {
 
     return { latitude, longitude };
   };
+
   const handleSetValue = async () => {
     const location = await getCurrentLocation();
     return location;
   };
+
   const handleCheckOut = async () => {
     try {
       const current_location = await handleCallLocationPermission();
@@ -672,7 +671,6 @@ const HomeScreen = ({ navigation }: Props) => {
         log_id: logId,
         current_location: location,
       }).unwrap();
-      console.log('🚀 ~ handleActivityCheckOut ~ res:', res);
 
       if (res.message.success) {
         Toast.show({ type: 'success', text1: 'Activity Checked Out' });
@@ -1673,8 +1671,8 @@ const HomeScreen = ({ navigation }: Props) => {
               <TargetMetricBox
                 label="Orders"
                 achieved={`₹${soAchievement % 1 !== 0
-                    ? soAchievement.toFixed(2)
-                    : soAchievement
+                  ? soAchievement.toFixed(2)
+                  : soAchievement
                   }`}
                 target={`₹${salesTarget}`}
                 rate={soPct}
@@ -1685,8 +1683,8 @@ const HomeScreen = ({ navigation }: Props) => {
               <TargetMetricBox
                 label="Delivery Note"
                 achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0
-                    ? (ddnStats?.value ?? 0).toFixed(2)
-                    : ddnStats?.value ?? 0
+                  ? (ddnStats?.value ?? 0).toFixed(2)
+                  : ddnStats?.value ?? 0
                   }`}
                 target={`₹${ddnTarget}`}
                 rate={ddnPct}

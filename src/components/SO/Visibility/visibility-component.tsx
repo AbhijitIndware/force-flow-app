@@ -15,14 +15,14 @@ import moment from 'moment';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {useGetVisibiltyClaimListQuery} from '../../../features/base/base-api';
+import {useGetMyVisibilityClaimsQuery} from '../../../features/tada/tadaApiv2';
 
 const {width} = Dimensions.get('window');
 
 const VisibilityComponent = ({navigation}: any) => {
-  const {data, isLoading, isFetching} = useGetVisibiltyClaimListQuery();
+  const {data, isLoading, isFetching} = useGetMyVisibilityClaimsQuery();
 
-  const claimList = data?.message?.data?.visibility_claims || [];
+  const claimList = data?.message?.data || [];
 
   const renderItem = ({item}: any) => {
     return (

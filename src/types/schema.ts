@@ -171,10 +171,10 @@ export const visibilityClaimSchema = Yup.object().shape({
     .min(0, 'Price difference cannot be negative')
     .required('Price difference amount is required'),
 
-  // damage_claim: Yup.number()
-  //   .typeError('Damage claim must be a number')
-  //   .min(0, 'Damage claim cannot be negative')
-  //   .required('Damage claim amount is required'),
+  damage_claim: Yup.number()
+    .typeError('Damage claim must be a number')
+    .min(0, 'Damage claim cannot be negative')
+    .required('Damage claim amount is required'),
 
   image: Yup.object().shape({
     mime: Yup.string().required('Image type is required'),
