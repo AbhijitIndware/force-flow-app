@@ -123,10 +123,11 @@ const ExpenseComponent = ({ navigation }: any) => {
       {/* ── FAB ── */}
       <TouchableOpacity
         onPress={() => navigation.navigate('AddExpenseScreen')}
-        style={styles.fab}
-        activeOpacity={0.85}>
-        <Ionicons name="add" size={24} color="#FFFFFF" />
-        <Text style={styles.fabText}>Add Claim</Text>
+        style={styles.claimButton}>
+        <Text style={styles.claimButtonText}>Create Expense Claim</Text>
+        <View style={styles.iconCircle}>
+          <Ionicons name="add" size={15} color={Colors.darkButton} />
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -179,7 +180,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 16,
-    backgroundColor: Colors.orange,
+    backgroundColor: Colors.darkButton,
     borderRadius: 24,
     flexDirection: 'row',
     alignItems: 'center',
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     elevation: 8,
-    shadowColor: Colors.orange,
+    shadowColor: Colors.darkButton,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
@@ -197,5 +198,36 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
     color: '#FFFFFF',
+  },
+  claimButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    gap: 10,
+    margin: 15,
+    elevation: 4, // Android
+    shadowColor: '#000', // iOS
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+
+  iconCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 18,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  claimButtonText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
   },
 });

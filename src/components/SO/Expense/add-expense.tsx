@@ -265,10 +265,14 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
 
       {/* ── Self Arranged Stay (only before draft, not in edit mode) ── */}
 
-      <View style={styles.toggleRow}>
+      <View style={[styles.toggleRow, claimId && isEditMode && { backgroundColor: '#E2E8F0', opacity: 0.6 }]}>
         <View style={{ flex: 1 }}>
           <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
-          <Text style={styles.toggleSub}>Enable if you arranged your own lodging</Text>
+          <Text style={styles.toggleSub}>
+            {claimId && isEditMode 
+              ? 'Cannot be changed while updating' 
+              : 'Enable if you arranged your own lodging'}
+          </Text>
         </View>
         <Switch
           value={isSelfArrangedStay}
@@ -331,7 +335,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       {/* ── Action Button ── */}
       {!claimId ? (
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: Colors.primary }, (!pjpStoreId || loading) && styles.disabled]}
+          style={[styles.actionBtn, { backgroundColor: Colors.darkButton }, (!pjpStoreId || loading) && styles.disabled]}
           onPress={handleCreateDraft}
           disabled={!pjpStoreId || loading}>
           <Text style={styles.actionBtnText}>Create Draft</Text>

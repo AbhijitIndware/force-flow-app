@@ -21,7 +21,7 @@ import DeliveryNoteDetailScreen from '../OrdersScreen/DeliveryNoteDetailScreen';
 import PurchaseDetailScreen from '../OrdersScreen/PurchaseDetailScreen';
 import PjpDetailScreen from '../ActivityScreen/PjpDetailScreen';
 import StockReport from '../ActivityScreen/StockReport';
-import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
+// import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
 import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
 import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
@@ -157,11 +157,11 @@ const SoNavigation = () => {
         component={AddExpenseScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="AddExpenseItemScreen"
         component={AddExpenseItemScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       {/* <Stack.Screen
         name="ExpenseClaimScreen"
         component={ExpenseClaimScreen}

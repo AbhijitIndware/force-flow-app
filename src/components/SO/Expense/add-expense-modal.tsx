@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
   },
   submitBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.orange,
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',

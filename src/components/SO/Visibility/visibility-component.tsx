@@ -12,19 +12,19 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {useGetMyVisibilityClaimsQuery} from '../../../features/tada/tadaApiv2';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const VisibilityComponent = ({navigation}: any) => {
-  const {data, isLoading, isFetching} = useGetMyVisibilityClaimsQuery();
+const VisibilityComponent = ({ navigation }: any) => {
+  const { data, isLoading, isFetching } = useGetMyVisibilityClaimsQuery();
 
   const claimList = data?.message?.data || [];
 
-  const renderItem = ({item}: any) => {
+  const renderItem = ({ item }: any) => {
     return (
       <TouchableOpacity
         style={styles.dataBox}
@@ -33,7 +33,7 @@ const VisibilityComponent = ({navigation}: any) => {
             claimId: item.claim_id,
           })
         }>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <Text style={styles.quantityCount}>Store : {item.store}</Text>
 
           <Text style={styles.quantitytime}>
@@ -47,8 +47,8 @@ const VisibilityComponent = ({navigation}: any) => {
             {item.docstatus === 0
               ? 'Draft'
               : item.docstatus === 1
-              ? 'Submitted'
-              : 'Cancelled'}
+                ? 'Submitted'
+                : 'Cancelled'}
           </Text>
         </View>
 
@@ -61,19 +61,7 @@ const VisibilityComponent = ({navigation}: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* CTA BUTTON */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => navigation.navigate('AddVisibilityScreen')}
-        style={styles.claimButton}>
-        <View style={styles.iconCircle}>
-          <Ionicons name="add" size={22} color={Colors.darkButton} />
-        </View>
 
-        <Text style={styles.claimButtonText}>Claim a Visibility</Text>
-
-        {/* <Ionicons name="chevron-forward" size={22} color={Colors.white} /> */}
-      </TouchableOpacity>
 
       {/* LOADER */}
       {isLoading || isFetching ? (
@@ -91,7 +79,16 @@ const VisibilityComponent = ({navigation}: any) => {
             <Text style={styles.emptyText}>No visibility claims found</Text>
           }
         />
-      )}
+      )}      {/* CTA BUTTON */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('AddVisibilityScreen')}
+        style={styles.claimButton}>
+        <Text style={styles.claimButtonText}>Create Visibility Claim</Text>
+        <View style={styles.iconCircle}>
+          <Ionicons name="add" size={15} color={Colors.darkButton} />
+        </View>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -178,6 +175,7 @@ const styles = StyleSheet.create({
   claimButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: Colors.darkButton,
     borderRadius: 10,
     paddingVertical: 10,
@@ -188,12 +186,12 @@ const styles = StyleSheet.create({
     shadowColor: '#000', // iOS
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
   },
 
   iconCircle: {
-    width: 30,
-    height: 30,
+    width: 20,
+    height: 20,
     borderRadius: 18,
     backgroundColor: Colors.white,
     justifyContent: 'center',
@@ -201,7 +199,6 @@ const styles = StyleSheet.create({
   },
 
   claimButtonText: {
-    flex: 1,
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
     color: Colors.white,
