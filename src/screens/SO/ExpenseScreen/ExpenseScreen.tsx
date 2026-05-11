@@ -1,15 +1,15 @@
-import {StyleSheet, SafeAreaView, View} from 'react-native';
-import React, {useState} from 'react';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { StyleSheet, SafeAreaView, View } from 'react-native';
+import React, { useState } from 'react';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import ExpenseComponent from '../../../components/SO/Expense/expense';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import ExpenseComponent from '../../../components/SO/Expense/expense-component';
 import VisibilityComponent from '../../../components/SO/Visibility/visibility-component';
-import {Tab, TabView} from '@rneui/themed';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
+import { Tab, TabView } from '@rneui/themed';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -21,7 +21,7 @@ type Props = {
   route: any;
 };
 
-const ExpenseScreen = ({navigation}: Props) => {
+const ExpenseScreen = ({ navigation }: Props) => {
   const [index, setIndex] = useState(0);
 
   return (
@@ -47,7 +47,7 @@ const ExpenseScreen = ({navigation}: Props) => {
             height: 0,
           }}
           variant="primary"
-          style={{backgroundColor: Colors.transparent, padding: 0}}>
+          style={{ backgroundColor: Colors.transparent, padding: 0 }}>
           <Tab.Item
             title="Expense"
             titleStyle={{
@@ -85,11 +85,11 @@ const ExpenseScreen = ({navigation}: Props) => {
       </View>
       <TabView value={index} onChange={setIndex} animationType="spring">
         <TabView.Item
-          style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
+          style={{ width: '100%', flex: 1, backgroundColor: Colors.lightBg }}>
           <ExpenseComponent navigation={navigation} />
         </TabView.Item>
         <TabView.Item
-          style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
+          style={{ width: '100%', flex: 1, backgroundColor: Colors.lightBg }}>
           <VisibilityComponent navigation={navigation} />
         </TabView.Item>
       </TabView>

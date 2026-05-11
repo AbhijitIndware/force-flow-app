@@ -264,20 +264,20 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       </View>
 
       {/* ── Self Arranged Stay (only before draft, not in edit mode) ── */}
-      {!claimId && !isEditMode && (
-        <View style={styles.toggleRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
-            <Text style={styles.toggleSub}>Enable if you arranged your own lodging</Text>
-          </View>
-          <Switch
-            value={isSelfArrangedStay}
-            trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
-            thumbColor={isSelfArrangedStay ? Colors.primary : '#f4f3f4'}
-            onValueChange={setIsSelfArrangedStay}
-          />
+
+      <View style={styles.toggleRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
+          <Text style={styles.toggleSub}>Enable if you arranged your own lodging</Text>
         </View>
-      )}
+        <Switch
+          value={isSelfArrangedStay}
+          disabled={claimId && isEditMode ? true : false}
+          trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
+          thumbColor={isSelfArrangedStay ? Colors.primary : '#f4f3f4'}
+          onValueChange={setIsSelfArrangedStay}
+        />
+      </View>
 
       {/* ── Draft Status Badge ── */}
       {claimId && (

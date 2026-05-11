@@ -158,6 +158,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
           data={EXPENSE_TYPES}
           error={touched.claim_type && errors.claim_type}
           onChange={(val: string) => onSelect('claim_type', val)}
+          height={40}
 
         />
 
@@ -186,6 +187,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
                 ]}
                 error={touched.ta_rail_class && errors.ta_rail_class}
                 onChange={(val: string) => setFieldValue('ta_rail_class', val)}
+                height={40}
               />
             )}
 
@@ -271,7 +273,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
       {/* ----------------------- */}
       {/*  ATTACHMENT UPLOAD BTN */}
       {/* ----------------------- */}
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: 5 }}>
         <Text style={styles.label}>Attachment</Text>
 
         <TouchableOpacity
@@ -415,7 +417,7 @@ const styles = StyleSheet.create({
   },
   uploadBox: {
     marginTop: 5,
-    height: 120,
+    height: 60,
     backgroundColor: '#F8FAFC',
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -423,6 +425,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: Colors.border,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,

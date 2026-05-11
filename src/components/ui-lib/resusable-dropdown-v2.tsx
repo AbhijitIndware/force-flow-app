@@ -1,8 +1,8 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import {Colors} from '../../utils/colors';
-import {Fonts} from '../../constants';
-import {Size} from '../../utils/fontSize';
+import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '../../utils/colors';
+import { Fonts } from '../../constants';
+import { Size } from '../../utils/fontSize';
 import DropdownComponentV2 from '../ui/CustomDropdown-v2';
 
 interface DropdownOption {
@@ -29,6 +29,9 @@ interface ReusableDropdownProps {
 
   onOpen?: () => void;
   disabled?: boolean;
+  labelStyle?: any;   // 👈 add
+  height?: number;
+  textSize?: number;
 }
 
 const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
@@ -49,10 +52,13 @@ const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
 
   onOpen,
   disabled,
+  labelStyle,   // 👈 add
+  height,
+  textSize
 }) => {
   return (
     <View style={styles.inputWrapper}>
-      <Text style={styles.label}>{label}</Text>
+      {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <DropdownComponentV2
         selectText={label}
         data={data}
@@ -68,6 +74,8 @@ const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
         onAddPress={onAddPress}
         onOpen={onOpen}
         disabled={disabled}
+        height={height}
+        textSize={textSize}
       />
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -75,14 +83,14 @@ const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
 };
 
 const styles = StyleSheet.create({
-  inputWrapper: {marginBottom: 16},
+  inputWrapper: { marginBottom: 16 },
   label: {
     fontSize: Size.xs,
     marginBottom: 4,
     color: Colors.black,
     fontFamily: Fonts.regular,
   },
-  error: {fontSize: Size.xs, color: 'red', marginTop: 4},
+  error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
 });
 
 export default ReusableDropdownv2;
