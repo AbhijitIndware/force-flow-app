@@ -36,6 +36,7 @@ const initialValues = {
     mime: '',
     data: '',
   },
+  date: new Date().toISOString().split('T')[0],
 };
 
 const AddVisibilityScreen = ({ navigation }: Props) => {

@@ -57,7 +57,7 @@ export type SoAppStackParamList = {
   AsmDashboard: undefined;
 
   ExpenseScreen: undefined;
-  AddExpenseScreen: undefined;
+  AddExpenseScreen: { claimId?: string } | undefined;
   AddExpenseItemScreen: undefined;
   ExpenseClaimScreen: { id: string; name: string };
   ExpenseListScreen: { id: string; name: string };

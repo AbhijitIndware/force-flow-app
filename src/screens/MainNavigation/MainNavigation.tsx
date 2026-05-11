@@ -37,7 +37,6 @@ const MainNavigation = () => {
     return state?.persistedReducer?.authSlice?.sId;
   });
   const isAuthenticated = !!sId;
-  console.log("🚀 ~ MainNavigation ~ isAuthenticated:", isAuthenticated)
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );

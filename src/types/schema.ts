@@ -96,11 +96,31 @@ export const addSalesOrderSchema = Yup.object().shape({
 });
 
 export const expenseItemSchema = Yup.object().shape({
-  date: Yup.string().required('Date is required'),
+  // date: Yup.string().required('Date is required'),
   claim_type: Yup.string().required('Claim type is required'),
   amount: Yup.number()
     .typeError('Amount must be a number')
     .required('Amount is required'),
+  ta_mode: Yup.string().when('claim_type', {
+    is: 'TA',
+    then: schema => schema.required('Travel mode is required'),
+  }),
+  ta_rail_class: Yup.string().when(['claim_type', 'ta_mode'], {
+    is: (claim_type: string, ta_mode: string) => claim_type === 'TA' && ta_mode === 'Rail',
+    then: schema => schema.required('Rail class is required'),
+  }),
+  mobile_number: Yup.string().when('claim_type', {
+    is: 'Telecom',
+    then: schema => schema.required('Mobile number is required'),
+  }),
+  telecom_bill_month: Yup.string().when('claim_type', {
+    is: 'Telecom',
+    then: schema => schema.required('Bill month is required'),
+  }),
+  incidental_bill_month: Yup.string().when('claim_type', {
+    is: 'Incidental',
+    then: schema => schema.required('Bill month is required'),
+  }),
 });
 
 //Promoter
@@ -158,27 +178,26 @@ export const addSalesInvoiceSchema = Yup.object({
 });
 export const visibilityClaimSchema = Yup.object().shape({
   store: Yup.string().required('Store is required'),
+  pjp_store_id: Yup.string().required('PJP store ID is required'),
 
   collection_amount: Yup.number()
     .typeError('Collection amount must be a number')
-    .positive('Collection amount must be greater than 0')
-    .required('Collection amount is required'),
+    .optional(),
 
-  payment_type: Yup.string().required('Payment type is required'),
+  payment_type: Yup.string().optional(),
 
   price_difference_amount: Yup.number()
     .typeError('Price difference must be a number')
     .min(0, 'Price difference cannot be negative')
-    .required('Price difference amount is required'),
+    .optional(),
 
   damage_claim: Yup.number()
     .typeError('Damage claim must be a number')
     .min(0, 'Damage claim cannot be negative')
-    .required('Damage claim amount is required'),
+    .optional(),
 
   image: Yup.object().shape({
-    mime: Yup.string().required('Image type is required'),
-
-    data: Yup.string().required('Image is required'),
-  }),
+    mime: Yup.string().optional(),
+    data: Yup.string().optional(),
+  }).optional(),
 });

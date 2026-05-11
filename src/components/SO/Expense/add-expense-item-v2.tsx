@@ -11,9 +11,6 @@ import {
 } from 'react-native';
 import { Text } from 'react-native';
 import ReusableInput from '../../ui-lib/reuseable-input';
-import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import { useGetExpenseClaimTypeQuery } from '../../../features/tada/tadaApi';
 import { FormikTouched } from 'formik';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 import { Upload } from 'lucide-react-native';
@@ -25,6 +22,7 @@ import { Size } from '../../../utils/fontSize';
 import { Fonts } from '../../../constants';
 import { flexCol } from '../../../utils/styles';
 import { Switch } from 'react-native';
+import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
 
 interface Props {
   values: Record<string, string | any>;
@@ -52,7 +50,20 @@ interface DropdownOption {
   label: string;
   value: string;
 }
-
+export const EXPENSE_TYPES: DropdownOption[] = [
+  { label: 'Daily Allowance', value: 'Daily Allowance' },
+  { label: 'TA - Auto', value: 'TA - Auto' },
+  { label: 'TA - Cab', value: 'TA - Cab' },
+  { label: 'TA - Bus', value: 'TA - Bus' },
+  { label: 'TA - Rail', value: 'TA - Rail' },
+  { label: 'TA - Bike (Petrol)', value: 'TA - Bike (Petrol)' },
+  { label: 'TA - Local Travel', value: 'TA - Local Travel' },
+  { label: 'Lodging / Boarding / Hotel', value: 'Lodging / Boarding / Hotel' },
+  { label: 'Food / Meals', value: 'Food / Meals' },
+  { label: 'Mobile Bill', value: 'Mobile Bill' },
+  { label: 'Courier', value: 'Courier' },
+  { label: 'Xerox', value: 'Xerox' },
+];
 const AddExpenseItemV2: React.FC<Props> = ({
   values,
   errors,
@@ -62,10 +73,8 @@ const AddExpenseItemV2: React.FC<Props> = ({
   setFieldValue,
   scrollY,
 }) => {
-  const [claimType, setClaimType] = useState<DropdownOption[]>([]);
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
-  const { data } = useGetExpenseClaimTypeQuery();
-  console.log("🚀 ~ AddExpenseItemV2 ~ data:", data)
+  const [showImagePreview, setShowImagePreview] = useState(false);
 
   const isImage = (type?: string) => {
     return !!type && type.startsWith('image/');
@@ -119,22 +128,19 @@ const AddExpenseItemV2: React.FC<Props> = ({
     });
   };
 
-  useEffect(() => {
-    const requiredTypes = ['DA', 'TA', 'Lodging', 'Telecom', 'Incidental'];
-    if (data?.data) {
-      const filtered = data.data
-        .filter(item => requiredTypes.includes(item.name))
-        .map(item => ({
-          label: item.name,
-          value: item.name,
-        }));
-      
-      // If some required types are missing from API, we can still add them or rely on API
-      setClaimType(filtered.length > 0 ? filtered : requiredTypes.map(t => ({ label: t, value: t })));
-    } else {
-      setClaimType(requiredTypes.map(t => ({ label: t, value: t })));
-    }
-  }, [data]);
+  const TA_TYPES = [
+    'TA - Auto',
+    'TA - Cab',
+    'TA - Bus',
+    'TA - Rail',
+    'TA - Bike (Petrol)',
+    'TA - Local Travel',
+  ];
+
+  const isTA = TA_TYPES.includes(values.claim_type);
+  const isRail = values.claim_type === 'TA - Rail';
+  const isMobileBill = values.claim_type === 'Mobile Bill';
+  const isIncidental = values.claim_type === 'Courier' || values.claim_type === 'Xerox';
 
   return (
     <Animated.ScrollView
@@ -143,121 +149,124 @@ const AddExpenseItemV2: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={{ padding: 16 }}>
-      <ReusableDatePicker
-        label="Expenses Date"
-        value={values.date}
-        onChange={(val: string) => setFieldValue('date', val)}
-        error={touched.date && errors.date}
-      />
-      <ReusableDropdownv2
-        label="Expense Claim Type"
-        field="claim_type"
-        value={values.claim_type}
-        data={claimType}
-        error={touched.claim_type && errors.claim_type}
-        onChange={(val: string) => onSelect('claim_type', val)}
-      />
-      <ReusableInput
-        label="Description"
-        value={values.description}
-        onChangeText={handleChange('description')}
-        onBlur={() => handleBlur('description')}
-        error={touched.description && errors.description}
-      />
-      <ReusableInput
-        label="Amount"
-        value={values.amount}
-        onChangeText={handleChange('amount')}
-        onBlur={() => handleBlur('amount')}
-        error={touched.amount && errors.amount}
-        keyboardType="numeric"
-      />
 
-      {/* TA SPECIFIC FIELDS */}
-      {values.claim_type === 'TA' && (
-        <>
-          <ReusableDropdownv2
-            label="Travel Mode"
-            field="ta_mode"
-            value={values.ta_mode}
-            data={[
-              { label: 'Bus', value: 'Bus' },
-              { label: 'Train', value: 'Train' },
-              { label: 'Auto', value: 'Auto' },
-              { label: 'Bike', value: 'Bike' },
-              { label: 'Flight', value: 'Flight' },
-            ]}
-            error={touched.ta_mode && errors.ta_mode}
-            onChange={(val: string) => setFieldValue('ta_mode', val)}
-          />
+      <View style={styles.card}>
+        <ReusableDropdownv2
+          label="Expense Claim Type"
+          field="claim_type"
+          value={values.claim_type}
+          data={EXPENSE_TYPES}
+          error={touched.claim_type && errors.claim_type}
+          onChange={(val: string) => onSelect('claim_type', val)}
 
-          {values.ta_mode === 'Train' && (
-            <ReusableDropdownv2
-              label="Rail Class"
-              field="ta_rail_class"
-              value={values.ta_rail_class}
-              data={[
-                { label: 'AC 3 Tier', value: 'AC 3 Tier' },
-                { label: 'Sleeper', value: 'Sleeper' },
-                { label: 'AC Chair Car', value: 'AC Chair Car' },
-                { label: 'Non-AC Chair Car', value: 'Non-AC Chair Car' },
-              ]}
-              error={touched.ta_rail_class && errors.ta_rail_class}
-              onChange={(val: string) => setFieldValue('ta_rail_class', val)}
+        />
+
+        {/* TA SPECIFIC FIELDS */}
+        {isTA && (
+          <View style={{ marginTop: 10 }}>
+            <ReusableInput
+              label="Distance (KM)"
+              placeholder="0.00"
+              value={values.ta_km}
+              onChangeText={handleChange('ta_km')}
+              onBlur={() => handleBlur('ta_km')}
+              error={touched.ta_km && errors.ta_km}
+              keyboardType="numeric"
             />
-          )}
+            {isRail && (
+              <ReusableDropdownv2
+                label="Rail Class"
+                field="ta_rail_class"
+                value={values.ta_rail_class}
+                data={[
+                  { label: 'Sleeper', value: 'Sleeper' },
+                  { label: 'Non-AC Chair Car', value: 'Non-AC Chair Car' },
+                  { label: 'III-AC', value: 'III-AC' },
+                  { label: 'AC Chair Car', value: 'AC Chair Car' },
+                ]}
+                error={touched.ta_rail_class && errors.ta_rail_class}
+                onChange={(val: string) => setFieldValue('ta_rail_class', val)}
+              />
+            )}
 
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginTop: 15,
-              paddingHorizontal: 5,
-            }}>
-            <Text style={styles.label}>Is Local Travel?</Text>
-            <Switch
-              value={values.is_local === 1}
-              onValueChange={val => setFieldValue('is_local', val ? 1 : 0)}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 15,
+                paddingHorizontal: 5,
+                backgroundColor: '#f9f9f9',
+                padding: 10,
+                borderRadius: 8,
+              }}>
+              <Text style={[styles.label, { marginBottom: 0 }]}>Is Local Travel?</Text>
+              <Switch
+                value={values.is_local === 1}
+                trackColor={{ false: '#767577', true: Colors.primary + '80' }}
+                thumbColor={values.is_local === 1 ? Colors.primary : '#f4f3f4'}
+                onValueChange={val => setFieldValue('is_local', val ? 1 : 0)}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* MOBILE BILL SPECIFIC FIELDS */}
+        {isMobileBill && (
+          <View style={{ marginTop: 10 }}>
+            <ReusableInput
+              label="Mobile Number"
+              value={values.mobile_number}
+              onChangeText={handleChange('mobile_number')}
+              onBlur={() => handleBlur('mobile_number')}
+              error={touched.mobile_number && errors.mobile_number}
+              keyboardType="phone-pad"
+            />
+            <ReusableDatePicker
+              label="Bill Month"
+              value={values.telecom_bill_month}
+              onChange={(val: string) => {
+                const firstDay = moment(val).startOf('month').format('YYYY-MM-DD');
+                setFieldValue('telecom_bill_month', firstDay);
+              }}
+              error={touched.telecom_bill_month && errors.telecom_bill_month}
             />
           </View>
-        </>
-      )}
+        )}
 
-      {/* TELECOM SPECIFIC FIELDS */}
-      {values.claim_type === 'Telecom' && (
-        <>
-          <ReusableInput
-            label="Mobile Number"
-            value={values.mobile_number}
-            onChangeText={handleChange('mobile_number')}
-            onBlur={() => handleBlur('mobile_number')}
-            error={touched.mobile_number && errors.mobile_number}
-            keyboardType="phone-pad"
-          />
-          <ReusableDropdownv2
-            label="Bill Month"
-            field="telecom_bill_month"
-            value={values.telecom_bill_month}
-            data={[
-              { label: 'January', value: 'January' },
-              { label: 'February', value: 'February' },
-              { label: 'March', value: 'March' },
-              { label: 'April', value: 'April' },
-              { label: 'May', value: 'May' },
-              { label: 'June', value: 'June' },
-              { label: 'July', value: 'July' },
-              { label: 'August', value: 'August' },
-              { label: 'September', value: 'September' },
-              { label: 'October', value: 'October' },
-              { label: 'November', value: 'November' },
-              { label: 'December', value: 'December' },
-            ]}
-            error={touched.telecom_bill_month && errors.telecom_bill_month}
-            onChange={(val: string) => setFieldValue('telecom_bill_month', val)}
-          />
-        </>
-      )}
+        {/* INCIDENTAL (Courier / Xerox) SPECIFIC FIELDS */}
+        {isIncidental && (
+          <View style={{ marginTop: 10 }}>
+            <ReusableDatePicker
+              label="Bill Month"
+              value={values.incidental_bill_month}
+              onChange={(val: string) => {
+                const firstDay = moment(val).startOf('month').format('YYYY-MM-DD');
+                setFieldValue('incidental_bill_month', firstDay);
+              }}
+              error={touched.incidental_bill_month && errors.incidental_bill_month}
+            />
+          </View>
+        )}
+        <ReusableInput
+          label="Description"
+          placeholder="Enter description"
+          value={values.description}
+          onChangeText={handleChange('description')}
+          onBlur={() => handleBlur('description')}
+          error={touched.description && errors.description}
+        />
+        <ReusableInput
+          label="Amount"
+          placeholder="0.00"
+          value={values.amount}
+          onChangeText={handleChange('amount')}
+          onBlur={() => handleBlur('amount')}
+          error={touched.amount && errors.amount}
+          keyboardType="numeric"
+        />
+
+      </View>
 
       {/* ----------------------- */}
       {/*  ATTACHMENT UPLOAD BTN */}
@@ -283,36 +292,78 @@ const AddExpenseItemV2: React.FC<Props> = ({
           />
 
           <View style={styles.bottomSheet}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Upload Attachment</Text>
+              <TouchableOpacity onPress={() => setShowAttachmentOptions(false)}>
+                <Text style={{ color: Colors.primary, fontWeight: '600' }}>Done</Text>
+              </TouchableOpacity>
+            </View>
             <Pressable
               style={styles.optionBtn}
               onPress={() => {
                 setShowAttachmentOptions(false);
                 handlePickDocument();
               }}>
-              <Text style={styles.optionText}>📁 Select from Drive</Text>
+              <View style={styles.optionIcon}>
+                <Text style={{ fontSize: 20 }}>📁</Text>
+              </View>
+              <Text style={styles.optionText}>Select from Drive</Text>
             </Pressable>
 
             <Pressable style={styles.optionBtn} onPress={handleOpenCamera}>
-              <Text style={styles.optionText}>📷 Click Photo</Text>
+              <View style={[styles.optionIcon, { backgroundColor: '#E3F2FD' }]}>
+                <Text style={{ fontSize: 20 }}>📷</Text>
+              </View>
+              <Text style={styles.optionText}>Click Photo</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.optionBtn, { borderTopWidth: 1 }]}
+              style={[styles.optionBtn, { marginTop: 10 }]}
               onPress={() => setShowAttachmentOptions(false)}>
-              <Text style={[styles.optionText, { color: 'red' }]}>Cancel</Text>
+              <Text style={[styles.optionText, { color: 'red', marginLeft: 0, width: '100%', textAlign: 'center' }]}>Cancel</Text>
             </Pressable>
+          </View>
+        </Modal>
+
+        {/* IMAGE PREVIEW MODAL */}
+        <Modal
+          visible={showImagePreview}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowImagePreview(false)}>
+          <View style={styles.fullScreenOverlay}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setShowImagePreview(false)}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+            {values.attachment && isImage(values.attachment.type) && (
+              <Image
+                source={{ uri: values.attachment.uri }}
+                style={styles.fullImage}
+                resizeMode="contain"
+              />
+            )}
           </View>
         </Modal>
 
         {values.attachment && (
           <View style={[flexCol, { gap: 10, marginTop: 15 }]}>
-            <View style={styles.previewContainer}>
+            <Pressable
+              style={styles.previewContainer}
+              onPress={() => isImage(values.attachment.type) && setShowImagePreview(true)}
+            >
               {isImage(values.attachment.type) ? (
-                <Image
-                  source={{ uri: values.attachment.uri }}
-                  style={styles.fullWidthImage}
-                  resizeMode="contain"
-                />
+                <View style={styles.imageWrapper}>
+                  <Image
+                    source={{ uri: values.attachment.uri }}
+                    style={styles.fullWidthImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.zoomIcon}>
+                    <Text style={{ color: '#fff', fontSize: 10 }}>View Full</Text>
+                  </View>
+                </View>
               ) : (
                 <View style={styles.fileCard}>
                   <View style={styles.fileIconContainer}>
@@ -327,11 +378,12 @@ const AddExpenseItemV2: React.FC<Props> = ({
                   </View>
                 </View>
               )}
-            </View>
-            <TouchableOpacity onPress={() => setFieldValue('attachment', null)}>
-              <Text style={{ color: 'red', fontSize: 15, fontWeight: '700' }}>
-                Remove
-              </Text>
+            </Pressable>
+            <TouchableOpacity
+              onPress={() => setFieldValue('attachment', null)}
+              style={styles.removeBtn}
+            >
+              <Text style={styles.removeBtnText}>Remove Attachment</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -343,81 +395,137 @@ const AddExpenseItemV2: React.FC<Props> = ({
 export default AddExpenseItemV2;
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
   label: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 6,
     color: '#333',
+    fontFamily: Fonts.medium,
   },
   uploadBox: {
     marginTop: 5,
-    height: 100,
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    height: 120,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderStyle: 'dashed',
+    borderColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   uploadHint: {
-    color: '#000',
+    color: '#475569',
     textAlign: 'center',
     fontWeight: '600',
+    fontSize: 13,
   },
   previewContainer: {
-    alignItems: 'center',
+    width: '100%',
+  },
+  imageWrapper: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    overflow: 'hidden',
+    position: 'relative',
   },
   fullWidthImage: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    height: '100%',
     backgroundColor: '#f9f9f9',
+  },
+  zoomIcon: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   bottomSheet: {
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingBottom: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 10,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
   },
   optionBtn: {
-    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 10,
+  },
+  optionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: '#E8F5E9',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: '#334155',
+    marginLeft: 15,
   },
   fileCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: '#E2E8F0',
     gap: 12,
     width: '100%',
   },
   fileIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#E11D48',
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fileIcon: {
-    fontSize: 22,
+    fontSize: 20,
     color: '#fff',
   },
   fileInfo: {
@@ -426,11 +534,47 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111',
+    color: '#1E293B',
   },
   fileType: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#64748B',
     marginTop: 2,
+  },
+  removeBtn: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  removeBtnText: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  fullScreenOverlay: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });

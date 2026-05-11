@@ -6,11 +6,11 @@ import {
   Modal,
   View,
 } from 'react-native';
-import React, {useRef} from 'react';
-import {Colors} from '../../../utils/colors';
+import React, { useRef } from 'react';
+import { Colors } from '../../../utils/colors';
 import Toast from 'react-native-toast-message';
-import {useFormik} from 'formik';
-import {expenseItemSchema} from '../../../types/schema';
+import { useFormik } from 'formik';
+import { expenseItemSchema } from '../../../types/schema';
 import AddExpenseItemV2 from './add-expense-item-v2';
 
 const initialValues = {
@@ -22,11 +22,13 @@ const initialValues = {
   ta_mode: '',
   ta_rail_class: '',
   is_local: 0,
+  ta_km: '',
   telecom_bill_month: '',
   mobile_number: '',
+  incidental_bill_month: '',
 };
 
-const AddExpenseModal = ({visible, onClose, onAddExpense}: any) => {
+const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const {
@@ -39,21 +41,26 @@ const AddExpenseModal = ({visible, onClose, onAddExpense}: any) => {
     setFieldValue,
     resetForm,
   } = useFormik({
-    initialValues,
+    initialValues: {
+      ...initialValues,
+      date: selectedDate || '',   // ← pre-fill date
+    },
     validationSchema: expenseItemSchema,
     onSubmit: async formValues => {
       // send all values to parent including attachment
       onAddExpense({
         expense_type: formValues.claim_type,
-        expense_date: formValues.date,
+        expense_date: formValues.date || selectedDate,
         custom_claim_description: formValues.description,
         amount: Number(formValues.amount),
         attachment: formValues.attachment,
         ta_mode: formValues.ta_mode,
         ta_rail_class: formValues.ta_rail_class,
         is_local: formValues.is_local,
+        ta_km: Number(formValues.ta_km) || 0,
         telecom_bill_month: formValues.telecom_bill_month,
         mobile_number: formValues.mobile_number,
+        incidental_bill_month: formValues.incidental_bill_month,
       });
 
       Toast.show({
@@ -66,7 +73,6 @@ const AddExpenseModal = ({visible, onClose, onAddExpense}: any) => {
       onClose();
     },
   });
-
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalWrapper}>
@@ -120,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  submitText: {color: Colors.white, fontSize: 16, fontWeight: 'bold'},
-  closeBtn: {padding: 10, alignItems: 'center'},
-  closeText: {fontSize: 14, color: Colors.black},
+  submitText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
+  closeBtn: { padding: 10, alignItems: 'center' },
+  closeText: { fontSize: 14, color: Colors.black },
 });

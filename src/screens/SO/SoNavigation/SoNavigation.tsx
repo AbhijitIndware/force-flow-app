@@ -24,8 +24,6 @@ import StockReport from '../ActivityScreen/StockReport';
 import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
 import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
-import ExpenseClaimScreen from '../ExpenseScreen/ExpenseClaimScreen';
-import ExpenseListScreen from '../ExpenseScreen/ExpenseListScreen';
 import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
 import AddVisibilityScreen from '../VisibilityScreen/AddVisibilityClaim';
 import TeamsSalesReport from '../Sales/TeamSalesReport';
@@ -164,7 +162,7 @@ const SoNavigation = () => {
         component={AddExpenseItemScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="ExpenseClaimScreen"
         component={ExpenseClaimScreen}
         options={{ headerShown: false }}
@@ -173,7 +171,7 @@ const SoNavigation = () => {
         name="ExpenseListScreen"
         component={ExpenseListScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="VisibilityScreen"
         component={VisibilityScreen}

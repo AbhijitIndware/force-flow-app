@@ -9,7 +9,7 @@ import {
   View,
   ActivityIndicator,
 } from 'react-native';
-import React, { useMemo } from 'react';
+import React, { JSX, useMemo } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -48,6 +48,7 @@ const ExpenseComponent = ({ navigation }: any) => {
   });
 
   const claims = claimsData?.message?.data || [];
+  console.log("🚀 ~ ExpenseComponent ~ claims:", claims)
 
   const counts = useMemo(() => {
     return claims.reduce(
@@ -193,7 +194,7 @@ const ExpenseComponent = ({ navigation }: any) => {
         {/* ── Recent Claims ── */}
         <View style={styles.listContainer}>
           <View style={styles.listHeader}>
-            <Text style={styles.SectionHeading}>Recent Claims</Text>
+            <Text style={styles.SectionHeading}>Recent claims</Text>
             {claimsFetching && <ActivityIndicator size="small" color={Colors.orange} />}
           </View>
 
@@ -202,30 +203,60 @@ const ExpenseComponent = ({ navigation }: any) => {
               <Text style={styles.emptyText}>No claims found for this month</Text>
             </View>
           ) : (
-            claims.map((claim: any) => {
-              const statusColor = claim.approval_status === 'Approved' ? Colors.success :
-                claim.approval_status === 'Rejected' ? Colors.error :
-                  Colors.orange;
+            claims.map((claim) => {
+              const statusMap: Record<string, {
+                color: string; bg: string; icon: JSX.Element; label: string;
+              }> = {
+                Approved: {
+                  color: '#3B6D11', bg: '#EAF3DE',
+                  icon: <CircleCheckBig size={20} color="#3B6D11" />,
+                  label: 'Approved',
+                },
+                Rejected: {
+                  color: '#A32D2D', bg: '#FCEBEB',
+                  icon: <CircleX size={20} color="#A32D2D" />,
+                  label: 'Rejected',
+                },
+              };
+              const s = statusMap[claim.approval_status] ?? {
+                color: '#854F0B', bg: '#FAEEDA',
+                icon: <RotateCw size={20} color="#854F0B" />,
+                label: claim.approval_status || 'Pending',
+              };
+
               return (
                 <TouchableOpacity
-                  key={claim.claim_id}
-                  style={[styles.claimCard, { borderLeftColor: statusColor }]}
+                  key={claim.name}
+                  style={styles.claimCard}
                   activeOpacity={0.7}
                   onPress={() =>
-                    navigation.navigate('ExpenseClaimDetails', { claimId: claim.claim_id })
+                    navigation.navigate('AddExpenseScreen', { claimId: claim.name })
                   }>
-                  <View style={styles.claimLeft}>
-                    <Text style={styles.claimId}>{claim.claim_id}</Text>
-                    <Text style={styles.claimDate}>{moment(claim.date).format('DD MMM YYYY')}</Text>
+                  {/* Status icon box */}
+                  <View style={[styles.claimIconBox, { backgroundColor: s.bg }]}>
+                    {s.icon}
                   </View>
+
+                  {/* Body */}
+                  <View style={styles.claimBody}>
+                    <Text style={styles.claimId}>{claim.name}</Text>
+                    <Text style={styles.claimDate}>
+                      {moment(claim.custom_travel_end_date).format('DD MMM YYYY')}
+                    </Text>
+                  </View>
+
+                  {/* Right */}
                   <View style={styles.claimRight}>
-                    <View style={[styles.statusPill, { backgroundColor: statusColor + '15' }]}>
-                      <Text style={[styles.claimStatus, { color: statusColor }]}>
-                        {claim.approval_status}
-                      </Text>
+                    <View style={[styles.statusPill, { backgroundColor: s.bg }]}>
+                      <Text style={[styles.claimStatus, { color: s.color }]}>{s.label}</Text>
                     </View>
-                    <Text style={styles.claimAmount}>₹ {claim.total_amount}</Text>
+                    <Text style={styles.claimAmount}>
+                      ₹ {Number(claim.total_claimed_amount).toLocaleString('en-IN')}
+                    </Text>
                   </View>
+
+                  {/* Chevron */}
+                  <Ionicons name="chevron-forward" size={16} color={Colors.gray} />
                 </TouchableOpacity>
               );
             })
@@ -528,21 +559,6 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     letterSpacing: 0.5,
   },
-  claimCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    // Shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
   claimLeft: { gap: 6 },
   claimId: {
     fontFamily: Fonts.bold,
@@ -648,4 +664,32 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     color: Colors.white,
   },
+  claimCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    borderWidth: 0.5,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  claimIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  claimBody: {
+    flex: 1,
+    gap: 3,
+  }
 });

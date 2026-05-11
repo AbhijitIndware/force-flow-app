@@ -20,9 +20,17 @@ export const baseQuery = fetchBaseQuery({
     const sId = (getState() as RootState).persistedReducer.authSlice.sId;
     const zone = (getState() as RootState).persistedReducer.authSlice.employee?.zone;
 
+    const api_key = (getState() as RootState).persistedReducer.authSlice?.api_credentials?.api_key;
+    const api_secret = (getState() as RootState).persistedReducer.authSlice?.api_credentials?.api_secret;
+
+    const encodedAuth = btoa(`${api_key}:${api_secret}`);
+
     if (sId) {
       headers.set('sId', `${sId}`);
       headers.set('zone', `${zone}`);
+    }
+    if (api_key && api_secret) {
+      headers.set('Authorization', `Basic ${encodedAuth}`);
     }
     return headers;
   },
@@ -62,7 +70,9 @@ export const baseQueryForTada = fetchBaseQuery({
 
     const encodedAuth = btoa(`${api_key}:${api_secret}`);
 
-    headers.set('Authorization', `Basic ${encodedAuth}`);
+    if (api_key && api_secret) {
+      headers.set('Authorization', `Basic ${encodedAuth}`);
+    }
     return headers;
   },
 });

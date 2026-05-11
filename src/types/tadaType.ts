@@ -45,18 +45,45 @@ export interface ClaimDetailExpense {
     ta_mode?: string;
 }
 
-export interface ClaimDetail {
+export interface ExpenseClaimResponse {
+    message: {
+        status: string;
+        message: string;
+        data: ExpenseClaimData;
+    };
+}
+
+export interface ExpenseClaimData {
     claim_id: string;
     employee: string;
     employee_name: string;
+    posting_date: string;
     approval_status: string;
-    expense_approver: string;           // Added per docs
-    authorized_approver: string;        // Added per docs
-    authorized_approver_name: string;   // Added per docs
+    docstatus: number;
+    pjp_store_id: string;
+    travel_start_date: string;
+    travel_end_date: string;
+    from_city: string;
+    to_city: string;
+    distance_km: number;
+    travel_type: string;
+    city_class: string;
+    is_self_arranged_stay: number;
+    expense_approver: string | null;
+    authorized_approver: string;
+    authorized_approver_name: string | null;
     total_claimed_amount: number;
     total_sanctioned_amount: number;
-    expenses: ClaimDetailExpense[];
-    attachments: string[];
+    expenses: Expense[];
+    attachments: Attachment[];
+}
+
+export interface Expense {
+    // Add fields when available
+}
+
+export interface Attachment {
+    // Add fields when available
 }
 
 // ─── Phase 2 – Manager Approval ────────────────────────────────────────────
@@ -154,17 +181,23 @@ export interface AddExpenseRowPayload {
 
     // TA-specific
     /** Required when expense_type is "TA" */
-    ta_mode?: 'Bus' | 'Train' | 'Auto' | 'Bike' | 'Flight';
-    /** Required when ta_mode is "Train" */
-    ta_rail_class?: 'AC 3 Tier' | 'Sleeper' | 'AC Chair Car' | 'Non-AC Chair Car';
+    ta_mode?: 'Rail' | 'Bus' | 'Auto' | 'Bike' | 'Cab' | 'Local';
+    /** Required when ta_mode is "Rail" */
+    ta_rail_class?: 'Sleeper' | 'Non-AC Chair Car' | 'III-AC' | 'AC Chair Car';
     /** 1 = local travel, 0 = outstation */
     is_local?: 0 | 1;
+    /** Distance traveled in KM (if applicable) */
+    ta_km?: number;
 
     // Telecom-specific
-    /** Required when expense_type is "Telecom". e.g. "April", "May" */
+    /** Required when expense_type is "Telecom". Format: YYYY-MM-DD (first day of bill month) */
     telecom_bill_month?: string;
     /** Required when expense_type is "Telecom" */
     mobile_number?: string;
+
+    // Incidental-specific
+    /** Required when expense_type is "Incidental". Format: YYYY-MM-DD (first day of bill month) */
+    incidental_bill_month?: string;
 }
 
 export interface DeleteExpenseRowPayload {

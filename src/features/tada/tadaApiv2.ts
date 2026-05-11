@@ -5,7 +5,6 @@ import {
   ApproveClaimPayload,
   ApproveVisibilityClaimPayload,
   CancelVisibilityClaimPayload,
-  ClaimDetail,
   CreateExpenseDraftPayload,
   CreateVisibilityClaimPayload,
   DeleteExpenseRowPayload,
@@ -23,6 +22,7 @@ import {
   TadaApiResponse,
   TadaSummary,
   VisibilityClaim,
+  ExpenseClaimResponse,
 } from '../../types/tadaType';
 import { baseQueryForTadaWithAuthGuard } from '../utility';
 
@@ -131,7 +131,7 @@ export const tadaApiV2 = createApi({
 
     // 7. Get Claim Detail
     getClaimDetail: builder.query<
-      TadaApiResponse<ClaimDetail>,
+      ExpenseClaimResponse,
       { claim_id: string }
     >({
       query: ({ claim_id }) => ({

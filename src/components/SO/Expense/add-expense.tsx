@@ -1,19 +1,16 @@
 import {
   ActivityIndicator,
   Animated,
-  Image,
-  Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Colors } from '../../../utils/colors';
 import { Size } from '../../../utils/fontSize';
 import { Fonts } from '../../../constants';
-import { CirclePlus, Upload } from 'lucide-react-native';
+import { CirclePlus } from 'lucide-react-native';
 import moment from 'moment';
 import AddExpenseModal from './add-expense-modal';
 import Toast from 'react-native-toast-message';
@@ -21,17 +18,20 @@ import {
   useCreateExpenseDraftMutation,
   useAddExpenseRowMutation,
   useSubmitExpenseClaimMutation,
+  useDeleteExpenseRowMutation,
+  useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
 import { fileToBase64 } from '../../../utils/fileUtils';
-import { ExpenseClaimPayload } from '../../../types/baseType';
 import { useAppSelector } from '../../../store/hook';
-import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
-import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import { pick } from '@react-native-documents/picker';
-import { launchCamera } from 'react-native-image-picker';
-import { windowWidth } from '../../../utils/utils';
+import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
+import { Switch } from 'react-native-paper';
+import { EmployeeStrip } from './AddExpense/EmployeeStrip';
+import { PjpSelectionDropdown } from './AddExpense/PjpSelectionDropdown';
+import { DraftStatusBadge } from './AddExpense/DraftStatusBadge';
+import { ProgressOverlay } from './AddExpense/ProgressOverlay';
+import { ExpenseRowCard } from './AddExpense/ExpenseRowCard';
 
-type LocalExpenseItem = {
+export type LocalExpenseItem = {
   expense_type: string;
   expense_date: string;
   custom_claim_description: string;
@@ -42,268 +42,310 @@ type LocalExpenseItem = {
   is_local?: 0 | 1;
   telecom_bill_month?: string;
   mobile_number?: string;
+  ta_km?: number;
+  incidental_bill_month?: string;
+  row_id?: string;
 };
 
-const AddExpenseComponent = ({ navigation }: any) => {
-  const [total, setTotal] = useState<number>(0);
+type Props = {
+  navigation: any;
+  existingClaimId?: string;
+};
+
+const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
+  const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
-  const [claimId, setClaimId] = useState<string | null>(null);
-  const [attachment, setAttachment] = useState<any | null>(null);
-  const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
+  const [claimId, setClaimId] = useState<string | null>(existingClaimId || null);
   const [loading, setLoading] = useState(false);
   const [uploadStep, setUploadStep] = useState('');
-  const [pjpStoreId, setPjpStoreId] = useState<string>('');
+  const [pjpStoreId, setPjpStoreId] = useState('');
+  const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
+  const [isSelfArrangedStay, setIsSelfArrangedStay] = useState(false);
+  const draftAttempted = useRef(false);
 
-  const [createExpenseDraft, { isLoading: isCreatingDraft }] =
-    useCreateExpenseDraftMutation();
-  const [addExpenseRow, { isLoading: isAddingRow }] = useAddExpenseRowMutation();
-  const [submitExpenseClaim, { isLoading: isSubmitting }] =
-    useSubmitExpenseClaimMutation();
+  const [createExpenseDraft] = useCreateExpenseDraftMutation();
+  const [addExpenseRow] = useAddExpenseRowMutation();
+  const [submitExpenseClaim] = useSubmitExpenseClaimMutation();
+  const [deleteExpenseRow] = useDeleteExpenseRowMutation();
 
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
+
+  // ── Load existing rows when editing a draft ──
+  const { data: existingDetail } = useGetClaimDetailQuery(
+    { claim_id: existingClaimId! },
+    { skip: !existingClaimId },
   );
-  const handleSaveExpenseToServer = async () => {
-    if (expenses.length === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'Please add at least one expense item',
-      });
+  console.log("🚀 ~ AddExpenseComponent ~ existingDetail:", existingDetail)
+
+  useEffect(() => {
+    const rows = existingDetail?.message?.data?.expenses;
+    if (!rows?.length) return;
+    const mapped: LocalExpenseItem[] = rows.map((r: any) => ({
+      expense_type: r.expense_type,
+      expense_date: r.date,
+      custom_claim_description: r.description,
+      amount: Number(r.amount),
+      ta_mode: r.ta_mode,
+      ta_rail_class: r.ta_rail_class,
+      is_local: r.is_local,
+      telecom_bill_month: r.telecom_bill_month,
+      mobile_number: r.mobile_number,
+      ta_km: r.ta_km,
+      incidental_bill_month: r.incidental_bill_month,
+      row_id: r.row_id,
+    }));
+    setExpenses(mapped);
+    setTotal(mapped.reduce((s, r) => s + r.amount, 0));
+  }, [existingDetail]);
+
+  // ── Step 1: Create Draft ──
+  const handleCreateDraft = async () => {
+    if (!pjpStoreId) {
+      Toast.show({ type: 'error', text1: 'Please select a PJP first' });
       return;
     }
-
+    if (claimId) return;
     try {
       setLoading(true);
-
-      // 1. Create Draft
-      setUploadStep('Initializing draft...');
-      const pjpId = pjpStoreId;
-
-      if (!pjpId) {
-        Toast.show({
-          type: 'error',
-          text1: 'Please select a PJP',
-        });
-        setLoading(false);
-        return;
-      }
-
+      setUploadStep('Creating draft...');
       const draftRes = await createExpenseDraft({
-        pjp_store_id: pjpId,
+        pjp_store_id: pjpStoreId,
+        is_self_arranged_stay: isSelfArrangedStay ? 1 : 0,
       }).unwrap();
-      console.log("🚀 ~ handleSaveExpenseToServer ~ draftRes:", draftRes)
-
-      const claim_id = draftRes.message.data?.claim_id;
-
-      if (!claim_id) {
-        throw new Error('Failed to obtain claim ID from server');
-      }
-
-      // 2. Add Rows Sequentially
-      for (let i = 0; i < expenses.length; i++) {
-        const expense = expenses[i];
-        setUploadStep(`Uploading item ${i + 1} of ${expenses.length}...`);
-
-        let imageData = undefined;
-
-        if (expense.attachment) {
-          const base64 = await fileToBase64(
-            expense.attachment.uri,
-            expense.attachment.type,
-          );
-          imageData = {
-            mime: expense.attachment.type,
-            data: base64,
-          };
-        }
-
-        await addExpenseRow({
-          claim_id,
-          expense_type: expense.expense_type as any,
-          amount: expense.amount,
-          date: expense.expense_date,
-          description: expense.custom_claim_description,
-          image: imageData,
-          ta_mode: expense.ta_mode as any,
-          ta_rail_class: expense.ta_rail_class as any,
-          is_local: expense.is_local as any,
-          telecom_bill_month: expense.telecom_bill_month,
-          mobile_number: expense.mobile_number,
-        }).unwrap();
-      }
-
-      // 3. Submit Claim
-      setUploadStep('Finalizing submission...');
-      await submitExpenseClaim({ claim_id }).unwrap();
-
-      Toast.show({
-        type: 'success',
-        text1: 'Expense claim submitted successfully',
-        position: 'top',
-      });
-
-      clearFormData();
-      navigation.goBack();
+      const newClaimId = draftRes.message.data?.claim_id;
+      if (!newClaimId) throw new Error('Failed to obtain claim ID');
+      setClaimId(newClaimId);
+      Toast.show({ type: 'success', text1: 'Draft created! Now add your expenses.', position: 'top' });
     } catch (error: any) {
-      console.error('Expense Submission Error:', error);
-      Toast.show({
-        type: 'error',
-        text1: error?.data?.message?.message || 'Failed to submit expense',
-        position: 'top',
-      });
+      draftAttempted.current = false;
+      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to create draft', position: 'top' });
     } finally {
       setLoading(false);
       setUploadStep('');
     }
   };
 
+  // ── Step 2: Add Row ──
   const handleAddLocalExpense = async (item: LocalExpenseItem) => {
-    setExpenses(prev => [...prev, item]);
-    setTotal(prev => prev + item.amount);
+    if (!claimId) {
+      Toast.show({ type: 'error', text1: 'Please create a draft first.' });
+      return;
+    }
+    try {
+      setLoading(true);
+      setUploadStep('Adding expense item...');
+      let imageData = undefined;
+      if (item.attachment) {
+        const base64 = await fileToBase64(item.attachment.uri, item.attachment.type);
+        imageData = { mime: item.attachment.type, data: base64 };
+      }
+      const rowRes = await addExpenseRow({
+        claim_id: claimId,
+        expense_type: item.expense_type as any,
+        amount: item.amount,
+        date: item.expense_date,
+        description: item.custom_claim_description,
+        image: imageData,
+        ta_mode: item.ta_mode as any,
+        ta_rail_class: item.ta_rail_class as any,
+        is_local: item.is_local as any,
+        telecom_bill_month: item.telecom_bill_month,
+        mobile_number: item.mobile_number,
+        ta_km: item.ta_km,
+        incidental_bill_month: item.incidental_bill_month,
+      }).unwrap();
+      const row_id = rowRes?.message?.data?.row_id;
+      setExpenses(prev => [...prev, { ...item, row_id }]);
+      setTotal(prev => prev + item.amount);
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to add expense item', position: 'top' });
+    } finally {
+      setLoading(false);
+      setUploadStep('');
+    }
+  };
+
+  // ── Remove Row ──
+  const handleRemoveItem = async (index: number) => {
+    const item = expenses[index];
+    if (claimId && item.row_id) {
+      try {
+        setLoading(true);
+        setUploadStep('Removing item...');
+        await deleteExpenseRow({ claim_id: claimId, row_id: item.row_id }).unwrap();
+      } catch (error: any) {
+        Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to remove item', position: 'top' });
+        return;
+      } finally {
+        setLoading(false);
+        setUploadStep('');
+      }
+    }
+    setExpenses(prev => prev.filter((_, i) => i !== index));
+    setTotal(prev => prev - item.amount);
+  };
+
+  // ── Step 3: Submit ──
+  const handleSubmitClaim = async () => {
+    if (expenses.length === 0) {
+      Toast.show({ type: 'error', text1: 'Please add at least one expense item' });
+      return;
+    }
+    if (!claimId) {
+      Toast.show({ type: 'error', text1: 'No active draft found' });
+      return;
+    }
+    try {
+      setLoading(true);
+      setUploadStep('Finalizing submission...');
+      let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
+      console.log("🚀 ~ handleSubmitClaim ~ res:", res)
+      Toast.show({ type: 'success', text1: 'Expense claim submitted successfully', position: 'top' });
+      clearFormData();
+      navigation.goBack();
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to submit expense', position: 'top' });
+    } finally {
+      setLoading(false);
+      setUploadStep('');
+    }
   };
 
   const clearFormData = () => {
     setExpenses([]);
     setTotal(0);
     setPjpStoreId('');
+    setClaimId(null);
+    setIsSelfArrangedStay(false);
+    draftAttempted.current = false;
   };
 
-  const handleRemoveItem = (index: number) => {
-    const item = expenses[index];
-    setExpenses(prev => prev.filter((_, i) => i !== index));
-    setTotal(prev => prev - item.amount);
+  const handlePjpSelect = (id: string) => {
+    if (id !== pjpStoreId) {
+      setClaimId(null);
+      setExpenses([]);
+      setTotal(0);
+      draftAttempted.current = false;
+    }
+    setPjpStoreId(id);
   };
+
+  const isEditMode = !!existingClaimId;
 
   return (
     <View style={styles.container}>
-      <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Expense Approver</Text>
+      <EmployeeStrip employee={employee} />
 
-        <View style={styles.readonlyInput}>
-          <Text style={styles.readonlyText}>
-            {user?.full_name || 'No Employee Found'}
-          </Text>
+      {/* ── Date + PJP ── */}
+      <View style={styles.rowInputs}>
+        <View style={{ flex: 1 }}>
+          <ReusableDatePicker
+            label="Date"
+            value={selectedDate}
+            onChange={(val: string) => setSelectedDate(val)}
+            marginBottom={0}
+            labelStyle={styles.inputLabel}
+            inputStyle={{ fontSize: 13 }}
+            height={42}
+            disabled={!!claimId}
+          />
+        </View>
+        <View style={{ flex: 1.3 }}>
+          <PjpSelectionDropdown
+            value={pjpStoreId}
+            onSelect={handlePjpSelect}
+            selectedDate={selectedDate}
+            disabled={!!claimId}
+          />
         </View>
       </View>
 
-      <PjpSelectionDropdown
-        value={pjpStoreId}
-        onSelect={setPjpStoreId}
-      />
-      <View style={styles.HeadingHead}>
-        <Text style={styles.SectionHeading}>Expense</Text>
-
-        <TouchableOpacity
-          disabled={loading}
-          onPress={() => setShowModal(true)}>
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={{ fontSize: Size.sm, fontFamily: Fonts.medium }}>
-              ₹ {total}
-            </Text>
-            <CirclePlus size={20} color={Colors.black} />
+      {/* ── Self Arranged Stay (only before draft, not in edit mode) ── */}
+      {!claimId && !isEditMode && (
+        <View style={styles.toggleRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
+            <Text style={styles.toggleSub}>Enable if you arranged your own lodging</Text>
           </View>
-        </TouchableOpacity>
-      </View>
+          <Switch
+            value={isSelfArrangedStay}
+            trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
+            thumbColor={isSelfArrangedStay ? Colors.primary : '#f4f3f4'}
+            onValueChange={setIsSelfArrangedStay}
+          />
+        </View>
+      )}
+
+      {/* ── Draft Status Badge ── */}
+      {claimId && (
+        <DraftStatusBadge claimId={claimId} itemCount={expenses.length} />
+      )}
+
+      {/* ── Expense Section Header ── */}
+      {claimId && (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Expenses</Text>
+          <TouchableOpacity
+            disabled={loading}
+            onPress={() => setShowModal(true)}
+            style={styles.addBtn}>
+            <Text style={styles.addBtnTotal}>₹ {total.toLocaleString('en-IN')}</Text>
+            <CirclePlus size={20} color={Colors.darkButton} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <AddExpenseModal
         visible={showModal}
         onClose={() => setShowModal(false)}
         onAddExpense={handleAddLocalExpense}
+        selectedDate={selectedDate}
       />
 
-      <Animated.ScrollView contentContainerStyle={styles.dataBoxSection}>
-        {expenses.length === 0 ? (
-          <View style={styles.emptyState}>
-            {/* <Image
-              source={require('../../../assets/images/emptyState.png')}
-              style={styles.emptyImage}
-            /> */}
-            <Text style={styles.emptyTitle}>No Items Added</Text>
-            <Text style={styles.emptySubtitle}>
-              Select a PJP store and tap the '+' icon to add your expenses.
-            </Text>
-          </View>
-        ) : (
-          expenses.map((expense, index) => (
-            <View key={index} style={styles.dataBox}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.quantityCount}>{expense.expense_type}</Text>
-                <Text style={styles.quantitytime}>
-                  {moment(expense.expense_date).format('LL')}
-                </Text>
-                {expense.attachment && (
-                  <View style={styles.attachmentPreview}>
-                    <Upload size={12} color={Colors.gray} />
-                    <Text style={styles.attachmentText} numberOfLines={1}>
-                      {expense.attachment.name}
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <View style={{ alignItems: 'flex-end', gap: 8 }}>
-                <Text style={styles.incressValu}>₹ {expense.amount}</Text>
-                <TouchableOpacity onPress={() => handleRemoveItem(index)}>
-                  <Text style={styles.deleteText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
+      {/* ── Expense List ── */}
+      {claimId && (
+        <Animated.ScrollView contentContainerStyle={styles.listContent}>
+          {expenses.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No items added</Text>
+              <Text style={styles.emptySubtitle}>
+                Tap the '+' icon above to add your first expense.
+              </Text>
             </View>
-          ))
-        )}
-      </Animated.ScrollView>
-
-      <TouchableOpacity
-        style={[
-          styles.submitBtn,
-          (loading || expenses.length === 0 || !pjpStoreId) && { opacity: 0.6 }
-        ]}
-        onPress={() => handleSaveExpenseToServer()}
-        disabled={loading || expenses.length === 0 || !pjpStoreId}>
-        <Text style={styles.submitText}>Submit Claim</Text>
-      </TouchableOpacity>
-
-      {/* ── Progress Overlay ── */}
-      {loading && (
-        <View style={styles.overlay}>
-          <View style={styles.overlayCard}>
-            <ActivityIndicator size="large" color={Colors.orange} />
-            <Text style={styles.overlayTitle}>Submitting Claim</Text>
-            <Text style={styles.overlaySubtitle}>{uploadStep}</Text>
-          </View>
-        </View>
+          ) : (
+            expenses.map((expense, index) => (
+              <ExpenseRowCard
+                key={expense.row_id || index}
+                expense={expense}
+                loading={loading}
+                onRemove={() => handleRemoveItem(index)}
+              />
+            ))
+          )}
+        </Animated.ScrollView>
       )}
-    </View>
-  );
-};
 
-const PjpSelectionDropdown = ({ value, onSelect, error }: any) => {
-  const { data } = useGetDailyPjpListQuery({
-    page: 1,
-    page_size: 20,
-    status: 'All',
-    date: moment().format('YYYY-MM-DD'),
-  });
-  console.log("🚀 ~ PjpSelectionDropdown ~ data:", data)
+      {/* ── Action Button ── */}
+      {!claimId ? (
+        <TouchableOpacity
+          style={[styles.actionBtn, { backgroundColor: Colors.primary }, (!pjpStoreId || loading) && styles.disabled]}
+          onPress={handleCreateDraft}
+          disabled={!pjpStoreId || loading}>
+          <Text style={styles.actionBtnText}>Create Draft</Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={[styles.actionBtn, { backgroundColor: Colors.darkButton }, (loading || expenses.length === 0) && styles.disabled]}
+          onPress={handleSubmitClaim}
+          disabled={loading || expenses.length === 0}>
+          <Text style={styles.actionBtnText}>Submit Claim</Text>
+        </TouchableOpacity>
+      )}
 
-  const pjpOptions = (data?.message?.data?.pjp_daily_stores || []).map((item) => ({
-    label: `${item.date} (${item.pjp_daily_store_id})`,
-    value: item.pjp_daily_store_id,
-  }));
-
-  return (
-    <View style={{ marginBottom: 15 }}>
-      <ReusableDropdown
-        label="Select PJP Store"
-        field="value"
-        value={value}
-        data={pjpOptions}
-        onChange={onSelect}
-        error={error}
-      />
+      <ProgressOverlay visible={loading} step={uploadStep} />
     </View>
   );
 };
@@ -313,281 +355,97 @@ export default AddExpenseComponent;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.transparent,
-    padding: 20,
+    padding: 16,
   },
-  inputWrapper: {
-    marginBottom: 15,
+  rowInputs: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 10,
   },
-
   inputLabel: {
-    fontSize: Size.sm,
+    fontSize: 11,
     fontFamily: Fonts.medium,
-    marginBottom: 6,
-    color: Colors.darkButton,
+    color: '#666',
+    marginBottom: 4,
   },
-
-  readonlyInput: {
-    height: 50,
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: Colors.border || '#DADADA',
+    borderColor: '#E2E8F0',
     borderRadius: 10,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    backgroundColor: '#F7F7F7',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
   },
-
-  readonlyText: {
-    fontSize: Size.sm,
+  toggleTitle: {
+    fontSize: 13,
+    fontFamily: Fonts.medium,
+    color: '#334155',
+  },
+  toggleSub: {
+    fontSize: 11,
     fontFamily: Fonts.regular,
-    color: Colors.black,
+    color: '#94A3B8',
+    marginTop: 2,
   },
-  HeadingHead: {
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
+    marginTop: 4,
   },
-  SectionHeading: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.md,
+  sectionTitle: {
+    fontFamily: Fonts.medium,
+    fontSize: 16,
     color: Colors.darkButton,
   },
-  dataBoxSection: { paddingTop: 15 },
-  dataBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 18,
-    marginBottom: 15,
-    padding: 20,
+  addBtn: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
-  quantityCount: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-  },
-  quantitytime: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
-  },
-  incressValu: {
-    color: Colors.sucess,
-    fontFamily: Fonts.medium,
+  addBtnTotal: {
     fontSize: Size.sm,
+    fontFamily: Fonts.medium,
+    color: Colors.darkButton,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-    color: '#333',
+  listContent: {
+    paddingVertical: 8,
   },
   emptyState: {
-    padding: 40,
+    paddingVertical: 40,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  emptyImage: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-    opacity: 0.8,
   },
   emptyTitle: {
     fontFamily: Fonts.bold,
-    fontSize: Size.md,
+    fontSize: Size.sm,
     color: Colors.darkButton,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptySubtitle: {
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.gray,
     textAlign: 'center',
     lineHeight: 20,
   },
-  attachmentPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: 4,
-    backgroundColor: '#F0F2F6',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  attachmentText: {
-    fontFamily: Fonts.medium,
-    fontSize: 10,
-    color: Colors.gray,
-    maxWidth: 120,
-  },
-  deleteText: {
-    fontFamily: Fonts.medium,
-    fontSize: 11,
-    color: Colors.error,
-  },
-  submitBtn: {
-    backgroundColor: Colors.darkButton,
+  actionBtn: {
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
   },
-  submitText: {
+  actionBtnText: {
     fontFamily: Fonts.bold,
-    fontSize: Size.md,
+    fontSize: Size.sm,
     color: Colors.white,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1000,
-    alignItems: 'center',
-    justifyContent: 'center',
+  disabled: {
+    opacity: 0.5,
   },
-  overlayCard: {
-    width: '80%',
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    gap: 15,
-  },
-  overlayTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-  },
-  overlaySubtitle: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    color: Colors.gray,
-    textAlign: 'center',
-  },
-  uploadText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  errorText: {
-    color: 'red',
-    marginTop: 4,
-    fontSize: 12,
-  },
-  uploadBox: {
-    marginTop: 5,
-    height: 100,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-  },
-
-  uploadHint: {
-    color: '#000',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-
-  previewContainer: {
-    marginTop: 12,
-    alignItems: 'center',
-  },
-
-  imagePreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-  },
-  fullWidthImage: {
-    width: windowWidth * 0.7,
-    height: 200, // adjust if needed
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    backgroundColor: '#f9f9f9',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  bottomSheet: {
-    backgroundColor: '#fff',
-    paddingVertical: 12,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  optionBtn: {
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  fileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
-    gap: 12,
-  },
-
-  fileIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#E11D48', // PDF red
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  fileIcon: {
-    fontSize: 22,
-    color: '#fff',
-  },
-
-  fileInfo: {
-    flex: 1,
-  },
-
-  fileName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111',
-  },
-
-  fileType: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  // submitBtn: {
-  //   backgroundColor: Colors.primary,
-  //   paddingVertical: 12,
-  //   borderRadius: 8,
-  //   alignItems: 'center',
-  //   marginVertical: 6,
-  //   // marginHorizontal: 16,
-  // },
-  // submitText: {
-  //   color: Colors.white,
-  //   fontSize: 16,
-  //   fontWeight: 'bold',
-  // },
 });
