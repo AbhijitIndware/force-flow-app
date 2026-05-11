@@ -76,10 +76,18 @@ const VisibilityComponent = ({ navigation }: any) => {
           contentContainerStyle={styles.dataBoxSection}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <Text style={styles.emptyText}>No visibility claims found</Text>
+            <View style={styles.emptyStateContainer}>
+              <Ionicons name="document-text-outline" size={60} color="#94A3B8" />
+              <Text style={styles.emptyStateTitle}>No Claims Found</Text>
+              <Text style={styles.emptyStateSub}>
+                You haven't created any visibility claims yet. Tap the button below to add one.
+              </Text>
+            </View>
           }
         />
-      )}      {/* CTA BUTTON */}
+      )}
+
+      {/* CTA BUTTON */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => navigation.navigate('AddVisibilityScreen')}
@@ -108,12 +116,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 30,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+
+  emptyStateTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
     color: Colors.darkButton,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+
+  emptyStateSub: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
   checkinButton: {

@@ -138,7 +138,7 @@ export default ExpenseComponent;
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: Colors.transparent,
   },
   loadingContainer: {
     flex: 1,

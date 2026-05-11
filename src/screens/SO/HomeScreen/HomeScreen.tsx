@@ -2125,7 +2125,7 @@ const HomeScreen = ({ navigation }: Props) => {
               style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity
-              onPress={() => navigation.navigate('VisibilityScreen')}
+              onPress={() => navigation.navigate('ExpenseScreen')}
               style={styles.IconlinkBox}>
               <View
                 style={[
