@@ -26,6 +26,8 @@ import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
 import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
 import AddVisibilityScreen from '../VisibilityScreen/AddVisibilityClaim';
+import VisibilityApprovalScreen from '../VisibilityScreen/VisibilityApprovalScreen';
+import VisibilityApprovalDetailScreen from '../VisibilityScreen/VisibilityApprovalDetailScreen';
 import TeamsSalesReport from '../Sales/TeamSalesReport';
 import StoreDetailScreen from '../PartnersScreen/StoreDetailScreen';
 import AsmDashboard from '../Sales/AsmDashboardScreen';
@@ -41,6 +43,7 @@ import StockManagementFormScreen from '../StockScreen/StockManagementFormScreen'
 import AddActivityLocationScreen from '../HomeScreen/AddActivityLocationScreen';
 import ActivityLocationScreen from '../HomeScreen/ActivityLocationScreen';
 import ActivityCheckInScreen from '../HomeScreen/ActivityCheckInScreen';
+import ExpenseApprovalScreen from '../ExpenseScreen/ExpenseApprovalScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -183,6 +186,16 @@ const SoNavigation = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="VisibilityApprovalScreen"
+        component={VisibilityApprovalScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="VisibilityApprovalDetailScreen"
+        component={VisibilityApprovalDetailScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="TeamsSalesReport"
         component={TeamsSalesReport}
         options={{ headerShown: false }}
@@ -207,7 +220,6 @@ const SoNavigation = () => {
         component={DetailByUserScreen}
         options={{ headerShown: false }}
       />
-
 
       <Stack.Screen
         name="OrderDetailScreen"
@@ -235,7 +247,6 @@ const SoNavigation = () => {
         options={{ headerShown: false }}
       />
 
-
       <Stack.Screen
         name="StockManagementScreen"
         component={StockManagementScreen}
@@ -259,6 +270,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="ActivityLocationScreen"
         component={ActivityLocationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ExpenseApprovalScreen"
+        component={ExpenseApprovalScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

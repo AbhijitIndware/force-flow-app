@@ -23,6 +23,7 @@ import {
   TadaSummary,
   VisibilityClaim,
   ExpenseClaimResponse,
+  VisibilityClaimsResponse,
 } from '../../types/tadaType';
 import { baseQueryForTadaWithAuthGuard } from '../utility';
 
@@ -190,7 +191,7 @@ export const tadaApiV2 = createApi({
     // 11. Get Visibility Claims List
     // Employee sees own claims. Pass view: "manager" to see team's claims.
     getMyVisibilityClaims: builder.query<
-      TadaApiResponse<VisibilityClaim[]>,
+      VisibilityClaimsResponse,
       GetVisibilityClaimsParams | void
     >({
       query: (params = {}) => ({

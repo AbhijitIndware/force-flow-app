@@ -113,7 +113,25 @@ export interface TadaSummary {
 }
 
 // ─── Phase 4 – Visibility Claims ──────────────────────────────────────────
+export interface VisibilityClaimsResponse {
+    message: {
+        success: boolean;
+        data: VisibilityClaimsData;
+    };
+}
 
+export interface VisibilityClaimsData {
+    visibility_claims: VisibilityClaim[];
+    pagination: Pagination;
+}
+
+export interface Pagination {
+    total: number;
+    page: number;
+    page_size: number;
+    total_pages: number;
+    has_more: boolean;
+}
 export interface VisibilityClaim {
     claim_id: string;
     employee: string;

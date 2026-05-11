@@ -6,7 +6,7 @@ export type MainNavigationStackParamList = {
   SoNavigation: undefined;
   LoginScreen: undefined;
   SignupScreen: undefined;
-  DistributorNavigation: undefined
+  DistributorNavigation: undefined;
 };
 export type PromoterAppStackParamList = {
   Home: undefined;
@@ -30,7 +30,7 @@ export type DistributorAppStackParamList = {
   DeliveryNotesScreen: undefined;
   DistributorProfileScreen: undefined;
   PurchaseOrderDetailScreen: { order_id?: string };
-  DeliveryNoteDetailScreen: { id: string }
+  DeliveryNoteDetailScreen: { id: string };
 };
 export type SoAppStackParamList = {
   Home: undefined;
@@ -64,8 +64,10 @@ export type SoAppStackParamList = {
 
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
+  VisibilityApprovalScreen: undefined;
+  VisibilityApprovalDetailScreen: { claimId: string };
   StoreDetailScreen: { storeId: string };
-  TeamDetailScreen: { date: string, employee_id: string };
+  TeamDetailScreen: { date: string; employee_id: string };
   DetailByStoreScreen: {
     store_id: string;
     date: string;
@@ -75,16 +77,26 @@ export type SoAppStackParamList = {
     employee_id: string;
     date: string;
   };
-  AllOrdersScreen: { date: string, employee: string, from_date?: string, to_date?: string };
+  AllOrdersScreen: {
+    date: string;
+    employee: string;
+    from_date?: string;
+    to_date?: string;
+  };
   OrderDetailScreen: { order_id: string };
   DeliveryNoteDetailScreen: { id: string };
   TeamAttendanceListScreen: { apiParams: any; today: string };
-  TeamPerformanceListScreen: { apiParams: any; today: string; mode: 'pjp' | 'value' | 'attendance' };
+  TeamPerformanceListScreen: {
+    apiParams: any;
+    today: string;
+    mode: 'pjp' | 'value' | 'attendance';
+  };
   StockManagementScreen: undefined;
-  StockManagementFormScreen: { store: string; storeName: string, items?: any[] };
+  StockManagementFormScreen: { store: string; storeName: string; items?: any[] };
   AddActivityLocationScreen: undefined;
   ActivityLocationScreen: undefined;
   ActivityCheckInScreen: undefined;
+  ExpenseApprovalScreen: undefined;
 };
 
 export type menuType = {
