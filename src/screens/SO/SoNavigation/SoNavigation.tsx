@@ -24,9 +24,9 @@ import StockReport from '../ActivityScreen/StockReport';
 // import AddExpenseItemScreen from '../ExpenseScreen/AddExpenseItemScreen';
 import AddExpenseScreen from '../ExpenseScreen/AddExpenseScreen';
 import ExpenseScreen from '../ExpenseScreen/ExpenseScreen';
-import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
+// import VisibilityScreen from '../VisibilityScreen/VisibilityScreen';
 import AddVisibilityScreen from '../VisibilityScreen/AddVisibilityClaim';
-import VisibilityApprovalScreen from '../VisibilityScreen/VisibilityApprovalScreen';
+// import VisibilityApprovalScreen from '../VisibilityScreen/VisibilityApprovalScreen';
 import VisibilityApprovalDetailScreen from '../VisibilityScreen/VisibilityApprovalDetailScreen';
 import TeamsSalesReport from '../Sales/TeamSalesReport';
 import StoreDetailScreen from '../PartnersScreen/StoreDetailScreen';
@@ -176,21 +176,21 @@ const SoNavigation = () => {
         component={ExpenseListScreen}
         options={{ headerShown: false }}
       /> */}
-      <Stack.Screen
+      {/* <Stack.Screen
         name="VisibilityScreen"
         component={VisibilityScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="AddVisibilityScreen"
         component={AddVisibilityScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="VisibilityApprovalScreen"
         component={VisibilityApprovalScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Stack.Screen
         name="VisibilityApprovalDetailScreen"
         component={VisibilityApprovalDetailScreen}
