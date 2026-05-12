@@ -60,19 +60,30 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
     validationSchema: visibilityClaimSchema,
     onSubmit: async formValues => {
       try {
-        await createVisibilityClaim({
+        let res = await createVisibilityClaim({
           ...formValues,
           do_submit: true,
         }).unwrap();
 
-        Toast.show({
-          type: 'success',
-          text1: 'Visibility claim submitted successfully',
-          position: 'top',
-        });
+        console.log("🚀 ~ AddVisibilityScreen ~ res:", res)
+        if (res?.message.success) {
 
-        resetForm();
-        navigation.goBack();
+          Toast.show({
+            type: 'success',
+            text1: 'Visibility claim submitted successfully',
+            position: 'top',
+          });
+
+          resetForm();
+          navigation.goBack();
+        } else {
+          Toast.show({
+            type: 'error',
+            text1: 'Failed to submit visibility claim',
+            text2: res.message?.message as string,
+            position: 'top',
+          });
+        }
       } catch (error: any) {
         console.error('Visibility Submission Error:', error);
         Toast.show({

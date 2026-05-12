@@ -1,5 +1,5 @@
 import { StyleSheet, SafeAreaView, View } from 'react-native';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -21,9 +21,15 @@ type Props = {
   route: any;
 };
 
-const ExpenseScreen = ({ navigation }: Props) => {
+const ExpenseScreen = ({ navigation, route }: Props) => {
+  const { index: initialIndex } = route.params || {};
   const [index, setIndex] = useState(0);
 
+  useEffect(() => {
+    if (initialIndex !== undefined) {
+      setIndex(initialIndex);
+    }
+  }, [initialIndex]);
   return (
     <SafeAreaView
       style={[

@@ -56,11 +56,15 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
-  const [claimId, setClaimId] = useState<string | null>(existingClaimId || null);
+  const [claimId, setClaimId] = useState<string | null>(
+    existingClaimId || null,
+  );
   const [loading, setLoading] = useState(false);
   const [uploadStep, setUploadStep] = useState('');
   const [pjpStoreId, setPjpStoreId] = useState('');
-  const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
+  const [selectedDate, setSelectedDate] = useState(
+    moment().format('YYYY-MM-DD'),
+  );
   const [isSelfArrangedStay, setIsSelfArrangedStay] = useState(false);
   const draftAttempted = useRef(false);
 
@@ -78,8 +82,17 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
     { claim_id: existingClaimId! },
     { skip: !existingClaimId },
   );
-  console.log("🚀 ~ AddExpenseComponent ~ existingDetail:", existingDetail)
 
+  const workflowStatus: string =
+    existingDetail?.message?.data?.workflow_state || '';
+
+  const isDraft = workflowStatus === 'Draft' || !workflowStatus;
+  const isPendingApproval = workflowStatus === 'Pending Approval';
+  const isApproved = workflowStatus === 'Approved';
+  const isRejected = workflowStatus === 'Rejected';
+  const isReadOnly = isPendingApproval || isApproved || isRejected;
+
+  // ── Derive workflow status from API ──
   useEffect(() => {
     const rows = existingDetail?.message?.data?.expenses;
     if (!rows?.length) return;
@@ -118,10 +131,18 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       const newClaimId = draftRes.message.data?.claim_id;
       if (!newClaimId) throw new Error('Failed to obtain claim ID');
       setClaimId(newClaimId);
-      Toast.show({ type: 'success', text1: 'Draft created! Now add your expenses.', position: 'top' });
+      Toast.show({
+        type: 'success',
+        text1: 'Draft created! Now add your expenses.',
+        position: 'top',
+      });
     } catch (error: any) {
       draftAttempted.current = false;
-      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to create draft', position: 'top' });
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message?.message || 'Failed to create draft',
+        position: 'top',
+      });
     } finally {
       setLoading(false);
       setUploadStep('');
@@ -139,7 +160,10 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       setUploadStep('Adding expense item...');
       let imageData = undefined;
       if (item.attachment) {
-        const base64 = await fileToBase64(item.attachment.uri, item.attachment.type);
+        const base64 = await fileToBase64(
+          item.attachment.uri,
+          item.attachment.type,
+        );
         imageData = { mime: item.attachment.type, data: base64 };
       }
       const rowRes = await addExpenseRow({
@@ -149,7 +173,6 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         date: item.expense_date,
         description: item.custom_claim_description,
         image: imageData,
-        ta_mode: item.ta_mode as any,
         ta_rail_class: item.ta_rail_class as any,
         is_local: item.is_local as any,
         telecom_bill_month: item.telecom_bill_month,
@@ -161,7 +184,11 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       setExpenses(prev => [...prev, { ...item, row_id }]);
       setTotal(prev => prev + item.amount);
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to add expense item', position: 'top' });
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message?.message || 'Failed to add expense item',
+        position: 'top',
+      });
     } finally {
       setLoading(false);
       setUploadStep('');
@@ -175,9 +202,16 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       try {
         setLoading(true);
         setUploadStep('Removing item...');
-        await deleteExpenseRow({ claim_id: claimId, row_id: item.row_id }).unwrap();
+        await deleteExpenseRow({
+          claim_id: claimId,
+          row_id: item.row_id,
+        }).unwrap();
       } catch (error: any) {
-        Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to remove item', position: 'top' });
+        Toast.show({
+          type: 'error',
+          text1: error?.data?.message?.message || 'Failed to remove item',
+          position: 'top',
+        });
         return;
       } finally {
         setLoading(false);
@@ -191,7 +225,10 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Step 3: Submit ──
   const handleSubmitClaim = async () => {
     if (expenses.length === 0) {
-      Toast.show({ type: 'error', text1: 'Please add at least one expense item' });
+      Toast.show({
+        type: 'error',
+        text1: 'Please add at least one expense item',
+      });
       return;
     }
     if (!claimId) {
@@ -202,12 +239,20 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       setLoading(true);
       setUploadStep('Finalizing submission...');
       let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
-      console.log("🚀 ~ handleSubmitClaim ~ res:", res)
-      Toast.show({ type: 'success', text1: 'Expense claim submitted successfully', position: 'top' });
+      console.log('🚀 ~ handleSubmitClaim ~ res:', res);
+      Toast.show({
+        type: 'success',
+        text1: 'Expense claim submitted successfully',
+        position: 'top',
+      });
       clearFormData();
       navigation.goBack();
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: error?.data?.message?.message || 'Failed to submit expense', position: 'top' });
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message?.message || 'Failed to submit expense',
+        position: 'top',
+      });
     } finally {
       setLoading(false);
       setUploadStep('');
@@ -234,11 +279,33 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   };
 
   const isEditMode = !!existingClaimId;
+  // ── Status banner config ──
+  const STATUS_BANNER: Record<
+    string,
+    { label: string; bg: string; color: string; dot: string }
+  > = {
+    Draft: { label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8' },
+    'Pending Approval': { label: 'Pending Approval', bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+    Approved: { label: 'Approved', bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
+    Rejected: { label: 'Rejected', bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
+  };
+  const bannerCfg = STATUS_BANNER[workflowStatus] ?? STATUS_BANNER['Draft'];
 
   return (
     <View style={styles.container}>
       <EmployeeStrip employee={employee} />
-
+      {/* ── Workflow status banner (only when viewing existing) ── */}
+      {existingClaimId && workflowStatus ? (
+        <View style={[extraStyles.statusBanner, { backgroundColor: bannerCfg.bg }]}>
+          <View style={[extraStyles.statusDot, { backgroundColor: bannerCfg.dot }]} />
+          <Text style={[extraStyles.statusBannerText, { color: bannerCfg.color }]}>
+            {bannerCfg.label}
+          </Text>
+          {isReadOnly && (
+            <Text style={extraStyles.readOnlyHint}>· Read-only</Text>
+          )}
+        </View>
+      ) : null}
       {/* ── Date + PJP ── */}
       <View style={styles.rowInputs}>
         <View style={{ flex: 1 }}>
@@ -250,7 +317,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
             labelStyle={styles.inputLabel}
             inputStyle={{ fontSize: 13 }}
             height={42}
-            disabled={!!claimId}
+            disabled={!!claimId || isReadOnly}
           />
         </View>
         <View style={{ flex: 1.3 }}>
@@ -258,19 +325,23 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
             value={pjpStoreId}
             onSelect={handlePjpSelect}
             selectedDate={selectedDate}
-            disabled={!!claimId}
+            disabled={!!claimId || isReadOnly}
           />
         </View>
       </View>
 
       {/* ── Self Arranged Stay (only before draft, not in edit mode) ── */}
 
-      <View style={[styles.toggleRow, claimId && isEditMode && { backgroundColor: '#E2E8F0', opacity: 0.6 }]}>
+      <View
+        style={[
+          styles.toggleRow,
+          claimId && isEditMode && { backgroundColor: '#E2E8F0', opacity: 0.6 },
+        ]}>
         <View style={{ flex: 1 }}>
           <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
           <Text style={styles.toggleSub}>
-            {claimId && isEditMode 
-              ? 'Cannot be changed while updating' 
+            {claimId && isEditMode
+              ? 'Cannot be changed while updating'
               : 'Enable if you arranged your own lodging'}
           </Text>
         </View>
@@ -292,13 +363,20 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       {claimId && (
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Expenses</Text>
-          <TouchableOpacity
+          {isDraft && (<TouchableOpacity
             disabled={loading}
             onPress={() => setShowModal(true)}
             style={styles.addBtn}>
-            <Text style={styles.addBtnTotal}>₹ {total.toLocaleString('en-IN')}</Text>
+            <Text style={styles.addBtnTotal}>
+              ₹ {total.toLocaleString('en-IN')}
+            </Text>
             <CirclePlus size={20} color={Colors.darkButton} />
-          </TouchableOpacity>
+          </TouchableOpacity>)}
+          {!isDraft && (
+            <Text style={styles.addBtnTotal}>
+              ₹ {total.toLocaleString('en-IN')}
+            </Text>
+          )}
         </View>
       )}
 
@@ -325,7 +403,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
                 key={expense.row_id || index}
                 expense={expense}
                 loading={loading}
-                onRemove={() => handleRemoveItem(index)}
+                onRemove={isDraft ? () => handleRemoveItem(index) : undefined}
               />
             ))
           )}
@@ -335,18 +413,37 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       {/* ── Action Button ── */}
       {!claimId ? (
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: Colors.darkButton }, (!pjpStoreId || loading) && styles.disabled]}
+          style={[
+            styles.actionBtn,
+            { backgroundColor: Colors.darkButton },
+            (!pjpStoreId || loading) && styles.disabled,
+          ]}
           onPress={handleCreateDraft}
           disabled={!pjpStoreId || loading}>
           <Text style={styles.actionBtnText}>Create Draft</Text>
         </TouchableOpacity>
       ) : (
-        <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: Colors.darkButton }, (loading || expenses.length === 0) && styles.disabled]}
-          onPress={handleSubmitClaim}
-          disabled={loading || expenses.length === 0}>
-          <Text style={styles.actionBtnText}>Submit Claim</Text>
-        </TouchableOpacity>
+        <>
+          {claimId && isDraft ?
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                { backgroundColor: Colors.darkButton },
+                (loading || expenses.length === 0) && styles.disabled,
+              ]}
+              onPress={handleSubmitClaim}
+              disabled={loading || expenses.length === 0}>
+              <Text style={styles.actionBtnText}>Submit Claim</Text>
+            </TouchableOpacity> :
+            <TouchableOpacity style={[
+              styles.actionBtn,
+              { backgroundColor: Colors.darkButton },
+              styles.disabled,
+            ]}
+            >
+              <Text style={styles.actionBtnText}>Submit Claim</Text>
+            </TouchableOpacity>}
+        </>
       )}
 
       <ProgressOverlay visible={loading} step={uploadStep} />
@@ -451,5 +548,112 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  readOnlyBanner: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FBBF24',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  readOnlyBannerApproved: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC',
+  },
+  readOnlyBannerRejected: {
+    backgroundColor: '#FEE2E2',
+    borderColor: '#FECACA',
+  },
+  readOnlyText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: '#92400E',
+    textAlign: 'center',
+  },
+  readOnlyTextApproved: {
+    color: '#166534',
+  },
+  readOnlyTextRejected: {
+    color: '#991B1B',
+  },
+});
+
+// ── Additional styles (merge with existing StyleSheet) ──
+const extraStyles = StyleSheet.create({
+  // Status banner at top
+  statusBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 0,
+    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    gap: 6,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  statusBannerText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 12,
+  },
+  readOnlyHint: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94a3b8',
+  },
+
+  // Approve / Reject row
+  approvalRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  rejectBtn: {
+    flex: 1,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#dc2626',
+  },
+  rejectBtnText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 14,
+    color: '#dc2626',
+  },
+  approveBtn: {
+    flex: 2,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#16a34a',
+  },
+  approveBtnText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 14,
+    color: '#fff',
+  },
+
+  // Read-only footer bar
+  readOnlyBar: {
+    marginTop: 10,
+    marginBottom: 16,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+  },
+  readOnlyBarText: {
+    fontFamily: Fonts.medium,
+    fontSize: 13,
+    color: '#64748b',
   },
 });

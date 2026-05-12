@@ -3,24 +3,28 @@ import {
   Image,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
-import {Upload} from 'lucide-react-native';
-import {pick} from '@react-native-documents/picker';
-import {launchCamera} from 'react-native-image-picker';
-import {windowWidth} from '../../../utils/utils';
+import React, { useEffect, useState } from 'react';
+import { Colors } from '../../../utils/colors';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { Upload, Calendar, CheckCircle } from 'lucide-react-native';
+import { pick } from '@react-native-documents/picker';
+import { launchCamera } from 'react-native-image-picker';
+import { windowWidth } from '../../../utils/utils';
 import RNFS from 'react-native-fs';
+import moment from 'moment';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
-import {useAppSelector} from '../../../store/hook';
+import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
+import { useAppSelector } from '../../../store/hook';
 import ReusableInput from '../../ui-lib/reuseable-input';
+import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
 
 interface Props {
   values: Record<any, any>;
@@ -51,47 +55,60 @@ const AddVisibilityComponent = ({
 }: Props) => {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
-
-  const [triggerStoreFetch, {data: storeData}] = useLazyGetDailyStoreQuery();
-
-  const pjpInitializedData = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.pjpInitializedData,
+  const [selectedDate, setSelectedDate] = useState<string>(
+    moment().format('YYYY-MM-DD'),
   );
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const [triggerStoreFetch, { data: storeData, isFetching: storesFetching }] =
+    useLazyGetDailyStoreQuery();
 
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+
+  // Step 1: fetch PJP list for the selected date to get pjp_store_id
+  const { data: pjpListData, isFetching: pjpFetching } = useGetDailyPjpListQuery(
+    {
+      page: 1,
+      page_size: 20,
+      status: 'All',
+      date: selectedDate,
+    },
+    { skip: !selectedDate },
+  );
+
+  // Step 2: once PJP list arrives, extract the pjp_store_id and fetch stores
+  useEffect(() => {
+    const pjpStoreDoc = pjpListData?.message?.data?.pjp_daily_stores?.[0]?.pjp_daily_store_id; // adjust to your API shape
+    if (pjpStoreDoc) {
+      setFieldValue('pjp_store_id', pjpStoreDoc);
+    }
+
+    if (user?.email && selectedDate) {
+      triggerStoreFetch({ user: user.email, date: selectedDate });
+    }
+  }, [pjpListData, selectedDate, user?.email]);
 
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
     label: i.store_name,
     value: i.store,
   }));
 
-  useEffect(() => {
-    if (user?.email && pjpInitializedData?.message?.data?.date) {
-      triggerStoreFetch({
-        user: user.email,
-        date: pjpInitializedData.message.data.date,
-      });
-    }
-  }, [user?.email, pjpInitializedData?.message?.data?.date]);
-
   const convertToBase64 = async (uri: string) => {
     return RNFS.readFile(uri, 'base64');
   };
 
   const handlePickDocument = async () => {
+    setShowOptions(false);
     try {
-      const doc = await pick({allowMultiSelection: false});
+      const doc = await pick({ allowMultiSelection: false });
       if (!doc?.[0]) return;
-
       const base64 = await convertToBase64(doc[0].uri);
-
       setFieldValue('image', {
         mime: doc[0].type || 'application/octet-stream',
         data: base64,
       });
-
       setPreviewUri(doc[0].uri);
     } catch (err) {
       console.warn(err);
@@ -100,112 +117,156 @@ const AddVisibilityComponent = ({
 
   const handleOpenCamera = async () => {
     setShowOptions(false);
-
-    const res = await launchCamera({
-      mediaType: 'photo',
-      quality: 0.8,
-    });
-
+    const res = await launchCamera({ mediaType: 'photo', quality: 0.8 });
     if (!res.assets?.[0]) return;
-
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
-
-    setFieldValue('image', {
-      mime: asset.type || 'image/jpeg',
-      data: base64,
-    });
-
+    setFieldValue('image', { mime: asset.type || 'image/jpeg', data: base64 });
     setPreviewUri(asset.uri!);
   };
 
+  const isLoading = pjpFetching || storesFetching;
+  const pjpResolved = !!values.pjp_store_id;
+
   return (
-    <View style={styles.container}>
-      {/* STORE */}
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}>
+
+      {/* ── DATE PICKER ── */}
       <View style={styles.inputWrapper}>
-        <ReusableDropdown
-          label="Store"
-          field="value"
-          value={values.store}
-          data={storeDailyList}
-          onChange={(val: string) => {
-            setFieldValue('store', val);
-            if (storeData?.message?.pjp_daily_store_doc) {
-              setFieldValue(
-                'pjp_store_id',
-                storeData.message.pjp_daily_store_doc,
-              );
-            }
-          }}
-          error={touched.store && errors.store}
-        />
+        <Text style={styles.inputLabel}>Date</Text>
+        <TouchableOpacity
+          style={styles.dateRow}
+          onPress={() => setShowDatePicker(true)}
+          activeOpacity={0.75}>
+          <Calendar size={14} color={Colors.darkButton} />
+          <Text style={styles.dateText}>
+            {moment(selectedDate).format('DD MMM YYYY')}
+          </Text>
+          {isLoading && (
+            <ActivityIndicator size="small" color={Colors.darkButton} />
+          )}
+          {pjpResolved && !isLoading && (
+            <CheckCircle size={14} color="#22c55e" />
+          )}
+        </TouchableOpacity>
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={moment(selectedDate).toDate()}
+            mode="date"
+            display="default"
+            onChange={(_event, date) => {
+              setShowDatePicker(false);
+              if (date) {
+                const formatted = moment(date).format('YYYY-MM-DD');
+                setSelectedDate(formatted);
+                setFieldValue('store', '');
+                setFieldValue('pjp_store_id', '');
+              }
+            }}
+          />
+        )}
       </View>
 
-      {/* PAYMENT TYPE */}
-      <View style={styles.inputWrapper}>
-        <ReusableDropdown
-          label="Payment Type"
-          field="value"
-          value={values.payment_type}
-          data={[
-            {label: 'Cash', value: 'Cash'},
-            {label: 'Cheque', value: 'Cheque'},
-            {label: 'Online', value: 'Online'},
-          ]}
-          onChange={(val: string) => setFieldValue('payment_type', val)}
-          error={touched.payment_type && errors.payment_type}
-        />
+      {/* PJP ID badge */}
+      {pjpResolved && (
+        <View style={styles.pjpBadge}>
+          <Text style={styles.pjpBadgeText}>PJP ID: {values.pjp_store_id}</Text>
+        </View>
+      )}
+
+      {/* ── STORE + PAYMENT TYPE (same row) ── */}
+      <View style={styles.row}>
+        <View style={styles.halfWrapper}>
+          <ReusableDropdown
+            label="Store"
+            field="value"
+            value={values.store}
+            data={storeDailyList}
+            onChange={(val: string) => {
+              setFieldValue('store', val);
+              if (!pjpResolved && storeData?.message?.pjp_daily_store_doc) {
+                setFieldValue('pjp_store_id', storeData.message.pjp_daily_store_doc);
+              }
+            }}
+            error={touched.store && errors.store}
+            disabled={storesFetching || storeDailyList.length === 0}
+          />
+          {storesFetching && <Text style={styles.hintText}>Loading…</Text>}
+          {!storesFetching && storeDailyList.length === 0 && selectedDate && (
+            <Text style={styles.hintText}>No stores found.</Text>
+          )}
+        </View>
+
+        <View style={styles.halfWrapper}>
+          <ReusableDropdown
+            label="Payment Type"
+            field="value"
+            value={values.payment_type}
+            data={[
+              { label: 'Cash', value: 'Cash' },
+              { label: 'Cheque', value: 'Cheque' },
+              { label: 'Online', value: 'Online' },
+            ]}
+            onChange={(val: string) => setFieldValue('payment_type', val)}
+            error={touched.payment_type && errors.payment_type}
+          />
+        </View>
       </View>
 
-      {/* COLLECTION */}
-      <View style={styles.inputWrapper}>
-        <ReusableInput
-          label="Collection Amount"
-          value={values.collection_amount}
-          onChangeText={handleChange('collection_amount')}
-          onBlur={() => handleBlur('collection_amount')}
-          error={touched.collection_amount && errors.collection_amount}
-        />
+      {/* ── COLLECTION + PRICE DIFFERENCE + DAMAGE (same row) ── */}
+      <View style={styles.row}>
+        <View style={styles.thirdWrapper}>
+          <ReusableInput
+            label="Collection"
+            value={values.collection_amount}
+            onChangeText={handleChange('collection_amount')}
+            onBlur={() => handleBlur('collection_amount')}
+            error={touched.collection_amount && errors.collection_amount}
+            keyboardType="numeric"
+          />
+        </View>
+
+        <View style={styles.thirdWrapper}>
+          <ReusableInput
+            label="Price Diff."
+            value={values.price_difference_amount}
+            onChangeText={handleChange('price_difference_amount')}
+            onBlur={() => handleBlur('price_difference_amount')}
+            error={touched.price_difference_amount && errors.price_difference_amount}
+            keyboardType="numeric"
+          />
+        </View>
+
+        <View style={styles.thirdWrapper}>
+          <ReusableInput
+            label="Damage"
+            value={values.damage_claim}
+            onChangeText={handleChange('damage_claim')}
+            onBlur={() => handleBlur('damage_claim')}
+            error={touched.damage_claim && errors.damage_claim}
+            keyboardType="numeric"
+          />
+        </View>
       </View>
 
-      {/* PRICE DIFFERENCE */}
-      <View style={styles.inputWrapper}>
-        <ReusableInput
-          label="Price Difference Amount"
-          value={values.price_difference_amount}
-          onChangeText={handleChange('price_difference_amount')}
-          onBlur={() => handleBlur('price_difference_amount')}
-          error={
-            touched.price_difference_amount && errors.price_difference_amount
-          }
-        />
-      </View>
-
-      {/* DAMAGE CLAIM */}
-      <View style={styles.inputWrapper}>
-        <ReusableInput
-          label="Damage Amount"
-          value={values.damage_claim}
-          onChangeText={handleChange('damage_claim')}
-          onBlur={() => handleBlur('damage_claim')}
-          error={touched.damage_claim && errors.damage_claim}
-        />
-      </View>
-
-      {/* ATTACHMENT */}
+      {/* ── ATTACHMENT ── */}
       <TouchableOpacity
         style={styles.uploadBox}
         onPress={() => setShowOptions(true)}>
-        <Upload size={28} color={Colors.black} />
+        <Upload size={20} color={Colors.black} />
         <Text style={styles.uploadHint}>Upload Image / Document</Text>
       </TouchableOpacity>
 
-      {/* IMAGE ERROR */}
       {touched.image?.data && errors.image?.data && (
         <Text style={styles.errorText}>{errors.image.data}</Text>
       )}
 
-      {/* OPTIONS */}
+      {/* ── BOTTOM SHEET ── */}
       <Modal visible={showOptions} transparent animationType="slide">
         <Pressable
           style={styles.modalOverlay}
@@ -221,72 +282,118 @@ const AddVisibilityComponent = ({
         </View>
       </Modal>
 
-      {/* PREVIEW */}
+      {/* ── IMAGE PREVIEW ── */}
       {previewUri && (
         <Image
-          source={{uri: previewUri}}
+          source={{ uri: previewUri }}
           style={styles.previewImage}
           resizeMode="contain"
         />
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 export default AddVisibilityComponent;
 
 const styles = StyleSheet.create({
-  container: {flex: 1, padding: 20},
-  inputWrapper: {marginBottom: 14},
+  scroll: { flex: 1 },
+  container: { padding: 16, paddingBottom: 40 },
+  inputWrapper: { marginBottom: 10 },
+
   inputLabel: {
-    fontSize: Size.sm,
+    fontSize: 12,
     fontFamily: Fonts.medium,
-    marginBottom: 6,
+    marginBottom: 4,
     color: Colors.darkButton,
   },
-  readonlyInput: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 10,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    backgroundColor: '#F7F7F7',
+
+  // Two-column / three-column row
+  row: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10,
   },
-  readonlyText: {
-    fontSize: Size.sm,
-    fontFamily: Fonts.regular,
+  halfWrapper: { flex: 1 },
+  thirdWrapper: { flex: 1 },
+
+  // Compact date row
+  dateRow: {
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: Colors.borderLight,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+    gap: 6,
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: Fonts.medium,
     color: Colors.black,
   },
-  uploadBox: {
-    marginTop: 20,
-    height: 100,
-    borderRadius: 10,
+
+  // PJP badge
+  pjpBadge: {
+    marginBottom: 10,
+    alignSelf: 'flex-start',
+    backgroundColor: '#f0fdf4',
     borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  pjpBadgeText: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    color: '#166534',
+  },
+
+  hintText: {
+    fontSize: 11,
+    color: Colors.darkButton,
+    marginTop: 3,
+    marginLeft: 2,
+    opacity: 0.6,
+  },
+
+  uploadBox: {
+    marginTop: 6,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
     borderColor: Colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#fff',
+    gap: 6,
+    backgroundColor: '#fafafa',
   },
-  uploadHint: {fontWeight: '600'},
+  uploadHint: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.black,
+  },
+
   previewImage: {
-    width: windowWidth * 0.7,
-    height: 200,
-    marginTop: 12,
+    width: windowWidth * 0.65,
+    height: 160,
+    marginTop: 10,
     alignSelf: 'center',
+    borderRadius: 8,
   },
-  modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.4)'},
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   bottomSheet: {
     backgroundColor: '#fff',
-    paddingVertical: 12,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingVertical: 10,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
   },
-  optionBtn: {paddingVertical: 14, alignItems: 'center'},
-  optionText: {fontSize: 16, fontWeight: '600'},
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 6,
-  },
+  optionBtn: { paddingVertical: 12, alignItems: 'center' },
+  optionText: { fontSize: 14, fontWeight: '600' },
+  errorText: { color: 'red', fontSize: 11, marginTop: 4 },
 });

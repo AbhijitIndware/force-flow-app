@@ -34,6 +34,7 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   const { data: claimsData, isLoading: claimsLoading, isFetching: claimsFetching } =
     useGetMyExpenseClaimsQuery({ month: selectedMonth, year: selectedYear });
+  console.log("🚀 ~ ExpenseComponent ~ claimsData:", claimsData)
 
   const { data: summaryData, isLoading: summaryLoading } = useGetMyTadaSummaryQuery({
     month: selectedMonth,

@@ -6,7 +6,7 @@ import { Fonts } from '../../../../constants';
 
 interface Claim {
     name: string;
-    approval_status: string;
+    workflow_state: string;
     custom_travel_end_date: string;
     total_claimed_amount: number | string;
 }
@@ -34,9 +34,9 @@ interface Props {
 }
 
 const ExpenseClaimCard: React.FC<Props> = ({ claim, onPress }) => {
-    const s = STATUS_MAP[claim.approval_status] ?? {
+    const s = STATUS_MAP[claim.workflow_state] ?? {
         ...DEFAULT_STATUS,
-        label: claim.approval_status || 'Pending',
+        label: claim.workflow_state || 'Pending',
     };
 
     return (

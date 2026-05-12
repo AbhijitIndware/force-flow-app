@@ -1,8 +1,9 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { createSlice } from '@reduxjs/toolkit';
+import {createApi} from '@reduxjs/toolkit/query/react';
+import {createSlice} from '@reduxjs/toolkit';
 import {
   AddExpenseRowPayload,
   ApproveClaimPayload,
+  ApproveClaimResponse,
   ApproveVisibilityClaimPayload,
   CancelVisibilityClaimPayload,
   CreateExpenseDraftPayload,
@@ -16,8 +17,10 @@ import {
   GetVisibilityClaimsParams,
   PendingApprovalClaim,
   RejectClaimPayload,
+  RejectClaimResponse,
   RejectVisibilityClaimPayload,
   SubmitExpenseClaimPayload,
+  SubmitExpenseClaimResponse,
   SubmitVisibilityClaimPayload,
   TadaApiResponse,
   TadaSummary,
@@ -25,12 +28,14 @@ import {
   ExpenseClaimResponse,
   VisibilityClaimsResponse,
 } from '../../types/tadaType';
-import { baseQueryForTadaWithAuthGuard } from '../utility';
+import {baseQueryForTadaWithAuthGuard} from '../utility';
 
 // ─── API Definition ────────────────────────────────────────────────────────
 
-const EXPENSE_BASE = '/method/salesforce_management.mobile_app_apis.expense_apis.expense_api';
-const VISIBILITY_BASE = '/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api';
+const EXPENSE_BASE =
+  '/method/salesforce_management.mobile_app_apis.expense_apis.expense_api';
+const VISIBILITY_BASE =
+  '/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api';
 const SOFTSENS_BASE = '/method/softsens.api';
 
 export const tadaApiV2 = createApi({
@@ -38,21 +43,20 @@ export const tadaApiV2 = createApi({
   baseQuery: baseQueryForTadaWithAuthGuard,
   tagTypes: ['Expense', 'Approval', 'VisibilityClaim', 'Dashboard'],
   endpoints: builder => ({
-
     // ── Phase 1: Employee Endpoints (Claim Submission Flow) ────────────────
 
     // 1. Get My Expense Claims
     getMyExpenseClaims: builder.query<
       TadaApiResponse<ExpenseClaim[]>,
-      { month?: number; year?: number; status?: string }
+      {month?: number; year?: number; status?: string}
     >({
-      query: ({ month, year, status } = {}) => ({
+      query: ({month, year, status} = {}) => ({
         url: `${EXPENSE_BASE}.get_my_expense_claims`,
         method: 'GET',
         params: {
-          ...(month !== undefined && { month }),
-          ...(year !== undefined && { year }),
-          ...(status && { status }),
+          ...(month !== undefined && {month}),
+          ...(year !== undefined && {year}),
+          ...(status && {status}),
         },
       }),
       providesTags: ['Expense'],
@@ -60,7 +64,7 @@ export const tadaApiV2 = createApi({
 
     // 2. Create Expense Draft
     createExpenseDraft: builder.mutation<
-      TadaApiResponse<{ claim_id: string }>,
+      TadaApiResponse<{claim_id: string}>,
       CreateExpenseDraftPayload
     >({
       query: body => ({
@@ -73,7 +77,11 @@ export const tadaApiV2 = createApi({
 
     // 3. Add Expense Row (with integrated receipt upload via image: { mime, data })
     addExpenseRow: builder.mutation<
-      TadaApiResponse<{ row_id: string; sanctioned_amount: number; file_url?: string }>,
+      TadaApiResponse<{
+        row_id: string;
+        sanctioned_amount: number;
+        file_url?: string;
+      }>,
       AddExpenseRowPayload
     >({
       query: body => ({
@@ -86,7 +94,7 @@ export const tadaApiV2 = createApi({
 
     // 4. Delete Expense Row (Draft claims only — returns NOT_DRAFT if already submitted)
     deleteExpenseRow: builder.mutation<
-      TadaApiResponse<{ claim_id: string; rows_remaining: number }>,
+      TadaApiResponse<{claim_id: string; rows_remaining: number}>,
       DeleteExpenseRowPayload
     >({
       query: body => ({
@@ -101,7 +109,7 @@ export const tadaApiV2 = createApi({
     // IMPORTANT: On validation failure the API returns status: "error" with
     // error_code: "VALIDATION_ERROR". Always show response.message to the user as a popup.
     submitExpenseClaim: builder.mutation<
-      TadaApiResponse<{ status: string }>,
+      TadaApiResponse<SubmitExpenseClaimResponse>,
       SubmitExpenseClaimPayload
     >({
       query: body => ({
@@ -117,28 +125,25 @@ export const tadaApiV2 = createApi({
     // 6. Get Pending Approvals
     getPendingApprovals: builder.query<
       TadaApiResponse<PendingApprovalClaim[]>,
-      { month?: number; year?: number }
+      {month?: number; year?: number}
     >({
-      query: ({ month, year } = {}) => ({
+      query: ({month, year} = {}) => ({
         url: `${EXPENSE_BASE}.get_pending_approvals`,
         method: 'GET',
         params: {
-          ...(month !== undefined && { month }),
-          ...(year !== undefined && { year }),
+          ...(month !== undefined && {month}),
+          ...(year !== undefined && {year}),
         },
       }),
       providesTags: ['Approval'],
     }),
 
     // 7. Get Claim Detail
-    getClaimDetail: builder.query<
-      ExpenseClaimResponse,
-      { claim_id: string }
-    >({
-      query: ({ claim_id }) => ({
+    getClaimDetail: builder.query<ExpenseClaimResponse, {claim_id: string}>({
+      query: ({claim_id}) => ({
         url: `${EXPENSE_BASE}.get_claim_detail`,
         method: 'GET',
-        params: { claim_id },
+        params: {claim_id},
       }),
       providesTags: ['Approval', 'Expense'],
     }),
@@ -146,7 +151,7 @@ export const tadaApiV2 = createApi({
     // 8. Approve Claim
     // Backend validates that the caller is the employee's expense_approver or reports_to manager.
     approveClaim: builder.mutation<
-      TadaApiResponse<void>,
+      TadaApiResponse<ApproveClaimResponse>,
       ApproveClaimPayload
     >({
       query: body => ({
@@ -160,7 +165,7 @@ export const tadaApiV2 = createApi({
     // 9. Reject Claim
     // Reason is saved as a permanent comment on the document for audit trail.
     rejectClaim: builder.mutation<
-      TadaApiResponse<{ claim_id: string; approval_status: string }>,
+      TadaApiResponse<RejectClaimResponse>,
       RejectClaimPayload
     >({
       query: body => ({
@@ -176,28 +181,26 @@ export const tadaApiV2 = createApi({
     // 10. Get My TADA Summary
     getMyTadaSummary: builder.query<
       TadaApiResponse<TadaSummary>,
-      { month: number; year: number }
+      {month: number; year: number}
     >({
-      query: ({ month, year }) => ({
+      query: ({month, year}) => ({
         url: `${EXPENSE_BASE}.get_my_tada_summary`,
         method: 'GET',
-        params: { month, year },
+        params: {month, year},
       }),
       providesTags: ['Dashboard'],
     }),
 
     // ── Phase 4: Visibility Claims (Store Level Claims) ────────────────────
 
-    // 11. Get Visibility Claims List
-    // Employee sees own claims. Pass view: "manager" to see team's claims.
     getMyVisibilityClaims: builder.query<
       VisibilityClaimsResponse,
       GetVisibilityClaimsParams | void
     >({
-      query: (params = {}) => ({
+      query: params => ({
         url: `${VISIBILITY_BASE}.get_visibility_claims_list`,
         method: 'GET',
-        params: params ?? {},
+        params: params || {},
       }),
       providesTags: ['VisibilityClaim'],
     }),
@@ -205,19 +208,19 @@ export const tadaApiV2 = createApi({
     // 12. Get Visibility Claim Details
     getVisibilityClaimDetails: builder.query<
       TadaApiResponse<VisibilityClaim>,
-      { claim_id: string }
+      {claim_id: string}
     >({
-      query: ({ claim_id }) => ({
+      query: ({claim_id}) => ({
         url: `${VISIBILITY_BASE}.get_visibility_claim_details`,
         method: 'GET',
-        params: { claim_id },
+        params: {claim_id},
       }),
       providesTags: ['VisibilityClaim'],
     }),
 
     // 13. Create Visibility Claim
     createVisibilityClaim: builder.mutation<
-      TadaApiResponse<{ claim_id: string }>,
+      TadaApiResponse<{claim_id: string}>,
       CreateVisibilityClaimPayload
     >({
       query: body => ({
@@ -290,27 +293,27 @@ export const tadaApiV2 = createApi({
       ApproverInfo,
       GetApproverByEmployeeNoPayload
     >({
-      query: ({ employee_number }) => ({
+      query: ({employee_number}) => ({
         url: `${SOFTSENS_BASE}.get_approver_by_employee_no`,
         method: 'GET',
-        params: { employee_number },
+        params: {employee_number},
       }),
     }),
 
     // 19. Get Expense Rows By Employee
     // Access restricted to self, authorized manager, or System Manager.
     getExpenseRowsByEmployee: builder.query<
-      { data: ExpenseRow[] },
+      {data: ExpenseRow[]},
       GetExpenseRowsByEmployeeParams
     >({
-      query: ({ employee, date_from, date_to, limit }) => ({
+      query: ({employee, date_from, date_to, limit}) => ({
         url: `${SOFTSENS_BASE}.get_expense_rows_by_employee`,
         method: 'GET',
         params: {
           employee,
-          ...(date_from && { date_from }),
-          ...(date_to && { date_to }),
-          ...(limit !== undefined && { limit }),
+          ...(date_from && {date_from}),
+          ...(date_to && {date_to}),
+          ...(limit !== undefined && {limit}),
         },
       }),
     }),
@@ -366,8 +369,8 @@ export const tadaV2Slice = createSlice({
   name: 'tadaV2Slice',
   initialState,
   reducers: {},
-  extraReducers: _builder => { },
+  extraReducers: _builder => {},
 });
 
-export const { } = tadaV2Slice.actions;
+export const {} = tadaV2Slice.actions;
 export default tadaV2Slice.reducer;

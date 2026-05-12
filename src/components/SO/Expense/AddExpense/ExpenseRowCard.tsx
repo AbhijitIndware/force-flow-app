@@ -30,7 +30,7 @@ const TYPE_CONFIG: Record<string, { icon: string; bg: string }> = {
 type Props = {
     expense: LocalExpenseItem;
     loading: boolean;
-    onRemove: () => void;
+    onRemove: any;
 };
 
 export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {

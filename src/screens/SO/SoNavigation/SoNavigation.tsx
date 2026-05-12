@@ -44,6 +44,7 @@ import AddActivityLocationScreen from '../HomeScreen/AddActivityLocationScreen';
 import ActivityLocationScreen from '../HomeScreen/ActivityLocationScreen';
 import ActivityCheckInScreen from '../HomeScreen/ActivityCheckInScreen';
 import ExpenseApprovalScreen from '../ExpenseScreen/ExpenseApprovalScreen';
+import ExpenseApprovalDetailScreen from '../ExpenseScreen/ExpenseApprovalDetailScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -275,6 +276,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="ExpenseApprovalScreen"
         component={ExpenseApprovalScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ExpenseApprovalDetailScreen"
+        component={ExpenseApprovalDetailScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

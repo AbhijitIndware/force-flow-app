@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -16,44 +15,76 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
+import { VisibilityClaim } from '../../../types/tadaType';
 
-const { width } = Dimensions.get('window');
+const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> = {
+  Approved: { bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
+  Rejected: { bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
+  Pending: { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+};
+
+const getStatus = (s: string) =>
+  STATUS_CONFIG[s] ?? { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' };
+
+const fmt = (v: number) => (v > 0 ? `₹${v.toLocaleString('en-IN')}` : null);
 
 const VisibilityComponent = ({ navigation }: any) => {
   const { data, isLoading, isFetching } = useGetMyVisibilityClaimsQuery();
+  console.log("🚀 ~ VisibilityComponent ~ data:", data)
+  const claimList: VisibilityClaim[] =
+    data?.message?.data?.visibility_claims || [];
 
-  const claimList = data?.message?.data || [];
+  const renderItem = ({ item }: { item: VisibilityClaim }) => {
+    const st = getStatus(item.approval_status);
+    const amounts = [
+      { label: 'Collect', value: fmt(item.collection_amount) },
+      { label: 'P.Diff', value: fmt(item.price_difference_amount) },
+      { label: 'Damage', value: fmt(item.damage_claim), warn: true },
+    ].filter(a => a.value);
 
-  const renderItem = ({ item }: any) => {
     return (
       <TouchableOpacity
-        style={styles.dataBox}
+        style={styles.card}
+        activeOpacity={0.75}
         onPress={() =>
-          navigation.navigate('VisibilityClaimDetails', {
-            claimId: item.claim_id,
-          })
+          navigation.navigate('VisibilityClaimDetails', { claimId: item.claim_id })
         }>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.quantityCount}>Store : {item.store}</Text>
 
-          <Text style={styles.quantitytime}>
-            Date : {moment(item.date).format('DD MMM YYYY')}
+        {/* Row 1: store + date + badge */}
+        <View style={styles.row1}>
+          <Text style={styles.storeName} numberOfLines={1}>
+            {item.claim_id}
           </Text>
-
-          <Text style={styles.quantitytime}>Payment : {item.payment_type}</Text>
-
-          <Text style={styles.quantitytime}>
-            Status :{' '}
-            {item.docstatus === 0
-              ? 'Draft'
-              : item.docstatus === 1
-                ? 'Submitted'
-                : 'Cancelled'}
+          <Text style={styles.dateText}>
+            {moment(item.date).format('DD MMM YY')}
           </Text>
+          <View style={[styles.badge, { backgroundColor: st.bg }]}>
+            <View style={[styles.dot, { backgroundColor: st.dot }]} />
+            <Text style={[styles.badgeText, { color: st.color }]}>
+              {item.approval_status}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.positionValue}>
-          <Text style={styles.incressValu}>₹ {item.collection_amount}</Text>
+        {/* Row 2: amounts + payment pill */}
+        <View style={styles.row2}>
+          <View style={styles.amountsGroup}>
+            {amounts.map(a => (
+              <View key={a.label} style={styles.amountItem}>
+                <Text style={styles.amountLabel}>{a.label}</Text>
+                <Text
+                  style={[
+                    styles.amountValue,
+                    a.warn && { color: '#ea580c' },
+                  ]}>
+                  {a.value}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <View style={styles.paymentPill}>
+            <Text style={styles.paymentText}>{item.payment_type}</Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -61,33 +92,29 @@ const VisibilityComponent = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-
-
-      {/* LOADER */}
       {isLoading || isFetching ? (
         <View style={styles.loaderBox}>
           <ActivityIndicator size="large" color={Colors.darkButton} />
         </View>
       ) : (
         <FlatList
-          data={claimList || []}
+          data={claimList}
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
-          contentContainerStyle={styles.dataBoxSection}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyStateContainer}>
-              <Ionicons name="document-text-outline" size={60} color="#94A3B8" />
-              <Text style={styles.emptyStateTitle}>No Claims Found</Text>
-              <Text style={styles.emptyStateSub}>
-                You haven't created any visibility claims yet. Tap the button below to add one.
+            <View style={styles.emptyBox}>
+              <Ionicons name="document-text-outline" size={48} color="#94A3B8" />
+              <Text style={styles.emptyTitle}>No Claims Found</Text>
+              <Text style={styles.emptySub}>
+                Tap below to create your first visibility claim.
               </Text>
             </View>
           }
         />
       )}
 
-      {/* CTA BUTTON */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => navigation.navigate('AddVisibilityScreen')}
@@ -106,95 +133,108 @@ export default VisibilityComponent;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.transparent,
-    paddingHorizontal: 15,
+    backgroundColor: '#f5f6fa',
+    paddingHorizontal: 14,
+  },
+  loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { paddingTop: 12, paddingBottom: 16, gap: 8 },
+
+  // ── Compact card ──
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    gap: 6,
   },
 
-  loaderBox: {
+  // Row 1
+  row1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  storeName: {
     flex: 1,
-    justifyContent: 'center',
+    fontFamily: Fonts.semiBold,
+    fontSize: 12,
+    color: Colors.darkButton,
+  },
+  dateText: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94a3b8',
+  },
+  badge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 20,
+    gap: 3,
+  },
+  dot: { width: 5, height: 5, borderRadius: 3 },
+  badgeText: { fontSize: 10, fontFamily: Fonts.medium },
+
+  // Row 2
+  row2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  amountsGroup: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  amountItem: { alignItems: 'flex-start' },
+  amountLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: '#94a3b8',
+  },
+  amountValue: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 11,
+    color: Colors.darkButton,
+  },
+  paymentPill: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  paymentText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#3b82f6',
   },
 
-  emptyStateContainer: {
+  // Empty
+  emptyBox: {
     alignItems: 'center',
-    justifyContent: 'center',
     paddingVertical: 60,
     paddingHorizontal: 20,
+    gap: 8,
   },
-
-  emptyStateTitle: {
+  emptyTitle: {
     fontFamily: Fonts.bold,
     fontSize: Size.md,
     color: Colors.darkButton,
-    marginTop: 16,
-    marginBottom: 8,
   },
-
-  emptyStateSub: {
+  emptySub: {
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
-  },
-
-  checkinButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    gap: 6,
-    marginVertical: 15,
-  },
-
-  checkinButtonText: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.md,
-    color: Colors.white,
-  },
-
-  dataBoxSection: {
-    paddingBottom: 20,
-  },
-
-  dataBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 18,
-    marginBottom: 12,
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-
-  quantityCount: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-  },
-
-  quantitytime: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
     lineHeight: 18,
   },
 
-  positionValue: {
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-
-  incressValu: {
-    color: Colors.sucess,
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-  },
+  // CTA
   claimButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,26 +244,24 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 18,
     gap: 10,
-    marginVertical: 16,
-    elevation: 4, // Android
-    shadowColor: '#000', // iOS
+    marginVertical: 14,
+    elevation: 4,
+    shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
   },
-
-  iconCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 18,
-    backgroundColor: Colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   claimButtonText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
     color: Colors.white,
+  },
+  iconCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

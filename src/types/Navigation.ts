@@ -56,7 +56,7 @@ export type SoAppStackParamList = {
   TeamsSalesReport: { reportName: string };
   AsmDashboard: undefined;
 
-  ExpenseScreen: undefined;
+  ExpenseScreen: { index?: number } | undefined;
   AddExpenseScreen: { claimId?: string } | undefined;
   AddExpenseItemScreen: undefined;
   ExpenseClaimScreen: { id: string; name: string };
@@ -96,7 +96,8 @@ export type SoAppStackParamList = {
   AddActivityLocationScreen: undefined;
   ActivityLocationScreen: undefined;
   ActivityCheckInScreen: undefined;
-  ExpenseApprovalScreen: undefined;
+  ExpenseApprovalScreen: { index?: number } | undefined;
+  ExpenseApprovalDetailScreen: { claimId: string };
 };
 
 export type menuType = {
