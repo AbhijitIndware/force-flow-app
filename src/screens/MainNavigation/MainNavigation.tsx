@@ -101,10 +101,10 @@ const MainNavigation = () => {
     <View style={{ flex: 1 }}>
       {!isConnected && <NoInternetBanner />}
       {sessionExpired && <SessionExpiredBanner />}
-      <ApiErrorBanner
+      {/* <ApiErrorBanner
         errors={[globalError]}
         onDismiss={() => dispatch(setGlobalError(null))}
-      />
+      /> */}
       {isAuthenticated && userType ? (
         <AppStackNavigator userType={userType} insets={insets} />
       ) : (
