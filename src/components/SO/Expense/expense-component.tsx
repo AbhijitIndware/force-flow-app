@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo } from 'react';
+import React, {useMemo} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   useGetMyExpenseClaimsQuery,
   useGetMyTadaSummaryQuery,
@@ -28,18 +28,23 @@ interface ConsumedData {
   Incidental?: number;
 }
 
-const ExpenseComponent = ({ navigation }: any) => {
-  const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth() + 1);
+const ExpenseComponent = ({navigation}: any) => {
+  const [selectedMonth, setSelectedMonth] = React.useState(
+    new Date().getMonth() + 1,
+  );
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR);
 
-  const { data: claimsData, isLoading: claimsLoading, isFetching: claimsFetching } =
-    useGetMyExpenseClaimsQuery({ month: selectedMonth, year: selectedYear });
-  console.log("🚀 ~ ExpenseComponent ~ claimsData:", claimsData)
+  const {
+    data: claimsData,
+    isLoading: claimsLoading,
+    isFetching: claimsFetching,
+  } = useGetMyExpenseClaimsQuery({month: selectedMonth, year: selectedYear});
 
-  const { data: summaryData, isLoading: summaryLoading } = useGetMyTadaSummaryQuery({
-    month: selectedMonth,
-    year: selectedYear,
-  });
+  const {data: summaryData, isLoading: summaryLoading} =
+    useGetMyTadaSummaryQuery({
+      month: selectedMonth,
+      year: selectedYear,
+    });
 
   const claims = claimsData?.message?.data || [];
   const consumed = (summaryData?.message?.data?.consumed || {}) as ConsumedData;
@@ -53,7 +58,7 @@ const ExpenseComponent = ({ navigation }: any) => {
         else if (status === 'rejected') acc.rejected++;
         return acc;
       },
-      { pending: 0, approved: 0, rejected: 0 },
+      {pending: 0, approved: 0, rejected: 0},
     );
   }, [claims]);
 
@@ -77,8 +82,9 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   return (
     <View style={styles.root}>
-      <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
-
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}>
         {/* ── Sticky Header with embedded summary ── */}
         <ExpenseHeader
           selectedMonth={selectedMonth}
@@ -94,10 +100,11 @@ const ExpenseComponent = ({ navigation }: any) => {
         <View style={styles.listContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Claims</Text>
-            {claimsFetching
-              ? <ActivityIndicator size="small" color={Colors.orange} />
-              : <Text style={styles.sectionCount}>{claims.length}</Text>
-            }
+            {claimsFetching ? (
+              <ActivityIndicator size="small" color={Colors.orange} />
+            ) : (
+              <Text style={styles.sectionCount}>{claims.length}</Text>
+            )}
           </View>
 
           {claims.length === 0 ? (
@@ -111,14 +118,14 @@ const ExpenseComponent = ({ navigation }: any) => {
                 key={claim.name}
                 claim={claim}
                 onPress={() =>
-                  navigation.navigate('AddExpenseScreen', { claimId: claim.name })
+                  navigation.navigate('AddExpenseScreen', {claimId: claim.name})
                 }
               />
             ))
           )}
         </View>
 
-        <View style={{ height: 90 }} />
+        <View style={{height: 90}} />
       </ScrollView>
 
       {/* ── FAB ── */}
@@ -190,7 +197,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     elevation: 8,
     shadowColor: Colors.darkButton,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.35,
     shadowRadius: 8,
     zIndex: 999,
@@ -214,7 +221,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', // iOS
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
   },
 
   iconCircle: {

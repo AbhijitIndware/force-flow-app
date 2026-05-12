@@ -1,10 +1,10 @@
-import {Animated, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import moment from 'moment';
-import {Colors} from '../../../utils/colors';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
+import { Colors } from '../../../utils/colors';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
 import LoadingScreen from '../../ui/LoadingScreen';
-import {VisibilityClaim} from '../../../types/baseType';
+import { VisibilityClaim } from '../../../types/baseType';
 
 interface Props {
   navigation: any;
@@ -12,7 +12,7 @@ interface Props {
   claims: VisibilityClaim[];
 }
 
-const VisibilityListComponent = ({navigation, isFetching, claims}: Props) => {
+const VisibilityListComponent = ({ navigation, isFetching, claims }: Props) => {
   return (
     <View style={styles.container}>
       {isFetching ? (
@@ -28,12 +28,12 @@ const VisibilityListComponent = ({navigation, isFetching, claims}: Props) => {
                 style={styles.dataBox}
                 activeOpacity={0.8}
                 onPress={() =>
-                  navigation.navigate('VisibilityClaimDetails', {
+                  navigation.navigate('VisibilityApprovalDetailScreen', {
                     claimId: item.claim_id,
                   })
                 }>
                 {/* Left Section */}
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.quantityCount}>{item.employee_name}</Text>
 
                   <Text style={styles.quantitytime}>Store : {item.store}</Text>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
-  dataBoxSection: {paddingTop: 15},
+  dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 18,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
+  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   incressValu: {
     display: 'flex',
     flexDirection: 'row',

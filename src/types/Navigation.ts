@@ -65,7 +65,7 @@ export type SoAppStackParamList = {
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
   VisibilityApprovalScreen: undefined;
-  VisibilityApprovalDetailScreen: { claimId: string };
+  VisibilityApprovalDetailScreen: { claimId: string, isApprover: boolean };
   StoreDetailScreen: { storeId: string };
   TeamDetailScreen: { date: string; employee_id: string };
   DetailByStoreScreen: {

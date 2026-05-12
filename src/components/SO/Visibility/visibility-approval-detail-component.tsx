@@ -8,6 +8,7 @@ import {
   View,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
@@ -22,23 +23,31 @@ import {
   useRejectVisibilityClaimMutation,
 } from '../../../features/tada/tadaApiv2';
 import {TextInput} from 'react-native';
+import {imageBaseUrl} from '../../../features/apiBaseUrl';
 
 interface VisibilityApprovalDetailComponentProps {
   claimId: string;
   navigation: any;
+  isApprover: boolean;
 }
 
 const VisibilityApprovalDetailComponent = ({
   claimId,
   navigation,
+  isApprover,
 }: VisibilityApprovalDetailComponentProps) => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState('');
 
+  const isPDF = (image?: string) => {
+    return image?.toLowerCase().includes('.pdf');
+  };
   const {data, isLoading, isFetching} = useGetVisibilityClaimDetailsQuery({
     claim_id: claimId,
   });
-
   const [approveClaim, {isLoading: approveLoading}] =
     useApproveVisibilityClaimMutation();
   const [rejectClaim, {isLoading: rejectLoading}] =
@@ -194,14 +203,14 @@ const VisibilityApprovalDetailComponent = ({
           <Text style={styles.sectionTitle}>Employee Information</Text>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Employee</Text>
-            <Text style={styles.value}>{claim.employee || 'N/A'}</Text>
+            <Text style={styles.value}>{claim.employee_name || 'N/A'}</Text>
           </View>
-          <View style={styles.infoRow}>
+          {/* <View style={styles.infoRow}>
             <Text style={styles.label}>Approver</Text>
             <Text style={styles.value}>{claim.expense_approver || 'N/A'}</Text>
-          </View>
+          </View> */}
           <View style={styles.infoRow}>
-            <Text style={styles.label}>Authorized Approver</Text>
+            <Text style={styles.label}>Approver</Text>
             <Text style={styles.value}>
               {claim.authorized_approver_name || 'N/A'}
             </Text>
@@ -213,7 +222,7 @@ const VisibilityApprovalDetailComponent = ({
           <Text style={styles.sectionTitle}>Store Information</Text>
           <View style={styles.infoRow}>
             <Text style={styles.label}>Store Name</Text>
-            <Text style={styles.value}>{claim.store}</Text>
+            <Text style={styles.value}>{claim.store_name}</Text>
           </View>
         </View>
 
@@ -252,10 +261,24 @@ const VisibilityApprovalDetailComponent = ({
             <Text style={styles.label}>Damage Claim</Text>
             <Text style={styles.value}>₹ {claim.damage_claim}</Text>
           </View>
+          {claim?.visibility_image && (
+            <View style={styles.infoRow}>
+              <Text style={styles.label}>Claim Receipt</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setImageError('');
+                  setShowImagePreview(true);
+                }}
+                style={styles.receiptBtn}>
+                <Ionicons name="attach-outline" size={11} color="#2563eb" />
+                <Text style={styles.receiptText}>View Receipt</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Approval Actions - Only show if status is Submitted */}
-        {claim.approval_status === 'Submitted' && (
+        {claim.approval_status === 'Submitted' && isApprover && (
           <View style={styles.actionSection}>
             <TouchableOpacity
               style={[styles.button, styles.approveButton]}
@@ -295,6 +318,68 @@ const VisibilityApprovalDetailComponent = ({
 
         <View style={{height: 30}} />
       </ScrollView>
+
+      {/* IMAGE PREVIEW MODAL */}
+      <Modal
+        visible={showImagePreview}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowImagePreview(false)}>
+        <View style={styles.fullScreenOverlay}>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setShowImagePreview(false)}>
+            <Text style={styles.closeText}>✕</Text>
+          </TouchableOpacity>
+          {data?.message?.data?.visibility_image &&
+            (() => {
+              const imageUrl = data?.message?.data?.visibility_image.startsWith(
+                'http',
+              )
+                ? data?.message?.data?.visibility_image
+                : `${imageBaseUrl}${data?.message?.data?.visibility_image}`;
+
+              if (isPDF(imageUrl)) {
+                return (
+                  <View style={styles.pdfPlaceholder}>
+                    <Text style={styles.pdfPlaceholderText}>
+                      PDF preview is not supported here.
+                    </Text>
+                  </View>
+                );
+              }
+
+              return (
+                <>
+                  {imageLoading && (
+                    <ActivityIndicator
+                      size="large"
+                      color={Colors.white}
+                      style={styles.imageLoader}
+                    />
+                  )}
+                  <Image
+                    source={{uri: imageUrl}}
+                    style={styles.fullImage}
+                    resizeMode="contain"
+                    onLoadStart={() => {
+                      setImageError('');
+                      setImageLoading(true);
+                    }}
+                    onLoadEnd={() => setImageLoading(false)}
+                    onError={() => {
+                      setImageLoading(false);
+                      setImageError('Unable to load receipt image.');
+                    }}
+                  />
+                  {imageError ? (
+                    <Text style={styles.previewErrorText}>{imageError}</Text>
+                  ) : null}
+                </>
+              );
+            })()}
+        </View>
+      </Modal>
 
       {/* Reject Modal */}
       <Modal
@@ -395,6 +480,7 @@ const styles = StyleSheet.create({
   },
 
   statusBadge: {
+    height: 35,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -403,7 +489,7 @@ const styles = StyleSheet.create({
   },
 
   statusBadgeText: {
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
   },
 
@@ -570,5 +656,74 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
     color: Colors.white,
+  },
+  fullScreenOverlay: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  imageLoader: {
+    position: 'absolute',
+    top: '45%',
+    left: 0,
+    right: 0,
+  },
+  pdfPlaceholder: {
+    width: '100%',
+    height: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  pdfPlaceholderText: {
+    color: Colors.white,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    textAlign: 'center',
+  },
+  previewErrorText: {
+    marginTop: 12,
+    color: '#F87171',
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    textAlign: 'center',
+  },
+  receiptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  receiptText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#2563eb',
   },
 });

@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { Colors } from '../../../utils/colors';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
-import { CirclePlus } from 'lucide-react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {Colors} from '../../../utils/colors';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {CirclePlus} from 'lucide-react-native';
 import moment from 'moment';
 import AddExpenseModal from './add-expense-modal';
 import Toast from 'react-native-toast-message';
@@ -21,15 +21,15 @@ import {
   useDeleteExpenseRowMutation,
   useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
-import { fileToBase64 } from '../../../utils/fileUtils';
-import { useAppSelector } from '../../../store/hook';
+import {fileToBase64} from '../../../utils/fileUtils';
+import {useAppSelector} from '../../../store/hook';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import { Switch } from 'react-native-paper';
-import { EmployeeStrip } from './AddExpense/EmployeeStrip';
-import { PjpSelectionDropdown } from './AddExpense/PjpSelectionDropdown';
-import { DraftStatusBadge } from './AddExpense/DraftStatusBadge';
-import { ProgressOverlay } from './AddExpense/ProgressOverlay';
-import { ExpenseRowCard } from './AddExpense/ExpenseRowCard';
+import {Switch} from 'react-native-paper';
+import {EmployeeStrip} from './AddExpense/EmployeeStrip';
+import {PjpSelectionDropdown} from './AddExpense/PjpSelectionDropdown';
+import {DraftStatusBadge} from './AddExpense/DraftStatusBadge';
+import {ProgressOverlay} from './AddExpense/ProgressOverlay';
+import {ExpenseRowCard} from './AddExpense/ExpenseRowCard';
 
 export type LocalExpenseItem = {
   expense_type: string;
@@ -52,7 +52,7 @@ type Props = {
   existingClaimId?: string;
 };
 
-const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
+const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
@@ -78,9 +78,9 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   );
 
   // ── Load existing rows when editing a draft ──
-  const { data: existingDetail } = useGetClaimDetailQuery(
-    { claim_id: existingClaimId! },
-    { skip: !existingClaimId },
+  const {data: existingDetail} = useGetClaimDetailQuery(
+    {claim_id: existingClaimId!},
+    {skip: !existingClaimId},
   );
 
   const workflowStatus: string =
@@ -95,6 +95,13 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Derive workflow status from API ──
   useEffect(() => {
     const rows = existingDetail?.message?.data?.expenses;
+    setSelectedDate(
+      existingDetail?.message?.data?.travel_start_date ||
+        moment().format('YYYY-MM-DD'),
+    );
+    setIsSelfArrangedStay(
+      existingDetail?.message?.data?.is_self_arranged_stay === 1,
+    );
     if (!rows?.length) return;
     const mapped: LocalExpenseItem[] = rows.map((r: any) => ({
       expense_type: r.expense_type,
@@ -117,7 +124,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Step 1: Create Draft ──
   const handleCreateDraft = async () => {
     if (!pjpStoreId) {
-      Toast.show({ type: 'error', text1: 'Please select a PJP first' });
+      Toast.show({type: 'error', text1: 'Please select a PJP first'});
       return;
     }
     if (claimId) return;
@@ -152,7 +159,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Step 2: Add Row ──
   const handleAddLocalExpense = async (item: LocalExpenseItem) => {
     if (!claimId) {
-      Toast.show({ type: 'error', text1: 'Please create a draft first.' });
+      Toast.show({type: 'error', text1: 'Please create a draft first.'});
       return;
     }
     try {
@@ -164,7 +171,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
           item.attachment.uri,
           item.attachment.type,
         );
-        imageData = { mime: item.attachment.type, data: base64 };
+        imageData = {mime: item.attachment.type, data: base64};
       }
       const rowRes = await addExpenseRow({
         claim_id: claimId,
@@ -181,7 +188,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         incidental_bill_month: item.incidental_bill_month,
       }).unwrap();
       const row_id = rowRes?.message?.data?.row_id;
-      setExpenses(prev => [...prev, { ...item, row_id }]);
+      setExpenses(prev => [...prev, {...item, row_id}]);
       setTotal(prev => prev + item.amount);
     } catch (error: any) {
       Toast.show({
@@ -232,13 +239,13 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       return;
     }
     if (!claimId) {
-      Toast.show({ type: 'error', text1: 'No active draft found' });
+      Toast.show({type: 'error', text1: 'No active draft found'});
       return;
     }
     try {
       setLoading(true);
       setUploadStep('Finalizing submission...');
-      let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
+      let res = await submitExpenseClaim({claim_id: claimId}).unwrap();
       console.log('🚀 ~ handleSubmitClaim ~ res:', res);
       Toast.show({
         type: 'success',
@@ -282,12 +289,27 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Status banner config ──
   const STATUS_BANNER: Record<
     string,
-    { label: string; bg: string; color: string; dot: string }
+    {label: string; bg: string; color: string; dot: string}
   > = {
-    Draft: { label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8' },
-    'Pending Approval': { label: 'Pending Approval', bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
-    Approved: { label: 'Approved', bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
-    Rejected: { label: 'Rejected', bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
+    Draft: {label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
+    'Pending Approval': {
+      label: 'Pending Approval',
+      bg: '#fffbeb',
+      color: '#d97706',
+      dot: '#fbbf24',
+    },
+    Approved: {
+      label: 'Approved',
+      bg: '#f0fdf4',
+      color: '#16a34a',
+      dot: '#22c55e',
+    },
+    Rejected: {
+      label: 'Rejected',
+      bg: '#fff1f2',
+      color: '#dc2626',
+      dot: '#f87171',
+    },
   };
   const bannerCfg = STATUS_BANNER[workflowStatus] ?? STATUS_BANNER['Draft'];
 
@@ -295,7 +317,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
     <View style={styles.container}>
       <EmployeeStrip employee={employee} />
       {/* ── Workflow status banner (only when viewing existing) ── */}
-      {existingClaimId && workflowStatus ? (
+      {/* {existingClaimId && workflowStatus ? (
         <View style={[extraStyles.statusBanner, { backgroundColor: bannerCfg.bg }]}>
           <View style={[extraStyles.statusDot, { backgroundColor: bannerCfg.dot }]} />
           <Text style={[extraStyles.statusBannerText, { color: bannerCfg.color }]}>
@@ -305,22 +327,22 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
             <Text style={extraStyles.readOnlyHint}>· Read-only</Text>
           )}
         </View>
-      ) : null}
+      ) : null} */}
       {/* ── Date + PJP ── */}
       <View style={styles.rowInputs}>
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1}}>
           <ReusableDatePicker
             label="Date"
             value={selectedDate}
             onChange={(val: string) => setSelectedDate(val)}
             marginBottom={0}
             labelStyle={styles.inputLabel}
-            inputStyle={{ fontSize: 13 }}
+            inputStyle={{fontSize: 13}}
             height={42}
             disabled={!!claimId || isReadOnly}
           />
         </View>
-        <View style={{ flex: 1.3 }}>
+        <View style={{flex: 1.3}}>
           <PjpSelectionDropdown
             value={pjpStoreId}
             onSelect={handlePjpSelect}
@@ -335,9 +357,9 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       <View
         style={[
           styles.toggleRow,
-          claimId && isEditMode && { backgroundColor: '#E2E8F0', opacity: 0.6 },
+          claimId && isEditMode && {backgroundColor: '#E2E8F0', opacity: 0.6},
         ]}>
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1}}>
           <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
           <Text style={styles.toggleSub}>
             {claimId && isEditMode
@@ -347,8 +369,8 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         </View>
         <Switch
           value={isSelfArrangedStay}
-          disabled={claimId && isEditMode ? true : false}
-          trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
+          disabled={claimId && isEditMode ? true : false || expenses.length > 0}
+          trackColor={{false: '#CBD5E1', true: Colors.primary + '80'}}
           thumbColor={isSelfArrangedStay ? Colors.primary : '#f4f3f4'}
           onValueChange={setIsSelfArrangedStay}
         />
@@ -356,22 +378,28 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
 
       {/* ── Draft Status Badge ── */}
       {claimId && (
-        <DraftStatusBadge claimId={claimId} itemCount={expenses.length} />
+        <DraftStatusBadge
+          claimId={claimId}
+          itemCount={expenses.length}
+          status={existingDetail?.message?.data?.workflow_state}
+        />
       )}
 
       {/* ── Expense Section Header ── */}
       {claimId && (
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Expenses</Text>
-          {isDraft && (<TouchableOpacity
-            disabled={loading}
-            onPress={() => setShowModal(true)}
-            style={styles.addBtn}>
-            <Text style={styles.addBtnTotal}>
-              ₹ {total.toLocaleString('en-IN')}
-            </Text>
-            <CirclePlus size={20} color={Colors.darkButton} />
-          </TouchableOpacity>)}
+          {isDraft && (
+            <TouchableOpacity
+              disabled={loading}
+              onPress={() => setShowModal(true)}
+              style={styles.addBtn}>
+              <Text style={styles.addBtnTotal}>
+                ₹ {total.toLocaleString('en-IN')}
+              </Text>
+              <CirclePlus size={20} color={Colors.darkButton} />
+            </TouchableOpacity>
+          )}
           {!isDraft && (
             <Text style={styles.addBtnTotal}>
               ₹ {total.toLocaleString('en-IN')}
@@ -415,7 +443,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         <TouchableOpacity
           style={[
             styles.actionBtn,
-            { backgroundColor: Colors.darkButton },
+            {backgroundColor: Colors.darkButton},
             (!pjpStoreId || loading) && styles.disabled,
           ]}
           onPress={handleCreateDraft}
@@ -424,25 +452,27 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         </TouchableOpacity>
       ) : (
         <>
-          {claimId && isDraft ?
+          {claimId && isDraft ? (
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                { backgroundColor: Colors.darkButton },
+                {backgroundColor: Colors.darkButton},
                 (loading || expenses.length === 0) && styles.disabled,
               ]}
               onPress={handleSubmitClaim}
               disabled={loading || expenses.length === 0}>
               <Text style={styles.actionBtnText}>Submit Claim</Text>
-            </TouchableOpacity> :
-            <TouchableOpacity style={[
-              styles.actionBtn,
-              { backgroundColor: Colors.darkButton },
-              styles.disabled,
-            ]}
-            >
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                {backgroundColor: Colors.darkButton},
+                styles.disabled,
+              ]}>
               <Text style={styles.actionBtnText}>Submit Claim</Text>
-            </TouchableOpacity>}
+            </TouchableOpacity>
+          )}
         </>
       )}
 

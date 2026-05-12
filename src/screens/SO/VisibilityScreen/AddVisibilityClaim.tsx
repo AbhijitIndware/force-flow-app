@@ -1,19 +1,25 @@
-import { StyleSheet, SafeAreaView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
-import React, { useRef } from 'react';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
+import {
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from 'react-native';
+import React, {useRef} from 'react';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { useFormik } from 'formik';
-import { Animated } from 'react-native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {useFormik} from 'formik';
+import {Animated} from 'react-native';
 import Toast from 'react-native-toast-message';
 import {
   useCreateVisibilityClaimMutation,
   useSubmitVisibilityClaimMutation,
 } from '../../../features/tada/tadaApiv2';
 import AddVisibilityComponent from '../../../components/SO/Visibility/add-visibility-component';
-import { visibilityClaimSchema } from '../../../types/schema';
+import {visibilityClaimSchema} from '../../../types/schema';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -39,11 +45,11 @@ const initialValues = {
   date: new Date().toISOString().split('T')[0],
 };
 
-const AddVisibilityScreen = ({ navigation }: Props) => {
+const AddVisibilityScreen = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [createVisibilityClaim, { isLoading: isCreating }] =
+  const [createVisibilityClaim, {isLoading: isCreating}] =
     useCreateVisibilityClaimMutation();
-  const [submitVisibilityClaim, { isLoading: isSubmitting }] =
+  const [submitVisibilityClaim, {isLoading: isSubmitting}] =
     useSubmitVisibilityClaimMutation();
 
   const {
@@ -59,15 +65,20 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
     initialValues: initialValues,
     validationSchema: visibilityClaimSchema,
     onSubmit: async formValues => {
+      console.log('🚀 ~ AddVisibilityScreen ~ formValues:', formValues);
       try {
         let res = await createVisibilityClaim({
           ...formValues,
           do_submit: true,
+          image: formValues.image.data
+            ? {
+                mime: formValues.image.mime,
+                data: formValues.image.data,
+              }
+            : null,
         }).unwrap();
 
-        console.log("🚀 ~ AddVisibilityScreen ~ res:", res)
         if (res?.message.success) {
-
           Toast.show({
             type: 'success',
             text1: 'Visibility claim submitted successfully',
@@ -119,7 +130,7 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
 
       {/* SUBMIT BUTTON */}
       <TouchableOpacity
-        style={[styles.submitBtn, isLoading && { opacity: 0.7 }]}
+        style={[styles.submitBtn, isLoading && {opacity: 0.7}]}
         onPress={() => handleSubmit()}
         disabled={isLoading}>
         {isLoading ? (

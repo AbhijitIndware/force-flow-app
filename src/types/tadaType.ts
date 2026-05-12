@@ -6,7 +6,7 @@ export interface TadaApiResponse<T = any> {
     message?: string;
     data?: T;
     error_code?: string;
-    success: boolean
+    success: boolean;
   };
 }
 
@@ -127,10 +127,10 @@ export interface TadaSummary {
     Incidental: number;
   };
   status_summary: {
-    Draft: { count: number; amount: number };
-    'Pending Approval': { count: number; amount: number };
-    Approved: { count: number; amount: number };
-    Rejected: { count: number; amount: number };
+    Draft: {count: number; amount: number};
+    'Pending Approval': {count: number; amount: number};
+    Approved: {count: number; amount: number};
+    Rejected: {count: number; amount: number};
   };
   recent_claims: Array<{
     claim_id: string;
@@ -164,8 +164,10 @@ export interface Pagination {
 export interface VisibilityClaim {
   claim_id: string;
   employee: string;
+  employee_name: string;
   date: string;
   store: string;
+  store_name: string;
   collection_amount: number;
   payment_type: string;
   price_difference_amount: number;
@@ -220,18 +222,18 @@ export interface ImagePayload {
 export interface AddExpenseRowPayload {
   claim_id: string;
   expense_type:
-  | 'Daily Allowance'
-  | 'TA – Auto'
-  | 'TA – Cab'
-  | 'TA – Bus'
-  | 'TA – Rail'
-  | 'TA – Bike (Petrol)'
-  | 'TA – Local Travel'
-  | 'Lodging / Boarding / Hotel'
-  | 'Food / Meals'
-  | 'Mobile Bill'
-  | 'Courier'
-  | 'Xerox';
+    | 'Daily Allowance'
+    | 'TA – Auto'
+    | 'TA – Cab'
+    | 'TA – Bus'
+    | 'TA – Rail'
+    | 'TA – Bike (Petrol)'
+    | 'TA – Local Travel'
+    | 'Lodging / Boarding / Hotel'
+    | 'Food / Meals'
+    | 'Mobile Bill'
+    | 'Courier'
+    | 'Xerox';
   amount: number;
   date: string; // YYYY-MM-DD
   description?: string;
@@ -321,7 +323,7 @@ export interface CreateVisibilityClaimPayload {
   price_difference_amount?: number;
   damage_claim?: number;
   /** New image to upload */
-  image?: ImagePayload;
+  image?: ImagePayload | null;
   /** Existing file URL (fallback if no new image) */
   visibility_image?: string;
   /** true to immediately submit after creation */
