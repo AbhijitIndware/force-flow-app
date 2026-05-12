@@ -69,7 +69,7 @@ const VisibilityApprovalListComponent = ({navigation}: any) => {
         {/* Row 1: store + date + badge */}
         <View style={styles.row1}>
           <Text style={styles.storeName} numberOfLines={1}>
-            {item.store}
+            {item.claim_id}
           </Text>
           <Text style={styles.dateText}>
             {moment(item.date).format('DD MMM YY')}
