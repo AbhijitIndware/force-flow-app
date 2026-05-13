@@ -6,6 +6,7 @@ import {
   Modal,
   RefreshControl,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,7 +18,8 @@ import moment from 'moment';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { useGetPendingApprovalsQuery } from '../../../features/tada/tadaApiv2';
+import { useGetApprovalListQuery, useGetPendingApprovalsQuery } from '../../../features/tada/tadaApiv2';
+import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 
 const { width } = Dimensions.get('window');
 
@@ -50,14 +52,26 @@ interface HeaderProps {
   onMonthChange: (m: number) => void;
   onYearChange: (y: number) => void;
   counts: { pending: number; approved: number; rejected: number };
-}
 
+  setSelectedStatus: any;
+  selectedStatus: string
+}
+const FILTER_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Draft', value: 'Draft' },
+  { label: 'Pending Approval', value: 'Pending Approval' },
+  { label: 'Approved', value: 'Approved' },
+  { label: 'Rejected', value: 'Rejected' },
+];
 const ApprovalHeader: React.FC<HeaderProps> = ({
   selectedMonth,
   selectedYear,
   onMonthChange,
   onYearChange,
   counts,
+
+  setSelectedStatus,
+  selectedStatus,
 }) => {
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
@@ -89,6 +103,18 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
             </Text>
             <Ionicons name="chevron-down" size={11} color={Colors.darkButton} />
           </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <ReusableDropdownv2
+              label="Claim Status"
+              field="claim_type"
+              value={selectedStatus}
+              data={FILTER_OPTIONS}
+              onChange={(val: string) => setSelectedStatus(val)}
+              height={35}
+              marginBottom={0}
+              textSize={Size.xs}
+              labelStyle={{ display: 'none' }}
+            /></View>
         </View>
       </View>
 
@@ -189,16 +215,19 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
 
 // ─── Main List Component ───────────────────────────────────────────────────
 
+
 const ExpenseApprovalListComponent = ({ navigation }: any) => {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading, refetch } = useGetPendingApprovalsQuery({
+  const { data, isLoading, refetch } = useGetApprovalListQuery({
     month: selectedMonth,
     year: selectedYear,
-  });
+    status: selectedStatus,
+  }, { refetchOnMountOrArgChange: true });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -208,7 +237,7 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
 
   const claimList = data?.message?.data || [];
 
-  // Derive counts from the list
+  // Derive counts from the full list (before client-side filter)
   const counts = claimList.reduce(
     (acc, item) => {
       const s = item.approval_status;
@@ -269,8 +298,12 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
         selectedYear={selectedYear}
         onMonthChange={m => setSelectedMonth(m)}
         onYearChange={y => setSelectedYear(y)}
+        setSelectedStatus={setSelectedStatus}
+        selectedStatus={selectedStatus}
         counts={counts}
       />
+
+      {/* ── Status Filter Strip ── */}
 
       {isLoading ? (
         <View style={styles.loaderBox}>
@@ -307,6 +340,36 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
   );
 };
 
+// ── Additional styles to merge into your StyleSheet ──
+const additionalStyles = StyleSheet.create({
+  filterStrip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  filterChipActive: {
+    backgroundColor: Colors.darkButton,
+    borderColor: Colors.darkButton,
+  },
+  filterChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  filterChipTextActive: {
+    color: '#FFFFFF',
+  },
+});
+
 export default ExpenseApprovalListComponent;
 
 // ─── Header Styles ─────────────────────────────────────────────────────────
@@ -325,7 +388,7 @@ const hStyles = StyleSheet.create({
     gap: 0,
   },
   pill: {
-    flex: 1,
+    flex: 0.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

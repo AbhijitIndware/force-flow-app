@@ -63,6 +63,7 @@ export const EXPENSE_TYPES: DropdownOption[] = [
   { label: 'Mobile Bill', value: 'Mobile Bill' },
   { label: 'Courier', value: 'Courier' },
   { label: 'Xerox', value: 'Xerox' },
+  { label: 'TA – Share Taxi', value: 'TA – Share Taxi' }
 ];
 const AddExpenseItemV2: React.FC<Props> = ({
   values,

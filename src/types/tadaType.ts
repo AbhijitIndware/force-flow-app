@@ -114,6 +114,33 @@ export interface PendingApprovalClaim {
   total_sanctioned_amount: number;
 }
 
+export interface ApproverExpenseClaimResponse {
+  message: {
+    status: string;
+    message: string;
+    data: ApproverExpenseClaim[];
+  };
+}
+
+export interface ApproverExpenseClaim {
+  name: string;
+  employee: string;
+  employee_name: string;
+  posting_date: string;
+  workflow_state: string;
+  approval_status: string;
+  custom_travel_start_date: string;
+  custom_travel_end_date: string;
+  total_claimed_amount: number;
+  total_sanctioned_amount: number;
+  custom_travel_type: string;
+  custom_city_class: string;
+  custom_is_self_arranged_stay: number;
+  custom_manager_approval_promotional: number;
+  custom_manager_approval_for_extra: number;
+  custom_manager_approval_bike_over_100: number;
+}
+
 // ─── Phase 3 – Dashboard ───────────────────────────────────────────────────
 
 export interface TadaSummary {
@@ -127,10 +154,10 @@ export interface TadaSummary {
     Incidental: number;
   };
   status_summary: {
-    Draft: {count: number; amount: number};
-    'Pending Approval': {count: number; amount: number};
-    Approved: {count: number; amount: number};
-    Rejected: {count: number; amount: number};
+    Draft: { count: number; amount: number };
+    'Pending Approval': { count: number; amount: number };
+    Approved: { count: number; amount: number };
+    Rejected: { count: number; amount: number };
   };
   recent_claims: Array<{
     claim_id: string;
@@ -222,18 +249,18 @@ export interface ImagePayload {
 export interface AddExpenseRowPayload {
   claim_id: string;
   expense_type:
-    | 'Daily Allowance'
-    | 'TA – Auto'
-    | 'TA – Cab'
-    | 'TA – Bus'
-    | 'TA – Rail'
-    | 'TA – Bike (Petrol)'
-    | 'TA – Local Travel'
-    | 'Lodging / Boarding / Hotel'
-    | 'Food / Meals'
-    | 'Mobile Bill'
-    | 'Courier'
-    | 'Xerox';
+  | 'Daily Allowance'
+  | 'TA – Auto'
+  | 'TA – Cab'
+  | 'TA – Bus'
+  | 'TA – Rail'
+  | 'TA – Bike (Petrol)'
+  | 'TA – Local Travel'
+  | 'Lodging / Boarding / Hotel'
+  | 'Food / Meals'
+  | 'Mobile Bill'
+  | 'Courier'
+  | 'Xerox';
   amount: number;
   date: string; // YYYY-MM-DD
   description?: string;

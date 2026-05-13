@@ -32,6 +32,7 @@ interface ReusableDropdownProps {
   labelStyle?: any;   // 👈 add
   height?: number;
   textSize?: number;
+  marginBottom?: number;
 }
 
 const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
@@ -50,6 +51,7 @@ const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
   addButtonText,
   onAddPress,
 
+  marginBottom = 16,
   onOpen,
   disabled,
   labelStyle,   // 👈 add
@@ -57,7 +59,7 @@ const ReusableDropdownv2: React.FC<ReusableDropdownProps> = ({
   textSize
 }) => {
   return (
-    <View style={styles.inputWrapper}>
+    <View style={[styles.inputWrapper, { marginBottom }]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <DropdownComponentV2
         selectText={label}
