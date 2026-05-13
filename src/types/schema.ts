@@ -95,8 +95,9 @@ export const addSalesOrderSchema = Yup.object().shape({
   submit_order: Yup.boolean().required(),
 });
 
+export const AUTO_TA_THRESHOLD = 100; // change this value as needed
+
 export const expenseItemSchema = Yup.object().shape({
-  // date: Yup.string().required('Date is required'),
   claim_type: Yup.string().required('Claim type is required'),
   amount: Yup.number()
     .typeError('Amount must be a number')
@@ -106,7 +107,8 @@ export const expenseItemSchema = Yup.object().shape({
     then: schema => schema.required('Travel mode is required'),
   }),
   ta_rail_class: Yup.string().when(['claim_type', 'ta_mode'], {
-    is: (claim_type: string, ta_mode: string) => claim_type === 'TA' && ta_mode === 'Rail',
+    is: (claim_type: string, ta_mode: string) =>
+      claim_type === 'TA' && ta_mode === 'Rail',
     then: schema => schema.required('Rail class is required'),
   }),
   mobile_number: Yup.string().when('claim_type', {
@@ -121,6 +123,23 @@ export const expenseItemSchema = Yup.object().shape({
     is: 'Incidental',
     then: schema => schema.required('Bill month is required'),
   }),
+  attachment: Yup.mixed().test(
+    'attachment-required',
+    'Attachment is required',
+    function (value) {
+      const { claim_type, amount } = this.parent;
+      const isAutoTA = claim_type === 'TA - Auto';
+      const amountNum = parseFloat(amount) || 0;
+
+      // TA - Auto below threshold → optional
+      if (isAutoTA && amountNum < AUTO_TA_THRESHOLD) {
+        return true;
+      }
+
+      // All other cases → mandatory
+      return !!value;
+    },
+  ),
 });
 
 //Promoter

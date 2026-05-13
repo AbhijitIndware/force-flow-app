@@ -23,6 +23,7 @@ import { Fonts } from '../../../constants';
 import { flexCol } from '../../../utils/styles';
 import { Switch } from 'react-native';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
+import { AUTO_TA_THRESHOLD } from '../../../types/schema';
 
 interface Props {
   values: Record<string, string | any>;
@@ -77,6 +78,11 @@ const AddExpenseItemV2: React.FC<Props> = ({
   const [showAttachmentOptions, setShowAttachmentOptions] = useState(false);
   const [showImagePreview, setShowImagePreview] = useState(false);
 
+  // ── Attachment requirement logic ──
+  const isAutoTA = values.claim_type === 'TA - Auto';
+  const amountNum = parseFloat(values.amount) || 0;
+  const isAttachmentOptional = isAutoTA && amountNum < AUTO_TA_THRESHOLD;
+  const isAttachmentRequired = !isAttachmentOptional;
   const isImage = (type?: string) => {
     return !!type && type.startsWith('image/');
   };
@@ -274,16 +280,42 @@ const AddExpenseItemV2: React.FC<Props> = ({
       {/* ----------------------- */}
       {/*  ATTACHMENT UPLOAD BTN */}
       {/* ----------------------- */}
-      <View style={{ marginTop: 5 }}>
-        <Text style={styles.label}>Attachment</Text>
 
+
+      <View style={{ marginTop: 5 }}>
+        {/* Label row: "Attachment" + required/optional pill */}
+        <View style={styles.attachmentLabelRow}>
+          <Text style={{ ...styles.label, marginBottom: 0 }}>
+            Attachment
+          </Text>
+          {isAttachmentOptional ? (
+            <View style={styles.optionalPill}>
+              <Text style={styles.optionalPillText}>Optional</Text>
+            </View>
+          ) : (
+            <View style={styles.requiredPill}>
+              <Text style={styles.requiredPillText}>Required</Text>
+            </View>
+          )}
+        </View>
+        {/* Hint text for TA-Auto optional case */}
+        {isAutoTA && (
+          <Text style={styles.attachmentHint}>
+            {isAttachmentOptional
+              ? `Attachment not required for TA - Auto below ₹${AUTO_TA_THRESHOLD.toLocaleString('en-IN')}.`
+              : `Attachment required for TA - Auto amounts ₹${AUTO_TA_THRESHOLD.toLocaleString('en-IN')} and above.`}
+          </Text>
+        )}
         <TouchableOpacity
           onPress={() => setShowAttachmentOptions(true)}
           style={styles.uploadBox}>
           <Upload size={28} color={Colors.black} />
           <Text style={styles.uploadHint}>Upload images or documennts</Text>
         </TouchableOpacity>
-
+        {/* Formik error message */}
+        {touched.attachment && errors.attachment && isAttachmentRequired && (
+          <Text style={styles.errorText}>Attachment is required</Text>
+        )}
         <Modal
           visible={showAttachmentOptions}
           transparent
@@ -580,5 +612,60 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  attachmentLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  requiredPill: {
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+    marginBottom: 4,
+  },
+  requiredPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#DC2626',
+  },
+  optionalPill: {
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 20,
+    marginBottom: 4,
+  },
+  optionalPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#16A34A',
+  },
+  attachmentHint: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 8,
+    fontStyle: 'italic',
+  },
+  uploadBoxError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FFF5F5',
+  },
+  errorText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
+    marginLeft: 2,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 15,
+    paddingHorizontal: 5,
+    backgroundColor: '#f9f9f9',
+    padding: 10,
+    borderRadius: 8,
   },
 });
