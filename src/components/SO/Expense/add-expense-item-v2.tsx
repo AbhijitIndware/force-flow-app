@@ -55,6 +55,7 @@ export const EXPENSE_TYPES: DropdownOption[] = [
   { label: 'Daily Allowance', value: 'Daily Allowance' },
   { label: 'TA - Auto', value: 'TA - Auto' },
   { label: 'TA - Cab', value: 'TA - Cab' },
+  { label: 'TA – Share Taxi', value: 'TA – Share Taxi' },
   { label: 'TA - Bus', value: 'TA - Bus' },
   { label: 'TA - Rail', value: 'TA - Rail' },
   { label: 'TA - Bike (Petrol)', value: 'TA - Bike (Petrol)' },
@@ -64,7 +65,6 @@ export const EXPENSE_TYPES: DropdownOption[] = [
   { label: 'Mobile Bill', value: 'Mobile Bill' },
   { label: 'Courier', value: 'Courier' },
   { label: 'Xerox', value: 'Xerox' },
-  { label: 'TA – Share Taxi', value: 'TA – Share Taxi' }
 ];
 const AddExpenseItemV2: React.FC<Props> = ({
   values,
@@ -138,6 +138,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
   const TA_TYPES = [
     'TA - Auto',
     'TA - Cab',
+    'TA – Share Taxi',
     'TA - Bus',
     'TA - Rail',
     'TA - Bike (Petrol)',
@@ -145,6 +146,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
   ];
 
   const isTA = TA_TYPES.includes(values.claim_type);
+  console.log("🚀 ~ AddExpenseItemV2 ~ isTA:", isTA, values.claim_type)
   const isRail = values.claim_type === 'TA - Rail';
   const isMobileBill = values.claim_type === 'Mobile Bill';
   const isIncidental = values.claim_type === 'Courier' || values.claim_type === 'Xerox';
@@ -203,13 +205,23 @@ const AddExpenseItemV2: React.FC<Props> = ({
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginTop: 15,
+                marginVertical: 5,
                 paddingHorizontal: 5,
                 backgroundColor: '#f9f9f9',
                 padding: 10,
                 borderRadius: 8,
               }}>
-              <Text style={[styles.label, { marginBottom: 0 }]}>Is Local Travel?</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.label, { marginBottom: 0 }]}>Is Local Travel?</Text>
+                <Text style={{
+                  fontSize: 12,
+                  color: values.is_local === 1 ? '#00897B' : '#F4511E',
+                  fontWeight: '600',
+                  marginTop: 2,
+                }}>
+                  {values.is_local === 1 ? '✓ Local' : '⊙ Outstation'}
+                </Text>
+              </View>
               <Switch
                 value={values.is_local === 1}
                 trackColor={{ false: '#767577', true: Colors.primary + '80' }}
