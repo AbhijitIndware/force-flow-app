@@ -18,7 +18,6 @@ import { pick } from '@react-native-documents/picker';
 import { launchCamera } from 'react-native-image-picker';
 import { Colors } from '../../../utils/colors';
 import moment from 'moment';
-import { Size } from '../../../utils/fontSize';
 import { Fonts } from '../../../constants';
 import { flexCol } from '../../../utils/styles';
 import { Switch } from 'react-native';
@@ -52,7 +51,7 @@ interface DropdownOption {
   value: string;
 }
 export const EXPENSE_TYPES: DropdownOption[] = [
-  { label: 'Daily Allowance', value: 'Daily Allowance' },
+  // { label: 'Daily Allowance', value: 'Daily Allowance' },
   { label: 'TA - Auto', value: 'TA - Auto' },
   { label: 'TA - Cab', value: 'TA - Cab' },
   { label: 'TA – Share Taxi', value: 'TA – Share Taxi' },
@@ -146,7 +145,6 @@ const AddExpenseItemV2: React.FC<Props> = ({
   ];
 
   const isTA = TA_TYPES.includes(values.claim_type);
-  console.log("🚀 ~ AddExpenseItemV2 ~ isTA:", isTA, values.claim_type)
   const isRail = values.claim_type === 'TA - Rail';
   const isMobileBill = values.claim_type === 'Mobile Bill';
   const isIncidental = values.claim_type === 'Courier' || values.claim_type === 'Xerox';

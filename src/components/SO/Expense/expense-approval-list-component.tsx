@@ -20,6 +20,7 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { useGetApprovalListQuery, useGetPendingApprovalsQuery } from '../../../features/tada/tadaApiv2';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
+import { ApproverExpenseClaim } from '../../../types/tadaType';
 
 const { width } = Dimensions.get('window');
 
@@ -58,7 +59,7 @@ interface HeaderProps {
 }
 const FILTER_OPTIONS = [
   { label: 'All', value: '' },
-  { label: 'Draft', value: 'Draft' },
+  // { label: 'Draft', value: 'Draft' },
   { label: 'Pending Approval', value: 'Pending Approval' },
   { label: 'Approved', value: 'Approved' },
   { label: 'Rejected', value: 'Rejected' },
@@ -249,8 +250,8 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
     { pending: 0, approved: 0, rejected: 0 },
   );
 
-  const renderItem = ({ item }: any) => {
-    const st = getStatus(item.approval_status);
+  const renderItem = ({ item }: { item: ApproverExpenseClaim }) => {
+    const st = getStatus(item.workflow_state);
 
     return (
       <TouchableOpacity
@@ -272,7 +273,7 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
           <View style={[styles.badge, { backgroundColor: st.bg }]}>
             <View style={[styles.dot, { backgroundColor: st.dot }]} />
             <Text style={[styles.badgeText, { color: st.color }]}>
-              {item.approval_status}
+              {item.workflow_state}
             </Text>
           </View>
         </View>

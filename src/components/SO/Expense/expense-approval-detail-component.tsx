@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -15,15 +15,15 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   useGetClaimDetailQuery,
   useApproveClaimMutation,
   useRejectClaimMutation,
 } from '../../../features/tada/tadaApiv2';
-import {Expense} from '../../../types/tadaType';
+import { Expense } from '../../../types/tadaType';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export const imageBaseUrl = 'https://sfa.softsensbaby.in';
 
 const STATUS_CONFIG: Record<
   string,
-  {bg: string; color: string; dot: string; border: string}
+  { bg: string; color: string; dot: string; border: string }
 > = {
   Submitted: {
     bg: '#fffbeb',
@@ -64,7 +64,7 @@ const STATUS_CONFIG: Record<
     dot: '#f87171',
     border: '#fecaca',
   },
-  Draft: {bg: '#f8fafc', color: '#64748b', dot: '#94a3b8', border: '#e2e8f0'},
+  Draft: { bg: '#f8fafc', color: '#64748b', dot: '#94a3b8', border: '#e2e8f0' },
 };
 
 const EXPENSE_ICONS: Record<string, string> = {
@@ -120,13 +120,13 @@ const InfoRow = ({
   bold?: boolean;
   last?: boolean;
 }) => (
-  <View style={[styles.infoRow, last && {borderBottomWidth: 0}]}>
+  <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
     <Text style={styles.infoLabel}>{label}</Text>
     <Text
       style={[
         styles.infoValue,
-        valueColor ? {color: valueColor} : null,
-        bold ? {fontFamily: Fonts.bold} : null,
+        valueColor ? { color: valueColor } : null,
+        bold ? { fontFamily: Fonts.bold } : null,
       ]}>
       {value || 'N/A'}
     </Text>
@@ -151,7 +151,7 @@ const SectionCard = ({
       <View
         style={[
           styles.sectionIconWrap,
-          iconColor ? {backgroundColor: iconColor + '18'} : null,
+          iconColor ? { backgroundColor: iconColor + '18' } : null,
         ]}>
         <Ionicons
           name={icon}
@@ -197,9 +197,9 @@ const ExpenseRowCard = ({
   };
 
   return (
-    <View style={[styles.expenseCard, last && {borderBottomWidth: 0}]}>
+    <View style={[styles.expenseCard, last && { borderBottomWidth: 0 }]}>
       <View
-        style={[styles.expenseIconWrap, {backgroundColor: iconColor + '15'}]}>
+        style={[styles.expenseIconWrap, { backgroundColor: iconColor + '15' }]}>
         <Ionicons name={iconName} size={17} color={iconColor} />
       </View>
 
@@ -247,8 +247,8 @@ const ExpenseRowCard = ({
               backgroundColor: isReduced
                 ? '#fff1f2'
                 : isEqual
-                ? '#f8fafc'
-                : '#f0fdf4',
+                  ? '#f8fafc'
+                  : '#f0fdf4',
             },
           ]}>
           <Text
@@ -258,8 +258,8 @@ const ExpenseRowCard = ({
                 color: isReduced
                   ? '#dc2626'
                   : isEqual
-                  ? Colors.darkButton
-                  : '#16a34a',
+                    ? Colors.darkButton
+                    : '#16a34a',
               },
             ]}>
             ₹{item.sanctioned_amount.toLocaleString('en-IN')}
@@ -283,9 +283,9 @@ const ExpenseApprovalDetailComponent = ({
   const [previewType, setPreviewType] = useState<'image' | 'pdf'>('image');
   const [imageLoading, setImageLoading] = useState(false);
 
-  const {data, isLoading} = useGetClaimDetailQuery({claim_id: claimId});
-  const [approveClaim, {isLoading: approveLoading}] = useApproveClaimMutation();
-  const [rejectClaim, {isLoading: rejectLoading}] = useRejectClaimMutation();
+  const { data, isLoading } = useGetClaimDetailQuery({ claim_id: claimId });
+  const [approveClaim, { isLoading: approveLoading }] = useApproveClaimMutation();
+  const [rejectClaim, { isLoading: rejectLoading }] = useRejectClaimMutation();
 
   const claim = data?.message?.data;
 
@@ -294,14 +294,14 @@ const ExpenseApprovalDetailComponent = ({
       'Confirm Approval',
       'Are you sure you want to approve this expense claim?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Approve',
           onPress: async () => {
             try {
-              await approveClaim({claim_id: claimId}).unwrap();
+              await approveClaim({ claim_id: claimId }).unwrap();
               Alert.alert('Success', 'Expense claim approved successfully', [
-                {text: 'OK', onPress: () => navigation.goBack()},
+                { text: 'OK', onPress: () => navigation.goBack() },
               ]);
             } catch (error: any) {
               Alert.alert(
@@ -324,7 +324,7 @@ const ExpenseApprovalDetailComponent = ({
       'Confirm Rejection',
       'Are you sure you want to reject this expense claim?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reject',
           style: 'destructive',
@@ -378,8 +378,8 @@ const ExpenseApprovalDetailComponent = ({
     );
   }
 
-  const st = getStatusCfg(claim.approval_status);
-  const canAct = claim.approval_status === 'Draft';
+  const st = getStatusCfg(claim.workflow_state);
+  const canAct = claim.workflow_state === 'Pending Approval';
 
   const sanctionedTotal =
     claim.expenses?.reduce((sum, e) => sum + e.sanctioned_amount, 0) ??
@@ -393,7 +393,7 @@ const ExpenseApprovalDetailComponent = ({
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 40}}>
+        contentContainerStyle={{ paddingBottom: 40 }}>
         {/* ── Hero Header ────────────────────────────────────────── */}
         <View style={styles.heroCard}>
           <View style={styles.heroTop}>
@@ -411,11 +411,11 @@ const ExpenseApprovalDetailComponent = ({
             <View
               style={[
                 styles.statusBadge,
-                {backgroundColor: st.bg, borderColor: st.border},
+                { backgroundColor: st.bg, borderColor: st.border },
               ]}>
-              <View style={[styles.statusDot, {backgroundColor: st.dot}]} />
-              <Text style={[styles.statusText, {color: st.color}]}>
-                {claim.approval_status}
+              <View style={[styles.statusDot, { backgroundColor: st.dot }]} />
+              <Text style={[styles.statusText, { color: st.color }]}>
+                {claim.workflow_state}
               </Text>
             </View>
           </View>
@@ -436,7 +436,7 @@ const ExpenseApprovalDetailComponent = ({
 
             <View style={[styles.amountTile, styles.amountTileCenter]}>
               <Text style={styles.amountTileLabel}>Sanctioned</Text>
-              <Text style={[styles.amountTileValue, {color: '#16a34a'}]}>
+              <Text style={[styles.amountTileValue, { color: '#16a34a' }]}>
                 ₹{sanctionedTotal.toLocaleString('en-IN')}
               </Text>
             </View>
@@ -448,7 +448,7 @@ const ExpenseApprovalDetailComponent = ({
                 </View>
                 <View style={styles.amountTile}>
                   <Text style={styles.amountTileLabel}>Difference</Text>
-                  <Text style={[styles.amountTileValue, {color: '#dc2626'}]}>
+                  <Text style={[styles.amountTileValue, { color: '#dc2626' }]}>
                     ₹{diff.toLocaleString('en-IN')}
                   </Text>
                 </View>
@@ -514,7 +514,7 @@ const ExpenseApprovalDetailComponent = ({
               <View
                 style={[
                   styles.sectionIconWrap,
-                  {backgroundColor: '#F9731618'},
+                  { backgroundColor: '#F9731618' },
                 ]}>
                 <Ionicons name="receipt-outline" size={15} color="#F97316" />
               </View>
@@ -531,10 +531,10 @@ const ExpenseApprovalDetailComponent = ({
 
             <View style={styles.expenseColHeader}>
               <Text
-                style={[styles.expenseColLabel, {flex: 1, textAlign: 'left'}]}>
+                style={[styles.expenseColLabel, { flex: 1, textAlign: 'left' }]}>
                 Description
               </Text>
-              <Text style={[styles.expenseColLabel, {marginRight: 8}]}>
+              <Text style={[styles.expenseColLabel, { marginRight: 8 }]}>
                 Claimed
               </Text>
               <Text style={styles.expenseColLabel}>Sanctioned</Text>
@@ -685,7 +685,7 @@ const ExpenseApprovalDetailComponent = ({
               <View style={styles.modalIconCircle}>
                 <Ionicons name="close-circle" size={24} color="#dc2626" />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.modalTitle}>Reject Expense Claim</Text>
                 <Text style={styles.modalSubtitle}>#{claimId}</Text>
               </View>
@@ -791,7 +791,7 @@ const ExpenseApprovalDetailComponent = ({
                     </View>
                   )}
                   <Image
-                    source={{uri: previewUrl}}
+                    source={{ uri: previewUrl }}
                     style={styles.previewImage}
                     resizeMode="contain"
                     onLoadStart={() => setImageLoading(true)}
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  heroLeft: {flex: 1},
+  heroLeft: { flex: 1 },
   claimIdRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -923,8 +923,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
-  statusDot: {width: 6, height: 6, borderRadius: 3},
-  statusText: {fontFamily: Fonts.semiBold, fontSize: 11},
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontFamily: Fonts.semiBold, fontSize: 11 },
   heroDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1072,7 +1072,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexShrink: 0,
   },
-  expenseInfo: {flex: 1, gap: 3},
+  expenseInfo: { flex: 1, gap: 3 },
   expenseType: {
     fontFamily: Fonts.semiBold,
     fontSize: 12,
@@ -1239,7 +1239,7 @@ const styles = StyleSheet.create({
     gap: 8,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1270,7 +1270,7 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1418,12 +1418,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 7,
     shadowColor: '#dc2626',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
   },
-  disabledBtn: {opacity: 0.4},
+  disabledBtn: { opacity: 0.4 },
   modalConfirmText: {
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
@@ -1520,7 +1520,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     shadowColor: '#8B5CF6',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
