@@ -113,7 +113,7 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
               onChange={(val: string) => setSelectedStatus(val)}
               height={35}
               marginBottom={0}
-              textSize={Size.xs}
+              textSize={12}
               labelStyle={{ display: 'none' }}
             /></View>
         </View>
@@ -403,7 +403,7 @@ const hStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 0,
+    gap: 5,
   },
   pill: {
     flex: 0.5,
@@ -417,19 +417,20 @@ const hStyles = StyleSheet.create({
     paddingVertical: 5,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginRight: 6,
   },
+
   pillActive: {
-    backgroundColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FED7AA',
   },
   pillText: {
     fontFamily: Fonts.medium,
     fontSize: 12,
     color: '#475569',
   },
+
   pillTextActive: {
-    color: Colors.darkButton,
+    color: Colors.orange,
   },
   vDivider: {
     width: 1,

@@ -14,8 +14,9 @@ import moment from 'moment';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 import { VisibilityClaim } from '../../../types/tadaType';
+import VisibilityHeader from './VisibilityHeader';
+import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
 {
@@ -34,11 +35,13 @@ const fmt = (v: number) => (v > 0 ? `₹${v.toLocaleString('en-IN')}` : null);
 const VisibilityComponent = ({ navigation }: any) => {
   const [selectedMonth, setSelectedMonth] = React.useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = React.useState(new Date().getFullYear());
+  const [selectedStatus, setSelectedStatus] = React.useState('');
   const [page, setPage] = React.useState(1);
 
   const { data, isLoading, isFetching } = useGetMyVisibilityClaimsQuery({
     month: selectedMonth,
     year: selectedYear,
+    status: selectedStatus,
     page: page,
     page_size: 20,
   });
@@ -54,7 +57,7 @@ const VisibilityComponent = ({ navigation }: any) => {
 
   React.useEffect(() => {
     setPage(1);
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, selectedStatus]);
 
   const renderItem = ({ item }: { item: VisibilityClaim }) => {
     const st = getStatus(item.approval_status);
@@ -122,6 +125,16 @@ const VisibilityComponent = ({ navigation }: any) => {
           data={claimList}
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
+          ListHeaderComponent={
+            <VisibilityHeader
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={setSelectedMonth}
+              onYearChange={setSelectedYear}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+            />
+          }
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -161,10 +174,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f6fa',
-    paddingHorizontal: 14,
+    // paddingHorizontal: 14,
   },
   loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingTop: 12, paddingBottom: 16, gap: 8 },
+  listContent: { paddingBottom: 16, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -177,7 +190,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
-    gap: 6,
+    gap: 5,
+    marginHorizontal: 15
   },
 
   // Row 1
@@ -277,6 +291,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
+    marginHorizontal: 15
   },
   claimButtonText: {
     fontFamily: Fonts.semiBold,

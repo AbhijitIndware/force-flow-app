@@ -35,6 +35,7 @@ const ExpenseComponent = ({ navigation }: any) => {
     new Date().getMonth() + 1,
   );
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR);
+  const [selectedStatus, setSelectedStatus] = React.useState('');
 
   const [page, setPage] = React.useState(1);
 
@@ -45,6 +46,7 @@ const ExpenseComponent = ({ navigation }: any) => {
   } = useGetMyExpenseClaimsQuery({
     month: selectedMonth,
     year: selectedYear,
+    status: selectedStatus,
     page: page,
     page_size: 20,
   });
@@ -67,7 +69,7 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   React.useEffect(() => {
     setPage(1);
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, selectedStatus]);
 
   const counts = useMemo(() => {
     return claims.reduce(
@@ -122,6 +124,8 @@ const ExpenseComponent = ({ navigation }: any) => {
               selectedYear={selectedYear}
               onMonthChange={setSelectedMonth}
               onYearChange={setSelectedYear}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
               totalConsumed={totalConsumed}
               consumed={consumed}
               counts={counts}

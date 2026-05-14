@@ -17,6 +17,7 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { VisibilityClaim } from '../../../types/tadaType';
 import { useGetApproverVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
+import VisibilityHeader from './VisibilityHeader';
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
 {
@@ -34,12 +35,14 @@ const fmt = (v: number) => (v > 0 ? `₹${v.toLocaleString('en-IN')}` : null);
 const VisibilityApprovalListComponent = ({ navigation }: any) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, isFetching, refetch } = useGetApproverVisibilityClaimsQuery({
     month: selectedMonth,
     year: selectedYear,
+    status: selectedStatus,
     page: page,
     page_size: 20,
   });
@@ -61,14 +64,7 @@ const VisibilityApprovalListComponent = ({ navigation }: any) => {
 
   useEffect(() => {
     setPage(1);
-  }, [selectedMonth, selectedYear]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [selectedMonth, selectedYear]);
-  const pendingClaims = claimList.filter(
-    item => item.docstatus === 1 && item.approval_status === 'Submitted',
-  );
+  }, [selectedMonth, selectedYear, selectedStatus]);
 
   const renderItem = ({ item }: { item: VisibilityClaim }) => {
     const st = getStatus(item.approval_status);
@@ -140,9 +136,20 @@ const VisibilityApprovalListComponent = ({ navigation }: any) => {
         </View>
       ) : (
         <FlatList
-          data={pendingClaims}
+          data={claimList}
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
+          ListHeaderComponent={
+            <VisibilityHeader
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={setSelectedMonth}
+              onYearChange={setSelectedYear}
+              selectedStatus={selectedStatus}
+              onStatusChange={setSelectedStatus}
+              statuses={['', 'Submitted', 'Approved', 'Rejected']}
+            />
+          }
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -175,10 +182,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f6fa',
-    paddingHorizontal: 14,
+    // paddingHorizontal: 14,
   },
   loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingTop: 12, paddingBottom: 20, gap: 8 },
+  listContent: { paddingBottom: 20, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -192,6 +199,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     gap: 5,
+    marginHorizontal: 15
   },
 
   // Row 1: store + date + badge
