@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -8,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -36,6 +37,7 @@ const ExpenseComponent = ({ navigation }: any) => {
   );
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR);
   const [selectedStatus, setSelectedStatus] = React.useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const [page, setPage] = React.useState(1);
 
@@ -43,14 +45,20 @@ const ExpenseComponent = ({ navigation }: any) => {
     data: claimsData,
     isLoading: claimsLoading,
     isFetching: claimsFetching,
+    refetch
   } = useGetMyExpenseClaimsQuery({
     month: selectedMonth,
     year: selectedYear,
     status: selectedStatus,
     page: page,
     page_size: 20,
-  });
+  }, { refetchOnMountOrArgChange: true });
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  };
   const { data: summaryData, isLoading: summaryLoading } =
     useGetMyTadaSummaryQuery({
       month: selectedMonth,
@@ -104,9 +112,39 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.root}>
+      <ExpenseHeader
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onMonthChange={setSelectedMonth}
+        onYearChange={setSelectedYear}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        totalConsumed={totalConsumed}
+        consumed={consumed}
+        counts={counts}
+      />
+      <View style={styles.listContainer}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Claims</Text>
+          {claimsFetching ? (
+            <ActivityIndicator size="small" color={Colors.orange} />
+          ) : (
+            <Text style={styles.sectionCount}>{claims.length}</Text>
+          )}
+        </View>
+        {claims.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={28} color="#CBD5E1" />
+            <Text style={styles.emptyText}>No claims this period</Text>
+          </View>
+        )}
+      </View>
       <FlatList
         data={claims}
         keyExtractor={item => item.name}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16 }}>
             <ExpenseClaimCard
@@ -117,37 +155,6 @@ const ExpenseComponent = ({ navigation }: any) => {
             />
           </View>
         )}
-        ListHeaderComponent={
-          <>
-            <ExpenseHeader
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={setSelectedMonth}
-              onYearChange={setSelectedYear}
-              selectedStatus={selectedStatus}
-              onStatusChange={setSelectedStatus}
-              totalConsumed={totalConsumed}
-              consumed={consumed}
-              counts={counts}
-            />
-            <View style={styles.listContainer}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Claims</Text>
-                {claimsFetching ? (
-                  <ActivityIndicator size="small" color={Colors.orange} />
-                ) : (
-                  <Text style={styles.sectionCount}>{claims.length}</Text>
-                )}
-              </View>
-              {claims.length === 0 && (
-                <View style={styles.emptyState}>
-                  <Ionicons name="receipt-outline" size={28} color="#CBD5E1" />
-                  <Text style={styles.emptyText}>No claims this period</Text>
-                </View>
-              )}
-            </View>
-          </>
-        }
         stickyHeaderIndices={[0]}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
