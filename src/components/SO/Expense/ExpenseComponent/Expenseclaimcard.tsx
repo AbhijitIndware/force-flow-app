@@ -34,6 +34,11 @@ const STATUS_MAP: Record<string, StatusConfig> = {
     color: '#dc2626',
     dotColor: '#f87171',
   },
+  Cancelled: {
+    label: 'Cancelled',
+    color: '#64748b',
+    dotColor: '#94a3b8',
+  },
 };
 
 const DEFAULT_STATUS: StatusConfig = {

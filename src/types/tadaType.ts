@@ -118,8 +118,18 @@ export interface ApproverExpenseClaimResponse {
   message: {
     status: string;
     message: string;
-    data: ApproverExpenseClaim[];
+    data: ApproverExpenseClaimsData;
   };
+}
+
+export interface ExpenseClaimsData {
+  expense_claims: ExpenseClaim[];
+  pagination: Pagination;
+}
+
+export interface ApproverExpenseClaimsData {
+  expense_claims: ApproverExpenseClaim[];
+  pagination: Pagination;
 }
 
 export interface ApproverExpenseClaim {
@@ -327,14 +337,17 @@ export interface RejectClaimResponse {
 
 // Phase 4
 
-export interface GetVisibilityClaimsParams {
-  /** Pass "manager" to see the team's claims */
-  view?: 'manager';
-  status?: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
-  /** Manager view filter — defaults to "Submitted" */
-  approval_status?: 'Draft' | 'Submitted' | 'Approved' | 'Rejected';
+export interface StandardQueryParams {
+  month?: number;
+  year?: number;
   page?: number;
   page_size?: number;
+  status?: string;
+}
+
+export interface GetVisibilityClaimsParams extends StandardQueryParams {
+  /** Pass "manager" to see the team's claims */
+  view?: 'manager';
   from_date?: string; // YYYY-MM-DD
   to_date?: string; // YYYY-MM-DD
   store?: string;

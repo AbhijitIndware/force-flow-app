@@ -36,35 +36,12 @@ interface ExpenseApprovalDetailComponentProps {
 
 export const imageBaseUrl = 'https://sfa.softsensbaby.in';
 
-const STATUS_CONFIG: Record<
-  string,
-  { bg: string; color: string; dot: string; border: string }
-> = {
-  Submitted: {
-    bg: '#fffbeb',
-    color: '#d97706',
-    dot: '#fbbf24',
-    border: '#fde68a',
-  },
-  'Pending Approval': {
-    bg: '#eff6ff',
-    color: '#2563eb',
-    dot: '#60a5fa',
-    border: '#bfdbfe',
-  },
-  Approved: {
-    bg: '#f0fdf4',
-    color: '#16a34a',
-    dot: '#22c55e',
-    border: '#bbf7d0',
-  },
-  Rejected: {
-    bg: '#fff1f2',
-    color: '#dc2626',
-    dot: '#f87171',
-    border: '#fecaca',
-  },
-  Draft: { bg: '#f8fafc', color: '#64748b', dot: '#94a3b8', border: '#e2e8f0' },
+const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
+{
+  Submitted: { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+  'Pending Approval': { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+  Approved: { bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
+  Rejected: { bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
 };
 
 const EXPENSE_ICONS: Record<string, string> = {
@@ -411,7 +388,7 @@ const ExpenseApprovalDetailComponent = ({
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: st.bg, borderColor: st.border },
+                { backgroundColor: st.bg, borderColor: st.color },
               ]}>
               <View style={[styles.statusDot, { backgroundColor: st.dot }]} />
               <Text style={[styles.statusText, { color: st.color }]}>

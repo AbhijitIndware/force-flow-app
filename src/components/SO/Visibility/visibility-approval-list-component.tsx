@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,49 +12,70 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {useGetMyVisibilityClaimsQuery} from '../../../features/tada/tadaApiv2';
-import {VisibilityClaim} from '../../../types/tadaType';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { VisibilityClaim } from '../../../types/tadaType';
+import { useGetApproverVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 
-const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
-  {
-    Approved: {bg: '#16a34a20', color: '#16a34a', dot: '#22c55e'},
-    Rejected: {bg: '#dc262620', color: '#dc2626', dot: '#f87171'},
-    Submitted: {bg: '#d9770620', color: '#d97706', dot: '#fbbf24'},
-    Pending: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
-  };
+const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
+{
+  Approved: { bg: '#16a34a20', color: '#16a34a', dot: '#22c55e' },
+  Rejected: { bg: '#dc262620', color: '#dc2626', dot: '#f87171' },
+  Submitted: { bg: '#d9770620', color: '#d97706', dot: '#fbbf24' },
+  Pending: { bg: '#6B728020', color: '#6B7280', dot: '#94a3b8' },
+};
 
 const getStatus = (s: string) =>
-  STATUS_CONFIG[s] ?? {bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8'};
+  STATUS_CONFIG[s] ?? { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' };
 
 const fmt = (v: number) => (v > 0 ? `₹${v.toLocaleString('en-IN')}` : null);
 
-const VisibilityApprovalListComponent = ({navigation}: any) => {
+const VisibilityApprovalListComponent = ({ navigation }: any) => {
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
-  const {data, isLoading, refetch} = useGetMyVisibilityClaimsQuery({
-    view: 'manager',
+
+  const { data, isLoading, isFetching, refetch } = useGetApproverVisibilityClaimsQuery({
+    month: selectedMonth,
+    year: selectedYear,
+    page: page,
+    page_size: 20,
   });
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    setPage(1);
     await refetch();
-    setRefreshing(false);
   };
 
   const claimList: VisibilityClaim[] =
     data?.message?.data?.visibility_claims || [];
+  const pagination = data?.message?.data?.pagination;
+
+  const handleLoadMore = () => {
+    if (pagination?.has_more && !isFetching) {
+      setPage(prev => prev + 1);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedMonth, selectedYear]);
   const pendingClaims = claimList.filter(
     item => item.docstatus === 1 && item.approval_status === 'Submitted',
   );
 
-  const renderItem = ({item}: {item: VisibilityClaim}) => {
+  const renderItem = ({ item }: { item: VisibilityClaim }) => {
     const st = getStatus(item.approval_status);
     const amounts = [
-      {label: 'Collect', value: fmt(item.collection_amount)},
-      {label: 'P.Diff', value: fmt(item.price_difference_amount)},
-      {label: 'Damage', value: fmt(item.damage_claim), warn: true},
+      { label: 'Collect', value: fmt(item.collection_amount) },
+      { label: 'P.Diff', value: fmt(item.price_difference_amount) },
+      { label: 'Damage', value: fmt(item.damage_claim), warn: true },
     ].filter(a => a.value);
 
     return (
@@ -74,9 +95,9 @@ const VisibilityApprovalListComponent = ({navigation}: any) => {
           <Text style={styles.dateText}>
             {moment(item.date).format('DD MMM YY')}
           </Text>
-          <View style={[styles.badge, {backgroundColor: st.bg}]}>
-            <View style={[styles.dot, {backgroundColor: st.dot}]} />
-            <Text style={[styles.badgeText, {color: st.color}]}>
+          <View style={[styles.badge, { backgroundColor: st.bg }]}>
+            <View style={[styles.dot, { backgroundColor: st.dot }]} />
+            <Text style={[styles.badgeText, { color: st.color }]}>
               {item.approval_status}
             </Text>
           </View>
@@ -94,7 +115,7 @@ const VisibilityApprovalListComponent = ({navigation}: any) => {
               <View key={a.label} style={styles.amountItem}>
                 <Text style={styles.amountLabel}>{a.label}</Text>
                 <Text
-                  style={[styles.amountValue, a.warn && {color: '#ea580c'}]}>
+                  style={[styles.amountValue, a.warn && { color: '#ea580c' }]}>
                   {a.value}
                 </Text>
               </View>
@@ -123,6 +144,8 @@ const VisibilityApprovalListComponent = ({navigation}: any) => {
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -154,8 +177,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6fa',
     paddingHorizontal: 14,
   },
-  loaderBox: {flex: 1, justifyContent: 'center', alignItems: 'center'},
-  listContent: {paddingTop: 12, paddingBottom: 20, gap: 8},
+  loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { paddingTop: 12, paddingBottom: 20, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -164,7 +187,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -196,8 +219,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 3,
   },
-  dot: {width: 5, height: 5, borderRadius: 3},
-  badgeText: {fontSize: 10, fontFamily: Fonts.medium},
+  dot: { width: 5, height: 5, borderRadius: 3 },
+  badgeText: { fontSize: 10, fontFamily: Fonts.medium },
 
   // Row 2: employee
   employeeText: {
@@ -216,7 +239,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  amountItem: {alignItems: 'flex-start'},
+  amountItem: { alignItems: 'flex-start' },
   amountLabel: {
     fontFamily: Fonts.regular,
     fontSize: 9,

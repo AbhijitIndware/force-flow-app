@@ -28,6 +28,9 @@ import {
   ExpenseClaimResponse,
   VisibilityClaimsResponse,
   ApproverExpenseClaimResponse,
+  StandardQueryParams,
+  ExpenseClaimsData,
+  ApproverExpenseClaimsData,
 } from '../../types/tadaType';
 import { baseQueryForTadaWithAuthGuard } from '../utility';
 
@@ -46,19 +49,14 @@ export const tadaApiV2 = createApi({
   endpoints: builder => ({
     // ── Phase 1: Employee Endpoints (Claim Submission Flow) ────────────────
 
-    // 1. Get My Expense Claims
     getMyExpenseClaims: builder.query<
-      TadaApiResponse<ExpenseClaim[]>,
-      { month?: number; year?: number; status?: string }
+      TadaApiResponse<ExpenseClaimsData>,
+      StandardQueryParams
     >({
-      query: ({ month, year, status } = {}) => ({
+      query: (params = {}) => ({
         url: `${EXPENSE_BASE}.get_my_expense_claims`,
         method: 'GET',
-        params: {
-          ...(month !== undefined && { month }),
-          ...(year !== undefined && { year }),
-          ...(status && { status }),
-        },
+        params,
       }),
       providesTags: ['Expense'],
     }),
@@ -140,17 +138,38 @@ export const tadaApiV2 = createApi({
     }),
     getApprovalList: builder.query<
       ApproverExpenseClaimResponse,
-      { month?: number; year?: number, status: string }
+      StandardQueryParams
     >({
-      query: ({ month, year, status }) => ({
+      query: (params = {}) => ({
         url: `${EXPENSE_BASE}.get_claim_list`,
         method: 'GET',
-        params: {
-          ...(month !== undefined && { month }),
-          ...(year !== undefined && { year }),
-          ...(status !== undefined && { status }),
-        },
+        params,
       }),
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems) => {
+        if (newItems.message.data.pagination.page === 1) {
+          return newItems;
+        }
+        return {
+          ...newItems,
+          message: {
+            ...newItems.message,
+            data: {
+              ...newItems.message.data,
+              expense_claims: [
+                ...currentCache.message.data.expense_claims,
+                ...newItems.message.data.expense_claims,
+              ],
+            },
+          },
+        };
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg !== previousArg;
+      },
       providesTags: ['Approval'],
     }),
 
@@ -218,6 +237,32 @@ export const tadaApiV2 = createApi({
         method: 'GET',
         params: params || {},
       }),
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        if (!queryArgs) return endpointName;
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems) => {
+        if (newItems.message.data.pagination.page === 1) {
+          return newItems;
+        }
+        return {
+          ...newItems,
+          message: {
+            ...newItems.message,
+            data: {
+              ...newItems.message.data,
+              visibility_claims: [
+                ...currentCache.message.data.visibility_claims,
+                ...newItems.message.data.visibility_claims,
+              ],
+            },
+          },
+        };
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg !== previousArg;
+      },
       providesTags: ['VisibilityClaim'],
     }),
 
@@ -259,7 +304,43 @@ export const tadaApiV2 = createApi({
       }),
       invalidatesTags: ['VisibilityClaim'],
     }),
-
+    getApproverVisibilityClaims: builder.query<
+      VisibilityClaimsResponse,
+      GetVisibilityClaimsParams | void
+    >({
+      query: params => ({
+        url: `${VISIBILITY_BASE}.get_approver_visibility_claims_list`,
+        method: 'GET',
+        params: params || {},
+      }),
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        if (!queryArgs) return endpointName;
+        const { page, ...rest } = queryArgs;
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems) => {
+        if (newItems.message.data.pagination.page === 1) {
+          return newItems;
+        }
+        return {
+          ...newItems,
+          message: {
+            ...newItems.message,
+            data: {
+              ...newItems.message.data,
+              visibility_claims: [
+                ...currentCache.message.data.visibility_claims,
+                ...newItems.message.data.visibility_claims,
+              ],
+            },
+          },
+        };
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg !== previousArg;
+      },
+      providesTags: ['VisibilityClaim'],
+    }),
     // 15. Approve Visibility Claim (Manager only)
     // Same expense_approver → reports_to security check as expense approve.
     approveVisibilityClaim: builder.mutation<
@@ -361,7 +442,7 @@ export const {
   useSubmitVisibilityClaimMutation,
   useApproveVisibilityClaimMutation,
   useRejectVisibilityClaimMutation,
-  useCancelVisibilityClaimMutation,
+  useCancelVisibilityClaimMutation, useGetApproverVisibilityClaimsQuery,
 
   // Phase 5 – Softsens Utility APIs
   useGetApproverByEmployeeNoQuery,

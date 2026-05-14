@@ -1,16 +1,18 @@
 import {
   ActivityIndicator,
+  FlatList,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useMemo} from 'react';
+import React, { useMemo } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   useGetMyExpenseClaimsQuery,
   useGetMyTadaSummaryQuery,
@@ -28,26 +30,44 @@ interface ConsumedData {
   Incidental?: number;
 }
 
-const ExpenseComponent = ({navigation}: any) => {
+const ExpenseComponent = ({ navigation }: any) => {
   const [selectedMonth, setSelectedMonth] = React.useState(
     new Date().getMonth() + 1,
   );
   const [selectedYear, setSelectedYear] = React.useState(CURRENT_YEAR);
 
+  const [page, setPage] = React.useState(1);
+
   const {
     data: claimsData,
     isLoading: claimsLoading,
     isFetching: claimsFetching,
-  } = useGetMyExpenseClaimsQuery({month: selectedMonth, year: selectedYear});
+  } = useGetMyExpenseClaimsQuery({
+    month: selectedMonth,
+    year: selectedYear,
+    page: page,
+    page_size: 20,
+  });
 
-  const {data: summaryData, isLoading: summaryLoading} =
+  const { data: summaryData, isLoading: summaryLoading } =
     useGetMyTadaSummaryQuery({
       month: selectedMonth,
       year: selectedYear,
     });
 
-  const claims = claimsData?.message?.data || [];
+  const claims = claimsData?.message?.data?.expense_claims || [];
+  const pagination = claimsData?.message?.data?.pagination;
   const consumed = (summaryData?.message?.data?.consumed || {}) as ConsumedData;
+
+  const handleLoadMore = () => {
+    if (pagination?.has_more && !claimsFetching) {
+      setPage(prev => prev + 1);
+    }
+  };
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedMonth, selectedYear]);
 
   const counts = useMemo(() => {
     return claims.reduce(
@@ -58,7 +78,7 @@ const ExpenseComponent = ({navigation}: any) => {
         else if (status === 'rejected') acc.rejected++;
         return acc;
       },
-      {pending: 0, approved: 0, rejected: 0},
+      { pending: 0, approved: 0, rejected: 0 },
     );
   }, [claims]);
 
@@ -81,52 +101,55 @@ const ExpenseComponent = ({navigation}: any) => {
   }
 
   return (
-    <View style={styles.root}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={[0]}>
-        {/* ── Sticky Header with embedded summary ── */}
-        <ExpenseHeader
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onMonthChange={setSelectedMonth}
-          onYearChange={setSelectedYear}
-          totalConsumed={totalConsumed}
-          consumed={consumed}
-          counts={counts}
-        />
-
-        {/* ── Claims List ── */}
-        <View style={styles.listContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Claims</Text>
-            {claimsFetching ? (
-              <ActivityIndicator size="small" color={Colors.orange} />
-            ) : (
-              <Text style={styles.sectionCount}>{claims.length}</Text>
-            )}
+    <SafeAreaView style={styles.root}>
+      <FlatList
+        data={claims}
+        keyExtractor={item => item.name}
+        renderItem={({ item }) => (
+          <View style={{ paddingHorizontal: 16 }}>
+            <ExpenseClaimCard
+              claim={item}
+              onPress={() =>
+                navigation.navigate('AddExpenseScreen', { claimId: item.name })
+              }
+            />
           </View>
-
-          {claims.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={28} color="#CBD5E1" />
-              <Text style={styles.emptyText}>No claims this period</Text>
+        )}
+        ListHeaderComponent={
+          <>
+            <ExpenseHeader
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+              onMonthChange={setSelectedMonth}
+              onYearChange={setSelectedYear}
+              totalConsumed={totalConsumed}
+              consumed={consumed}
+              counts={counts}
+            />
+            <View style={styles.listContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Claims</Text>
+                {claimsFetching ? (
+                  <ActivityIndicator size="small" color={Colors.orange} />
+                ) : (
+                  <Text style={styles.sectionCount}>{claims.length}</Text>
+                )}
+              </View>
+              {claims.length === 0 && (
+                <View style={styles.emptyState}>
+                  <Ionicons name="receipt-outline" size={28} color="#CBD5E1" />
+                  <Text style={styles.emptyText}>No claims this period</Text>
+                </View>
+              )}
             </View>
-          ) : (
-            claims.map((claim: any) => (
-              <ExpenseClaimCard
-                key={claim.name}
-                claim={claim}
-                onPress={() =>
-                  navigation.navigate('AddExpenseScreen', {claimId: claim.name})
-                }
-              />
-            ))
-          )}
-        </View>
-
-        <View style={{height: 90}} />
-      </ScrollView>
+          </>
+        }
+        stickyHeaderIndices={[0]}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={<View style={{ height: 90 }} />}
+        showsVerticalScrollIndicator={false}
+      />
 
       {/* ── FAB ── */}
       <TouchableOpacity
@@ -137,7 +160,7 @@ const ExpenseComponent = ({navigation}: any) => {
           <Ionicons name="add" size={15} color={Colors.darkButton} />
         </View>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -197,7 +220,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     elevation: 8,
     shadowColor: Colors.darkButton,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
     shadowRadius: 8,
     zIndex: 999,
@@ -221,7 +244,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', // iOS
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
   },
 
   iconCircle: {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -224,10 +224,14 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading, refetch } = useGetApprovalListQuery({
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, refetch, isFetching } = useGetApprovalListQuery({
     month: selectedMonth,
     year: selectedYear,
     status: selectedStatus,
+    page: page,
+    page_size: 20,
   }, { refetchOnMountOrArgChange: true });
 
   const onRefresh = async () => {
@@ -236,7 +240,18 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
-  const claimList = data?.message?.data || [];
+  const claimList = data?.message?.data?.expense_claims || [];
+  const pagination = data?.message?.data?.pagination;
+
+  const handleLoadMore = () => {
+    if (pagination?.has_more && !isFetching) {
+      setPage(prev => prev + 1);
+    }
+  };
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedMonth, selectedYear, selectedStatus]);
 
   // Derive counts from the full list (before client-side filter)
   const counts = claimList.reduce(
@@ -317,6 +332,8 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
