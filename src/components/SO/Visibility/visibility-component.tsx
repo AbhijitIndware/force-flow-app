@@ -116,6 +116,14 @@ const VisibilityComponent = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <VisibilityHeader
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onMonthChange={setSelectedMonth}
+        onYearChange={setSelectedYear}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+      />
       {isLoading || isFetching ? (
         <View style={styles.loaderBox}>
           <ActivityIndicator size="large" color={Colors.darkButton} />
@@ -125,16 +133,6 @@ const VisibilityComponent = ({ navigation }: any) => {
           data={claimList}
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
-          ListHeaderComponent={
-            <VisibilityHeader
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={setSelectedMonth}
-              onYearChange={setSelectedYear}
-              selectedStatus={selectedStatus}
-              onStatusChange={setSelectedStatus}
-            />
-          }
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 14,
   },
   loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingBottom: 16, gap: 8 },
+  listContent: { padding: 10, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -191,7 +189,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     gap: 5,
-    marginHorizontal: 15
   },
 
   // Row 1

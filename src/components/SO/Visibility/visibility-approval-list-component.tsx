@@ -130,6 +130,16 @@ const VisibilityApprovalListComponent = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
+
+      <VisibilityHeader
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        onMonthChange={setSelectedMonth}
+        onYearChange={setSelectedYear}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        statuses={['', 'Submitted', 'Approved', 'Rejected']}
+      />
       {isLoading ? (
         <View style={styles.loaderBox}>
           <ActivityIndicator size="large" color={Colors.darkButton} />
@@ -139,17 +149,6 @@ const VisibilityApprovalListComponent = ({ navigation }: any) => {
           data={claimList}
           keyExtractor={item => item.claim_id.toString()}
           renderItem={renderItem}
-          ListHeaderComponent={
-            <VisibilityHeader
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onMonthChange={setSelectedMonth}
-              onYearChange={setSelectedYear}
-              selectedStatus={selectedStatus}
-              onStatusChange={setSelectedStatus}
-              statuses={['', 'Submitted', 'Approved', 'Rejected']}
-            />
-          }
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
@@ -185,7 +184,7 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 14,
   },
   loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { paddingBottom: 20, gap: 8 },
+  listContent: { padding: 10, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -199,7 +198,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     gap: 5,
-    marginHorizontal: 15
   },
 
   // Row 1: store + date + badge
