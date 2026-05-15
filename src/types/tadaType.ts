@@ -248,7 +248,7 @@ export interface CreateExpenseDraftPayload {
   from_city?: string;
   to_city?: string;
   /** 1 = self-arranged stay (lower payout caps), 0 = hotel */
-  is_self_arranged_stay?: 0 | 1;
+  // is_self_arranged_stay?: 0 | 1;
 }
 
 export interface ImagePayload {
@@ -294,6 +294,7 @@ export interface AddExpenseRowPayload {
   // Incidental specific (Courier, Xerox)
   /** Required when expense_type is "Courier" or "Xerox". Format: YYYY-MM-DD */
   incidental_bill_month?: string;
+  is_self_arranged_stay?: number
 }
 
 export interface DeleteExpenseRowPayload {

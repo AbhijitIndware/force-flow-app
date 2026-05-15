@@ -26,6 +26,7 @@ const initialValues = {
   telecom_bill_month: '',
   mobile_number: '',
   incidental_bill_month: '',
+  is_self_arranged_stay: 0,
 };
 
 const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) => {
@@ -61,6 +62,7 @@ const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) 
         telecom_bill_month: formValues.telecom_bill_month,
         mobile_number: formValues.mobile_number,
         incidental_bill_month: formValues.incidental_bill_month,
+        is_self_arranged_stay: formValues.is_self_arranged_stay,
       });
 
       Toast.show({

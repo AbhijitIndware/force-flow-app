@@ -7,32 +7,34 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {Trash2, Upload} from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Trash2, Upload } from 'lucide-react-native';
 import moment from 'moment';
-import {Colors} from '../../../../utils/colors';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
-import {LocalExpenseItem} from '../add-expense';
+import { Colors } from '../../../../utils/colors';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
+import { LocalExpenseItem } from '../add-expense';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const TYPE_CONFIG: Record<string, {icon: string; bg: string}> = {
-  'Daily Allowance': {icon: '💵', bg: '#EAF3DE'},
+const TYPE_CONFIG: Record<string, { icon: string; bg: string }> = {
+  'Daily Allowance': { icon: '💵', bg: '#EAF3DE' },
 
-  'TA - Auto': {icon: '🛺', bg: '#E6F1FB'},
-  'TA - Cab': {icon: '🚕', bg: '#E6F1FB'},
-  'TA - Bus': {icon: '🚌', bg: '#E6F1FB'},
-  'TA - Rail': {icon: '🚆', bg: '#E6F1FB'},
-  'TA - Bike (Petrol)': {icon: '🏍️', bg: '#E6F1FB'},
-  'TA - Local Travel': {icon: '🚗', bg: '#E6F1FB'},
+  'TA - Auto': { icon: '🛺', bg: '#E6F1FB' },
+  'TA - Cab': { icon: '🚕', bg: '#E6F1FB' },
+  'TA - Bus': { icon: '🚌', bg: '#E6F1FB' },
+  'TA - Rail': { icon: '🚆', bg: '#E6F1FB' },
+  'TA - Bike (Petrol)': { icon: '🏍️', bg: '#E6F1FB' },
+  'TA - Local Travel': { icon: '🚗', bg: '#E6F1FB' },
 
-  'Lodging / Boarding / Hotel': {icon: '🏨', bg: '#FAEEDA'},
+  'Lodging / Boarding / Hotel': { icon: '🏨', bg: '#FAEEDA' },
 
-  'Food / Meals': {icon: '🍽️', bg: '#FFF4E5'},
+  'Food / Meals': { icon: '🍽️', bg: '#FFF4E5' },
 
-  'Mobile Bill': {icon: '📱', bg: '#EEEDFE'},
+  'Mobile Bill': { icon: '📱', bg: '#EEEDFE' },
 
-  Courier: {icon: '📦', bg: '#FAECE7'},
-  Xerox: {icon: '📄', bg: '#FAECE7'},
+  Courier: { icon: '📦', bg: '#FAECE7' },
+  Xerox: { icon: '📄', bg: '#FAECE7' },
 };
 
 const normalizeExpenseType = (type: string) =>
@@ -44,7 +46,8 @@ type Props = {
   onRemove: any;
 };
 
-export const ExpenseRowCard = ({expense, loading, onRemove}: Props) => {
+export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
+  console.log("🚀 ~ ExpenseRowCard ~ expense:", expense)
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState('');
@@ -54,17 +57,25 @@ export const ExpenseRowCard = ({expense, loading, onRemove}: Props) => {
     icon: '💰',
     bg: '#F1EFE8',
   };
-  const attachmentUri = expense.attachment?.uri || expense.attachment?.url;
+  const attachmentUri =
+    typeof expense.attachment === 'string'
+      ? `${imageBaseUrl}${expense.attachment}`
+      : expense.attachment?.uri || expense.attachment?.url;
+  console.log("🚀 ~ ExpenseRowCard ~ attachmentUri:", attachmentUri)
+
   const isPDF = (attachment: any) => {
-    const name = attachment?.name || attachment?.uri || attachment?.url || '';
+    const name =
+      typeof attachment === 'string'
+        ? attachment
+        : attachment?.name || attachment?.uri || attachment?.url || '';
     return typeof name === 'string' && name.toLowerCase().includes('.pdf');
   };
 
   return (
     <>
       <View style={styles.card}>
-        <View style={[styles.iconBox, {backgroundColor: config.bg}]}>
-          <Text style={{fontSize: 18}}>{config.icon}</Text>
+        <View style={[styles.iconBox, { backgroundColor: config.bg }]}>
+          <Text style={{ fontSize: 18 }}>{config.icon}</Text>
         </View>
 
         <View style={styles.body}>
@@ -81,15 +92,13 @@ export const ExpenseRowCard = ({expense, loading, onRemove}: Props) => {
           ) : null}
           {expense.attachment ? (
             <TouchableOpacity
-              style={styles.attachPill}
+              style={styles.receiptBtn}
               onPress={() => {
                 setImageError('');
                 setShowImagePreview(true);
               }}>
-              <Upload size={11} color="#888" />
-              <Text style={styles.attachText} numberOfLines={1}>
-                {expense.attachment.name}
-              </Text>
+              <Ionicons name="attach-outline" size={11} color="#2563eb" />
+              <Text style={styles.receiptText}>View Receipt</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -101,7 +110,7 @@ export const ExpenseRowCard = ({expense, loading, onRemove}: Props) => {
           <TouchableOpacity
             disabled={loading}
             onPress={onRemove}
-            style={[styles.removeBtn, loading && {opacity: 0.5}]}>
+            style={[styles.removeBtn, loading && { opacity: 0.5 }]}>
             <Trash2 size={12} color="#A32D2D" />
             <Text style={styles.removeText}>Remove</Text>
           </TouchableOpacity>
@@ -136,7 +145,7 @@ export const ExpenseRowCard = ({expense, loading, onRemove}: Props) => {
                   />
                 )}
                 <Image
-                  source={{uri: attachmentUri}}
+                  source={{ uri: attachmentUri }}
                   style={styles.fullImage}
                   resizeMode="contain"
                   onLoadStart={() => {
@@ -304,5 +313,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
     textAlign: 'center',
+  },
+  receiptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  receiptText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#2563eb',
   },
 });

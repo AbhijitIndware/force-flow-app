@@ -143,7 +143,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
     'TA - Bike (Petrol)',
     'TA - Local Travel',
   ];
-
+  const isHotel = values.claim_type === 'Lodging / Boarding / Hotel';
   const isTA = TA_TYPES.includes(values.claim_type);
   const isRail = values.claim_type === 'TA - Rail';
   const isMobileBill = values.claim_type === 'Mobile Bill';
@@ -267,6 +267,30 @@ const AddExpenseItemV2: React.FC<Props> = ({
             />
           </View>
         )}
+
+        {/* HOTEL / LODGING SPECIFIC FIELDS */}
+        {isHotel && (
+          <View
+            style={[
+              styles.toggleRow,
+              { marginTop: 10 },
+            ]}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
+              <Text style={styles.toggleSub}>
+                Enable if you arranged your own lodging
+              </Text>
+            </View>
+            <Switch
+              value={values.is_self_arranged_stay === 1}
+              trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
+              thumbColor={values.is_self_arranged_stay === 1 ? Colors.primary : '#f4f3f4'}
+              onValueChange={val => setFieldValue('is_self_arranged_stay', val ? 1 : 0)}
+            />
+          </View>
+        )}
+
+
         <ReusableInput
           label="Description"
           placeholder="Enter description"
@@ -677,5 +701,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     padding: 10,
     borderRadius: 8,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  toggleTitle: {
+    fontSize: 13,
+    fontFamily: Fonts.medium,
+    color: '#334155',
+  },
+  toggleSub: {
+    fontSize: 11,
+    fontFamily: Fonts.regular,
+    color: '#94A3B8',
+    marginTop: 2,
   },
 });
