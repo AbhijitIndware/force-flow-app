@@ -24,6 +24,7 @@ import {
   useRejectClaimMutation,
 } from '../../../features/tada/tadaApiv2';
 import { Expense } from '../../../types/tadaType';
+import Toast from 'react-native-toast-message';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -259,6 +260,15 @@ const ExpenseApprovalDetailComponent = ({
   const [previewUrl, setPreviewUrl] = useState('');
   const [previewType, setPreviewType] = useState<'image' | 'pdf'>('image');
   const [imageLoading, setImageLoading] = useState(false);
+  // ─── State additions (add to existing useState block) ────────────────────
+  const [approveModalVisible, setApproveModalVisible] = useState(false);
+  const [approvalFlags, setApprovalFlags] = useState({
+    bike_over_100: false,
+    extra: false,
+    promotional: false,
+  });
+
+
 
   const { data, isLoading } = useGetClaimDetailQuery({ claim_id: claimId });
   const [approveClaim, { isLoading: approveLoading }] = useApproveClaimMutation();
@@ -266,37 +276,91 @@ const ExpenseApprovalDetailComponent = ({
 
   const claim = data?.message?.data;
 
+  // const handleApprove = () => {
+  //   Alert.alert(
+  //     'Confirm Approval',
+  //     'Are you sure you want to approve this expense claim?',
+  //     [
+  //       { text: 'Cancel', style: 'cancel' },
+  //       {
+  //         text: 'Approve',
+  //         onPress: async () => {
+  //           try {
+  //             await approveClaim({ claim_id: claimId }).unwrap();
+  //             Alert.alert('Success', 'Expense claim approved successfully', [
+  //               { text: 'OK', onPress: () => navigation.goBack() },
+  //             ]);
+  //           } catch (error: any) {
+  //             Alert.alert(
+  //               'Error',
+  //               error?.data?.message || 'Failed to approve claim',
+  //             );
+  //           }
+  //         },
+  //       },
+  //     ],
+  //   );
+  // };
+
+
+  // ─── Replace handleApprove ────────────────────────────────────────────────
   const handleApprove = () => {
-    Alert.alert(
-      'Confirm Approval',
-      'Are you sure you want to approve this expense claim?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Approve',
-          onPress: async () => {
-            try {
-              await approveClaim({ claim_id: claimId }).unwrap();
-              Alert.alert('Success', 'Expense claim approved successfully', [
-                { text: 'OK', onPress: () => navigation.goBack() },
-              ]);
-            } catch (error: any) {
-              Alert.alert(
-                'Error',
-                error?.data?.message || 'Failed to approve claim',
-              );
-            }
-          },
-        },
-      ],
-    );
+    setApproveModalVisible(true);
+  };
+
+  const handleConfirmApprove = async () => {
+    try {
+      let payload = {
+        claim_id: claimId,
+        bike_over_100: approvalFlags.bike_over_100 ? 1 : 0,
+        extra: approvalFlags.extra ? 1 : 0,
+        promotional: approvalFlags.promotional ? 1 : 0,
+      }
+      console.log("🚀 ~ handleConfirmApprove ~ payload:", payload)
+      const res = await approveClaim(payload).unwrap();
+      console.log("🚀 ~ handleConfirmApprove ~ res:", res)
+
+      if (res?.message?.status === 'success') {
+        setApproveModalVisible(false);
+        setApprovalFlags({ bike_over_100: false, extra: false, promotional: false });
+        Toast.show({
+          type: 'success',
+          text1: 'Claim Approved',
+          text2: 'Expense claim approved successfully',
+          // position: 'bottom',
+          // visibilityTime: 2000,
+          onHide: () => navigation.goBack(),
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Approval Failed',
+          text2: res?.message?.message || 'Failed to approve claim',
+          // position: 'bottom',
+          // visibilityTime: 3000,
+        });
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error?.data?.message || 'Failed to approve claim',
+        // position: 'bottom',
+        // visibilityTime: 3000,
+      });
+    }
   };
 
   const handleReject = () => {
     if (!rejectReason.trim()) {
-      Alert.alert('Required', 'Please enter a reason for rejection');
+      Toast.show({
+        type: 'error',
+        text1: 'Required',
+        text2: 'Please enter a reason for rejection',
+      });
       return;
     }
+
     Alert.alert(
       'Confirm Rejection',
       'Are you sure you want to reject this expense claim?',
@@ -311,21 +375,24 @@ const ExpenseApprovalDetailComponent = ({
                 claim_id: claimId,
                 reason: rejectReason,
               }).unwrap();
-              Alert.alert('Success', 'Expense claim rejected successfully', [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    setRejectModalVisible(false);
-                    setRejectReason('');
-                    navigation.goBack();
-                  },
-                },
-              ]);
+              setRejectModalVisible(false);
+              setRejectReason('');
+              Toast.show({
+                type: 'success',
+                text1: 'Claim Rejected',
+                text2: 'Expense claim rejected successfully',
+                // position: 'bottom',
+                // visibilityTime: 2000,
+                // onHide: () => navigation.goBack(),
+              });
             } catch (error: any) {
-              Alert.alert(
-                'Error',
-                error?.data?.message || 'Failed to reject claim',
-              );
+              Toast.show({
+                type: 'error',
+                text1: 'Rejection Failed',
+                text2: error?.data?.message || 'Failed to reject claim',
+                // position: 'bottom',
+                // visibilityTime: 3000,
+              });
             }
           },
         },
@@ -796,6 +863,129 @@ const ExpenseApprovalDetailComponent = ({
           </View>
         </View>
       </Modal>
+
+      {/* ── Approve Modal ───────────────────────────────────────── */}
+      <Modal
+        visible={approveModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setApproveModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalDragHandle} />
+
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <View style={[styles.modalIconCircle, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>Approve Expense Claim</Text>
+                <Text style={styles.modalSubtitle}>#{claimId}</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setApproveModalVisible(false)}>
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Section Label */}
+            <View style={approveStyles.sectionLabelRow}>
+              <Ionicons name="shield-checkmark-outline" size={14} color="#6366f1" />
+              <Text style={approveStyles.sectionLabel}>Approvals & Exceptions</Text>
+            </View>
+
+            {/* Checkbox Items */}
+            {[
+              {
+                key: 'bike_over_100' as const,
+                icon: 'bicycle-outline',
+                iconColor: '#0ea5e9',
+                iconBg: '#e0f2fe',
+                title: 'Approve Long Distance Bike Travel',
+                sub: 'Allows full payment for bike travel > 100km',
+              },
+              {
+                key: 'extra' as const,
+                icon: 'bed-outline',
+                iconColor: '#f97316',
+                iconBg: '#fff7ed',
+                title: 'Approve Policy Exception',
+                sub: 'Allows extra hotel costs or self-arranged stays',
+              },
+              {
+                key: 'promotional' as const,
+                icon: 'megaphone-outline',
+                iconColor: '#8b5cf6',
+                iconBg: '#f5f3ff',
+                title: 'Approve Promotional/BTL Expense',
+                sub: 'Allows reimbursement for marketing materials',
+              },
+            ].map((item, idx, arr) => (
+              <TouchableOpacity
+                key={item.key}
+                style={[
+                  approveStyles.checkRow,
+                  approvalFlags[item.key] && approveStyles.checkRowActive,
+                  idx === arr.length - 1 && { marginBottom: 0 },
+                ]}
+                onPress={() =>
+                  setApprovalFlags(prev => ({ ...prev, [item.key]: !prev[item.key] }))
+                }
+                activeOpacity={0.7}>
+                {/* Left icon */}
+                <View style={[approveStyles.itemIcon, { backgroundColor: item.iconBg }]}>
+                  <Ionicons name={item.icon as any} size={18} color={item.iconColor} />
+                </View>
+
+                {/* Text */}
+                <View style={{ flex: 1 }}>
+                  <Text style={approveStyles.checkTitle}>{item.title}</Text>
+                  <Text style={approveStyles.checkSub}>{item.sub}</Text>
+                </View>
+
+                {/* Checkbox */}
+                <View
+                  style={[
+                    approveStyles.checkbox,
+                    approvalFlags[item.key] && approveStyles.checkboxChecked,
+                  ]}>
+                  {approvalFlags[item.key] && (
+                    <Ionicons name="checkmark" size={13} color="#fff" />
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))}
+
+            {/* Footer */}
+            <View style={[styles.modalFooter, { marginTop: 20 }]}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => {
+                  setApproveModalVisible(false);
+                  setApprovalFlags({ bike_over_100: false, extra: false, promotional: false });
+                }}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalConfirmBtn, { backgroundColor: '#16a34a', borderColor: '#16a34a' }]}
+                onPress={handleConfirmApprove}
+                disabled={approveLoading}>
+                {approveLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle" size={16} color="#fff" />
+                    <Text style={styles.modalConfirmText}>Confirm Approval</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -803,7 +993,69 @@ const ExpenseApprovalDetailComponent = ({
 export default ExpenseApprovalDetailComponent;
 
 // ─── Styles ────────────────────────────────────────────────────────────────
-
+const approveStyles = StyleSheet.create({
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366f1',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+    marginBottom: 10,
+  },
+  checkRowActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
+  },
+  itemIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  checkSub: {
+    fontSize: 11,
+    color: '#64748b',
+    lineHeight: 15,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
+  },
+});
 const styles = StyleSheet.create({
   container: {
     flex: 1,

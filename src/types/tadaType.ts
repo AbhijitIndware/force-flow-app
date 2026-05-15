@@ -314,6 +314,9 @@ export interface SubmitExpenseClaimResponse {
 
 export interface ApproveClaimPayload {
   claim_id: string;
+  bike_over_100: number,
+  extra: number,
+  promotional: number
 }
 
 export interface ApproveClaimResponse {
