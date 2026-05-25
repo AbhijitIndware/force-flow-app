@@ -39,6 +39,7 @@ interface Props {
   allItems: StockDashboardItem[];
   isStockFetching: boolean;
   stockWarning?: string;
+  onShowRules?: () => void;
 }
 
 const AddSaleForm: React.FC<Props> = ({
@@ -54,6 +55,7 @@ const AddSaleForm: React.FC<Props> = ({
   seededCount = 0,
   allItems,
   isStockFetching,
+  onShowRules,
 }) => {
   const [itemLockMap, setItemLockMap] = useState<Record<number, boolean>>({});
 
@@ -131,7 +133,7 @@ const AddSaleForm: React.FC<Props> = ({
           value={values.custom_warehouse}
           data={warehouseList}
           onChange={(val: string) => setFieldValue('custom_warehouse', val)}
-          marginBottom={selectedStoreOutstanding > 0 ? 5 : 15}
+          marginBottom={selectedStoreOutstanding > 0 ? 5 : 0}
         />
         {selectedStoreOutstanding > 0 ? (
           <View style={styles.outstandingCard}>
@@ -144,6 +146,13 @@ const AddSaleForm: React.FC<Props> = ({
       </View>
 
       <View style={styles.tableSection}>
+        {/* Stock Rules Link */}
+        <TouchableOpacity style={styles.rulesTextLink} onPress={onShowRules}>
+          <Text style={styles.rulesTextLinkText}>
+            📌 View Stock Update Rules
+          </Text>
+        </TouchableOpacity>
+
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={true}
@@ -283,8 +292,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   addMoreText: {color: Colors.orange, fontFamily: Fonts.semiBold, fontSize: 13},
+  rulesTextLink: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  rulesTextLinkText: {
+    color: '#DC2626',
+    fontFamily: Fonts.semiBold,
+    fontSize: 13,
+  },
   outstandingCard: {
-    marginBottom: 12,
+    marginBottom: 5,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 10,

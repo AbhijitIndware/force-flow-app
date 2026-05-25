@@ -8,6 +8,7 @@ import {
   Animated,
   View,
   Dimensions,
+  Modal,
 } from 'react-native';
 import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
@@ -33,6 +34,7 @@ import {useAppSelector} from '../../../store/hook';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {getStoreLabel} from '../../../utils/utils';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const {width} = Dimensions.get('window');
 
@@ -77,6 +79,7 @@ const initial: IAddSalesOrderV2 = {
 const AddSaleScreen = ({navigation, route}: Props) => {
   const [loading, setLoading] = useState(false);
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
   type DateField = 'transaction_date' | 'delivery_date';
   const [activeField, setActiveField] = useState<DateField | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -217,9 +220,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     setSelectedStoreId(salesDetails?.message?.data?.store_details?.store);
 
     const detail = salesDetails.message.data;
-    console.log('🚀 ~ AddSaleScreen ~ detail:', detail);
     const allStockItems = stockData?.message?.previous_items ?? [];
-    console.log('🚀 ~ AddSaleScreen ~ allStockItems:', allStockItems);
 
     const mergedItems = detail.items.map(it => {
       const stockItem = allStockItems.find(s => s.item_code === it.item_code);
@@ -331,6 +332,64 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         </View>
       )}
 
+      {/* Stock Rules Modal */}
+      <Modal
+        transparent
+        visible={showRulesModal}
+        animationType="fade"
+        onRequestClose={() => setShowRulesModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.rulesModal}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>📌 Stock Update Rules</Text>
+              <TouchableOpacity onPress={() => setShowRulesModal(false)}>
+                <Ionicons name="close" size={24} color={Colors.black} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Modal Content */}
+            <View style={styles.modalContent}>
+              <View style={styles.ruleItem}>
+                <Text style={styles.ruleNumber}>•</Text>
+                <Text style={styles.ruleText}>
+                  For any Existing/Previous item, you must audit the physical
+                  stock before ordering.
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Text style={styles.ruleNumber}>•</Text>
+                <Text style={styles.ruleText}>
+                  If the item has stock: Enter the exact quantity.
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Text style={styles.ruleNumber}>•</Text>
+                <Text style={styles.ruleText}>
+                  If the item is completely out of stock: Enter 0.
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Text style={styles.ruleNumber}>•</Text>
+                <Text style={styles.ruleText}>
+                  Do not leave the stock box blank for existing items.
+                </Text>
+              </View>
+            </View>
+
+            {/* Modal Footer */}
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setShowRulesModal(false)}>
+              <Text style={styles.modalCloseBtnText}>Got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <AddSaleForm
         values={values}
         errors={errors}
@@ -349,6 +408,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
         allItems={allItems}
         isStockFetching={isStockFetching}
         stockWarning={stockWarning}
+        onShowRules={() => setShowRulesModal(true)}
       />
 
       <View
@@ -420,4 +480,69 @@ const styles = StyleSheet.create({
     borderBottomColor: '#BFDBFE',
   },
   seedingText: {fontFamily: Fonts.regular, fontSize: Size.xs, color: '#1D4ED8'},
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  rulesModal: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    marginHorizontal: 20,
+    maxHeight: '80%',
+    minHeight: '50%',
+    width: '90%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.black,
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 16,
+  },
+  ruleItem: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  ruleNumber: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.orange,
+    marginTop: 2,
+  },
+  ruleText: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: '#4B5563',
+    lineHeight: 20,
+  },
+  modalCloseBtn: {
+    backgroundColor: Colors.orange,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  modalCloseBtnText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
+  },
 });
