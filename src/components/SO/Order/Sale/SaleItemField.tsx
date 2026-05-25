@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,11 @@ import {
   TextInput,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Fonts } from '../../../../constants';
-import { StockDashboardItem } from '../../../../types/baseType';
-import { flexRow } from '../../../../utils/styles';
+import {Fonts} from '../../../../constants';
+import {StockDashboardItem} from '../../../../types/baseType';
+import {flexRow} from '../../../../utils/styles';
 import SaleItemDropdown from '../../../ui-lib/sale-item-dropdown';
-import { Size } from '../../../../utils/fontSize';
+import {Size} from '../../../../utils/fontSize';
 
 const COLUMN_WIDTHS = {
   item: 170,
@@ -83,7 +83,7 @@ export const SaleItemField: React.FC<Props> = ({
         stockInfo?.has_history && styles.lockedRow,
       ]}>
       {/* --- Item Dropdown OR Text --- */}
-      <View style={[styles.col, { width: COLUMN_WIDTHS.item }]}>
+      <View style={[styles.col, {width: COLUMN_WIDTHS.item}]}>
         {stockInfo?.has_history && (
           <View style={styles.floatingBadge}>
             <Text style={styles.badgeText}>Prev</Text>
@@ -119,18 +119,24 @@ export const SaleItemField: React.FC<Props> = ({
           <View style={styles.col}>
             <Text style={styles.stockLabel}>
               Opening:{' '}
-              <Text style={styles.boldText}>{stockInfo?.opening_stock ?? 0}</Text>
+              <Text style={styles.boldText}>
+                {stockInfo?.opening_stock ?? 0}
+              </Text>
             </Text>
             <Text style={styles.stockLabel}>
               Current:{' '}
-              <Text style={styles.boldText}>{stockInfo?.current_stock ?? 0}</Text>
+              <Text style={styles.boldText}>
+                {stockInfo?.current_stock ?? 0}
+              </Text>
             </Text>
           </View>
 
           <View style={styles.col}>
             <Text style={styles.stockLabel}>
               MTD:{' '}
-              <Text style={styles.boldText}>{stockInfo?.mtd_territory ?? 0}</Text>
+              <Text style={styles.boldText}>
+                {stockInfo?.mtd_territory ?? 0}
+              </Text>
             </Text>
             <Text style={styles.stockLabel}>
               New:{' '}
@@ -165,7 +171,7 @@ export const SaleItemField: React.FC<Props> = ({
         </View>
       </View>*/}
       {/* --- Physical Qty --- */}
-      <View style={[styles.col, { width: COLUMN_WIDTHS.qty }]}>
+      <View style={[styles.col, {width: COLUMN_WIDTHS.qty}]}>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -176,7 +182,7 @@ export const SaleItemField: React.FC<Props> = ({
       </View>
 
       {/* --- Order Qty --- */}
-      <View style={[styles.col, { width: COLUMN_WIDTHS.qty }]}>
+      <View style={[styles.col, {width: COLUMN_WIDTHS.qty}]}>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -187,7 +193,7 @@ export const SaleItemField: React.FC<Props> = ({
       </View>
 
       {/* --- Rate --- */}
-      <View style={[styles.col, { width: COLUMN_WIDTHS.rate }]}>
+      <View style={[styles.col, {width: COLUMN_WIDTHS.rate}]}>
         <TextInput
           style={[styles.input, !canOrder && styles.inputDisabled]}
           editable={canOrder}
@@ -199,7 +205,7 @@ export const SaleItemField: React.FC<Props> = ({
       </View>
 
       {/* --- Amount --- */}
-      <View style={[styles.col, { width: COLUMN_WIDTHS.amount }]}>
+      <View style={[styles.col, {width: COLUMN_WIDTHS.amount}]}>
         <Text style={styles.amountText}>
           ₹
           {((item.qty || 0) * (item.rate || 0)).toLocaleString(undefined, {
@@ -212,7 +218,7 @@ export const SaleItemField: React.FC<Props> = ({
       {/* --- Delete --- */}
       <TouchableOpacity
         onPress={() => removeItem(index)}
-        style={[styles.col, { width: COLUMN_WIDTHS.action }]}>
+        style={[styles.col, {width: COLUMN_WIDTHS.action}]}>
         <Ionicons name="trash-outline" size={18} color="#dc2626" />
       </TouchableOpacity>
     </View>
@@ -227,10 +233,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
   },
-  evenRow: { backgroundColor: '#fff' },
-  oddRow: { backgroundColor: '#f9fafb' },
-  lockedRow: { backgroundColor: '#fffbeb' },
-  col: { paddingHorizontal: 6 },
+  evenRow: {backgroundColor: '#fff'},
+  oddRow: {backgroundColor: '#f9fafb'},
+  lockedRow: {backgroundColor: '#fffbeb'},
+  col: {paddingHorizontal: 6},
   floatingBadge: {
     position: 'absolute',
     top: -7,
@@ -239,8 +245,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderRadius: 3,
   },
-  badgeText: { color: '#fff', fontSize: 9 },
-  stockLabel: { fontSize: 10, color: '#6b7280' },
+  badgeText: {color: '#fff', fontSize: 9},
+  stockLabel: {fontSize: 10, color: '#6b7280'},
   itemTextContainer: {
     paddingVertical: 2,
     paddingHorizontal: 4,
@@ -259,14 +265,14 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#d1d5db',
-    height: 35,
+    height: 39,
     textAlign: 'center',
     borderRadius: 4,
     fontSize: Size.xxs,
-    color: '#000'
+    color: '#000',
   },
-  inputDisabled: { backgroundColor: '#f3f4f6' },
-  amountText: { fontSize: 12, fontFamily: Fonts.semiBold },
+  inputDisabled: {backgroundColor: '#f3f4f6'},
+  amountText: {fontSize: 12, fontFamily: Fonts.semiBold},
   boldText: {
     fontWeight: 'bold',
   },

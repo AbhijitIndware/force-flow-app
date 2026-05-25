@@ -41,7 +41,7 @@ const SaleItemDropdown: React.FC<SaleItemDropdownProps> = ({
         selectedId={value ? String(value) : null}
         setSelectedId={onChange}
         name={field}
-        height={34}
+        // height={34}
         onLoadMore={onLoadMore}
         loadingMore={loadingMore}
         searchText={searchText}
@@ -49,6 +49,8 @@ const SaleItemDropdown: React.FC<SaleItemDropdownProps> = ({
         disabled={disabled}
         clearTextAfterSearch={true}
         textSize={Size.xxs}
+        height={30}
+        // marginBottom={0}
       />
     </View>
   );

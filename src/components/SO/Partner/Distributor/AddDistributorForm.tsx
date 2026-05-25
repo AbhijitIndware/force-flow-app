@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 // AddDistributorForm.tsx
 import React from 'react';
-import {Animated} from 'react-native';
+import {Animated, View} from 'react-native';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 
@@ -116,6 +116,7 @@ const AddDistributorForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
+      {/* Distributor Name (Full Width) */}
       <ReusableInput
         label="Distributor Name"
         value={values.distributor_name}
@@ -123,13 +124,8 @@ const AddDistributorForm: React.FC<Props> = ({
         onBlur={() => handleBlur('distributor_name')}
         error={touched.distributor_name && errors.distributor_name}
       />
-      <ReusableInput
-        label="SAP Code"
-        value={values.distributor_sap_code}
-        onChangeText={handleChange('distributor_sap_code')}
-        onBlur={() => handleBlur('distributor_sap_code')}
-        error={touched.distributor_sap_code && errors.distributor_sap_code}
-      />
+
+      {/* Group (Full Width) */}
       <ReusableDropdown
         label="Group"
         field="distributor_group"
@@ -142,6 +138,8 @@ const AddDistributorForm: React.FC<Props> = ({
         searchText={distributorGroupSearchText}
         setSearchText={setDistributorGroupSearchText}
       />
+
+      {/* Employee (Full Width) */}
       <ReusableDropdown
         label="Employee"
         field="employee"
@@ -154,85 +152,126 @@ const AddDistributorForm: React.FC<Props> = ({
         searchText={employeeSearchText}
         setSearchText={setEmployeeSearchText}
       />
-      <ReusableDropdown
-        label="Zone"
-        field="zone"
-        value={values.zone}
-        data={zoneList}
-        error={touched.zone && errors.zone}
-        onChange={(val: string) => onSelect('zone', val)}
-        onLoadMore={onLoadMoreZone}
-        loadingMore={loadingMoreZone}
-        searchText={zoneSearchText}
-        setSearchText={setZoneSearchText}
-      />
-      <ReusableDropdown
-        label="State"
-        field="state"
-        value={values.state}
-        data={stateList}
-        error={touched.state && errors.state}
-        onChange={(val: string) => onSelect('state', val)}
-        onLoadMore={onLoadMoreState}
-        loadingMore={loadingMoreState}
-        searchText={stateSearchText}
-        setSearchText={setStateSearchText}
-      />
-      <ReusableDropdown
-        label="City"
-        field="city"
-        value={values.city}
-        data={cityList}
-        error={touched.city && errors.city}
-        onChange={(val: string) => onSelect('city', val)}
-        onLoadMore={onLoadMoreCity}
-        loadingMore={loadingMoreCity}
-        searchText={citySearchText}
-        setSearchText={setCitySearchText}
-      />
-      <ReusableDropdown
-        label="Reports To"
-        field="reports_to"
-        value={values.reports_to}
-        data={employeeList}
-        error={touched.reports_to && errors.reports_to}
-        onChange={(val: string) => onSelect('reports_to', val)}
-      />
-      <ReusableDropdown
-        label="Designation"
-        field="designation"
-        value={values.designation}
-        data={designationList}
-        error={touched.designation && errors.designation}
-        onChange={(val: string) => onSelect('designation', val)}
-        onLoadMore={onLoadMoreDesignation}
-        loadingMore={loadingMoreDesignation}
-        searchText={designationSearchText}
-        setSearchText={setDesignationSearchText}
-      />
-      <ReusableInput
-        label="Distributor Code"
-        value={values.distributor_code}
-        onChangeText={handleChange('distributor_code')}
-        onBlur={() => handleBlur('distributor_code')}
-        error={touched.distributor_code && errors.distributor_code}
-      />
-      <ReusableInput
-        label="Mobile"
-        value={values.mobile}
-        onChangeText={handleChange('mobile')}
-        onBlur={() => handleBlur('mobile')}
-        error={touched.mobile && errors.mobile}
-        keyboardType="numeric"
-      />
-      <ReusableInput
-        label="Email"
-        value={values.email}
-        onChangeText={handleChange('email')}
-        onBlur={() => handleBlur('email')}
-        error={touched.email && errors.email}
-        keyboardType="email-address"
-      />
+
+      {/* Zone, State, City (3 Columns) */}
+      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
+        <View style={{flex: 1}}>
+          <ReusableDropdown
+            label="Zone"
+            field="zone"
+            value={values.zone}
+            data={zoneList}
+            error={touched.zone && errors.zone}
+            onChange={(val: string) => onSelect('zone', val)}
+            onLoadMore={onLoadMoreZone}
+            loadingMore={loadingMoreZone}
+            searchText={zoneSearchText}
+            setSearchText={setZoneSearchText}
+          />
+        </View>
+        <View style={{flex: 1}}>
+          <ReusableDropdown
+            label="State"
+            field="state"
+            value={values.state}
+            data={stateList}
+            error={touched.state && errors.state}
+            onChange={(val: string) => onSelect('state', val)}
+            onLoadMore={onLoadMoreState}
+            loadingMore={loadingMoreState}
+            searchText={stateSearchText}
+            setSearchText={setStateSearchText}
+          />
+        </View>
+        <View style={{flex: 1}}>
+          <ReusableDropdown
+            label="City"
+            field="city"
+            value={values.city}
+            data={cityList}
+            error={touched.city && errors.city}
+            onChange={(val: string) => onSelect('city', val)}
+            onLoadMore={onLoadMoreCity}
+            loadingMore={loadingMoreCity}
+            searchText={citySearchText}
+            setSearchText={setCitySearchText}
+          />
+        </View>
+      </View>
+
+      {/* Email and Mobile (2 Columns) */}
+      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
+        <View style={{flex: 1}}>
+          <ReusableInput
+            label="Email"
+            value={values.email}
+            onChangeText={handleChange('email')}
+            onBlur={() => handleBlur('email')}
+            error={touched.email && errors.email}
+            keyboardType="email-address"
+          />
+        </View>
+        <View style={{flex: 1}}>
+          <ReusableInput
+            label="Mobile"
+            value={values.mobile}
+            onChangeText={handleChange('mobile')}
+            onBlur={() => handleBlur('mobile')}
+            error={touched.mobile && errors.mobile}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+
+      {/* SAP Code and Distributor Code (2 Columns) */}
+      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
+        <View style={{flex: 1}}>
+          <ReusableInput
+            label="SAP Code"
+            value={values.distributor_sap_code}
+            onChangeText={handleChange('distributor_sap_code')}
+            onBlur={() => handleBlur('distributor_sap_code')}
+            error={touched.distributor_sap_code && errors.distributor_sap_code}
+          />
+        </View>
+        <View style={{flex: 1}}>
+          <ReusableInput
+            label="Distributor Code"
+            value={values.distributor_code}
+            onChangeText={handleChange('distributor_code')}
+            onBlur={() => handleBlur('distributor_code')}
+            error={touched.distributor_code && errors.distributor_code}
+          />
+        </View>
+      </View>
+
+      {/* Reports To and Designation (2 Columns) */}
+      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
+        <View style={{flex: 1}}>
+          <ReusableDropdown
+            label="Reports To"
+            field="reports_to"
+            value={values.reports_to}
+            data={employeeList}
+            error={touched.reports_to && errors.reports_to}
+            onChange={(val: string) => onSelect('reports_to', val)}
+          />
+        </View>
+        <View style={{flex: 1}}>
+          <ReusableDropdown
+            label="Designation"
+            field="designation"
+            value={values.designation}
+            data={designationList}
+            error={touched.designation && errors.designation}
+            onChange={(val: string) => onSelect('designation', val)}
+            onLoadMore={onLoadMoreDesignation}
+            loadingMore={loadingMoreDesignation}
+            searchText={designationSearchText}
+            setSearchText={setDesignationSearchText}
+          />
+        </View>
+      </View>
     </Animated.ScrollView>
   );
 };
