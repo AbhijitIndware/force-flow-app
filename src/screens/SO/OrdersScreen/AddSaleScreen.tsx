@@ -59,9 +59,9 @@ const mapSalesDetailToForm = (detail: RSoDetailData): IAddSalesOrderV2 => ({
 
 const EMPTY_ITEM = {
   item_code: '',
-  qty: 0,
+  qty: '',
   rate: 0,
-  physical_qty: 0,
+  physical_qty: '',
   delivery_date: moment().add(7, 'days').format('YYYY-MM-DD'),
 };
 
@@ -191,9 +191,9 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     if (previousItems.length > 0) {
       const seededItems = previousItems.map(i => ({
         item_code: i.item_code,
-        qty: 0,
+        qty: '',
         rate: i.item_rate ?? 0,
-        physical_qty: 0,
+        physical_qty: '',
         delivery_date: defaultDate,
       }));
       setFieldValue('items', [...seededItems]);
@@ -217,16 +217,18 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     setSelectedStoreId(salesDetails?.message?.data?.store_details?.store);
 
     const detail = salesDetails.message.data;
+    console.log('🚀 ~ AddSaleScreen ~ detail:', detail);
     const allStockItems = stockData?.message?.previous_items ?? [];
+    console.log('🚀 ~ AddSaleScreen ~ allStockItems:', allStockItems);
 
     const mergedItems = detail.items.map(it => {
       const stockItem = allStockItems.find(s => s.item_code === it.item_code);
       return {
         item_code: it.item_code,
-        qty: it.qty,
+        qty: it.qty || '',
         rate: it.rate,
         delivery_date: it.delivery_date,
-        physical_qty: it?.physical_qty ?? 0,
+        physical_qty: it?.physical_qty ?? '',
       };
     });
 

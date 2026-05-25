@@ -175,7 +175,7 @@ export const SaleItemField: React.FC<Props> = ({
         <TextInput
           style={styles.input}
           keyboardType="numeric"
-          value={item.physical_qty === 0 ? '' : String(item.physical_qty)}
+          value={String(item.physical_qty)}
           onChangeText={v => handleChange('physical_qty', v)}
           placeholder="0"
         />
@@ -186,7 +186,7 @@ export const SaleItemField: React.FC<Props> = ({
         <TextInput
           style={styles.input}
           keyboardType="numeric"
-          value={item.qty === 0 ? '' : String(item.qty)}
+          value={String(item.qty)}
           onChangeText={v => handleChange('qty', v)}
           placeholder="0"
         />

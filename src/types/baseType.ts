@@ -1,4 +1,4 @@
-import { ApiResponse, Filters, PaginationInfo } from './Navigation';
+import {ApiResponse, Filters, PaginationInfo} from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -177,7 +177,7 @@ export type StoreData = {
   actions: StoreActions;
   times: StoreTimes;
   targets: StoreTargets;
-  store_name: string
+  store_name: string;
 };
 export type RPjpInitialize = {
   message: {
@@ -275,7 +275,7 @@ export type ICheckOut = {
 };
 export type IMarkActivity = {
   store: string;
-  activity_type: { activity_type: string }[];
+  activity_type: {activity_type: string}[];
 };
 
 export interface IAddDistributorResponse extends ApiResponse {
@@ -408,18 +408,18 @@ export type RAddSalesOrder = {
 
 export type IAddSalesOrderV2 = {
   customer?: string;
-  transaction_date?: string;    // ISO date string — defaults to today
-  delivery_date?: string;       // ISO date string — defaults to today + 7 days
-  custom_warehouse: string;     // store's warehouse ID — REQUIRED
-  terms?: string | null;               // terms and conditions name
-  submit_order?: boolean;       // defaults to false (keep as Draft)
+  transaction_date?: string; // ISO date string — defaults to today
+  delivery_date?: string; // ISO date string — defaults to today + 7 days
+  custom_warehouse: string; // store's warehouse ID — REQUIRED
+  terms?: string | null; // terms and conditions name
+  submit_order?: boolean; // defaults to false (keep as Draft)
   items: {
     item_code: string;
-    qty: number;                // order quantity
+    qty: string | number; // order quantity
     rate: number;
-    physical_qty?: number;      // required for items with stock history
+    physical_qty?: string | number; // required for items with stock history
     // unless already counted today (Rule 3)
-    delivery_date?: string;     // per-item override
+    delivery_date?: string; // per-item override
   }[];
 };
 export type RAddSalesOrderV2 = {
@@ -445,14 +445,14 @@ export type RAddSalesOrderV2 = {
     // ── Rule 1 violation payload ──────────────────────────────────────
     blocked_items?: string[];
   };
-}
+};
 
 // 🔹 Update type
 type OrderItem = {
   item_code: string;
   qty: number | string;
   physical_qty?: number | string;
-  delivery_date?: string;             // order quantity
+  delivery_date?: string; // order quantity
   rate: number;
 };
 export type IUpdateSalesOrder = {
@@ -535,7 +535,7 @@ export type RPoList = {
 };
 
 export interface POOrderDetails {
-  created_by: string
+  created_by: string;
   order_id: string;
   supplier: string;
   supplier_name: string;
@@ -552,7 +552,7 @@ export interface POOrderDetails {
   creation: string; // datetime string
   modified: string; // datetime string
   docstatus: number;
-  workflow_state: string
+  workflow_state: string;
 }
 export interface POOrderItem {
   item_code: string;
@@ -598,7 +598,6 @@ export interface POOrderData {
     grand_total: number;
   }[]; // can replace `any` with correct type if structure is known
   totals: Totals;
-
 
   linked_ddns: LinkedDDN[];
 }
@@ -816,7 +815,6 @@ export interface RLastPjpStores {
     last_pjp_name: string;
   };
 }
-
 
 //Partner
 export interface Store {
@@ -1177,7 +1175,7 @@ export interface EmployeeData {
 
 //Expense
 export type RExpenseClaimType = {
-  data: { name: string }[];
+  data: {name: string}[];
 };
 
 export type ClaimData = {
@@ -1188,7 +1186,7 @@ export type ClaimData = {
   sanctioned: number;
 };
 export type RExpenseClaimByEmp = {
-  message: { data: ClaimData[] };
+  message: {data: ClaimData[]};
 };
 
 export interface IExpenseItem {
@@ -1340,7 +1338,7 @@ export type PromoterAttendanceData = {
 
   assigned_store: any;
   attendance_date: string;
-  checkin_records: { check_in: null; check_out: null };
+  checkin_records: {check_in: null; check_out: null};
   employee: string;
   employee_name: string;
   message: string;
@@ -1790,7 +1788,7 @@ export interface AsmKeyMetrics {
   orders_delivered: number;
   delivery_rate: number;
   store_created_success: number;
-  store_created: number
+  store_created: number;
 }
 
 export interface AsmStorePlanning {
@@ -1876,7 +1874,6 @@ export interface AsmDashboardParams {
   employee: string; // format: 'HR-EMP-XXXXX'
 }
 
-
 type AsmAttendanceRecord = {
   employee_id: string;
   employee_name: string;
@@ -1911,8 +1908,6 @@ export type AsmAttendanceResponse = {
   records: AsmAttendanceRecord[];
 };
 
-
-
 // ─── Target vs Achievement — Types ───────────────────────────────────────────
 
 export type TargetSource = 'personal' | 'global';
@@ -1920,8 +1915,8 @@ export type TargetSource = 'personal' | 'global';
 // ── API 1: GET — Fetch Employee Targets ─────────────────────────────────────
 
 export interface IGetEmployeeTargetsParams {
-  month: number;  // 1–12
-  year: number;   // e.g. 2026
+  month: number; // 1–12
+  year: number; // e.g. 2026
 }
 
 export interface RGetEmployeeTargets {
@@ -1930,7 +1925,7 @@ export interface RGetEmployeeTargets {
     ddn_target: number;
     source: TargetSource;
     record: string | null;
-    period: string;       // "YYYY-MM"
+    period: string; // "YYYY-MM"
   };
 }
 
@@ -1939,8 +1934,8 @@ export interface RGetEmployeeTargets {
 export interface ISetEmployeeTargets {
   sales_target: number;
   ddn_target: number;
-  month: number;  // 1–12
-  year: number;   // e.g. 2026
+  month: number; // 1–12
+  year: number; // e.g. 2026
 }
 
 export interface RSetEmployeeTargets {
@@ -1954,12 +1949,12 @@ export interface RSetEmployeeTargets {
 // ── API 3: POST — SO Stats ───────────────────────────────────────────────────
 
 export interface ISoStatsParams {
-  from_date: string;  // "YYYY-MM-DD"
-  to_date: string;    // "YYYY-MM-DD"
+  from_date: string; // "YYYY-MM-DD"
+  to_date: string; // "YYYY-MM-DD"
 }
 
 export interface SoByStatus {
-  state: string;  // e.g. "Approved"
+  state: string; // e.g. "Approved"
   count: number;
   value: number;
 }
@@ -1967,7 +1962,7 @@ export interface SoByStatus {
 export interface RGetSoStats {
   message: {
     count: number;
-    value: number;         // total SO value (₹)
+    value: number; // total SO value (₹)
     unique_stores: number;
     by_status: SoByStatus[];
   };
@@ -1983,7 +1978,7 @@ export interface IDdnStatsParams {
 }
 
 export interface DdnByStatus {
-  state: string;  // e.g. "Delivered", "Approved"
+  state: string; // e.g. "Delivered", "Approved"
   count: number;
   value: number;
 }
@@ -1991,10 +1986,10 @@ export interface DdnByStatus {
 export interface RGetDdnStats {
   message: {
     count: number;
-    value: number;               // total DDN value (₹)
+    value: number; // total DDN value (₹)
     unique_stores: number;
     unique_distributors: number;
-    fill_rate: number;           // (del_qty / ord_qty) × 100
+    fill_rate: number; // (del_qty / ord_qty) × 100
     by_status: DdnByStatus[];
   };
 }
@@ -2006,9 +2001,9 @@ export interface TargetAchievementSummary {
   ddn_target: number;
   so_achievement: number;
   ddn_achievement: number;
-  so_pct: number;       // (so_achievement / sales_target) × 100
-  ddn_pct: number;      // (ddn_achievement / ddn_target) × 100
-  so_variance: number;  // +ve = on track, -ve = lagging
+  so_pct: number; // (so_achievement / sales_target) × 100
+  ddn_pct: number; // (ddn_achievement / ddn_target) × 100
+  so_variance: number; // +ve = on track, -ve = lagging
   ddn_variance: number;
 }
 
@@ -2050,7 +2045,7 @@ export type DeliveryNoteResponse = {
       items: Item[];
       totals: DDNTotals;
     };
-  }
+  };
 };
 
 export type OrderDetails = {
@@ -2091,8 +2086,6 @@ export type DDNTotals = {
   total: number;
   grand_total: number;
 };
-
-
 
 // ─── STOCK MANAGEMENT TYPES ──────────────────────────────────────────────────
 
@@ -2250,4 +2243,3 @@ export interface RGetActivityCheckInStatus {
     remarks: string | null;
   };
 }
-
