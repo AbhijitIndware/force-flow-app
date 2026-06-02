@@ -1,5 +1,5 @@
 import React from 'react';
-import {StatusBar, useColorScheme} from 'react-native';
+import {StatusBar, useColorScheme, View} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
@@ -10,22 +10,31 @@ import {toastConfig} from './src/components/ui-lib/custom-toast';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {PaperProvider} from 'react-native-paper';
 import DisclaimerModal from './DisclaimerModal';
+import {useNetworkStatus} from './src/hooks/useNetworkStatus';
+import {SlowNetworkBanner} from './src/components/ui-lib/slow-network-banner';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const networkStatus = useNetworkStatus();
 
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaProvider>
           <PaperProvider>
-            <NavigationContainer>
-              <StatusBar
-                barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+            <View style={{flex: 1}}>
+              <SlowNetworkBanner
+                isVisible={networkStatus.isSlowNetwork}
+                effectiveType={networkStatus.effectiveType}
               />
-              <DisclaimerModal />
-              <MainNavigation />
-            </NavigationContainer>
+              <NavigationContainer>
+                <StatusBar
+                  barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+                />
+                <DisclaimerModal />
+                <MainNavigation />
+              </NavigationContainer>
+            </View>
           </PaperProvider>
           <Toast config={toastConfig} />
         </SafeAreaProvider>
