@@ -40,12 +40,14 @@ const ExpenseApprovalScreen = ({ navigation, route }: Props) => {
         },
       ]}>
       <PageHeader
-        title="Expense & Visibility Approval"
+        title="Expense Approval"
         navigation={() => {
           navigation.navigate('Home');
         }}
       />
-      <View style={styles.tabSection}>
+
+      <ExpenseApprovalListComponent navigation={navigation} />
+      {/* <View style={styles.tabSection}>
         <Tab
           value={index}
           onChange={e => setIndex(e)}
@@ -98,7 +100,7 @@ const ExpenseApprovalScreen = ({ navigation, route }: Props) => {
           style={{ width: '100%', flex: 1, backgroundColor: Colors.lightBg }}>
           <VisibilityApprovalListComponent navigation={navigation} />
         </TabView.Item>
-      </TabView>
+      </TabView> */}
     </SafeAreaView>
   );
 };

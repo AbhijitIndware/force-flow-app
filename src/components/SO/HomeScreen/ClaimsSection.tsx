@@ -107,7 +107,7 @@ export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
           />
         </View>
       </TouchableOpacity>
-      <Divider
+      {/* <Divider
         width={1}
         color={Colors.lightGray}
         style={{ marginBottom: 10, borderStyle: 'dashed' }}
@@ -135,7 +135,7 @@ export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
             color={Colors.darkButton}
           />
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };
