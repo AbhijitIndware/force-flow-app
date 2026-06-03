@@ -103,6 +103,7 @@ export interface Expense {
   mobile_number?: string | null;
   incidental_bill_month?: string | null;
   receipt_url?: string | null;
+  approver_note?: string | null;
 }
 
 export interface Attachment {
@@ -326,6 +327,19 @@ export interface ApproveClaimPayload {
   bike_over_100: number;
   extra: number;
   promotional: number;
+}
+
+export interface ApproverEditClaimRow {
+  row_id: string;
+  sanctioned_amount?: number;
+  approver_note?: string;
+  delete?: boolean;
+}
+
+export interface ApproverEditClaimPayload {
+  claim_id: string;
+  approver_remarks?: string;
+  rows: ApproverEditClaimRow[];
 }
 
 export interface ApproveClaimResponse {

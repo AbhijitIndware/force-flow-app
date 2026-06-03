@@ -32,6 +32,7 @@ import {
   ExpenseClaimsData,
   ApproverExpenseClaimsData,
   CreateExpenseClaim,
+  ApproverEditClaimPayload,
 } from '../../types/tadaType';
 import {baseQueryForTadaWithAuthGuard} from '../utility';
 
@@ -206,6 +207,18 @@ export const tadaApiV2 = createApi({
     >({
       query: body => ({
         url: `${EXPENSE_BASE}.reject_claim`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Approval', 'Expense'],
+    }),
+
+    approverEditClaim: builder.mutation<
+      TadaApiResponse<any>,
+      ApproverEditClaimPayload
+    >({
+      query: body => ({
+        url: `${EXPENSE_BASE}.approver_edit_claim`,
         method: 'POST',
         body,
       }),
@@ -431,6 +444,7 @@ export const {
   useGetClaimDetailQuery,
   useApproveClaimMutation,
   useRejectClaimMutation,
+  useApproverEditClaimMutation,
   useGetApprovalListQuery,
 
   // Phase 3 – Dashboard
