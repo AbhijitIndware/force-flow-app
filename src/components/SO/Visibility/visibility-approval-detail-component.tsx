@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -15,15 +15,15 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   useGetVisibilityClaimDetailsQuery,
   useApproveVisibilityClaimMutation,
   useRejectVisibilityClaimMutation,
 } from '../../../features/tada/tadaApiv2';
-import { imageBaseUrl } from '../../../features/apiBaseUrl';
+import {imageBaseUrl} from '../../../features/apiBaseUrl';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -35,13 +35,13 @@ interface VisibilityApprovalDetailComponentProps {
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
-{
-  Approved: { bg: '#16a34a20', color: '#16a34a', dot: '#22c55e' },
-  Rejected: { bg: '#dc262620', color: '#dc2626', dot: '#f87171' },
-  Submitted: { bg: '#d9770620', color: '#d97706', dot: '#fbbf24' },
-  Pending: { bg: '#6B728020', color: '#6B7280', dot: '#94a3b8' },
-};
+const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
+  {
+    Approved: {bg: '#16a34a20', color: '#16a34a', dot: '#22c55e'},
+    Rejected: {bg: '#dc262620', color: '#dc2626', dot: '#f87171'},
+    Submitted: {bg: '#d9770620', color: '#d97706', dot: '#fbbf24'},
+    Pending: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
+  };
 
 const getStatusCfg = (s: string) =>
   STATUS_CONFIG[s] ?? {
@@ -66,13 +66,13 @@ const InfoRow = ({
   bold?: boolean;
   last?: boolean;
 }) => (
-  <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
+  <View style={[styles.infoRow, last && {borderBottomWidth: 0}]}>
     <Text style={styles.infoLabel}>{label}</Text>
     <Text
       style={[
         styles.infoValue,
-        valueColor ? { color: valueColor } : null,
-        bold ? { fontFamily: Fonts.bold } : null,
+        valueColor ? {color: valueColor} : null,
+        bold ? {fontFamily: Fonts.bold} : null,
       ]}>
       {value || 'N/A'}
     </Text>
@@ -97,7 +97,7 @@ const SectionCard = ({
       <View
         style={[
           styles.sectionIconWrap,
-          iconColor ? { backgroundColor: iconColor + '18' } : null,
+          iconColor ? {backgroundColor: iconColor + '18'} : null,
         ]}>
         <Ionicons
           name={icon}
@@ -121,19 +121,19 @@ const VisibilityApprovalDetailComponent = ({
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showImagePreview, setShowImagePreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
-  const [imageError, setImageError] = useState('');
 
   const isPDF = (image?: string) => {
     return image?.toLowerCase().includes('.pdf');
   };
-  const { data, isLoading, isFetching } = useGetVisibilityClaimDetailsQuery({
+  const {data, isLoading, isFetching} = useGetVisibilityClaimDetailsQuery({
     claim_id: claimId,
   });
   console.log('🚀 ~ VisibilityApprovalDetailComponent ~ data:', data);
-  const [approveClaim, { isLoading: approveLoading }] =
+  const [approveClaim, {isLoading: approveLoading}] =
     useApproveVisibilityClaimMutation();
-  const [rejectClaim, { isLoading: rejectLoading }] =
+  const [rejectClaim, {isLoading: rejectLoading}] =
     useRejectVisibilityClaimMutation();
 
   const claim = data?.message?.data;
@@ -146,7 +146,7 @@ const VisibilityApprovalDetailComponent = ({
         [
           {
             text: 'Cancel',
-            onPress: () => { },
+            onPress: () => {},
             style: 'cancel',
           },
           {
@@ -186,7 +186,7 @@ const VisibilityApprovalDetailComponent = ({
         [
           {
             text: 'Cancel',
-            onPress: () => { },
+            onPress: () => {},
             style: 'cancel',
           },
           {
@@ -246,7 +246,7 @@ const VisibilityApprovalDetailComponent = ({
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}>
+        contentContainerStyle={{paddingBottom: 40}}>
         {/* ── Hero Header ────────────────────────────────────────── */}
         <View style={styles.heroCard}>
           <View style={styles.heroTop}>
@@ -264,10 +264,10 @@ const VisibilityApprovalDetailComponent = ({
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: st.bg, borderColor: st.color },
+                {backgroundColor: st.bg, borderColor: st.color},
               ]}>
-              <View style={[styles.statusDot, { backgroundColor: st.dot }]} />
-              <Text style={[styles.statusText, { color: st.color }]}>
+              <View style={[styles.statusDot, {backgroundColor: st.dot}]} />
+              <Text style={[styles.statusText, {color: st.color}]}>
                 {claim.approval_status}
               </Text>
             </View>
@@ -280,28 +280,6 @@ const VisibilityApprovalDetailComponent = ({
               <Text style={styles.amountTileLabel}>Collection Amount</Text>
               <Text style={styles.amountTileValue}>
                 ₹{claim.collection_amount?.toLocaleString('en-IN') || '0'}
-              </Text>
-            </View>
-
-            <View style={styles.amountArrow}>
-              <Ionicons name="add" size={14} color="#CBD5E1" />
-            </View>
-
-            <View style={[styles.amountTile, styles.amountTileCenter]}>
-              <Text style={styles.amountTileLabel}>Price Difference</Text>
-              <Text style={[styles.amountTileValue, { color: '#16a34a' }]}>
-                ₹{claim.price_difference_amount?.toLocaleString('en-IN') || '0'}
-              </Text>
-            </View>
-
-            <View style={styles.amountArrow}>
-              <Ionicons name="add" size={14} color="#CBD5E1" />
-            </View>
-
-            <View style={styles.amountTile}>
-              <Text style={styles.amountTileLabel}>Damage Claim</Text>
-              <Text style={[styles.amountTileValue, { color: '#dc2626' }]}>
-                ₹{claim.damage_claim?.toLocaleString('en-IN') || '0'}
               </Text>
             </View>
           </View>
@@ -326,6 +304,11 @@ const VisibilityApprovalDetailComponent = ({
           icon="storefront-outline"
           iconColor="#0EA5E9">
           <InfoRow label="Store Name" value={claim.store_name} last />
+          <InfoRow
+            label="Distributor Name"
+            value={claim.distributor_name}
+            last
+          />
         </SectionCard>
 
         {/* ── Claim Details ────────────────────────────────────── */}
@@ -338,15 +321,16 @@ const VisibilityApprovalDetailComponent = ({
             label="Date"
             value={moment(claim.date).format('DD MMM YYYY')}
           />
-          <InfoRow label="Payment Type" value={claim.payment_type} />
+          {/* <InfoRow label="Payment Type" value={claim.payment_type} /> */}
           <InfoRow
             label="Collection Amount"
-            value={`₹ ${claim.collection_amount?.toLocaleString('en-IN') || '0'
-              }`}
+            value={`₹ ${
+              claim.collection_amount?.toLocaleString('en-IN') || '0'
+            }`}
             valueColor="#16a34a"
             bold
           />
-          <InfoRow
+          {/* <InfoRow
             label="Price Difference"
             value={`₹ ${claim.price_difference_amount?.toLocaleString('en-IN') || '0'
               }`}
@@ -354,21 +338,23 @@ const VisibilityApprovalDetailComponent = ({
           <InfoRow
             label="Damage Claim"
             value={`₹ ${claim.damage_claim?.toLocaleString('en-IN') || '0'}`}
-          />
-          {claim?.visibility_image && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Claim Receipt</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setImageError('');
-                  setShowImagePreview(true);
-                }}
-                style={styles.receiptBtn}>
-                <Ionicons name="attach-outline" size={11} color="#2563eb" />
-                <Text style={styles.receiptText}>View Receipt</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          /> */}
+
+          {claim?.attachments &&
+            claim?.attachments?.map((attachment, index) => (
+              <View style={styles.infoRow} key={index}>
+                <Text style={styles.infoLabel}>Claim Image {index + 1}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setPreviewImage(attachment);
+                    setShowImagePreview(true);
+                  }}
+                  style={styles.receiptBtn}>
+                  <Ionicons name="attach-outline" size={11} color="#2563eb" />
+                  <Text style={styles.receiptText}>View Image</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
         </SectionCard>
 
         {/* ── Action Buttons ───────────────────────────────────── */}
@@ -437,20 +423,17 @@ const VisibilityApprovalDetailComponent = ({
             </View>
 
             <View style={styles.previewContainer}>
-              {data?.message?.data?.visibility_image ? (
-                isPDF(data?.message?.data?.visibility_image) ? (
+              {previewImage ? (
+                isPDF(previewImage) ? (
                   <View style={styles.pdfPreviewContainer}>
                     <Ionicons name="document-text" size={64} color="#8B5CF6" />
                     <Text style={styles.pdfPreviewText}>PDF Document</Text>
                     <TouchableOpacity
                       style={styles.pdfOpenBtn}
                       onPress={() => {
-                        const url =
-                          data?.message?.data?.visibility_image.startsWith(
-                            'http',
-                          )
-                            ? data?.message?.data?.visibility_image
-                            : `${imageBaseUrl}${data?.message?.data?.visibility_image}`;
+                        const url = previewImage.startsWith('http')
+                          ? previewImage
+                          : `${imageBaseUrl}${previewImage}`;
                         Linking.openURL(url);
                       }}>
                       <Ionicons
@@ -474,11 +457,9 @@ const VisibilityApprovalDetailComponent = ({
                     )}
                     <Image
                       source={{
-                        uri: data.message.data.visibility_image.startsWith(
-                          'http',
-                        )
-                          ? data.message.data.visibility_image
-                          : `${imageBaseUrl}${data.message.data.visibility_image}`,
+                        uri: previewImage.startsWith('http')
+                          ? previewImage
+                          : `${imageBaseUrl}${previewImage}`,
                       }}
                       style={styles.previewImage}
                       resizeMode="contain"
@@ -515,7 +496,7 @@ const VisibilityApprovalDetailComponent = ({
               <View style={styles.modalIconCircle}>
                 <Ionicons name="close-circle" size={24} color="#dc2626" />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={{flex: 1}}>
                 <Text style={styles.modalTitle}>Reject Visibility Claim</Text>
                 <Text style={styles.modalSubtitle}>#{claimId}</Text>
               </View>
@@ -636,7 +617,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -656,6 +637,8 @@ const styles = StyleSheet.create({
   },
 
   statusBadge: {
+    flexDirection: 'row',
+    gap: 10,
     height: 35,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -668,8 +651,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
   },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontFamily: Fonts.semiBold, fontSize: 11 },
+  statusDot: {width: 6, height: 6, borderRadius: 3},
+  statusText: {fontFamily: Fonts.semiBold, fontSize: 11},
 
   section: {
     backgroundColor: Colors.white,
@@ -677,7 +660,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -899,7 +882,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
@@ -909,7 +892,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  heroLeft: { flex: 1 },
+  heroLeft: {flex: 1},
   claimIdRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -951,11 +934,14 @@ const styles = StyleSheet.create({
   // Amount tiles
   amountRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
   amountTile: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 3,
   },
   amountTileCenter: {},
@@ -1043,7 +1029,7 @@ const styles = StyleSheet.create({
     gap: 8,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1074,7 +1060,7 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1181,12 +1167,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 7,
     shadowColor: '#dc2626',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
   },
-  disabledBtn: { opacity: 0.4 },
+  disabledBtn: {opacity: 0.4},
   modalConfirmText: {
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
@@ -1283,7 +1269,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,

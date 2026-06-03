@@ -18,18 +18,25 @@ import {
   CheckCircle,
   AlertCircle,
   X,
+  Plus,
 } from 'lucide-react-native';
 import {pick} from '@react-native-documents/picker';
 import {launchCamera} from 'react-native-image-picker';
-import {windowWidth} from '../../../utils/utils';
 import RNFS from 'react-native-fs';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
 import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
 import {useAppSelector} from '../../../store/hook';
-import ReusableInput from '../../ui-lib/reuseable-input';
 import {useGetDailyPjpListQuery} from '../../../features/base/base-api';
+import {useLazyGetVCDistributorDetailsQuery} from '../../../features/tada/tadaApiv2';
+
+const MAX_IMAGES = 3;
+
+interface ImageItem {
+  mime: string;
+  data: string;
+}
 
 interface Props {
   values: Record<any, any>;
@@ -54,23 +61,28 @@ const AddVisibilityComponent = ({
   values,
   errors,
   touched,
-  handleChange,
-  handleBlur,
   setFieldValue,
 }: Props) => {
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const [showOptions, setShowOptions] = useState(false);
+  // ── multi-image state ──────────────────────────────────────────────
+  const [previewUris, setPreviewUris] = useState<string[]>([]);
+  const [showOptions, setShowOptions] = useState(false); // Add to state at the top of the component:
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+  // ──────────────────────────────────────────────────────────────────
   const [selectedDate, setSelectedDate] = useState<string>(
     moment().format('YYYY-MM-DD'),
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [triggerStoreFetch, {data: storeData, isFetching: storesFetching}] =
-    useLazyGetDailyStoreQuery();
-
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+
+  const [triggerStoreFetch, {data: storeData, isFetching: storesFetching}] =
+    useLazyGetDailyStoreQuery();
+  const [
+    triggerStoreDetails,
+    {data: storeDetails, isFetching: storeDetailsFetching},
+  ] = useLazyGetVCDistributorDetailsQuery(); // ← your actual hook
 
   const {data: pjpListData, isFetching: pjpFetching} = useGetDailyPjpListQuery(
     {page: 1, page_size: 20, status: 'All', date: selectedDate},
@@ -82,6 +94,8 @@ const AddVisibilityComponent = ({
       pjpListData?.message?.data?.pjp_daily_stores?.[0]?.pjp_daily_store_id;
     if (pjpStoreDoc) {
       setFieldValue('pjp_store_id', pjpStoreDoc);
+    } else {
+      setFieldValue('pjp_store_id', '');
     }
     if (user?.email && selectedDate) {
       triggerStoreFetch({user: user.email, date: selectedDate});
@@ -95,22 +109,60 @@ const AddVisibilityComponent = ({
 
   const isLoading = pjpFetching || storesFetching;
   const pjpResolved = !!values.pjp_store_id;
-  // Show warning only after fetch is done and nothing resolved
   const pjpNotFound = !pjpFetching && !pjpResolved && !!selectedDate;
 
   const convertToBase64 = async (uri: string) => RNFS.readFile(uri, 'base64');
 
+  // ── helpers that write to `images` array ──────────────────────────
+  const appendImage = (uri: string, item: ImageItem) => {
+    const newUris = [...previewUris, uri];
+    const newImages: ImageItem[] = [...(values.images ?? []), item];
+    setPreviewUris(newUris);
+    setFieldValue('images', newImages);
+  };
+
+  const removeImage = (index: number) => {
+    const newUris = previewUris.filter((_, i) => i !== index);
+    const newImages = (values.images ?? []).filter(
+      (_: ImageItem, i: number) => i !== index,
+    );
+    setPreviewUris(newUris);
+    setFieldValue('images', newImages);
+  };
+  // ──────────────────────────────────────────────────────────────────
+
+  const canAddMore = previewUris.length < MAX_IMAGES;
+
   const handlePickDocument = async () => {
     setShowOptions(false);
+    if (!canAddMore) return;
     try {
-      const doc = await pick({allowMultiSelection: false});
-      if (!doc?.[0]) return;
-      const base64 = await convertToBase64(doc[0].uri);
-      setFieldValue('image', {
-        mime: doc[0].type || 'application/octet-stream',
-        data: base64,
-      });
-      setPreviewUri(doc[0].uri);
+      const docs = await pick({allowMultiSelection: true});
+      if (!docs?.length) return;
+
+      // Only take as many as we still have slots for
+      const remaining = MAX_IMAGES - previewUris.length;
+      const selected = docs.slice(0, remaining);
+
+      const newUris: string[] = [];
+      const newImages: ImageItem[] = [];
+
+      for (const doc of selected) {
+        const base64 = await convertToBase64(doc.uri);
+        newUris.push(doc.uri);
+        newImages.push({
+          mime: doc.type || 'application/octet-stream',
+          data: base64,
+        });
+      }
+
+      const updatedUris = [...previewUris, ...newUris];
+      const updatedImages: ImageItem[] = [
+        ...(values.images ?? []),
+        ...newImages,
+      ];
+      setPreviewUris(updatedUris);
+      setFieldValue('images', updatedImages);
     } catch (err) {
       console.warn(err);
     }
@@ -118,17 +170,12 @@ const AddVisibilityComponent = ({
 
   const handleOpenCamera = async () => {
     setShowOptions(false);
+    if (!canAddMore) return;
     const res = await launchCamera({mediaType: 'photo', quality: 0.8});
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
-    setFieldValue('image', {mime: asset.type || 'image/jpeg', data: base64});
-    setPreviewUri(asset.uri!);
-  };
-
-  const handleRemoveImage = () => {
-    setPreviewUri(null);
-    setFieldValue('image', undefined);
+    appendImage(asset.uri!, {mime: asset.type || 'image/jpeg', data: base64});
   };
 
   return (
@@ -137,24 +184,56 @@ const AddVisibilityComponent = ({
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}>
-      {/* ── DATE PICKER ── */}
+      {/* ── DATE + STORE ── */}
       <View style={styles.inputWrapper}>
-        <Text style={styles.inputLabel}>Date</Text>
-        <TouchableOpacity
-          style={styles.dateRow}
-          onPress={() => setShowDatePicker(true)}
-          activeOpacity={0.75}>
-          <Calendar size={14} color={Colors.darkButton} />
-          <Text style={styles.dateText}>
-            {moment(selectedDate).format('DD MMM YYYY')}
-          </Text>
-          {isLoading && (
-            <ActivityIndicator size="small" color={Colors.darkButton} />
-          )}
-          {pjpResolved && !isLoading && (
-            <CheckCircle size={14} color="#22c55e" />
-          )}
-        </TouchableOpacity>
+        <View style={styles.row}>
+          <View style={styles.halfWrapper}>
+            <Text style={styles.inputLabel}>Date</Text>
+            <TouchableOpacity
+              style={styles.dateRow}
+              onPress={() => setShowDatePicker(true)}
+              activeOpacity={0.75}>
+              <Calendar size={14} color={Colors.darkButton} />
+              <Text style={styles.dateText}>
+                {moment(selectedDate).format('DD MMM YYYY')}
+              </Text>
+              {isLoading && (
+                <ActivityIndicator size="small" color={Colors.darkButton} />
+              )}
+              {pjpResolved && !isLoading && (
+                <CheckCircle size={14} color="#22c55e" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.halfWrapper}>
+            <ReusableDropdown
+              label="Store"
+              field="value"
+              value={values.store}
+              data={storeDailyList}
+              onChange={(val: string) => {
+                setFieldValue('store', val);
+                if (!pjpResolved && storeData?.message?.pjp_daily_store_doc) {
+                  setFieldValue(
+                    'pjp_store_id',
+                    storeData.message.pjp_daily_store_doc,
+                  );
+                }
+                triggerStoreDetails({store: val});
+              }}
+              error={touched.store && errors.store}
+              disabled={storesFetching || storeDailyList.length === 0}
+              marginBottom={0}
+              height={38}
+              textSize={12}
+            />
+            {storesFetching && <Text style={styles.hintText}>Loading…</Text>}
+            {!storesFetching && storeDailyList.length === 0 && selectedDate && (
+              <Text style={styles.hintText}>No stores found.</Text>
+            )}
+          </View>
+        </View>
 
         {showDatePicker && (
           <DateTimePicker
@@ -162,19 +241,18 @@ const AddVisibilityComponent = ({
             mode="date"
             display="default"
             onChange={(_event, date) => {
+              setFieldValue('store', '');
+              setFieldValue('pjp_store_id', '');
               setShowDatePicker(false);
               if (date) {
                 const formatted = moment(date).format('YYYY-MM-DD');
                 setSelectedDate(formatted);
                 setFieldValue('date', formatted);
-                setFieldValue('store', '');
-                setFieldValue('pjp_store_id', '');
               }
             }}
           />
         )}
 
-        {/* ── No PJP warning ── */}
         {pjpNotFound && (
           <View style={styles.noPjpBanner}>
             <AlertCircle size={13} color="#d97706" />
@@ -188,7 +266,6 @@ const AddVisibilityComponent = ({
           </View>
         )}
 
-        {/* ── PJP resolved badge ── */}
         {pjpResolved && (
           <View style={styles.pjpBadge}>
             <View style={styles.pjpDot} />
@@ -199,127 +276,176 @@ const AddVisibilityComponent = ({
         )}
       </View>
 
-      {/* ── STORE + PAYMENT TYPE ── */}
-      <View style={styles.row}>
+      {/* ── DISTRIBUTOR + COLLECTION (auto-filled) ── */}
+      <View style={[styles.row, {marginTop: 0}]}>
         <View style={styles.halfWrapper}>
-          <ReusableDropdown
-            label="Store"
-            field="value"
-            value={values.store}
-            data={storeDailyList}
-            onChange={(val: string) => {
-              setFieldValue('store', val);
-              if (!pjpResolved && storeData?.message?.pjp_daily_store_doc) {
-                setFieldValue(
-                  'pjp_store_id',
-                  storeData.message.pjp_daily_store_doc,
-                );
-              }
-            }}
-            error={touched.store && errors.store}
-            disabled={storesFetching || storeDailyList.length === 0}
-          />
-          {storesFetching && <Text style={styles.hintText}>Loading…</Text>}
-          {!storesFetching && storeDailyList.length === 0 && selectedDate && (
-            <Text style={styles.hintText}>No stores found.</Text>
+          <Text style={styles.inputLabel}>Distributor</Text>
+          <View style={styles.readOnlyField}>
+            {storeDetailsFetching ? (
+              <ActivityIndicator size="small" color={Colors.darkButton} />
+            ) : (
+              <Text style={styles.readOnlyText} numberOfLines={1}>
+                {storeDetails?.message?.data?.distributor_name ?? '—'}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.halfWrapper}>
+          <Text style={styles.inputLabel}>Collection Amount</Text>
+          <View style={styles.readOnlyField}>
+            {storeDetailsFetching ? (
+              <ActivityIndicator size="small" color={Colors.darkButton} />
+            ) : (
+              <Text style={styles.readOnlyText}>
+                {storeDetails?.message?.data?.collection_amount ?? '—'}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* ── IMAGE SECTION ── */}
+      <View style={styles.inputWrapper}>
+        <Text style={styles.inputLabel}>
+          Images{' '}
+          <Text style={styles.imageLimitHint}>
+            ({previewUris.length}/{MAX_IMAGES})
+          </Text>
+        </Text>
+
+        <View style={styles.imageGrid}>
+          {/* Filled thumbnails */}
+          {previewUris.map((uri, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.thumbCard}
+              onPress={() => setPreviewIndex(index)}
+              activeOpacity={0.85}>
+              <Image
+                source={{uri}}
+                style={styles.thumbImage}
+                resizeMode="cover"
+              />
+              {/* Remove button */}
+              <TouchableOpacity
+                style={styles.thumbRemoveBtn}
+                onPress={() => removeImage(index)}
+                activeOpacity={0.8}>
+                <X size={11} color="#fff" />
+              </TouchableOpacity>
+              {/* Index badge */}
+              <View style={styles.thumbBadge}>
+                <Text style={styles.thumbBadgeText}>{index + 1}</Text>
+              </View>
+              {/* View full overlay */}
+              <View style={styles.thumbViewHint}>
+                <Text style={styles.thumbViewHintText}>View</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+
+          {/* "Add" tile */}
+          {canAddMore && (
+            <TouchableOpacity
+              style={styles.addTile}
+              onPress={() => setShowOptions(true)}
+              activeOpacity={0.75}>
+              <View style={styles.addIconCircle}>
+                <Plus size={18} color={Colors.darkButton} />
+              </View>
+              <Text style={styles.addTileHint}>Add</Text>
+            </TouchableOpacity>
           )}
         </View>
 
-        <View style={styles.halfWrapper}>
-          <ReusableDropdown
-            label="Payment Type"
-            field="value"
-            value={values.payment_type}
-            data={[
-              {label: 'Cash', value: 'Cash'},
-              {label: 'Cheque', value: 'Cheque'},
-              {label: 'Online', value: 'Online'},
-            ]}
-            onChange={(val: string) => setFieldValue('payment_type', val)}
-            error={touched.payment_type && errors.payment_type}
-          />
-        </View>
-      </View>
-
-      {/* ── COLLECTION + PRICE DIFF + DAMAGE ── */}
-      <View style={styles.row}>
-        <View style={styles.thirdWrapper}>
-          <ReusableInput
-            label="Collection"
-            value={values.collection_amount}
-            onChangeText={handleChange('collection_amount')}
-            onBlur={() => handleBlur('collection_amount')}
-            error={touched.collection_amount && errors.collection_amount}
-            keyboardType="numeric"
-          />
-        </View>
-        <View style={styles.thirdWrapper}>
-          <ReusableInput
-            label="Price Diff."
-            value={values.price_difference_amount}
-            onChangeText={handleChange('price_difference_amount')}
-            onBlur={() => handleBlur('price_difference_amount')}
-            error={
-              touched.price_difference_amount && errors.price_difference_amount
-            }
-            keyboardType="numeric"
-          />
-        </View>
-        <View style={styles.thirdWrapper}>
-          <ReusableInput
-            label="Damage"
-            value={values.damage_claim}
-            onChangeText={handleChange('damage_claim')}
-            onBlur={() => handleBlur('damage_claim')}
-            error={touched.damage_claim && errors.damage_claim}
-            keyboardType="numeric"
-          />
-        </View>
-      </View>
-
-      {previewUri ? (
-        /* ── Image preview card ── */
-        <View style={styles.previewCard}>
-          <Image
-            source={{uri: previewUri}}
-            style={styles.previewImage}
-            resizeMode="cover"
-          />
-          {/* Re-upload overlay button */}
-          <TouchableOpacity
-            style={styles.reUploadBtn}
-            onPress={() => setShowOptions(true)}
-            activeOpacity={0.8}>
-            <Upload size={13} color="#fff" />
-            <Text style={styles.reUploadText}>Change</Text>
-          </TouchableOpacity>
-          {/* Remove button */}
-          <TouchableOpacity
-            style={styles.removeBtn}
-            onPress={handleRemoveImage}
-            activeOpacity={0.8}>
-            <X size={13} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      ) : (
-        /* ── Empty upload box ── */
-        <TouchableOpacity
-          style={styles.uploadBox}
-          onPress={() => setShowOptions(true)}
-          activeOpacity={0.75}>
-          <View style={styles.uploadIconCircle}>
-            <Upload size={18} color={Colors.darkButton} />
-          </View>
-          <Text style={styles.uploadHint}>Upload Image / Document</Text>
+        {previewUris.length === 0 && (
           <Text style={styles.uploadSub}>
-            Tap to select from drive or camera
+            Tap "Add" to upload from drive or camera
           </Text>
-        </TouchableOpacity>
+        )}
+      </View>
+
+      {touched.images && errors.images && (
+        <Text style={styles.errorText}>
+          {typeof errors.images === 'string' ? errors.images : 'Image required'}
+        </Text>
       )}
 
-      {touched.image?.data && errors.image?.data && (
-        <Text style={styles.errorText}>{errors.image.data}</Text>
-      )}
+      {/* ── IMAGE PREVIEW MODAL ── */}
+      <Modal
+        visible={previewIndex !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewIndex(null)}>
+        <View style={styles.fullScreenOverlay}>
+          {/* Close button */}
+          <TouchableOpacity
+            style={styles.previewCloseBtn}
+            onPress={() => setPreviewIndex(null)}>
+            <X size={18} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Counter badge — "1 / 3" */}
+          {previewIndex !== null && (
+            <View style={styles.previewCounter}>
+              <Text style={styles.previewCounterText}>
+                {previewIndex + 1} / {previewUris.length}
+              </Text>
+            </View>
+          )}
+
+          {/* Full image */}
+          {previewIndex !== null && (
+            <Image
+              source={{uri: previewUris[previewIndex]}}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          )}
+
+          {/* Prev / Next arrows */}
+          <View style={styles.previewNavRow}>
+            <TouchableOpacity
+              style={[
+                styles.previewNavBtn,
+                previewIndex === 0 && styles.previewNavBtnDisabled,
+              ]}
+              disabled={previewIndex === 0}
+              onPress={() =>
+                setPreviewIndex(prev => (prev !== null ? prev - 1 : 0))
+              }>
+              <Text style={styles.previewNavText}>‹</Text>
+            </TouchableOpacity>
+
+            {/* Dot indicators */}
+            <View style={styles.previewDots}>
+              {previewUris.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.previewDot,
+                    i === previewIndex && styles.previewDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.previewNavBtn,
+                previewIndex === previewUris.length - 1 &&
+                  styles.previewNavBtnDisabled,
+              ]}
+              disabled={previewIndex === previewUris.length - 1}
+              onPress={() =>
+                setPreviewIndex(prev => (prev !== null ? prev + 1 : 0))
+              }>
+              <Text style={styles.previewNavText}>›</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── BOTTOM SHEET ── */}
       <Modal visible={showOptions} transparent animationType="slide">
@@ -328,6 +454,7 @@ const AddVisibilityComponent = ({
           onPress={() => setShowOptions(false)}
         />
         <View style={styles.bottomSheet}>
+          <View style={styles.sheetHandle} />
           <Pressable style={styles.optionBtn} onPress={handlePickDocument}>
             <Text style={styles.optionText}>📁 Select from Drive</Text>
           </Pressable>
@@ -342,6 +469,8 @@ const AddVisibilityComponent = ({
 
 export default AddVisibilityComponent;
 
+const THUMB_SIZE = 90;
+
 const styles = StyleSheet.create({
   scroll: {flex: 1},
   container: {padding: 16, paddingBottom: 40},
@@ -352,6 +481,11 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     marginBottom: 4,
     color: Colors.darkButton,
+  },
+  imageLimitHint: {
+    fontSize: 11,
+    fontFamily: Fonts.regular,
+    color: '#94a3b8',
   },
 
   row: {flexDirection: 'row', gap: 8, marginBottom: 10},
@@ -436,10 +570,56 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 
-  // Empty upload box
-  uploadBox: {
+  // ── Image grid ──────────────────────────────────────────────────
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     marginTop: 4,
-    height: 100,
+  },
+
+  // Thumbnail card
+  thumbCard: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#f1f5f9',
+  },
+  thumbImage: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbRemoveBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thumbBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  thumbBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontFamily: Fonts.medium,
+  },
+
+  // "Add more" tile
+  addTile: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: 8,
     borderWidth: 1,
     borderStyle: 'dashed',
@@ -449,69 +629,27 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: '#fafafa',
   },
-  uploadIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  addIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#f1f5f9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
   },
-  uploadHint: {
-    fontSize: 12,
-    fontFamily: Fonts.semiBold,
+  addTileHint: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
     color: Colors.darkButton,
   },
+
   uploadSub: {
     fontSize: 10,
     fontFamily: Fonts.regular,
     color: '#94a3b8',
+    marginTop: 6,
   },
-
-  // Image preview card
-  previewCard: {
-    marginTop: 4,
-    borderRadius: 10,
-    overflow: 'hidden',
-    width: '100%',
-    height: 180,
-    backgroundColor: '#f1f5f9',
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-  },
-  // "Change" button — bottom-left overlay
-  reUploadBtn: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  reUploadText: {
-    fontSize: 11,
-    fontFamily: Fonts.medium,
-    color: '#fff',
-  },
-  // "X" remove button — top-right
-  removeBtn: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // ────────────────────────────────────────────────────────────────
 
   modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.4)'},
   bottomSheet: {
@@ -531,4 +669,119 @@ const styles = StyleSheet.create({
   optionBtn: {width: '100%', paddingVertical: 14, alignItems: 'center'},
   optionText: {fontSize: 14, fontWeight: '600'},
   errorText: {color: 'red', fontSize: 11, marginTop: 4},
+
+  thumbViewHint: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingVertical: 3,
+    alignItems: 'center',
+  },
+  thumbViewHintText: {
+    fontSize: 9,
+    color: '#fff',
+    fontFamily: Fonts.medium,
+  },
+
+  // Full-screen overlay
+  fullScreenOverlay: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '75%',
+  },
+
+  // Close button
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // "1 / 3" counter
+  previewCounter: {
+    position: 'absolute',
+    top: 54,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  previewCounterText: {
+    color: '#fff',
+    fontSize: 13,
+    fontFamily: Fonts.medium,
+  },
+
+  // Prev / Next nav row
+  previewNavRow: {
+    position: 'absolute',
+    bottom: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  previewNavBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewNavBtnDisabled: {
+    opacity: 0.3,
+  },
+  previewNavText: {
+    color: '#fff',
+    fontSize: 28,
+    lineHeight: 32,
+  },
+
+  // Dot indicators
+  previewDots: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+  },
+  previewDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  previewDotActive: {
+    backgroundColor: '#fff',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  readOnlyField: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: Colors.borderLight,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+  },
+  readOnlyText: {
+    fontSize: 12,
+    fontFamily: Fonts.medium,
+    color: Colors.black,
+  },
 });

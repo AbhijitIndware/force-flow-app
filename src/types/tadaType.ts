@@ -215,9 +215,6 @@ export interface VisibilityClaim {
   store: string;
   store_name: string;
   collection_amount: number;
-  payment_type: string;
-  price_difference_amount: number;
-  damage_claim: number;
   visibility_image: string;
   approval_status: string;
   expense_approver: string;
@@ -225,6 +222,23 @@ export interface VisibilityClaim {
   authorized_approver_name: string;
   docstatus: number;
   attachments: string[];
+
+  visibility_image_2: string | null;
+  visibility_image_3: string | null;
+  approved_amount: number;
+  state: string | null;
+  distributor: string | null;
+  distributor_name: string;
+  creation: string;
+  modified: string;
+  owner: string;
+}
+
+export interface CollectionResponse {
+  state: string;
+  distributor: string;
+  collection_amount: number;
+  distributor_name: string;
 }
 
 // ─── Phase 5 – Softsens Utility APIs ──────────────────────────────────────
@@ -383,17 +397,11 @@ export interface GetVisibilityClaimsParams extends StandardQueryParams {
 export interface CreateVisibilityClaimPayload {
   store: string;
   pjp_store_id: string;
-  date?: string; // YYYY-MM-DD, defaults to today
-  collection_amount?: number;
-  payment_type?: 'Cash' | 'Cheque' | 'Online';
-  price_difference_amount?: number;
-  damage_claim?: number;
-  /** New image to upload */
-  image?: ImagePayload | null;
-  /** Existing file URL (fallback if no new image) */
-  visibility_image?: string;
-  /** true to immediately submit after creation */
+  date: string;
   do_submit?: boolean;
+  image: ImagePayload | null;
+  image_2?: ImagePayload | null;
+  image_3?: ImagePayload | null;
 }
 
 export interface SubmitVisibilityClaimPayload {

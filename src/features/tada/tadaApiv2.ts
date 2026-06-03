@@ -33,6 +33,7 @@ import {
   ApproverExpenseClaimsData,
   CreateExpenseClaim,
   ApproverEditClaimPayload,
+  CollectionResponse,
 } from '../../types/tadaType';
 import {baseQueryForTadaWithAuthGuard} from '../utility';
 
@@ -293,6 +294,18 @@ export const tadaApiV2 = createApi({
       providesTags: ['VisibilityClaim'],
     }),
 
+    getVCDistributorDetails: builder.query<
+      TadaApiResponse<CollectionResponse>,
+      {store: string}
+    >({
+      query: ({store}) => ({
+        url: `${VISIBILITY_BASE}.get_store_details_for_vc`,
+        method: 'GET',
+        params: {store},
+      }),
+      providesTags: ['VisibilityClaim'],
+    }),
+
     // 13. Create Visibility Claim
     createVisibilityClaim: builder.mutation<
       TadaApiResponse<{claim_id: string}>,
@@ -452,6 +465,7 @@ export const {
 
   // Phase 4 – Visibility Claims
   useGetMyVisibilityClaimsQuery,
+  useLazyGetVCDistributorDetailsQuery,
   useGetVisibilityClaimDetailsQuery,
   useCreateVisibilityClaimMutation,
   useSubmitVisibilityClaimMutation,

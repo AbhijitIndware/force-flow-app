@@ -1,8 +1,8 @@
 import React from 'react';
-import { Text, TextInput, View, StyleSheet, TextInputProps } from 'react-native';
-import { Colors } from '../../utils/colors';
-import { Fonts } from '../../constants';
-import { Size } from '../../utils/fontSize';
+import {Text, TextInput, View, StyleSheet, TextInputProps} from 'react-native';
+import {Colors} from '../../utils/colors';
+import {Fonts} from '../../constants';
+import {Size} from '../../utils/fontSize';
 
 interface DistributorInputProps {
   label: string;
@@ -14,6 +14,8 @@ interface DistributorInputProps {
   disabled?: boolean;
   placeholder?: string;
   marginBottom?: number;
+  height?: number;
+  textSize?: number;
 }
 
 const ReusableInput: React.FC<DistributorInputProps> = ({
@@ -26,18 +28,19 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
   disabled = false,
   placeholder,
   marginBottom = 16,
+  height = 45,
+  textSize = Size.xs,
 }) => (
-  <View style={[styles.inputWrapper, { marginBottom }]}>
+  <View style={[styles.inputWrapper, {marginBottom}]}>
     <Text style={styles.label}>{label}</Text>
     <TextInput
-      style={styles.input}
+      style={[styles.input, {height, fontSize: textSize}]}
       placeholder={placeholder ? placeholder : `Enter ${label}`}
       value={value}
       onChangeText={onChangeText}
       onBlur={onBlur}
       placeholderTextColor="#999"
       keyboardType={keyboardType}
-
       editable={!disabled}
     />
     {error && <Text style={styles.error}>{error}</Text>}
@@ -45,8 +48,13 @@ const ReusableInput: React.FC<DistributorInputProps> = ({
 );
 
 const styles = StyleSheet.create({
-  inputWrapper: { marginBottom: 16 },
-  label: { fontSize: Size.xs, marginBottom: 4, color: Colors.black, fontFamily: Fonts.regular },
+  inputWrapper: {marginBottom: 16},
+  label: {
+    fontSize: Size.xs,
+    // marginBottom: 4,
+    color: Colors.black,
+    fontFamily: Fonts.regular,
+  },
   input: {
     backgroundColor: Colors.white,
     borderRadius: 10,
@@ -59,7 +67,7 @@ const styles = StyleSheet.create({
     height: 45,
     fontSize: Size.xs,
   },
-  error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
+  error: {fontSize: Size.xs, color: 'red', marginTop: 4},
   lockBanner: {
     flexDirection: 'row',
     alignItems: 'center',

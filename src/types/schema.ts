@@ -80,9 +80,7 @@ export const addSalesOrderSchema = Yup.object().shape({
     .of(
       Yup.object().shape({
         item_code: Yup.string().required('Item code is required'),
-        qty: Yup.number()
-          .typeError('Quantity must be a number')
-          .optional(),
+        qty: Yup.number().typeError('Quantity must be a number').optional(),
         rate: Yup.number()
           .typeError('Rate must be a number')
           .positive('Rate must be greater than 0')
@@ -127,7 +125,7 @@ export const expenseItemSchema = Yup.object().shape({
     'attachment-required',
     'Attachment is required',
     function (value) {
-      const { claim_type, amount } = this.parent;
+      const {claim_type, amount} = this.parent;
       const isAutoTA = claim_type === 'TA - Auto';
       const amountNum = parseFloat(amount) || 0;
 
@@ -197,26 +195,12 @@ export const addSalesInvoiceSchema = Yup.object({
 });
 export const visibilityClaimSchema = Yup.object().shape({
   store: Yup.string().required('Store is required'),
-  pjp_store_id: Yup.string().required('PJP store ID is required'),
+  pjp_store_id: Yup.string().required('PJP is required'),
+  date: Yup.string().required('Date is required'),
 
-  collection_amount: Yup.number()
-    .typeError('Collection amount must be a number')
-    .optional(),
-
-  payment_type: Yup.string().optional(),
-
-  price_difference_amount: Yup.number()
-    .typeError('Price difference must be a number')
-    .min(0, 'Price difference cannot be negative')
-    .optional(),
-
-  damage_claim: Yup.number()
-    .typeError('Damage claim must be a number')
-    .min(0, 'Damage claim cannot be negative')
-    .optional(),
-
-  image: Yup.object().shape({
-    mime: Yup.string().optional(),
-    data: Yup.string().optional(),
-  }).optional(),
+  images: Yup.array()
+    .of(Yup.object({mime: Yup.string(), data: Yup.string()}))
+    .min(1, 'At least one image required')
+    .max(3)
+    .required(),
 });

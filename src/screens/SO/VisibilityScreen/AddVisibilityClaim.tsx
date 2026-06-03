@@ -20,6 +20,11 @@ import {
 } from '../../../features/tada/tadaApiv2';
 import AddVisibilityComponent from '../../../components/SO/Visibility/add-visibility-component';
 import {visibilityClaimSchema} from '../../../types/schema';
+import moment from 'moment';
+import {
+  CreateVisibilityClaimPayload,
+  ImagePayload,
+} from '../../../types/tadaType';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -34,23 +39,13 @@ type Props = {
 const initialValues = {
   store: '',
   pjp_store_id: '',
-  collection_amount: 0,
-  payment_type: 'Cash' as const,
-  price_difference_amount: 0,
-  damage_claim: 0,
-  image: {
-    mime: '',
-    data: '',
-  },
-  date: new Date().toISOString().split('T')[0],
+  date: moment().format('YYYY-MM-DD'),
+  images: [] as ImagePayload[],
 };
 
 const AddVisibilityScreen = ({navigation}: Props) => {
-  const scrollY = useRef(new Animated.Value(0)).current;
   const [createVisibilityClaim, {isLoading: isCreating}] =
     useCreateVisibilityClaimMutation();
-  const [submitVisibilityClaim, {isLoading: isSubmitting}] =
-    useSubmitVisibilityClaimMutation();
 
   const {
     values,
@@ -65,26 +60,26 @@ const AddVisibilityScreen = ({navigation}: Props) => {
     initialValues: initialValues,
     validationSchema: visibilityClaimSchema,
     onSubmit: async formValues => {
-      console.log('🚀 ~ AddVisibilityScreen ~ formValues:', formValues);
       try {
-        let res = await createVisibilityClaim({
-          ...formValues,
-          do_submit: true,
-          image: formValues.image.data
-            ? {
-                mime: formValues.image.mime,
-                data: formValues.image.data,
-              }
-            : null,
-        }).unwrap();
+        const [img1, img2, img3] = formValues.images ?? [];
 
+        const payload: CreateVisibilityClaimPayload = {
+          store: formValues.store,
+          pjp_store_id: formValues.pjp_store_id,
+          date: formValues.date,
+          do_submit: true,
+          image: img1 ? {mime: img1.mime, data: img1.data} : null,
+          image_2: img2 ? {mime: img2.mime, data: img2.data} : null,
+          image_3: img3 ? {mime: img3.mime, data: img3.data} : null,
+        };
+
+        const res = await createVisibilityClaim(payload).unwrap();
         if (res?.message.success) {
           Toast.show({
             type: 'success',
             text1: 'Visibility claim submitted successfully',
             position: 'top',
           });
-
           resetForm();
           navigation.goBack();
         } else {
@@ -109,7 +104,7 @@ const AddVisibilityScreen = ({navigation}: Props) => {
     },
   });
 
-  const isLoading = isCreating || isSubmitting;
+  const isLoading = isCreating;
 
   return (
     <SafeAreaView style={[flexCol, styles.container]}>
