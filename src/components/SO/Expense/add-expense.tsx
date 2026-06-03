@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import { Colors } from '../../../utils/colors';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
-import { CirclePlus } from 'lucide-react-native';
+import React, {useEffect, useRef, useState} from 'react';
+import {Colors} from '../../../utils/colors';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {CirclePlus} from 'lucide-react-native';
 import moment from 'moment';
 import AddExpenseModal from './add-expense-modal';
 import Toast from 'react-native-toast-message';
@@ -21,15 +21,15 @@ import {
   useDeleteExpenseRowMutation,
   useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
-import { fileToBase64 } from '../../../utils/fileUtils';
-import { useAppSelector } from '../../../store/hook';
+import {fileToBase64} from '../../../utils/fileUtils';
+import {useAppSelector} from '../../../store/hook';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import { Switch } from 'react-native-paper';
-import { EmployeeStrip } from './AddExpense/EmployeeStrip';
-import { PjpSelectionDropdown } from './AddExpense/PjpSelectionDropdown';
-import { DraftStatusBadge } from './AddExpense/DraftStatusBadge';
-import { ProgressOverlay } from './AddExpense/ProgressOverlay';
-import { ExpenseRowCard } from './AddExpense/ExpenseRowCard';
+import {Switch} from 'react-native-paper';
+import {EmployeeStrip} from './AddExpense/EmployeeStrip';
+import {PjpSelectionDropdown} from './AddExpense/PjpSelectionDropdown';
+import {DraftStatusBadge} from './AddExpense/DraftStatusBadge';
+import {ProgressOverlay} from './AddExpense/ProgressOverlay';
+import {ExpenseRowCard} from './AddExpense/ExpenseRowCard';
 
 export type LocalExpenseItem = {
   expense_type: string;
@@ -53,7 +53,7 @@ type Props = {
   existingClaimId?: string;
 };
 
-const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
+const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
@@ -67,6 +67,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
     moment().format('YYYY-MM-DD'),
   );
   const [isSelfArrangedStay, setIsSelfArrangedStay] = useState(false);
+  const [distanceKm, setDistanceKm] = useState<number>(0);
   const draftAttempted = useRef(false);
 
   const [createExpenseDraft] = useCreateExpenseDraftMutation();
@@ -79,9 +80,13 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   );
 
   // ── Load existing rows when editing a draft ──
-  const { data: existingDetail } = useGetClaimDetailQuery(
-    { claim_id: existingClaimId! },
-    { skip: !existingClaimId },
+  const {data: existingDetail} = useGetClaimDetailQuery(
+    {claim_id: existingClaimId!},
+    {skip: !existingClaimId},
+  );
+  console.log(
+    '🚀 ~ AddExpenseComponent ~ existingDetail:',
+    existingDetail?.message?.data?.distance_km,
   );
 
   const workflowStatus: string =
@@ -98,8 +103,9 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
     const rows = existingDetail?.message?.data?.expenses;
     setSelectedDate(
       existingDetail?.message?.data?.travel_start_date ||
-      moment().format('YYYY-MM-DD'),
+        moment().format('YYYY-MM-DD'),
     );
+    setDistanceKm(existingDetail?.message?.data?.distance_km as number);
     setIsSelfArrangedStay(
       existingDetail?.message?.data?.is_self_arranged_stay === 1,
     );
@@ -117,7 +123,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       ta_km: r.ta_km,
       incidental_bill_month: r.incidental_bill_month,
       row_id: r.row_id,
-      attachment: r.receipt_url
+      attachment: r.receipt_url,
     }));
     setExpenses(mapped);
     setTotal(mapped.reduce((s, r) => s + r.amount, 0));
@@ -126,7 +132,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Step 1: Create Draft ──
   const handleCreateDraft = async () => {
     if (!pjpStoreId) {
-      Toast.show({ type: 'error', text1: 'Please select a PJP first' });
+      Toast.show({type: 'error', text1: 'Please select a PJP first'});
       return;
     }
     if (claimId) return;
@@ -137,9 +143,12 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         pjp_store_id: pjpStoreId,
         // is_self_arranged_stay: isSelfArrangedStay ? 1 : 0,
       }).unwrap();
+      console.log('🚀 ~ handleCreateDraft ~ draftRes:', draftRes);
       const newClaimId = draftRes.message.data?.claim_id;
+      const distance = draftRes.message.data?.distance_km;
       if (!newClaimId) throw new Error('Failed to obtain claim ID');
       setClaimId(newClaimId);
+      setDistanceKm(distance as number);
       Toast.show({
         type: 'success',
         text1: 'Draft created! Now add your expenses.',
@@ -161,7 +170,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Step 2: Add Row ──
   const handleAddLocalExpense = async (item: LocalExpenseItem) => {
     if (!claimId) {
-      Toast.show({ type: 'error', text1: 'Please create a draft first.' });
+      Toast.show({type: 'error', text1: 'Please create a draft first.'});
       return;
     }
     try {
@@ -173,7 +182,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
           item.attachment.uri,
           item.attachment.type,
         );
-        imageData = { mime: item.attachment.type, data: base64 };
+        imageData = {mime: item.attachment.type, data: base64};
       }
       const rowRes = await addExpenseRow({
         claim_id: claimId,
@@ -191,7 +200,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         is_self_arranged_stay: item.is_self_arranged_stay,
       }).unwrap();
       const row_id = rowRes?.message?.data?.row_id;
-      setExpenses(prev => [...prev, { ...item, row_id }]);
+      setExpenses(prev => [...prev, {...item, row_id}]);
       setTotal(prev => prev + item.amount);
     } catch (error: any) {
       Toast.show({
@@ -242,13 +251,13 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       return;
     }
     if (!claimId) {
-      Toast.show({ type: 'error', text1: 'No active draft found' });
+      Toast.show({type: 'error', text1: 'No active draft found'});
       return;
     }
     try {
       setLoading(true);
       setUploadStep('Finalizing submission...');
-      let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
+      let res = await submitExpenseClaim({claim_id: claimId}).unwrap();
       console.log('🚀 ~ handleSubmitClaim ~ res:', res);
       Toast.show({
         type: 'success',
@@ -274,6 +283,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
     setTotal(0);
     setPjpStoreId('');
     setClaimId(null);
+    setDistanceKm(0);
     setIsSelfArrangedStay(false);
     draftAttempted.current = false;
   };
@@ -292,9 +302,9 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
   // ── Status banner config ──
   const STATUS_BANNER: Record<
     string,
-    { label: string; bg: string; color: string; dot: string }
+    {label: string; bg: string; color: string; dot: string}
   > = {
-    Draft: { label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8' },
+    Draft: {label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
     'Pending Approval': {
       label: 'Pending Approval',
       bg: '#fffbeb',
@@ -333,25 +343,35 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
       ) : null} */}
       {/* ── Date + PJP ── */}
       <View style={styles.rowInputs}>
-        <View style={{ flex: 1 }}>
+        <View style={{flex: 1}}>
           <ReusableDatePicker
             label="Date"
             value={selectedDate}
             onChange={(val: string) => setSelectedDate(val)}
             marginBottom={0}
             labelStyle={styles.inputLabel}
-            inputStyle={{ fontSize: 13 }}
+            inputStyle={{fontSize: 13}}
             height={42}
             disabled={!!claimId || isReadOnly}
           />
         </View>
-        <View style={{ flex: 1.3 }}>
+        <View style={{flex: 1.3}}>
           <PjpSelectionDropdown
             value={pjpStoreId}
             onSelect={handlePjpSelect}
             selectedDate={selectedDate}
             disabled={!!claimId || isReadOnly}
           />
+        </View>
+      </View>
+
+      {/* ── Distance KM Display ── */}
+      <View style={styles.distanceCard}>
+        <View style={styles.distanceContent}>
+          <Text style={styles.distanceLabel}>Distance Travelled</Text>
+          <Text style={styles.distanceValue}>
+            {distanceKm || distanceKm === 0 ? `${distanceKm} km` : 'N/A'}
+          </Text>
         </View>
       </View>
 
@@ -446,7 +466,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
         <TouchableOpacity
           style={[
             styles.actionBtn,
-            { backgroundColor: Colors.darkButton },
+            {backgroundColor: Colors.darkButton},
             (!pjpStoreId || loading) && styles.disabled,
           ]}
           onPress={handleCreateDraft}
@@ -459,7 +479,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                { backgroundColor: Colors.darkButton },
+                {backgroundColor: Colors.darkButton},
                 (loading || expenses.length === 0) && styles.disabled,
               ]}
               onPress={handleSubmitClaim}
@@ -470,7 +490,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId }: Props) => {
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                { backgroundColor: Colors.darkButton },
+                {backgroundColor: Colors.darkButton},
                 styles.disabled,
               ]}>
               <Text style={styles.actionBtnText}>Submit Claim</Text>
@@ -495,6 +515,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginBottom: 10,
+  },
+  distanceCard: {
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#E0F2FE',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 12,
+    justifyContent: 'space-between',
+  },
+  distanceContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  distanceLabel: {
+    fontSize: 12,
+    fontFamily: Fonts.regular,
+    color: '#64748B',
+  },
+  distanceValue: {
+    fontSize: 14,
+    fontFamily: Fonts.bold,
+    color: Colors.darkButton,
   },
   inputLabel: {
     fontSize: 11,

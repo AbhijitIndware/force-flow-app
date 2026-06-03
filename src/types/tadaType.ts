@@ -23,6 +23,14 @@ export type TadaErrorCode =
   | 'SERVER_ERROR';
 
 // ─── Phase 1 – Employee Endpoints (Claim Submission Flow) ──────────────────
+export type CreateExpenseClaim = {
+  claim_id: string;
+  distance_km: number;
+  travel_type: 'Local' | 'Outstation' | string;
+  travel_date: string; // ISO date string "YYYY-MM-DD"
+  from_city: string;
+  to_city: string;
+};
 
 export interface ExpenseClaim {
   name: string;
@@ -164,10 +172,10 @@ export interface TadaSummary {
     Incidental: number;
   };
   status_summary: {
-    Draft: { count: number; amount: number };
-    'Pending Approval': { count: number; amount: number };
-    Approved: { count: number; amount: number };
-    Rejected: { count: number; amount: number };
+    Draft: {count: number; amount: number};
+    'Pending Approval': {count: number; amount: number};
+    Approved: {count: number; amount: number};
+    Rejected: {count: number; amount: number};
   };
   recent_claims: Array<{
     claim_id: string;
@@ -259,18 +267,18 @@ export interface ImagePayload {
 export interface AddExpenseRowPayload {
   claim_id: string;
   expense_type:
-  | 'Daily Allowance'
-  | 'TA – Auto'
-  | 'TA – Cab'
-  | 'TA – Bus'
-  | 'TA – Rail'
-  | 'TA – Bike (Petrol)'
-  | 'TA – Local Travel'
-  | 'Lodging / Boarding / Hotel'
-  | 'Food / Meals'
-  | 'Mobile Bill'
-  | 'Courier'
-  | 'Xerox';
+    | 'Daily Allowance'
+    | 'TA – Auto'
+    | 'TA – Cab'
+    | 'TA – Bus'
+    | 'TA – Rail'
+    | 'TA – Bike (Petrol)'
+    | 'TA – Local Travel'
+    | 'Lodging / Boarding / Hotel'
+    | 'Food / Meals'
+    | 'Mobile Bill'
+    | 'Courier'
+    | 'Xerox';
   amount: number;
   date: string; // YYYY-MM-DD
   description?: string;
@@ -294,7 +302,7 @@ export interface AddExpenseRowPayload {
   // Incidental specific (Courier, Xerox)
   /** Required when expense_type is "Courier" or "Xerox". Format: YYYY-MM-DD */
   incidental_bill_month?: string;
-  is_self_arranged_stay?: number
+  is_self_arranged_stay?: number;
 }
 
 export interface DeleteExpenseRowPayload {
@@ -315,9 +323,9 @@ export interface SubmitExpenseClaimResponse {
 
 export interface ApproveClaimPayload {
   claim_id: string;
-  bike_over_100: number,
-  extra: number,
-  promotional: number
+  bike_over_100: number;
+  extra: number;
+  promotional: number;
 }
 
 export interface ApproveClaimResponse {
