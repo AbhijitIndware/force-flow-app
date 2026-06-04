@@ -21,6 +21,9 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
+import PageHeader from '../../../components/ui/PageHeader';
+import CalendarView from '../../../components/weeklyoff/CalendarView';
+import Toast from 'react-native-toast-message';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -51,9 +54,19 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
   const handleMark = async () => {
     try {
       const res = await markDayOff({date: selectedDate}).unwrap();
-      Alert.alert('Success', res.message.message);
+      Toast.show({
+        type: 'success',
+        text1: 'Weekly Off Marked',
+        text2: res.message.message,
+        position: 'top',
+      });
     } catch (err: any) {
-      Alert.alert('Error', err?.data?.message ?? 'Something went wrong');
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to Mark',
+        text2: err?.data?.message ?? 'Something went wrong',
+        position: 'top',
+      });
     }
   };
 
@@ -69,12 +82,19 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
           onPress: async () => {
             try {
               const res = await cancelDayOff({date: selectedDate}).unwrap();
-              Alert.alert('Done', res.message.message);
+              Toast.show({
+                type: 'success',
+                text1: 'Weekly Off Removed',
+                text2: res.message.message,
+                position: 'top',
+              });
             } catch (err: any) {
-              Alert.alert(
-                'Error',
-                err?.data?.message ?? 'Something went wrong',
-              );
+              Toast.show({
+                type: 'error',
+                text1: 'Failed to Remove',
+                text2: err?.data?.message ?? 'Something went wrong',
+                position: 'top',
+              });
             }
           },
         },
@@ -85,14 +105,7 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}>
-          <ArrowLeft size={18} color={Colors.text} strokeWidth={1.5} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Weekly Off</Text>
-      </View>
+      <PageHeader title="Weekly Off" navigation={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Info Banner */}
@@ -106,122 +119,102 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
 
         {/* Mark / Cancel Card */}
         <View style={styles.card}>
-          {/* Status Row */}
-          <View style={styles.cardRow}>
+          <View style={styles.statusRow}>
             <View>
-              <Text style={styles.cardTitle}>
+              <Text style={styles.statusDateLabel}>
                 {isToday
-                  ? "Today's status"
+                  ? 'Today'
                   : moment(selectedDate).format('ddd, DD MMM YYYY')}
               </Text>
-              {isToday && (
-                <Text style={styles.cardSub}>
-                  {moment(selectedDate).format('dddd, DD MMM YYYY')}
-                </Text>
-              )}
             </View>
             <View
               style={[
-                styles.badge,
-                isSelectedDateOff ? styles.badgeOff : styles.badgeWork,
+                styles.statusPill,
+                isSelectedDateOff
+                  ? styles.statusPillOff
+                  : styles.statusPillWork,
               ]}>
+              <View
+                style={[
+                  styles.statusPillDot,
+                  {
+                    backgroundColor: isSelectedDateOff
+                      ? Colors.textMuted
+                      : Colors.success,
+                  },
+                ]}
+              />
               <Text
                 style={[
-                  styles.badgeText,
+                  styles.statusPillText,
                   isSelectedDateOff
-                    ? styles.badgeOffText
-                    : styles.badgeWorkText,
+                    ? styles.statusPillTextOff
+                    : styles.statusPillTextWork,
                 ]}>
                 {isSelectedDateOff ? 'Weekly Off' : 'Working'}
               </Text>
             </View>
           </View>
 
-          {/* Date Picker */}
           <ReusableDatePicker
             label="Select date"
             value={selectedDate}
             onChange={date => setSelectedDate(date)}
-            marginBottom={16}
+            marginBottom={5}
             labelStyle={styles.datePickerLabel}
             inputStyle={styles.datePickerInput}
+            height={38}
+            textSize={Size.xs}
+            // inputStyle={{paddingHorizontal: 2, fontSize: Size.xs}}
           />
 
-          {/* Action Button */}
-          <View style={styles.btnRow}>
-            {!isSelectedDateOff ? (
-              <TouchableOpacity
-                style={[
-                  styles.btn,
-                  styles.btnPrimary,
-                  marking && styles.btnDisabled,
-                ]}
-                onPress={handleMark}
-                disabled={marking}>
-                {marking ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <CalendarOff size={15} color="#fff" strokeWidth={1.5} />
-                )}
-                <Text style={styles.btnPrimaryText}>Mark as weekly off</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                style={[
-                  styles.btn,
-                  styles.btnDanger,
-                  cancelling && styles.btnDisabled,
-                ]}
-                onPress={handleCancel}
-                disabled={cancelling}>
-                {cancelling ? (
-                  <ActivityIndicator size="small" color={Colors.danger} />
-                ) : null}
-                <Text style={styles.btnDangerText}>Cancel weekly off</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          {!isSelectedDateOff ? (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                styles.actionBtnGreen,
+                marking && styles.btnDisabled,
+              ]}
+              onPress={handleMark}
+              disabled={marking}
+              activeOpacity={0.85}>
+              {marking ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <CalendarOff size={15} color="#fff" strokeWidth={1.5} />
+              )}
+              <Text style={styles.actionBtnText}>Mark as Weekly Off</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                styles.actionBtnRed,
+                cancelling && styles.btnDisabled,
+              ]}
+              onPress={handleCancel}
+              disabled={cancelling}
+              activeOpacity={0.85}>
+              {cancelling ? (
+                <ActivityIndicator size="small" color={Colors.danger} />
+              ) : (
+                <CalendarOff
+                  size={15}
+                  color={Colors.danger}
+                  strokeWidth={1.5}
+                />
+              )}
+              <Text style={styles.actionBtnTextRed}>Cancel Weekly Off</Text>
+            </TouchableOpacity>
+          )}
         </View>
-
         {/* History */}
         <Text style={styles.sectionTitle}>History</Text>
         <View style={styles.card}>
           {historyLoading ? (
             <ActivityIndicator style={{padding: 20}} color={Colors.orange} />
-          ) : weeklyOffs.length === 0 ? (
-            <Text style={styles.emptyText}>No weekly offs recorded yet.</Text>
           ) : (
-            (dayOffsData?.message?.data ?? []).map((item, index) => (
-              <View
-                key={item.name}
-                style={[
-                  styles.historyItem,
-                  index === (dayOffsData?.message?.data?.length ?? 0) - 1 && {
-                    borderBottomWidth: 0,
-                  },
-                ]}>
-                <View style={styles.historyIconWrap}>
-                  <CalendarOff
-                    size={16}
-                    color={Colors.success}
-                    strokeWidth={1.5}
-                  />
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={styles.historyDate}>
-                    {moment(item.attendance_date).format('DD MMM YYYY')}
-                  </Text>
-                  <Text style={styles.historyDay}>
-                    {moment(item.attendance_date).format('dddd')}
-                  </Text>
-                </View>
-                <View style={[styles.badge, styles.badgeOff]}>
-                  <Text style={[styles.badgeText, styles.badgeOffText]}>
-                    Weekly Off
-                  </Text>
-                </View>
-              </View>
-            ))
+            <CalendarView weeklyOffs={weeklyOffs} />
           )}
         </View>
       </ScrollView>
@@ -262,30 +255,15 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: Colors.infoLight,
     borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
+    padding: 5,
+    marginBottom: 5,
     alignItems: 'flex-start',
   },
   infoText: {
     flex: 1,
     fontFamily: Fonts.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.info,
-    lineHeight: 18,
-  },
-  card: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    borderWidth: 0.5,
-    borderColor: Colors.border,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
   },
   cardTitle: {fontFamily: Fonts.medium, fontSize: 15, color: Colors.text},
   cardSub: {
@@ -307,7 +285,7 @@ const styles = StyleSheet.create({
   },
   datePickerInput: {
     fontFamily: Fonts.regular,
-    fontSize: Size.sm,
+    // fontSize: Size.sm,
     color: Colors.text,
   },
   btnRow: {flexDirection: 'row', gap: 10},
@@ -363,4 +341,60 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 20,
   },
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: Colors.border,
+    padding: 12,
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  statusDateLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: 14,
+    color: Colors.text,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  statusPillOff: {
+    backgroundColor: Colors.lightGray,
+    borderColor: Colors.border,
+  },
+  statusPillWork: {
+    backgroundColor: Colors.lightSuccess,
+    borderColor: Colors.success + '40',
+  },
+  statusPillDot: {width: 6, height: 6, borderRadius: 3},
+  statusPillText: {fontFamily: Fonts.medium, fontSize: 11},
+  statusPillTextOff: {color: Colors.textMuted},
+  statusPillTextWork: {color: Colors.success},
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  actionBtnGreen: {backgroundColor: Colors.success},
+  actionBtnRed: {
+    borderWidth: 1,
+    borderColor: Colors.danger + '60',
+    backgroundColor: Colors.danger + '08',
+  },
+  actionBtnText: {fontFamily: Fonts.regular, fontSize: 12, color: '#fff'},
+  actionBtnTextRed: {fontFamily: Fonts.regular, fontSize: 12, color: '#fff'},
 });

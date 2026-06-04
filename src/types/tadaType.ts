@@ -288,7 +288,7 @@ export interface AddExpenseRowPayload {
     | 'TA – Bus'
     | 'TA – Rail'
     | 'TA – Bike (Petrol)'
-    | 'TA – Local Travel'
+    | 'TA – Ex-HQ Local Travel'
     | 'Lodging / Boarding / Hotel'
     | 'Food / Meals'
     | 'Mobile Bill'

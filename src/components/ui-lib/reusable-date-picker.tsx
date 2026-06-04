@@ -1,10 +1,10 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Platform } from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, TouchableOpacity, Platform} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Colors } from '../../utils/colors';
-import { Size } from '../../utils/fontSize';
-import { Fonts } from '../../constants';
+import {Colors} from '../../utils/colors';
+import {Size} from '../../utils/fontSize';
+import {Fonts} from '../../constants';
 
 interface Props {
   label: string;
@@ -12,14 +12,24 @@ interface Props {
   onChange: (dateStr: string) => void;
   error?: string | false;
   marginBottom?: any;
-  labelStyle?: any;        // add
+  labelStyle?: any; // add
   inputStyle?: any;
-  disabled?: boolean        // add
-  height?: number
+  disabled?: boolean; // add
+  height?: number;
+  textSize?: any; // add
 }
 
 const ReusableDatePicker: React.FC<Props> = ({
-  label, value, onChange, error, marginBottom, labelStyle, inputStyle, disabled, height = 50
+  label,
+  value,
+  onChange,
+  error,
+  marginBottom,
+  labelStyle,
+  inputStyle,
+  disabled,
+  height = 50,
+  textSize = Size.sm,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -31,26 +41,31 @@ const ReusableDatePicker: React.FC<Props> = ({
   };
 
   return (
-    <View style={{ marginBottom: marginBottom ?? 16 }}>
-      <Text style={[{ marginBottom: 4, fontSize: 14 }, labelStyle]}>{label}</Text>
+    <View style={{marginBottom: marginBottom ?? 16}}>
+      <Text style={[{marginBottom: 4, fontSize: 14}, labelStyle]}>{label}</Text>
       <TouchableOpacity
         onPress={() => setShowPicker(true)}
-        style={[{
-          borderColor: error ? 'red' : '#ecececff',
-          borderWidth: 1,
-          padding: 12,
-          borderRadius: 10,
-          backgroundColor: Colors.white,
-          height: height,
-          justifyContent: 'center',
-        }, inputStyle]}
-        disabled={disabled}
-      >
-        <Text style={[{ fontSize: Size.sm, fontFamily: Fonts.regular }, inputStyle]}>
+        style={[
+          {
+            borderColor: error ? 'red' : '#ecececff',
+            borderWidth: 1,
+            padding: 5,
+            paddingHorizontal: 10,
+            borderRadius: 10,
+            backgroundColor: Colors.white,
+            height: height,
+            justifyContent: 'center',
+            // padding: 0,
+          },
+          inputStyle,
+        ]}
+        disabled={disabled}>
+        <Text
+          style={[{fontSize: textSize, fontFamily: Fonts.regular}, inputStyle]}>
           {value || 'Select date'}
         </Text>
       </TouchableOpacity>
-      {error && <Text style={{ color: 'red', marginTop: 4 }}>{error}</Text>}
+      {error && <Text style={{color: 'red', marginTop: 4}}>{error}</Text>}
       {showPicker && (
         <DateTimePicker
           value={value ? new Date(value) : new Date()}
