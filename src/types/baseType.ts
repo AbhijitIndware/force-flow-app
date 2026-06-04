@@ -1,4 +1,4 @@
-import {ApiResponse, Filters, PaginationInfo} from './Navigation';
+import { ApiResponse, Filters, PaginationInfo } from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -275,7 +275,7 @@ export type ICheckOut = {
 };
 export type IMarkActivity = {
   store: string;
-  activity_type: {activity_type: string}[];
+  activity_type: { activity_type: string }[];
 };
 
 export interface IAddDistributorResponse extends ApiResponse {
@@ -1175,7 +1175,7 @@ export interface EmployeeData {
 
 //Expense
 export type RExpenseClaimType = {
-  data: {name: string}[];
+  data: { name: string }[];
 };
 
 export type ClaimData = {
@@ -1186,7 +1186,7 @@ export type ClaimData = {
   sanctioned: number;
 };
 export type RExpenseClaimByEmp = {
-  message: {data: ClaimData[]};
+  message: { data: ClaimData[] };
 };
 
 export interface IExpenseItem {
@@ -1338,7 +1338,7 @@ export type PromoterAttendanceData = {
 
   assigned_store: any;
   attendance_date: string;
-  checkin_records: {check_in: null; check_out: null};
+  checkin_records: { check_in: null; check_out: null };
   employee: string;
   employee_name: string;
   message: string;
@@ -2241,5 +2241,26 @@ export interface RGetActivityCheckInStatus {
     image_url: string | null;
     activity_type: string | null;
     remarks: string | null;
+  };
+}
+
+
+// Weekly Off
+export interface IMarkDayOff {
+  date: string; // YYYY-MM-DD
+}
+export interface RMarkDayOff {
+  message: { success: boolean; message: string; document_name?: string };
+}
+export interface ICancelDayOff {
+  date: string;
+}
+export interface RCancelDayOff {
+  message: { success: boolean; message: string };
+}
+export interface RGetDayOffs {
+  message: {
+    success: boolean;
+    data: { name: string; attendance_date: string; status: string }[];
   };
 }

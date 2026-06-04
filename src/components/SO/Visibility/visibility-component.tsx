@@ -23,8 +23,12 @@ const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
     Approved: {bg: '#16a34a20', color: '#16a34a', dot: '#22c55e'},
     Rejected: {bg: '#dc262620', color: '#dc2626', dot: '#f87171'},
     Submitted: {bg: '#d9770620', color: '#d97706', dot: '#fbbf24'},
+    'Pending Accounting Manager': {
+      bg: '#d9770620',
+      color: '#d97706',
+      dot: '#fbbf24',
+    },
     Draft: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
-    Cancelled: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
   };
 
 const getStatus = (s: string) =>

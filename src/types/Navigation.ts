@@ -1,4 +1,4 @@
-import { PjpDailyStore } from './baseType';
+import {PjpDailyStore} from './baseType';
 
 //Stack ParamList Type
 export type MainNavigationStackParamList = {
@@ -13,7 +13,7 @@ export type PromoterAppStackParamList = {
   HomeScreen: undefined;
   AttendanceScreen: undefined;
   SalesScreen: undefined;
-  PromoterSaleDetailScreen: { id: string };
+  PromoterSaleDetailScreen: {id: string};
   AddSalesScreen: undefined;
   StockScreen: undefined;
   IncentiveScreen: undefined;
@@ -29,45 +29,45 @@ export type DistributorAppStackParamList = {
   PurchaseOrdersScreen: undefined;
   DeliveryNotesScreen: undefined;
   DistributorProfileScreen: undefined;
-  PurchaseOrderDetailScreen: { order_id?: string };
-  DeliveryNoteDetailScreen: { id: string };
+  PurchaseOrderDetailScreen: {order_id?: string};
+  DeliveryNoteDetailScreen: {id: string};
 };
 export type SoAppStackParamList = {
   Home: undefined;
   HomeScreen: undefined;
   AttendanceScreen: undefined;
-  SalesScreen: { index?: number } | undefined;
+  SalesScreen: {index?: number} | undefined;
   ActivityScreen: undefined;
-  OrdersScreen: { index?: number } | undefined;
-  PartnersScreen: { index?: number } | undefined;
+  OrdersScreen: {index?: number} | undefined;
+  PartnersScreen: {index?: number} | undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: undefined;
-  AddStoreScreen: { storeId?: string } | undefined;
+  AddStoreScreen: {storeId?: string} | undefined;
   AddMarketVisitScreen: undefined;
-  AddPjpScreen: { id?: string } | undefined;
-  AddSaleScreen: { orderId?: string } | undefined;
+  AddPjpScreen: {id?: string} | undefined;
+  AddSaleScreen: {orderId?: string} | undefined;
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
-  SaleDetailScreen: { id: string };
-  PurchaseDetailScreen: { id: string };
-  PjpDetailScreen: { details: PjpDailyStore };
-  StockReport: { reportName: string };
-  TeamsSalesReport: { reportName: string };
+  SaleDetailScreen: {id: string};
+  PurchaseDetailScreen: {id: string};
+  PjpDetailScreen: {details: PjpDailyStore};
+  StockReport: {reportName: string};
+  TeamsSalesReport: {reportName: string};
   AsmDashboard: undefined;
 
-  ExpenseScreen: { index?: number } | undefined;
-  AddExpenseScreen: { claimId?: string } | undefined;
+  ExpenseScreen: {index?: number} | undefined;
+  AddExpenseScreen: {claimId?: string} | undefined;
   AddExpenseItemScreen: undefined;
-  ExpenseClaimScreen: { id: string; name: string };
-  ExpenseListScreen: { id: string; name: string };
+  ExpenseClaimScreen: {id: string; name: string};
+  ExpenseListScreen: {id: string; name: string};
 
   VisibilityScreen: undefined;
   AddVisibilityScreen: undefined;
   VisibilityApprovalScreen: undefined;
-  VisibilityApprovalDetailScreen: { claimId: string, isApprover: boolean };
-  StoreDetailScreen: { storeId: string };
-  TeamDetailScreen: { date: string; employee_id: string };
+  VisibilityApprovalDetailScreen: {claimId: string; isApprover: boolean};
+  StoreDetailScreen: {storeId: string};
+  TeamDetailScreen: {date: string; employee_id: string};
   DetailByStoreScreen: {
     store_id: string;
     date: string;
@@ -83,21 +83,22 @@ export type SoAppStackParamList = {
     from_date?: string;
     to_date?: string;
   };
-  OrderDetailScreen: { order_id: string };
-  DeliveryNoteDetailScreen: { id: string };
-  TeamAttendanceListScreen: { apiParams: any; today: string };
+  OrderDetailScreen: {order_id: string};
+  DeliveryNoteDetailScreen: {id: string};
+  TeamAttendanceListScreen: {apiParams: any; today: string};
   TeamPerformanceListScreen: {
     apiParams: any;
     today: string;
     mode: 'pjp' | 'value' | 'attendance';
   };
   StockManagementScreen: undefined;
-  StockManagementFormScreen: { store: string; storeName: string; items?: any[] };
+  StockManagementFormScreen: {store: string; storeName: string; items?: any[]};
   AddActivityLocationScreen: undefined;
   ActivityLocationScreen: undefined;
   ActivityCheckInScreen: undefined;
-  ExpenseApprovalScreen: { index?: number } | undefined;
-  ExpenseApprovalDetailScreen: { claimId: string };
+  ExpenseApprovalScreen: {index?: number} | undefined;
+  ExpenseApprovalDetailScreen: {claimId: string};
+  WeeklyOffScreen: undefined;
 };
 
 export type menuType = {

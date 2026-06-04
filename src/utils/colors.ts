@@ -3,37 +3,31 @@ export const Colors = {
   primary: '#EB4255',
   lightPrimary: '#FFFAE4',
   secondary: '#FF0000',
-
   // Backgrounds
   bgColor: '#F5F5F5',
   surface: '#FFFFFF',
   card: '#FAFAFA',
   overlay: 'rgba(0, 0, 0, 0.5)',
-
   // Text
   textPrimary: '#1A1A1A',
   textSecondary: '#4F4F4F',
   textTertiary: '#828282',
   textInverse: '#FFFFFF',
   placeholder: '#BDBDBD',
-
   // Borders
   borderLight: '#E0E0E0',
   border: '#969AA4',
   headerBorder: '#DBDBDB',
   inputBorder: '#969AA4',
-
   // Menu & Icons
   menuColor: '#A9A9A9',
   iconColor: '#666666',
   disabled: '#C4C4C4',
-
   // Status Colors
   success: '#34A853',
   error: '#FF0000',
   warning: '#FFB302',
   info: '#2DCCFF',
-
   // Light Variants
   lightPink: '#EB425526',
   lightGray: '#E8E8E8',
@@ -43,7 +37,6 @@ export const Colors = {
   lightGreen: '#DFFF9A',
   lightOrange: '#FFD580',
   lightYellow: '#FFF8E1',
-
   // Shades
   white: '#FFFFFF',
   black: '#000000',
@@ -52,7 +45,6 @@ export const Colors = {
   darkerGray: '#3C3C3C',
   lightestGray: '#F2F2F2',
   green: '#32CD32',
-
   // Other Custom
   orange: '#FF7B00',
   greyDark: '#4A4A4A',
@@ -66,9 +58,14 @@ export const Colors = {
   denger: '#D31010',
   holdLight: '#FFE9D4',
   blue: '#367CFF',
-
   // Transparent variants
   transparent: 'transparent',
   translucentWhite: 'rgba(255, 255, 255, 0.7)',
   translucentBlack: 'rgba(0, 0, 0, 0.4)',
+  // Aliases
+  background: '#F5F5F5',
+  text: '#1A1A1A',
+  textMuted: '#828282',
+  danger: '#D31010',
+  infoLight: '#E3ECFF',
 };

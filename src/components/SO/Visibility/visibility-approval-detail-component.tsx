@@ -40,7 +40,12 @@ const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
     Approved: {bg: '#16a34a20', color: '#16a34a', dot: '#22c55e'},
     Rejected: {bg: '#dc262620', color: '#dc2626', dot: '#f87171'},
     Submitted: {bg: '#d9770620', color: '#d97706', dot: '#fbbf24'},
-    Pending: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
+    'Pending Accounting Manager': {
+      bg: '#d9770620',
+      color: '#d97706',
+      dot: '#fbbf24',
+    },
+    Draft: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
   };
 
 const getStatusCfg = (s: string) =>
@@ -69,6 +74,7 @@ const InfoRow = ({
   <View style={[styles.infoRow, last && {borderBottomWidth: 0}]}>
     <Text style={styles.infoLabel}>{label}</Text>
     <Text
+      numberOfLines={2}
       style={[
         styles.infoValue,
         valueColor ? {color: valueColor} : null,
@@ -130,7 +136,6 @@ const VisibilityApprovalDetailComponent = ({
   const {data, isLoading, isFetching} = useGetVisibilityClaimDetailsQuery({
     claim_id: claimId,
   });
-  console.log('🚀 ~ VisibilityApprovalDetailComponent ~ data:', data);
   const [approveClaim, {isLoading: approveLoading}] =
     useApproveVisibilityClaimMutation();
   const [rejectClaim, {isLoading: rejectLoading}] =
@@ -144,25 +149,13 @@ const VisibilityApprovalDetailComponent = ({
         'Confirm Approval',
         'Are you sure you want to approve this visibility claim?',
         [
-          {
-            text: 'Cancel',
-            onPress: () => {},
-            style: 'cancel',
-          },
+          {text: 'Cancel', onPress: () => {}, style: 'cancel'},
           {
             text: 'Approve',
             onPress: async () => {
-              const result = await approveClaim({
-                claim_id: claimId,
-              }).unwrap();
-
+              await approveClaim({claim_id: claimId}).unwrap();
               Alert.alert('Success', 'Visibility claim approved successfully', [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    navigation.goBack();
-                  },
-                },
+                {text: 'OK', onPress: () => navigation.goBack()},
               ]);
             },
           },
@@ -178,25 +171,19 @@ const VisibilityApprovalDetailComponent = ({
       Alert.alert('Required', 'Please enter a reason for rejection');
       return;
     }
-
     try {
       Alert.alert(
         'Confirm Rejection',
         'Are you sure you want to reject this visibility claim?',
         [
-          {
-            text: 'Cancel',
-            onPress: () => {},
-            style: 'cancel',
-          },
+          {text: 'Cancel', onPress: () => {}, style: 'cancel'},
           {
             text: 'Reject',
             onPress: async () => {
-              const result = await rejectClaim({
+              await rejectClaim({
                 claim_id: claimId,
                 reason: rejectReason,
               }).unwrap();
-
               Alert.alert('Success', 'Visibility claim rejected successfully', [
                 {
                   text: 'OK',
@@ -249,17 +236,10 @@ const VisibilityApprovalDetailComponent = ({
         contentContainerStyle={{paddingBottom: 40}}>
         {/* ── Hero Header ────────────────────────────────────────── */}
         <View style={styles.heroCard}>
-          <View style={styles.heroTop}>
-            <View style={styles.heroLeft}>
-              <View style={styles.claimIdRow}>
-                <View style={styles.claimIdPill}>
-                  <Text style={styles.claimIdPillText}>CLAIM</Text>
-                </View>
-                <Text style={styles.claimId}>{claim.claim_id}</Text>
-              </View>
-              <Text style={styles.heroDate}>
-                {moment(claim.date).format('dddd, DD MMMM YYYY')}
-              </Text>
+          {/* Row 1: Claim pill + Status badge side by side */}
+          <View style={styles.heroTopRow}>
+            <View style={styles.claimIdPill}>
+              <Text style={styles.claimIdPillText}>CLAIM</Text>
             </View>
             <View
               style={[
@@ -267,21 +247,30 @@ const VisibilityApprovalDetailComponent = ({
                 {backgroundColor: st.bg, borderColor: st.color},
               ]}>
               <View style={[styles.statusDot, {backgroundColor: st.dot}]} />
-              <Text style={[styles.statusText, {color: st.color}]}>
+              <Text
+                style={[styles.statusText, {color: st.color}]}
+                numberOfLines={1}>
                 {claim.approval_status}
               </Text>
             </View>
           </View>
 
+          {/* Row 2: Claim ID */}
+          <Text style={styles.claimId}>{claim.claim_id}</Text>
+
+          {/* Row 3: Date */}
+          <Text style={styles.heroDate}>
+            {moment(claim.date).format('dddd, DD MMMM YYYY')}
+          </Text>
+
           <View style={styles.heroDivider} />
 
+          {/* Row 4: Amount */}
           <View style={styles.amountRow}>
-            <View style={styles.amountTile}>
-              <Text style={styles.amountTileLabel}>Collection Amount</Text>
-              <Text style={styles.amountTileValue}>
-                ₹{claim.collection_amount?.toLocaleString('en-IN') || '0'}
-              </Text>
-            </View>
+            <Text style={styles.amountTileLabel}>COLLECTION AMOUNT</Text>
+            <Text style={styles.amountTileValue}>
+              ₹{claim.collection_amount?.toLocaleString('en-IN') || '0'}
+            </Text>
           </View>
         </View>
 
@@ -321,7 +310,6 @@ const VisibilityApprovalDetailComponent = ({
             label="Date"
             value={moment(claim.date).format('DD MMM YYYY')}
           />
-          {/* <InfoRow label="Payment Type" value={claim.payment_type} /> */}
           <InfoRow
             label="Collection Amount"
             value={`₹ ${
@@ -330,18 +318,8 @@ const VisibilityApprovalDetailComponent = ({
             valueColor="#16a34a"
             bold
           />
-          {/* <InfoRow
-            label="Price Difference"
-            value={`₹ ${claim.price_difference_amount?.toLocaleString('en-IN') || '0'
-              }`}
-          />
-          <InfoRow
-            label="Damage Claim"
-            value={`₹ ${claim.damage_claim?.toLocaleString('en-IN') || '0'}`}
-          /> */}
-
           {claim?.attachments &&
-            claim?.attachments?.map((attachment, index) => (
+            claim?.attachments?.map((attachment: string, index: number) => (
               <View style={styles.infoRow} key={index}>
                 <Text style={styles.infoLabel}>Claim Image {index + 1}</Text>
                 <TouchableOpacity
@@ -407,78 +385,73 @@ const VisibilityApprovalDetailComponent = ({
         transparent
         animationType="fade"
         onRequestClose={() => setShowImagePreview(false)}>
-        <View style={styles.previewModalOverlay}>
-          <View style={styles.previewModalContent}>
-            <View style={styles.previewModalHeader}>
-              <Text style={styles.previewModalTitle}>
-                {isPDF(data?.message?.data?.visibility_image)
-                  ? 'PDF Preview'
-                  : 'Image Preview'}
-              </Text>
-              <TouchableOpacity
-                style={styles.previewModalCloseBtn}
-                onPress={() => setShowImagePreview(false)}>
-                <Ionicons name="close" size={24} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.previewContainer}>
-              {previewImage ? (
-                isPDF(previewImage) ? (
-                  <View style={styles.pdfPreviewContainer}>
-                    <Ionicons name="document-text" size={64} color="#8B5CF6" />
-                    <Text style={styles.pdfPreviewText}>PDF Document</Text>
-                    <TouchableOpacity
-                      style={styles.pdfOpenBtn}
-                      onPress={() => {
-                        const url = previewImage.startsWith('http')
-                          ? previewImage
-                          : `${imageBaseUrl}${previewImage}`;
-                        Linking.openURL(url);
-                      }}>
-                      <Ionicons
-                        name="open-outline"
-                        size={16}
-                        color={Colors.white}
-                      />
-                      <Text style={styles.pdfOpenText}>Open PDF</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={styles.imagePreviewContainer}>
-                    {imageLoading && (
-                      <View style={styles.imageLoadingOverlay}>
-                        <ActivityIndicator
-                          size="large"
-                          color={Colors.darkButton}
-                        />
-                        <Text style={styles.loadingText}>Loading image...</Text>
-                      </View>
-                    )}
-                    <Image
-                      source={{
-                        uri: previewImage.startsWith('http')
-                          ? previewImage
-                          : `${imageBaseUrl}${previewImage}`,
-                      }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                      onLoadStart={() => setImageLoading(true)}
-                      onLoadEnd={() => setImageLoading(false)}
-                      onError={() => setImageLoading(false)}
-                    />
-                  </View>
-                )
-              ) : (
-                <View style={styles.pdfPreviewContainer}>
-                  <Ionicons name="document-text" size={64} color="#8B5CF6" />
-                  <Text style={styles.pdfPreviewText}>
-                    No attachment available
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
+        <View style={styles.fullScreenOverlay}>
+          <TouchableOpacity
+            style={styles.closeBtn}
+            onPress={() => setShowImagePreview(false)}>
+            <Text style={styles.closeText}>✕</Text>
+          </TouchableOpacity>
+          {previewImage ? (
+            isPDF(previewImage) ? (
+              <View style={{alignItems: 'center', gap: 16}}>
+                <Ionicons name="document-text" size={64} color="#8B5CF6" />
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontFamily: Fonts.medium,
+                    fontSize: 16,
+                  }}>
+                  PDF Document
+                </Text>
+                <TouchableOpacity
+                  style={styles.pdfOpenBtn}
+                  onPress={() => {
+                    const url = previewImage.startsWith('http')
+                      ? previewImage
+                      : `${imageBaseUrl}${previewImage}`;
+                    Linking.openURL(url);
+                  }}>
+                  <Ionicons
+                    name="open-outline"
+                    size={16}
+                    color={Colors.white}
+                  />
+                  <Text style={styles.pdfOpenText}>Open PDF</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                {imageLoading && (
+                  <ActivityIndicator
+                    size="large"
+                    color={Colors.white}
+                    style={{position: 'absolute'}}
+                  />
+                )}
+                <Image
+                  source={{
+                    uri: previewImage.startsWith('http')
+                      ? previewImage
+                      : `${imageBaseUrl}${previewImage}`,
+                  }}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                  onLoadStart={() => setImageLoading(true)}
+                  onLoadEnd={() => setImageLoading(false)}
+                  onError={() => setImageLoading(false)}
+                />
+              </>
+            )
+          ) : (
+            <Text
+              style={{
+                color: '#94a3b8',
+                fontFamily: Fonts.regular,
+                fontSize: 14,
+              }}>
+              No attachment available
+            </Text>
+          )}
         </View>
       </Modal>
 
@@ -579,7 +552,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.lightBg,
-    padding: 15,
+    padding: 12,
   },
   centered: {
     flex: 1,
@@ -611,253 +584,158 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
-  headerCard: {
+
+  // ── Hero Card ──────────────────────────────────────────────────
+  heroCard: {
+    marginBottom: 10,
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
   },
-
-  claimIdText: {
+  // Top row: pill + badge on same line
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  claimIdPill: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  claimIdPillText: {
     fontFamily: Fonts.bold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    marginBottom: 4,
+    fontSize: 9,
+    color: '#94A3B8',
+    letterSpacing: 0.8,
   },
-
-  dateText: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: '#64748B',
-  },
-
   statusBadge: {
     flexDirection: 'row',
-    gap: 10,
-    height: 35,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-
-  statusBadgeText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    maxWidth: '65%',
   },
   statusDot: {width: 6, height: 6, borderRadius: 3},
-  statusText: {fontFamily: Fonts.semiBold, fontSize: 11},
+  statusText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 11,
+    flexShrink: 1,
+  },
+  // Claim ID on its own line — no wrapping issue
+  claimId: {
+    fontFamily: Fonts.bold,
+    fontSize: 16,
+    color: Colors.darkButton,
+    letterSpacing: -0.3,
+    marginBottom: 3,
+  },
+  heroDate: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94A3B8',
+    marginBottom: 10,
+  },
+  heroDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginBottom: 10,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  amountTileLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  amountTileValue: {
+    fontFamily: Fonts.bold,
+    fontSize: 15,
+    color: Colors.darkButton,
+    letterSpacing: -0.3,
+  },
 
+  // ── Section Card ───────────────────────────────────────────────
   section: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    padding: 13,
+    marginBottom: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
-
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  sectionIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 9,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sectionTitle: {
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
     color: Colors.darkButton,
-    marginBottom: 12,
-  },
-
-  label: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.xs,
-    color: '#64748B',
-    flex: 0.4,
-  },
-
-  value: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
-    flex: 0.6,
-    textAlign: 'right',
-  },
-
-  button: {
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderRadius: 10,
-    gap: 8,
+  },
+  sectionRight: {
+    marginLeft: 'auto',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 4,
   },
 
-  approveButton: {
-    backgroundColor: '#10B981',
-  },
-
-  rejectButton: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1.5,
-    borderColor: '#EF4444',
-  },
-
-  buttonText: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.sm,
-    color: Colors.white,
-  },
-
-  errorText: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    color: '#EF4444',
-  },
-
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    maxHeight: '80%',
-  },
-
-  modalHeader: {
+  // ── Info Rows ──────────────────────────────────────────────────
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
   },
-
-  modalTitle: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.md,
-    color: Colors.darkButton,
-  },
-
-  modalDescription: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: '#64748B',
-    marginBottom: 15,
-    lineHeight: 20,
-  },
-
-  reasonInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    padding: 12,
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    color: Colors.darkButton,
-    textAlignVertical: 'top',
-    marginBottom: 8,
-    maxHeight: 120,
-  },
-
-  charCount: {
-    fontFamily: Fonts.regular,
-    fontSize: Size.xxs,
+  infoLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: 12,
     color: '#94A3B8',
+    flex: 0.6,
+  },
+  infoValue: {
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+    color: Colors.darkButton,
+    flex: 0.58,
     textAlign: 'right',
-    marginBottom: 15,
   },
 
-  modalFooter: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-
-  modalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  cancelButton: {
-    backgroundColor: '#F1F5F9',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-
-  confirmButton: {
-    backgroundColor: '#EF4444',
-  },
-
-  modalButtonText: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.sm,
-    color: Colors.white,
-  },
-  fullScreenOverlay: {
-    flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullImage: {
-    width: '100%',
-    height: '80%',
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  imageLoader: {
-    position: 'absolute',
-    top: '45%',
-    left: 0,
-    right: 0,
-  },
-  pdfPlaceholder: {
-    width: '100%',
-    height: '80%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  pdfPlaceholderText: {
-    color: Colors.white,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    textAlign: 'center',
-  },
-  previewErrorText: {
-    marginTop: 12,
-    color: '#F87171',
-    fontFamily: Fonts.regular,
-    fontSize: Size.xs,
-    textAlign: 'center',
-  },
   receiptBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -875,147 +753,12 @@ const styles = StyleSheet.create({
     color: '#2563eb',
   },
 
-  // ── Hero Card ──
-  heroCard: {
-    marginBottom: 10,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    padding: 18,
-    shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  heroTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  heroLeft: {flex: 1},
-  claimIdRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 5,
-  },
-  claimIdPill: {
-    backgroundColor: '#F1F5F9',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  claimIdPillText: {
-    fontFamily: Fonts.bold,
-    fontSize: 9,
-    color: '#94A3B8',
-    letterSpacing: 0.8,
-  },
-  claimId: {
-    fontFamily: Fonts.bold,
-    fontSize: 16,
-    color: Colors.darkButton,
-    letterSpacing: -0.3,
-  },
-  heroDate: {
-    fontFamily: Fonts.regular,
-    fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 1,
-  },
-  heroDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginBottom: 16,
-  },
-
-  // Amount tiles
-  amountRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-  },
-  amountTile: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 3,
-  },
-  amountTileCenter: {},
-  amountArrow: {
-    paddingHorizontal: 2,
-  },
-  amountTileLabel: {
-    fontFamily: Fonts.regular,
-    fontSize: 10,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  amountTileValue: {
-    fontFamily: Fonts.bold,
-    fontSize: 15,
-    color: Colors.darkButton,
-    letterSpacing: -0.3,
-  },
-
-  // ── Section Card ──
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  sectionIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 9,
-    backgroundColor: '#F1F5F9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionRight: {
-    marginLeft: 'auto',
-  },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: '#F8FAFC',
-    marginBottom: 4,
-  },
-
-  // Info rows
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingVertical: 9,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F8FAFC',
-  },
-  infoLabel: {
-    fontFamily: Fonts.medium,
-    fontSize: 12,
-    color: '#94A3B8',
-    flex: 0.42,
-  },
-  infoValue: {
-    fontFamily: Fonts.medium,
-    fontSize: 12,
-    color: Colors.darkButton,
-    flex: 0.58,
-    textAlign: 'right',
-  },
-
-  // Action buttons
+  // ── Action Buttons ─────────────────────────────────────────────
   actionSection: {
-    width: '97%',
     flexDirection: 'row',
-    gap: 12,
-    marginHorizontal: 5,
+    gap: 10,
     marginTop: 10,
+    marginBottom: 4,
   },
   approveBtn: {
     flex: 1,
@@ -1025,8 +768,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
     borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: 10,
+    gap: 6,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
@@ -1054,8 +797,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     borderRadius: 12,
     paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 8,
+    paddingHorizontal: 10,
+    gap: 6,
     borderWidth: 1,
     borderColor: '#FECACA',
     elevation: 2,
@@ -1078,7 +821,12 @@ const styles = StyleSheet.create({
     color: '#dc2626',
   },
 
-  // Modal
+  // ── Reject Modal ───────────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
   modalSheet: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 28,
@@ -1095,6 +843,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 15,
+  },
   modalIconCircle: {
     width: 44,
     height: 44,
@@ -1104,6 +858,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FECACA',
+  },
+  modalTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
   },
   modalSubtitle: {
     fontFamily: Fonts.regular,
@@ -1142,6 +901,29 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     marginBottom: 8,
   },
+  reasonInput: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    padding: 12,
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+    textAlignVertical: 'top',
+    marginBottom: 8,
+    maxHeight: 120,
+  },
+  charCount: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#94A3B8',
+    textAlign: 'right',
+    marginBottom: 15,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   modalCancelBtn: {
     flex: 1,
     paddingVertical: 14,
@@ -1179,7 +961,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
 
-  // Preview Modal
+  // ── Preview Modal ──────────────────────────────────────────────
   previewModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.8)',
@@ -1191,6 +973,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     margin: 20,
     maxHeight: '80%',
+    height: '80%',
     width: '90%',
     overflow: 'hidden',
   },
@@ -1198,7 +981,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
   },
@@ -1278,5 +1061,32 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: 14,
     color: Colors.white,
+  },
+  fullScreenOverlay: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '100%',
+    height: '80%',
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });

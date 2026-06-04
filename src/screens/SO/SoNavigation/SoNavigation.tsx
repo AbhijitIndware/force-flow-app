@@ -1,8 +1,8 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../HomeScreen/HomeScreen';
 import Home from '../HomeScreen/Home';
-import { SoAppStackParamList } from '../../../types/Navigation';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import AttendanceScreen from '../Attendance/AttendanceScreen';
 import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
@@ -34,8 +34,8 @@ import AsmDashboard from '../Sales/AsmDashboardScreen';
 import TeamDetailScreen from '../Sales/TeamDetailScreen';
 import DetailByStoreScreen from '../Sales/DetailByStoreScreen';
 import DetailByUserScreen from '../Sales/DetailByUserScreen';
-import { OrderDetailScreen } from '../Sales/OrderDetailScreen';
-import { AllOrdersScreen } from '../Sales/AllOrderScreen';
+import {OrderDetailScreen} from '../Sales/OrderDetailScreen';
+import {AllOrdersScreen} from '../Sales/AllOrderScreen';
 import TeamAttendanceListScreen from '../HomeScreen/TeamAttendanceListScreen';
 import TeamPerformanceListScreen from '../HomeScreen/TeamPerformanceListScreen';
 import StockManagementScreen from '../StockScreen/StockManagementScreen';
@@ -45,6 +45,7 @@ import ActivityLocationScreen from '../HomeScreen/ActivityLocationScreen';
 import ActivityCheckInScreen from '../HomeScreen/ActivityCheckInScreen';
 import ExpenseApprovalScreen from '../ExpenseScreen/ExpenseApprovalScreen';
 import ExpenseApprovalDetailScreen from '../ExpenseScreen/ExpenseApprovalDetailScreen';
+import WeeklyOffScreen from '../WeeklyOffScreen/WeeklyOffScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -54,112 +55,112 @@ const SoNavigation = () => {
       <Stack.Screen
         name="Home"
         component={Home}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AttendanceScreen"
         component={AttendanceScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="SalesScreen"
         component={SalesScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ActivityScreen"
         component={ActivityScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="OrdersScreen"
         component={OrdersScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="PartnersScreen"
         component={PartnersScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ProfileScreen"
         component={ProfileScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddDistributorScreen"
         component={AddDistributorScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddStoreScreen"
         component={AddStoreScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="StoreDetailScreen"
         component={StoreDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddMarketVisitScreen"
         component={AddMarketVisitScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddPjpScreen"
         component={AddPjpScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="PjpDetailScreen"
         component={PjpDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="CheckInForm"
         component={CheckInForm}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="MarkActivityScreen"
         component={MarkActivityScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddSaleScreen"
         component={AddSaleScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="SaleDetailScreen"
         component={SaleDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="PurchaseDetailScreen"
         component={PurchaseDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="StockReport"
         component={StockReport}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ExpenseScreen"
         component={ExpenseScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddExpenseScreen"
         component={AddExpenseScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       {/* <Stack.Screen
         name="AddExpenseItemScreen"
@@ -184,7 +185,7 @@ const SoNavigation = () => {
       <Stack.Screen
         name="AddVisibilityScreen"
         component={AddVisibilityScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       {/* <Stack.Screen
         name="VisibilityApprovalScreen"
@@ -194,94 +195,99 @@ const SoNavigation = () => {
       <Stack.Screen
         name="VisibilityApprovalDetailScreen"
         component={VisibilityApprovalDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TeamsSalesReport"
         component={TeamsSalesReport}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AsmDashboard"
         component={AsmDashboard}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TeamDetailScreen"
         component={TeamDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="DetailByStoreScreen"
         component={DetailByStoreScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="DetailByUserScreen"
         component={DetailByUserScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
 
       <Stack.Screen
         name="OrderDetailScreen"
         component={OrderDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="DeliveryNoteDetailScreen"
         component={DeliveryNoteDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AllOrdersScreen"
         component={AllOrdersScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TeamAttendanceListScreen"
         component={TeamAttendanceListScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="TeamPerformanceListScreen"
         component={TeamPerformanceListScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
 
       <Stack.Screen
         name="StockManagementScreen"
         component={StockManagementScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="StockManagementFormScreen"
         component={StockManagementFormScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="AddActivityLocationScreen"
         component={AddActivityLocationScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ActivityCheckInScreen"
         component={ActivityCheckInScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ActivityLocationScreen"
         component={ActivityLocationScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ExpenseApprovalScreen"
         component={ExpenseApprovalScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
       />
       <Stack.Screen
         name="ExpenseApprovalDetailScreen"
         component={ExpenseApprovalDetailScreen}
-        options={{ headerShown: false }}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="WeeklyOffScreen"
+        component={WeeklyOffScreen}
+        options={{headerShown: false}}
       />
     </Stack.Navigator>
   );

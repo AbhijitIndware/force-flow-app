@@ -74,6 +74,11 @@ import {
   RGetActivityCheckInStatus,
   RAddSalesOrderV2,
   IAddSalesOrderV2,
+  RMarkDayOff,
+  IMarkDayOff,
+  ICancelDayOff,
+  RCancelDayOff,
+  RGetDayOffs,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1430,6 +1435,37 @@ export const baseApi = createApi({
       }),
       providesTags: ['Activity'],
     }),
+
+    // Weekly Off
+    markDayOff: builder.mutation<RMarkDayOff, IMarkDayOff>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.attendence.day_off.mark_day_off',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
+    cancelDayOff: builder.mutation<RCancelDayOff, ICancelDayOff>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.attendence.day_off.cancel_day_off',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP'],
+    }),
+    getDayOffs: builder.query<RGetDayOffs,
+      { from_date?: string; to_date?: string }
+    >({
+      query: ({ from_date, to_date } = {}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.attendence.day_off.get_day_offs',
+        method: 'GET',
+        params: {
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
+        },
+      }),
+      providesTags: ['PJP'],
+    }),
   }),
 });
 
@@ -1544,6 +1580,12 @@ export const {
   useActivityCheckInMutation,
   useActivityCheckOutMutation,
   useGetActivityCheckInStatusQuery,
+
+  // Weekly Off
+  useMarkDayOffMutation,
+  useCancelDayOffMutation,
+  useGetDayOffsQuery,
+  useLazyGetDayOffsQuery,
 
 } = baseApi;
 

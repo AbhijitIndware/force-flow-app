@@ -82,64 +82,6 @@ const PJPScreen = ({navigation}: any) => {
 
   const renderItem = ({item}: {item: PjpDailyStore}) => (
     <View style={styles.atteddanceCard}>
-      {/* <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-          <Text style={styles.time}></Text>
-        </View>
-        <View style={[flexRow, {gap: 0, position: 'relative', justifyContent: 'space-between', width: '100%' }]}>
-          <Text style={[styles.leave, {marginLeft: 0}]}>
-            {moment(item?.date).format('MMMM')}
-          </Text>
-          
-          <TouchableOpacity
-            onPress={() =>
-              setSelectedOrderId(
-                selectedOrderId === item.pjp_daily_store_id
-                  ? null
-                  : item.pjp_daily_store_id,
-              )
-            }>
-            <Text style={styles.threeDot}>⋮</Text>
-          </TouchableOpacity>
-          
-          {selectedOrderId === item.pjp_daily_store_id && (
-            <>
-              
-              <TouchableOpacity
-                style={StyleSheet.absoluteFillObject}
-                activeOpacity={1}
-                onPress={() => setSelectedOrderId(null)}
-              />
-              <View style={styles.dropdownMenu}>
-                {!(item?.date
-                  ? moment(item.date, 'YYYY-MM-DD').isBefore(moment(), 'day')
-                  : false) && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedOrderId(null);
-                      navigation.navigate('AddPjpScreen', {
-                        id: item?.pjp_daily_store_id,
-                      });
-                    }}>
-                    <Text style={styles.menuItem}>Edit</Text>
-                  </TouchableOpacity>
-                )}
-
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedOrderId(null);
-                    navigation.navigate('PjpDetailScreen', {
-                      details: item,
-                    });
-                  }}>
-                  <Text style={styles.menuItem}>View</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </View>
-      </View> */}
       <TouchableOpacity
         onPress={() => {
           // setModalVisible(false);
@@ -157,14 +99,6 @@ const PJPScreen = ({navigation}: any) => {
           </Text>
         </View>
         <View style={{flex: 1.5, paddingLeft: 10}}>
-          {/* <Text
-            style={{
-              fontFamily: Fonts.semiBold,
-              fontSize: Size.sm,
-              color: Colors.darkButton,
-            }}>
-            PJP of {moment(item?.date).format('MMMM')}
-          </Text> */}
           <Text style={styles.contentText}>Emp name</Text>
           <Text
             style={[
@@ -177,7 +111,6 @@ const PJPScreen = ({navigation}: any) => {
             ]}>
             {item?.employee_name}
           </Text>
-          {/* <Text style={styles.contentText}>Accestisa new mart</Text> */}
         </View>
         {/* Assign Button */}
         <TouchableOpacity
@@ -261,36 +194,6 @@ const PJPScreen = ({navigation}: any) => {
             />
           )}
         </View>
-        {/* <View>
-          <View style={styles.atteddanceCard}>
-            <View style={styles.cardHeader}>
-              <View style={styles.timeSection}>
-                <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                <Text style={styles.time}> 11:03:45 AM</Text>
-              </View>
-              <Text style={[styles.leave, {marginLeft: 'auto'}]}>January</Text>
-              <EllipsisVertical size={20} color={Colors.darkButton} />
-            </View>
-            <View style={styles.cardbody}>
-              <View style={styles.dateBox}>
-                <Text style={styles.dateText}>19</Text>
-                <Text style={styles.monthText}>Jan</Text>
-              </View>
-              <View>
-                <Text
-                  style={{
-                    fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
-                    color: Colors.darkButton,
-                  }}>
-                  PJP of January
-                </Text>
-                <Text style={styles.contentText}>Store name</Text>
-                <Text style={styles.contentText}>Accestisa new mart</Text>
-              </View>
-            </View>
-          </View>
-        </View> */}
       </View>
     </View>
   );

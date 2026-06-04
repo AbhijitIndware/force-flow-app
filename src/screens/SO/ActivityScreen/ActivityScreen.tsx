@@ -9,24 +9,29 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { ClipboardPenLine, FileCheck, MapPinCheck } from 'lucide-react-native';
-import { Tab } from '@rneui/themed';
-import { Button } from '@rneui/themed';
+import React, {useCallback, useRef, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {
+  CalendarOff,
+  ClipboardPenLine,
+  FileCheck,
+  MapPinCheck,
+} from 'lucide-react-native';
+import {Tab} from '@rneui/themed';
+import {Button} from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import { useGetProdCountQuery } from '../../../features/base/base-api';
+import {useGetProdCountQuery} from '../../../features/base/base-api';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -40,13 +45,13 @@ type Props = {
 
 const today = new Date().toISOString().split('T')[0];
 
-const ActivityScreen = ({ navigation, route }: Props) => {
+const ActivityScreen = ({navigation, route}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
-  const { data: prodData, refetch } = useGetProdCountQuery(
-    { date: today },
-    { refetchOnMountOrArgChange: true },
+  const {data: prodData, refetch} = useGetProdCountQuery(
+    {date: today},
+    {refetchOnMountOrArgChange: true},
   );
 
   const onRefresh = useCallback(() => {
@@ -72,76 +77,92 @@ const ActivityScreen = ({ navigation, route }: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false },
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
+          contentContainerStyle={{position: 'relative'}}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={styles.salesHeaderData}>
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.holdLight },
-                    ]}>
-                    <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
-                    {prodData?.message?.counts?.total_stores}
-                  </Text>
-                  <Text style={styles.countBoxTitle}>Total call</Text>
+            {/* Stat Cards Row */}
+            <View style={styles.statRow}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <ClipboardPenLine
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={18}
+                  />
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightSuccess },
-                    ]}>
-                    <MapPinCheck strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
-                    {prodData?.message?.counts?.status_counts?.Visited}
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
+                    {prodData?.message?.counts?.total_stores ?? 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Productive Call</Text>
+                  <Text style={styles.statLabel}>Total Call</Text>
                 </View>
               </View>
-              <Button
-                type="clear"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-                onPress={() =>
-                  // navigation.navigate('StockReport', {
-                  //   reportName: 'Stock Balance F',
-                  // })
-                  navigation.navigate('StockManagementScreen')
-                }>
-                <Text
-                  style={{
-                    fontFamily: Fonts.medium,
-                    fontSize: Size.xsmd,
-                    color: Colors.orange,
-                    lineHeight: 22,
-                    marginRight: 8,
-                  }}>
-                  View Stock Report
-                </Text>
+
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <MapPinCheck
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
+                    {prodData?.message?.counts?.status_counts?.Visited ?? 0}
+                  </Text>
+                  <Text style={styles.statLabel}>Productive Call</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Action Links Row */}
+            <View style={styles.linksRow}>
+              <TouchableOpacity
+                style={styles.actionLink}
+                onPress={() => navigation.navigate('WeeklyOffScreen')}>
+                <CalendarOff
+                  strokeWidth={1.4}
+                  color={Colors.orange}
+                  size={15}
+                />
+                <Text style={styles.actionLinkText}>Mark Weekly Off</Text>
                 <View style={styles.arrobox}>
                   <Ionicons
                     name="chevron-forward-outline"
-                    size={14}
-                    color={Colors.lightSuccess}
+                    size={11}
+                    color={Colors.white}
                   />
                 </View>
-              </Button>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionLink}
+                onPress={() => navigation.navigate('ActivityCheckInScreen')}>
+                <FileCheck strokeWidth={1.4} color={Colors.orange} size={15} />
+                <Text style={styles.actionLinkText}>Activity Check-In</Text>
+                <View style={styles.arrobox}>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={11}
+                    color={Colors.white}
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
           <View
@@ -180,7 +201,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
               <Tab.Item
                 title="Market Visit"
@@ -197,7 +218,7 @@ const ActivityScreen = ({ navigation, route }: Props) => {
                   borderLeftWidth: active ? 1 : undefined,
                   borderRightWidth: active ? 1 : undefined,
                 })}
-                buttonStyle={{ paddingHorizontal: 0 }}
+                buttonStyle={{paddingHorizontal: 0}}
               />
             </Tab>
           </View>
@@ -249,23 +270,84 @@ const styles = StyleSheet.create({
   //header-box-section css start
   headerSec: {
     backgroundColor: Colors.white,
-    minHeight: 150,
     width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    position: 'relative',
-    zIndex: 1,
-    // iOS Shadow
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
+    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 32,
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    paddingBottom: 20,
-
-    // Android Shadow
-    elevation: 2,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 1,
   },
+  statRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  statIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statText: {
+    flexDirection: 'column',
+  },
+  statNum: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+    // lineHeight: 22,
+  },
+  statLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#888',
+    marginTop: 1,
+  },
+  linksRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionLink: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FFD6A5',
+    backgroundColor: '#FFF8F0',
+  },
+  actionLinkText: {
+    flex: 1,
+    fontFamily: Fonts.medium,
+    fontSize: 11.5,
+    color: Colors.orange,
+    lineHeight: 15,
+  },
+  // keep your existing arrobox style unchanged
   arrobox: {
     width: 20,
     height: 20,
@@ -290,7 +372,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -326,10 +408,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -508,7 +590,7 @@ const styles = StyleSheet.create({
     padding: 15,
     minHeight: 107,
     shadowColor: '#9F9D9D',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 15,
