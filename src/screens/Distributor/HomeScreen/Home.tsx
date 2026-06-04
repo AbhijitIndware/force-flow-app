@@ -15,10 +15,10 @@ import {
   BottomTabHeaderProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {
   House,
   ShoppingCart,
@@ -26,19 +26,18 @@ import {
   ClipboardList,
   UserCircle2,
 } from 'lucide-react-native';
-import { useAppSelector } from '../../../store/hook';
-import { getInitials } from '../../../utils/utils';
+import {useAppSelector} from '../../../store/hook';
+import {getInitials} from '../../../utils/utils';
 // import PurchaseOrdersScreen from '../PurchaseOrders/PurchaseOrdersScreen';
 // import DeliveryNotesScreen from '../DeliveryNotes/DeliveryNotesScreen';
 // import DistributorProfileScreen from '../Profile/DistributorProfileScreen';
-import { DistributorAppStackParamList } from '../../../types/Navigation';
+import {DistributorAppStackParamList} from '../../../types/Navigation';
 import DistributorHomeScreen from './HomeScreen';
 import PurchaseOrdersScreen from '../Purchase/Purchaseordersscreen';
 import DeliveryNotesScreen from '../DeliveryNote/Deliverynotesscreen';
 import DistributorProfileScreen from '../Profile/Distributorprofilescreen';
 
-
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   DistributorAppStackParamList,
   'DistributorHomeScreen'
@@ -51,17 +50,17 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({ state, descriptors, navigation }: any) {
+function MyTabBar({state, descriptors, navigation}: any) {
   return (
-    <View style={{ flexDirection: 'row' }}>
+    <View style={{flexDirection: 'row'}}>
       {state.routes.map((route: any, index: any) => {
-        const { options } = descriptors[route.key];
+        const {options} = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-              ? options.title
-              : route.name;
+            ? options.title
+            : route.name;
 
         const isFocused = state.index === index;
 
@@ -77,7 +76,7 @@ function MyTabBar({ state, descriptors, navigation }: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityState={isFocused ? {selected: true} : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -124,7 +123,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 
   const profileImageSource = employee?.image_base64
-    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
 
   return (
@@ -147,7 +146,9 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => props.navigation.navigate('DistributorProfileScreen' as never)}>
+          onPress={() =>
+            props.navigation.navigate('DistributorProfileScreen' as never)
+          }>
           {profileImageSource ? (
             <Image
               source={profileImageSource}
@@ -169,7 +170,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const DistributorHome = ({ navigation, route }: Props) => {
+const DistributorHome = ({navigation, route}: Props) => {
   return (
     <Tab.Navigator
       initialRouteName="DistributorHomeScreen"
@@ -192,7 +193,7 @@ const DistributorHome = ({ navigation, route }: Props) => {
         component={DistributorHomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({focused}) => (
             <House strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -203,7 +204,7 @@ const DistributorHome = ({ navigation, route }: Props) => {
         options={{
           tabBarLabel: 'Orders',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({focused}) => (
             <ShoppingCart strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -214,7 +215,7 @@ const DistributorHome = ({ navigation, route }: Props) => {
         options={{
           tabBarLabel: 'Deliveries',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({focused}) => (
             <Truck strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -225,7 +226,7 @@ const DistributorHome = ({ navigation, route }: Props) => {
         options={{
           tabBarLabel: 'Profile',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
+          tabBarIcon: ({focused}) => (
             <UserCircle2 strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     width: width * 0.2,
     height: 50,
   },
-  notification: { position: 'relative', top: 6 },
+  notification: {position: 'relative', top: 6},
   notificationBatch: {
     width: 26,
     height: 26,
@@ -272,11 +273,11 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: { color: Colors.white },
-  userInfo: { overflow: 'hidden', borderRadius: 50 },
+  notificationCount: {color: Colors.white},
+  userInfo: {overflow: 'hidden', borderRadius: 50},
   avtarImage: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
   },
   tabButton: {
     width: '100%',
@@ -284,8 +285,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   initialsCircle: {
-    height: 35,
-    width: 35,
+    height: 30,
+    width: 30,
     borderRadius: 20,
     backgroundColor: Colors.orange,
     alignItems: 'center',
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     fontFamily: Fonts.medium,
-    fontSize: 18,
+    fontSize: 15,
     color: Colors.white,
     lineHeight: 12,
   },
