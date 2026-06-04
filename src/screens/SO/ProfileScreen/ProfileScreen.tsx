@@ -9,24 +9,24 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
+import React, {useCallback, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
-import { CirclePower } from 'lucide-react-native';
-import { Divider } from '@rneui/themed';
-import { useAppDispatch, useAppSelector } from '../../../store/hook';
-import { logout } from '../../../features/auth/auth';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {CirclePower} from 'lucide-react-native';
+import {Divider} from '@rneui/themed';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {logout} from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
-import { persistor } from '../../../store/store';
-import { baseApi } from '../../../features/base/base-api';
-import { dropdownApi } from '../../../features/dropdown/dropdown-api';
-import { getInitials, APP_VERSION } from '../../../utils/utils';
+import {persistor} from '../../../store/store';
+import {baseApi} from '../../../features/base/base-api';
+import {dropdownApi} from '../../../features/dropdown/dropdown-api';
+import {getInitials, APP_VERSION} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,7 +38,7 @@ type Props = {
   route: any;
 };
 
-const ProfileScreen = ({ navigation }: Props) => {
+const ProfileScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -53,7 +53,6 @@ const ProfileScreen = ({ navigation }: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  console.log("🚀 ~ ProfileScreen ~ employee:", employee)
 
   const dispatch = useAppDispatch();
 
@@ -70,7 +69,7 @@ const ProfileScreen = ({ navigation }: Props) => {
   };
 
   const profileImageSource = employee?.image_base64
-    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
 
   return (
@@ -128,11 +127,11 @@ const ProfileScreen = ({ navigation }: Props) => {
                 borderRadius: 15,
                 paddingVertical: 20,
               }}>
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -141,7 +140,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 22,
                     marginTop: 3,
@@ -152,14 +151,14 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
 
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -168,7 +167,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
@@ -179,13 +178,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -194,7 +193,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
@@ -225,13 +224,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 20,
                   }}>
@@ -240,7 +239,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
@@ -251,13 +250,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -266,7 +265,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
@@ -277,13 +276,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -292,23 +291,24 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
-                  }}>{employee?.mobile_no || 'N/A'}
+                  }}>
+                  {employee?.mobile_no || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 20,
                   }}>
@@ -317,7 +317,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
@@ -328,13 +328,13 @@ const ProfileScreen = ({ navigation }: Props) => {
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -343,11 +343,12 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
-                  }}>{employee?.birth_date || 'N/A'}
+                  }}>
+                  {employee?.birth_date || 'N/A'}
                 </Text>
               </View>
             </View>
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 

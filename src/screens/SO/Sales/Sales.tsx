@@ -5,28 +5,34 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { Banknote } from 'lucide-react-native';
-import { Button, Tab } from '@rneui/themed';
-import { Animated } from 'react-native';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {
+  Banknote,
+  ClipboardPenLine,
+  FileCheck,
+  MapPinCheck,
+} from 'lucide-react-native';
+import {Button, Tab} from '@rneui/themed';
+import {Animated} from 'react-native';
 import RecentTeamSaleScreen from './RecentTeamSaleScreen';
 import RecentSaleScreen from './RecentSaleScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import { useGetSalesRepotsQuery } from '../../../features/base/base-api';
+import {useGetSalesRepotsQuery} from '../../../features/base/base-api';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsmDashboard from './AsmDashboardScreen';
-import { useAppSelector } from '../../../store/hook';
+import {useAppSelector} from '../../../store/hook';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -38,8 +44,8 @@ type Props = {
   route: any;
 };
 
-const SalesScreen = ({ navigation, route }: Props) => {
-  const { index: initialIndex } = route.params || {};
+const SalesScreen = ({navigation, route}: Props) => {
+  const {index: initialIndex} = route.params || {};
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -52,15 +58,14 @@ const SalesScreen = ({ navigation, route }: Props) => {
     employee?.designation === 'Area Sales Executive' ||
     employee?.designation === 'ASE';
 
-
-  const { data, refetch, isFetching } = useGetSalesRepotsQuery({
+  const {data, refetch, isFetching} = useGetSalesRepotsQuery({
     view_type: isAsm
       ? index === 1
         ? 'self'
         : 'team_include_self'
       : index === 0
-        ? 'self'
-        : 'team_include_self',
+      ? 'self'
+      : 'team_include_self',
   });
 
   const onRefresh = useCallback(() => {
@@ -91,96 +96,82 @@ const SalesScreen = ({ navigation, route }: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false },
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: false},
           )}
           stickyHeaderIndices={[1]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{ position: 'relative' }}
+          contentContainerStyle={{position: 'relative'}}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={styles.salesHeaderData}>
-              <Text
-                style={{
-                  fontFamily: Fonts.regular,
-                  fontSize: Size.sm,
-                  color: Colors.darkButton,
-                }}>
-                Total Sales
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.semiBold,
-                  fontSize: Size.md,
-                  color: Colors.darkButton,
-                }}>
-                ₹ {Number(data?.message?.summary?.total_value || 0).toFixed(2)}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.regular,
-                  fontSize: Size.xs,
-                  color: Colors.sucess,
-                  lineHeight: 16,
-                  marginTop: 5,
-                }}>
-                ₹ {Number(data?.message?.mtd_summary?.total_value || 0).toFixed(2)} MTD{' '}
-              </Text>
-              {/* <Text
-                style={{
-                  fontFamily: Fonts.medium,
-                  fontSize: Size.xs,
-                  color: Colors.darkButton,
-                }}>
-                0% achieved{' '}
-              </Text> */}
-            </View>
-            <View style={styles.welcomBox}>
-              <Text style={styles.welcomeText}>
-                Target <Text style={styles.name}>₹0</Text>
-              </Text>
-              <View style={styles.linkBox}>
-                <View style={styles.linkContent}>
-                  <Banknote size={30} color={Colors.white} />
-                  <Text style={styles.welcomeText}>
-                    Incentive earned <Text style={styles.name}>₹0</Text>
+            {/* Stat Cards */}
+            <View style={styles.statRow}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <ClipboardPenLine
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
+                    {data?.message?.summary?.total_orders ?? 0}
                   </Text>
+                  <Text style={styles.statLabel}>Total Sales</Text>
+                </View>
+              </View>
+
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <MapPinCheck
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
+                    ₹
+                    {Number(data?.message?.summary?.total_value || 0).toFixed(
+                      2,
+                    )}
+                  </Text>
+                  <Text style={styles.statLabel}>Total Value</Text>
                 </View>
               </View>
             </View>
-            <Button
-              type="clear"
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginVertical: 5,
-              }}
-              onPress={() =>
-                navigation.navigate('TeamsSalesReport', {
-                  reportName: 'PJP Report',
-                })
-              }>
-              <Text
-                style={{
-                  fontFamily: Fonts.medium,
-                  fontSize: Size.xsmd,
-                  color: Colors.orange,
-                  lineHeight: 22,
-                  marginRight: 8,
-                }}>
-                View Team Sales Report
-              </Text>
-              <View style={styles.arrobox}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={14}
-                  color={Colors.lightSuccess}
-                />
-              </View>
-            </Button>
+
+            {/* Action Links */}
+            <View style={styles.linksRow}>
+              <TouchableOpacity
+                style={styles.actionLink}
+                onPress={() =>
+                  navigation.navigate('TeamsSalesReport', {
+                    reportName: 'PJP Report',
+                  })
+                }>
+                <FileCheck strokeWidth={1.4} color={Colors.orange} size={15} />
+                <Text style={styles.actionLinkText}>View Sales Report</Text>
+                <View style={styles.arrobox}>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={11}
+                    color={Colors.white}
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.tabSection}>
@@ -191,7 +182,7 @@ const SalesScreen = ({ navigation, route }: Props) => {
                 height: 0,
               }}
               variant="primary"
-              style={{ backgroundColor: Colors.transparent, padding: 0 }}>
+              style={{backgroundColor: Colors.transparent, padding: 0}}>
               {isAsm && (
                 <Tab.Item
                   title="Dashboard"
@@ -249,7 +240,6 @@ const SalesScreen = ({ navigation, route }: Props) => {
           </View>
           {/* Conditionally rendered tab content */}
           {(() => {
-
             if (isAsm) {
               switch (index) {
                 case 0:
@@ -315,26 +305,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingHorizontal: 20,
   },
-
-  //header-box-section css start
-  headerSec: {
-    backgroundColor: Colors.white,
-    minHeight: 200,
-    width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    // iOS Shadow
-    shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    position: 'relative',
-    zIndex: 1,
-    // Android Shadow
-    elevation: 2,
-  },
-
   salesHeaderData: {
     display: 'flex',
     flexDirection: 'column',
@@ -349,7 +319,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -384,10 +354,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -410,16 +380,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 20,
-  },
-  arrobox: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#FF7B00',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 100,
   },
 
   //atteddanceCard section css
@@ -586,5 +546,150 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
+  },
+  salesRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 14,
+  },
+  salesTile: {
+    flex: 1,
+    gap: 5,
+  },
+  salesDivider: {
+    width: 1,
+    height: 60,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 16,
+    alignSelf: 'center',
+  },
+  salesTileLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  salesTileValue: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.lg,
+    color: Colors.darkButton,
+    letterSpacing: -0.3,
+  },
+  mtdChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E6F7EE',
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  mtdChipText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: Colors.success,
+  },
+  reportLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FFD6A5',
+    backgroundColor: '#FFF8F0',
+  },
+  reportLinkText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xsmd,
+    color: Colors.orange,
+  },
+  headerSec: {
+    backgroundColor: Colors.white,
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
+    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 32,
+    shadowColor: '#979797',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 1,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  statIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statText: {
+    flexDirection: 'column',
+    gap: 2,
+  },
+  statNum: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+    lineHeight: 20,
+  },
+  statLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#888',
+  },
+  linksRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionLink: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FFD6A5',
+    backgroundColor: '#FFF8F0',
+  },
+  actionLinkText: {
+    flex: 1,
+    fontFamily: Fonts.medium,
+    fontSize: 11,
+    color: Colors.orange,
+    lineHeight: 15,
+  },
+  arrobox: {
+    width: 18,
+    height: 18,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
   },
 });

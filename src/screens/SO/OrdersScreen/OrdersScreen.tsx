@@ -7,38 +7,38 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import React, { useEffect, useRef } from 'react';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import React, {useEffect, useRef} from 'react';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   AlarmClockMinus,
   CirclePlus,
   PackageOpen,
   ShoppingCart,
 } from 'lucide-react-native';
-import { Tab } from '@rneui/themed';
-import { Animated } from 'react-native';
+import {Tab} from '@rneui/themed';
+import {Animated} from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import PurchaseOrder from '../../../components/SO/Order/Purchase/PurchaseOrder';
 import SalesOrder from '../../../components/SO/Order/Sale/SalesOrder';
 import DeliveryNoteComponent from '../../../components/SO/Order/DeliveryNote/DeliveryNoteComponent';
-import { useGetSalesPurchaseCountQuery } from '../../../features/base/base-api';
+import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 type Props = {
   navigation: any;
   route: any;
 };
 
-const OrdersScreen = ({ navigation, route }: Props) => {
-  const { index: initialIndex } = route.params || {};
+const OrdersScreen = ({navigation, route}: Props) => {
+  const {index: initialIndex} = route.params || {};
   const scrollY = useRef(new Animated.Value(0)).current;
   const [index, setIndex] = React.useState(0);
 
-  const { data: countData } = useGetSalesPurchaseCountQuery();
+  const {data: countData} = useGetSalesPurchaseCountQuery();
 
   useEffect(() => {
     if (initialIndex !== undefined) {
@@ -65,147 +65,198 @@ const OrdersScreen = ({ navigation, route }: Props) => {
       />
       <Animated.ScrollView
         onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false },
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false},
         )}
         stickyHeaderIndices={[1]} // Index of the Tab header
         scrollEventThrottle={16}
         nestedScrollEnabled={true}
         removeClippedSubviews={false}
-        contentContainerStyle={{ position: 'relative' }}>
+        contentContainerStyle={{position: 'relative'}}>
         <View style={styles.headerSec}>
           {index === 0 ? (
-            <View style={styles.salesHeaderData}>
-              {/* Sales Order Counts (Store) */}
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightBlue },
-                    ]}>
-                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+            <View style={styles.statRow}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightBlue},
+                  ]}>
+                  <ShoppingCart
+                    strokeWidth={1.4}
+                    color={Colors.blue}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.sales_orders?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total Orders</Text>
+                  <Text style={styles.statLabel}>Total</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightSuccess },
-                    ]}>
-                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <PackageOpen
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.sales_orders?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Delivered Orders</Text>
+                  <Text style={styles.statLabel}>Delivered</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.holdLight },
-                    ]}>
-                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <AlarmClockMinus
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.sales_orders?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending Orders</Text>
+                  <Text style={styles.statLabel}>Pending</Text>
                 </View>
               </View>
             </View>
           ) : index === 1 ? (
-            <View style={styles.salesHeaderData}>
-              {/* Purchase Order Counts (Distributor) */}
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightBlue },
-                    ]}>
-                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+            <View style={styles.statRow}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightBlue},
+                  ]}>
+                  <ShoppingCart
+                    strokeWidth={1.4}
+                    color={Colors.blue}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.purchase_orders?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total Orders</Text>
+                  <Text style={styles.statLabel}>Total</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightSuccess },
-                    ]}>
-                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <PackageOpen
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.purchase_orders?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Delivered Orders</Text>
+                  <Text style={styles.statLabel}>Delivered</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.holdLight },
-                    ]}>
-                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <AlarmClockMinus
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.purchase_orders?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending Orders</Text>
+                  <Text style={styles.statLabel}>Pending</Text>
                 </View>
               </View>
             </View>
           ) : (
-            <View style={styles.salesHeaderData}>
-              {/* Delivery Note Counts */}
-              <View style={styles.countBoxSection}>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightBlue },
-                    ]}>
-                    <ShoppingCart strokeWidth={1.4} color={Colors.blue} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+            <View style={styles.statRow}>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightBlue},
+                  ]}>
+                  <ShoppingCart
+                    strokeWidth={1.4}
+                    color={Colors.blue}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.delivery_notes?.total || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Total Delivery Note</Text>
+                  <Text style={styles.statLabel}>Total</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.lightSuccess },
-                    ]}>
-                    <PackageOpen strokeWidth={1.4} color={Colors.success} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.lightSuccess},
+                  ]}>
+                  <PackageOpen
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={18}
+                  />
+                </View>
+
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.delivery_notes?.submitted || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Approved Delivery Note</Text>
+                  <Text style={styles.statLabel}>Approved</Text>
                 </View>
-                <View style={styles.countBox}>
-                  <View
-                    style={[
-                      styles.countBoxIcon,
-                      { backgroundColor: Colors.holdLight },
-                    ]}>
-                    <AlarmClockMinus strokeWidth={1.4} color={Colors.orange} />
-                  </View>
-                  <Text style={styles.countBoxDay}>
+              </View>
+              <View style={styles.statCard}>
+                <View
+                  style={[
+                    styles.statIcon,
+                    {backgroundColor: Colors.holdLight},
+                  ]}>
+                  <AlarmClockMinus
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={18}
+                  />
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>
                     {countData?.message?.data?.delivery_notes?.draft || 0}
                   </Text>
-                  <Text style={styles.countBoxTitle}>Pending Delivery Note</Text>
+                  <Text style={styles.statLabel}>Pending</Text>
                 </View>
               </View>
             </View>
@@ -251,7 +302,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                 borderLeftWidth: active ? 1 : undefined,
                 borderRightWidth: active ? 1 : undefined,
               })}
-              buttonStyle={{ paddingHorizontal: 0 }}
+              buttonStyle={{paddingHorizontal: 0}}
             />
             <Tab.Item
               title="Distributor"
@@ -268,7 +319,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                 borderLeftWidth: active ? 1 : undefined,
                 borderRightWidth: active ? 1 : undefined,
               })}
-              buttonStyle={{ paddingHorizontal: 0 }}
+              buttonStyle={{paddingHorizontal: 0}}
             />
             <Tab.Item
               title="Delivery Note"
@@ -285,7 +336,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
                 borderLeftWidth: active ? 1 : undefined,
                 borderRightWidth: active ? 1 : undefined,
               })}
-              buttonStyle={{ paddingHorizontal: 0 }}
+              buttonStyle={{paddingHorizontal: 0}}
             />
           </Tab>
         </View>
@@ -318,9 +369,7 @@ const OrdersScreen = ({ navigation, route }: Props) => {
               })
             }>
             <CirclePlus strokeWidth={1.4} color={Colors.white} />
-            <Text style={styles.checkinButtonText}>
-              {`Add Orders`}
-            </Text>
+            <Text style={styles.checkinButtonText}>{`Add Orders`}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -339,26 +388,6 @@ const styles = StyleSheet.create({
   },
 
   //header-box-section css start
-  headerSec: {
-    backgroundColor: Colors.white,
-    minHeight: 150,
-    width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    position: 'relative',
-    zIndex: 1,
-    // iOS Shadow
-    shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    paddingBottom: 10,
-
-    // Android Shadow
-    elevation: 2,
-    marginBottom: 15,
-  },
   arrobox: {
     width: 20,
     height: 20,
@@ -383,7 +412,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -419,10 +448,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -601,7 +630,7 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 135,
     shadowColor: '#9F9D9D',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 15,
@@ -632,4 +661,61 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   //countBox-section css end
+
+  headerSec: {
+    backgroundColor: Colors.white,
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
+    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 32,
+    shadowColor: '#979797',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 1,
+    marginBottom: 0,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 6,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  statNum: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+  },
+  statLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  statText: {
+    flexDirection: 'column',
+    gap: 0,
+  },
 });
