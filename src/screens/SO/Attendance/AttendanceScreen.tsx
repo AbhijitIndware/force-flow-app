@@ -35,11 +35,8 @@ const AttendanceScreen = ({navigation}: Props) => {
           backgroundColor: Colors.lightBg,
         },
       ]}>
-      <PageHeader
-        title="Attendance & Shifts"
-        navigation={() => navigation.goBack()}
-      />
-      <View style={styles.tabSection}>
+      <PageHeader title="Attendance" navigation={() => navigation.goBack()} />
+      {/* <View style={styles.tabSection}>
         <Tab
           value={index}
           onChange={e => setIndex(e)}
@@ -101,9 +98,9 @@ const AttendanceScreen = ({navigation}: Props) => {
       </View>
       <TabView value={index} onChange={setIndex} animationType="spring">
         <TabView.Item
-          style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
-          <RecentAttendanceScreen />
-        </TabView.Item>
+          style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}> */}
+      <RecentAttendanceScreen />
+      {/* </TabView.Item>
         <TabView.Item style={{width: '100%', backgroundColor: Colors.lightBg}}>
           <RecentShiftsScreen />
         </TabView.Item>
@@ -111,7 +108,7 @@ const AttendanceScreen = ({navigation}: Props) => {
           style={{width: '100%', flex: 1, backgroundColor: Colors.lightBg}}>
           <RecentLeaveScreen />
         </TabView.Item>
-      </TabView>
+      </TabView> */}
     </SafeAreaView>
   );
 };

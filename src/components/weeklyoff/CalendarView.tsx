@@ -121,9 +121,9 @@ const CalendarView = ({weeklyOffs}: {weeklyOffs: string[]}) => {
             style={[
               calStyles.legendDot,
               {
-                backgroundColor: '#FEF2F2',
+                backgroundColor: '#EFF6FF',
                 borderWidth: 1,
-                borderColor: '#dc2626',
+                borderColor: '#2563eb',
               },
             ]}
           />
@@ -134,7 +134,7 @@ const CalendarView = ({weeklyOffs}: {weeklyOffs: string[]}) => {
             style={[
               calStyles.legendDot,
               {
-                backgroundColor: Colors.orange + '20',
+                backgroundColor: Colors.orange,
                 borderWidth: 1,
                 borderColor: Colors.orange,
               },
@@ -176,7 +176,7 @@ const calStyles = StyleSheet.create({
   offCount: {
     fontFamily: Fonts.regular,
     fontSize: 11,
-    color: Colors.success,
+    color: '#2563eb',
     marginTop: 2,
   },
   weekRow: {
@@ -203,16 +203,14 @@ const calStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   offCircle: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#EFF6FF',
   },
   offDateText: {
     fontFamily: Fonts.medium,
-    color: '#dc2626',
+    color: '#2563eb',
   },
   todayCircle: {
-    backgroundColor: Colors.orange + '20',
-    borderWidth: 1,
-    borderColor: Colors.orange,
+    backgroundColor: Colors.orange,
   },
   dateText: {
     fontFamily: Fonts.regular,
@@ -220,8 +218,8 @@ const calStyles = StyleSheet.create({
     color: Colors.text,
   },
   todayDateText: {
-    fontFamily: Fonts.medium,
-    color: Colors.orange,
+    fontFamily: Fonts.semiBold,
+    color: Colors.white,
   },
   pastDateText: {
     color: Colors.textMuted,

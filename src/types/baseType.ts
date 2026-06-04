@@ -1,4 +1,4 @@
-import { ApiResponse, Filters, PaginationInfo } from './Navigation';
+import {ApiResponse, Filters, PaginationInfo} from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -275,7 +275,7 @@ export type ICheckOut = {
 };
 export type IMarkActivity = {
   store: string;
-  activity_type: { activity_type: string }[];
+  activity_type: {activity_type: string}[];
 };
 
 export interface IAddDistributorResponse extends ApiResponse {
@@ -1069,6 +1069,42 @@ export interface AttendanceResponse {
     };
   };
 }
+export interface IGetAttendanceParams {
+  employee: string;
+  from_date: string;
+  to_date?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface IAttendanceSummaryResponse {
+  message: {
+    success: boolean;
+    employee: string;
+    total_working_hours_decimal: number;
+    total_working_hours_formatted: string;
+    status_counts: IStatusCounts;
+    total_records: number;
+    data: IAttendanceRecord[];
+  };
+}
+
+export interface IStatusCounts {
+  Present: number;
+  Absent: number;
+  'Half Day': number;
+  'Weekly Off': number;
+}
+
+export interface IAttendanceRecord {
+  date: string;
+  status: string;
+  working_hours_decimal: number;
+  working_hours_formatted: string;
+  first_check_in: string;
+  last_check_out: string;
+}
 
 export interface AttendanceRecord {
   name: string;
@@ -1175,7 +1211,7 @@ export interface EmployeeData {
 
 //Expense
 export type RExpenseClaimType = {
-  data: { name: string }[];
+  data: {name: string}[];
 };
 
 export type ClaimData = {
@@ -1186,7 +1222,7 @@ export type ClaimData = {
   sanctioned: number;
 };
 export type RExpenseClaimByEmp = {
-  message: { data: ClaimData[] };
+  message: {data: ClaimData[]};
 };
 
 export interface IExpenseItem {
@@ -1338,7 +1374,7 @@ export type PromoterAttendanceData = {
 
   assigned_store: any;
   attendance_date: string;
-  checkin_records: { check_in: null; check_out: null };
+  checkin_records: {check_in: null; check_out: null};
   employee: string;
   employee_name: string;
   message: string;
@@ -2244,23 +2280,22 @@ export interface RGetActivityCheckInStatus {
   };
 }
 
-
 // Weekly Off
 export interface IMarkDayOff {
   date: string; // YYYY-MM-DD
 }
 export interface RMarkDayOff {
-  message: { success: boolean; message: string; document_name?: string };
+  message: {success: boolean; message: string; document_name?: string};
 }
 export interface ICancelDayOff {
   date: string;
 }
 export interface RCancelDayOff {
-  message: { success: boolean; message: string };
+  message: {success: boolean; message: string};
 }
 export interface RGetDayOffs {
   message: {
     success: boolean;
-    data: { name: string; attendance_date: string; status: string }[];
+    data: {name: string; attendance_date: string; status: string}[];
   };
 }

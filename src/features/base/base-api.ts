@@ -79,6 +79,8 @@ import {
   ICancelDayOff,
   RCancelDayOff,
   RGetDayOffs,
+  IGetAttendanceParams,
+  IAttendanceSummaryResponse,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -502,6 +504,30 @@ export const baseApi = createApi({
         params: {
           page: page,
           page_size: page_size,
+        },
+      }),
+    }),
+    getAttendanceV2: builder.query<
+      IAttendanceSummaryResponse,
+      IGetAttendanceParams
+    >({
+      query: ({
+        employee,
+        from_date,
+        to_date,
+        status,
+        limit = 20,
+        offset = 0,
+      }) => ({
+        url: `/method/salesforce_management.mobile_app_apis.attendence.get_working_hours.fetch_working_hours`,
+        method: 'GET',
+        params: {
+          employee,
+          from_date,
+          to_date,
+          status,
+          limit,
+          offset,
         },
       }),
     }),
@@ -1558,6 +1584,7 @@ export const {
   useGetAsmUserDetailQuery,
   //Attendance
   useGetAttendanceQuery,
+  useGetAttendanceV2Query,
   //Copy PJP
   useCopyPjpToOtherEmpMutation,
   useGetEmployeesToAssignQuery,

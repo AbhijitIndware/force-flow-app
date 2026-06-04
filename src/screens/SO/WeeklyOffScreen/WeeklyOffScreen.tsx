@@ -393,8 +393,12 @@ const styles = StyleSheet.create({
   actionBtnRed: {
     borderWidth: 1,
     borderColor: Colors.danger + '60',
-    backgroundColor: Colors.danger + '08',
+    backgroundColor: Colors.danger + '20',
   },
   actionBtnText: {fontFamily: Fonts.regular, fontSize: 12, color: '#fff'},
-  actionBtnTextRed: {fontFamily: Fonts.regular, fontSize: 12, color: '#fff'},
+  actionBtnTextRed: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 12,
+    color: Colors.danger,
+  },
 });
