@@ -20,7 +20,13 @@ const MONTHS = [
   'December',
 ];
 
-const CalendarView = ({weeklyOffs}: {weeklyOffs: string[]}) => {
+const CalendarView = ({
+  weeklyOffs,
+  setSelectedDate,
+}: {
+  weeklyOffs: string[];
+  setSelectedDate: any;
+}) => {
   const [viewMonth, setViewMonth] = useState(moment());
 
   const startOfMonth = viewMonth.clone().startOf('month');
@@ -89,7 +95,12 @@ const CalendarView = ({weeklyOffs}: {weeklyOffs: string[]}) => {
             const isToday = date === today;
             const isPast = date ? moment(date).isBefore(today, 'day') : false;
             return (
-              <View key={col} style={calStyles.cell}>
+              <TouchableOpacity
+                key={col}
+                style={calStyles.cell}
+                onPress={() => {
+                  setSelectedDate(date);
+                }}>
                 {date ? (
                   <View
                     style={[
@@ -108,7 +119,7 @@ const CalendarView = ({weeklyOffs}: {weeklyOffs: string[]}) => {
                     </Text>
                   </View>
                 ) : null}
-              </View>
+              </TouchableOpacity>
             );
           })}
         </View>

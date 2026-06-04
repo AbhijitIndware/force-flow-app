@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,33 +12,46 @@ import {
   Platform,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { useCreateActivityLocationMutation } from '../../../features/base/base-api';
-import { useGetLocationByLatLongQuery } from '../../../features/dropdown/dropdown-api';
-import { getCurrentLocation, requestLocationPermission } from '../../../utils/utils';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {useCreateActivityLocationMutation} from '../../../features/base/base-api';
+import {useGetLocationByLatLongQuery} from '../../../features/dropdown/dropdown-api';
+import {
+  getCurrentLocation,
+  requestLocationPermission,
+} from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
-import { MapPin, Navigation, Save } from 'lucide-react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SoAppStackParamList } from '../../../types/Navigation';
+import {MapPin, Navigation, Save} from 'lucide-react-native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {SoAppStackParamList} from '../../../types/Navigation';
 
-type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'AddActivityLocationScreen'>;
+type NavigationProp = NativeStackNavigationProp<
+  SoAppStackParamList,
+  'AddActivityLocationScreen'
+>;
 
-const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp }) => {
+const AddActivityLocationScreen = ({
+  navigation,
+}: {
+  navigation: NavigationProp;
+}) => {
   const [locationName, setLocationName] = useState('');
   const [address, setAddress] = useState('');
-  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
-  const [createLocation, { isLoading }] = useCreateActivityLocationMutation();
+  const [createLocation, {isLoading}] = useCreateActivityLocationMutation();
 
-  const { data: locationData } = useGetLocationByLatLongQuery(
+  const {data: locationData} = useGetLocationByLatLongQuery(
     {
       latitude: coordinates?.latitude.toString() || '',
       longitude: coordinates?.longitude.toString() || '',
     },
-    { skip: !coordinates }
+    {skip: !coordinates},
   );
 
   useEffect(() => {
@@ -52,18 +65,18 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
       setIsLocating(true);
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
-        Toast.show({ type: 'error', text1: 'Location permission denied' });
+        Toast.show({type: 'error', text1: 'Location permission denied'});
         return;
       }
 
       const location = await getCurrentLocation();
       if (location) {
         const [lat, lng] = location.split(',').map(Number);
-        setCoordinates({ latitude: lat, longitude: lng });
-        Toast.show({ type: 'success', text1: 'Location captured' });
+        setCoordinates({latitude: lat, longitude: lng});
+        Toast.show({type: 'success', text1: 'Location captured'});
       }
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Failed to get location' });
+      Toast.show({type: 'error', text1: 'Failed to get location'});
     } finally {
       setIsLocating(false);
     }
@@ -71,11 +84,11 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
 
   const handleSubmit = async () => {
     if (!locationName.trim()) {
-      Toast.show({ type: 'error', text1: 'Please enter location name' });
+      Toast.show({type: 'error', text1: 'Please enter location name'});
       return;
     }
     if (!coordinates) {
-      Toast.show({ type: 'error', text1: 'Please capture coordinates' });
+      Toast.show({type: 'error', text1: 'Please capture coordinates'});
       return;
     }
 
@@ -88,25 +101,26 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
       }).unwrap();
 
       if (res.message.success) {
-        Toast.show({ type: 'success', text1: 'Location created successfully' });
+        Toast.show({type: 'success', text1: 'Location created successfully'});
         navigation.goBack();
       }
     } catch (error: any) {
-      console.log("🚀 ~ handleSubmit ~ error:", error)
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to create location'
+        text1: error?.data?.message || 'Failed to create location',
       });
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <PageHeader title="Add Activity Location" navigation={() => navigation.goBack()} />
+      <PageHeader
+        title="Create Activity Location"
+        navigation={() => navigation.goBack()}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
+        style={{flex: 1}}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.form}>
             <View style={styles.inputGroup}>
@@ -120,7 +134,6 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
               />
             </View>
 
-
             <View style={styles.coordinatesCard}>
               <View style={styles.cardHeader}>
                 <MapPin size={20} color={Colors.darkButton} />
@@ -131,11 +144,15 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
                 <View style={styles.coordsRow}>
                   <View style={styles.coordBox}>
                     <Text style={styles.coordLabel}>Latitude</Text>
-                    <Text style={styles.coordValue}>{coordinates.latitude.toFixed(6)}</Text>
+                    <Text style={styles.coordValue}>
+                      {coordinates.latitude.toFixed(6)}
+                    </Text>
                   </View>
                   <View style={styles.coordBox}>
                     <Text style={styles.coordLabel}>Longitude</Text>
-                    <Text style={styles.coordValue}>{coordinates.longitude.toFixed(6)}</Text>
+                    <Text style={styles.coordValue}>
+                      {coordinates.longitude.toFixed(6)}
+                    </Text>
                   </View>
                 </View>
               ) : (
@@ -145,14 +162,19 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
               <TouchableOpacity
                 style={styles.locationBtn}
                 onPress={handleGetLocation}
-                disabled={isLocating}
-              >
+                disabled={isLocating}>
                 {isLocating ? (
                   <ActivityIndicator color={Colors.darkButton} />
                 ) : (
                   <>
-                    <Navigation size={18} color={Colors.darkButton} style={{ marginRight: 8 }} />
-                    <Text style={styles.locationBtnText}>Capture Current Location</Text>
+                    <Navigation
+                      size={18}
+                      color={Colors.darkButton}
+                      style={{marginRight: 8}}
+                    />
+                    <Text style={styles.locationBtnText}>
+                      Capture Current Location
+                    </Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -175,16 +197,15 @@ const AddActivityLocationScreen = ({ navigation }: { navigation: NavigationProp 
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.submitBtn, isLoading && { opacity: 0.7 }]}
+            style={[styles.submitBtn, isLoading && {opacity: 0.7}]}
             onPress={handleSubmit}
-            disabled={isLoading}
-          >
+            disabled={isLoading}>
             {isLoading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <Save size={20} color={Colors.white} style={{ marginRight: 8 }} />
-                <Text style={styles.submitText}>Add Location</Text>
+                <Save size={20} color={Colors.white} style={{marginRight: 8}} />
+                <Text style={styles.submitText}>Create Location</Text>
               </>
             )}
           </TouchableOpacity>

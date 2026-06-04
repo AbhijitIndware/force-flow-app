@@ -1,5 +1,5 @@
 // Add ExpenseItem.tsx
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Animated,
   Image,
@@ -9,20 +9,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Text } from 'react-native';
+import {Text} from 'react-native';
 import ReusableInput from '../../ui-lib/reuseable-input';
-import { FormikTouched } from 'formik';
+import {FormikTouched} from 'formik';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
-import { Upload } from 'lucide-react-native';
-import { pick } from '@react-native-documents/picker';
-import { launchCamera } from 'react-native-image-picker';
-import { Colors } from '../../../utils/colors';
+import {Upload} from 'lucide-react-native';
+import {pick} from '@react-native-documents/picker';
+import {launchCamera} from 'react-native-image-picker';
+import {Colors} from '../../../utils/colors';
 import moment from 'moment';
-import { Fonts } from '../../../constants';
-import { flexCol } from '../../../utils/styles';
-import { Switch } from 'react-native';
+import {Fonts} from '../../../constants';
+import {flexCol} from '../../../utils/styles';
+import {Switch} from 'react-native';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import { AUTO_TA_THRESHOLD } from '../../../types/schema';
+import {AUTO_TA_THRESHOLD} from '../../../types/schema';
 
 interface Props {
   values: Record<string, string | any>;
@@ -52,18 +52,18 @@ interface DropdownOption {
 }
 export const EXPENSE_TYPES: DropdownOption[] = [
   // { label: 'Daily Allowance', value: 'Daily Allowance' },
-  { label: 'TA - Auto', value: 'TA - Auto' },
-  { label: 'TA - Cab', value: 'TA - Cab' },
-  { label: 'TA – Share Taxi', value: 'TA – Share Taxi' },
-  { label: 'TA - Bus', value: 'TA - Bus' },
-  { label: 'TA - Rail', value: 'TA - Rail' },
-  { label: 'TA - Bike (Petrol)', value: 'TA - Bike (Petrol)' },
-  { label: 'TA - Local Travel', value: 'TA - Local Travel' },
-  { label: 'Lodging / Boarding / Hotel', value: 'Lodging / Boarding / Hotel' },
-  { label: 'Food / Meals', value: 'Food / Meals' },
-  { label: 'Mobile Bill', value: 'Mobile Bill' },
-  { label: 'Courier', value: 'Courier' },
-  { label: 'Xerox', value: 'Xerox' },
+  {label: 'TA - Auto', value: 'TA - Auto'},
+  {label: 'TA - Cab', value: 'TA - Cab'},
+  {label: 'TA – Share Taxi', value: 'TA – Share Taxi'},
+  {label: 'TA - Bus', value: 'TA - Bus'},
+  {label: 'TA - Rail', value: 'TA - Rail'},
+  {label: 'TA - Bike (Petrol)', value: 'TA - Bike (Petrol)'},
+  {label: 'TA – Ex-HQ Local Travel', value: 'TA – Ex-HQ Local Travel'},
+  {label: 'Lodging / Boarding / Hotel', value: 'Lodging / Boarding / Hotel'},
+  {label: 'Food / Meals', value: 'Food / Meals'},
+  {label: 'Mobile Bill', value: 'Mobile Bill'},
+  {label: 'Courier', value: 'Courier'},
+  {label: 'Xerox', value: 'Xerox'},
 ];
 const AddExpenseItemV2: React.FC<Props> = ({
   values,
@@ -100,7 +100,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
         return;
       }
 
-      const { uri, name, type } = doc[0];
+      const {uri, name, type} = doc[0];
 
       setFieldValue('attachment', {
         uri,
@@ -147,16 +147,16 @@ const AddExpenseItemV2: React.FC<Props> = ({
   const isTA = TA_TYPES.includes(values.claim_type);
   const isRail = values.claim_type === 'TA - Rail';
   const isMobileBill = values.claim_type === 'Mobile Bill';
-  const isIncidental = values.claim_type === 'Courier' || values.claim_type === 'Xerox';
+  const isIncidental =
+    values.claim_type === 'Courier' || values.claim_type === 'Xerox';
 
   return (
     <Animated.ScrollView
-      onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+      onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{ padding: 16 }}>
-
+      contentContainerStyle={{padding: 16}}>
       <View style={styles.card}>
         <ReusableDropdownv2
           label="Expense Claim Type"
@@ -166,12 +166,11 @@ const AddExpenseItemV2: React.FC<Props> = ({
           error={touched.claim_type && errors.claim_type}
           onChange={(val: string) => onSelect('claim_type', val)}
           height={40}
-
         />
 
         {/* TA SPECIFIC FIELDS */}
         {isTA && (
-          <View style={{ marginTop: 10 }}>
+          <View style={{marginTop: 10}}>
             <ReusableInput
               label="Distance (KM)"
               placeholder="0.00"
@@ -187,10 +186,10 @@ const AddExpenseItemV2: React.FC<Props> = ({
                 field="ta_rail_class"
                 value={values.ta_rail_class}
                 data={[
-                  { label: 'Sleeper', value: 'Sleeper' },
-                  { label: 'Non-AC Chair Car', value: 'Non-AC Chair Car' },
-                  { label: 'III-AC', value: 'III-AC' },
-                  { label: 'AC Chair Car', value: 'AC Chair Car' },
+                  {label: 'Sleeper', value: 'Sleeper'},
+                  {label: 'Non-AC Chair Car', value: 'Non-AC Chair Car'},
+                  {label: 'III-AC', value: 'III-AC'},
+                  {label: 'AC Chair Car', value: 'AC Chair Car'},
                 ]}
                 error={touched.ta_rail_class && errors.ta_rail_class}
                 onChange={(val: string) => setFieldValue('ta_rail_class', val)}
@@ -209,20 +208,23 @@ const AddExpenseItemV2: React.FC<Props> = ({
                 padding: 10,
                 borderRadius: 8,
               }}>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.label, { marginBottom: 0 }]}>Is Local Travel?</Text>
-                <Text style={{
-                  fontSize: 12,
-                  color: values.is_local === 1 ? '#00897B' : '#F4511E',
-                  fontWeight: '600',
-                  marginTop: 2,
-                }}>
+              <View style={{flex: 1}}>
+                <Text style={[styles.label, {marginBottom: 0}]}>
+                  Is Local Travel?
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: values.is_local === 1 ? '#00897B' : '#F4511E',
+                    fontWeight: '600',
+                    marginTop: 2,
+                  }}>
                   {values.is_local === 1 ? '✓ Local' : '⊙ Outstation'}
                 </Text>
               </View>
               <Switch
                 value={values.is_local === 1}
-                trackColor={{ false: '#767577', true: Colors.primary + '80' }}
+                trackColor={{false: '#767577', true: Colors.primary + '80'}}
                 thumbColor={values.is_local === 1 ? Colors.primary : '#f4f3f4'}
                 onValueChange={val => setFieldValue('is_local', val ? 1 : 0)}
               />
@@ -232,7 +234,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
 
         {/* MOBILE BILL SPECIFIC FIELDS */}
         {isMobileBill && (
-          <View style={{ marginTop: 10 }}>
+          <View style={{marginTop: 10}}>
             <ReusableInput
               label="Mobile Number"
               value={values.mobile_number}
@@ -245,7 +247,9 @@ const AddExpenseItemV2: React.FC<Props> = ({
               label="Bill Month"
               value={values.telecom_bill_month}
               onChange={(val: string) => {
-                const firstDay = moment(val).startOf('month').format('YYYY-MM-DD');
+                const firstDay = moment(val)
+                  .startOf('month')
+                  .format('YYYY-MM-DD');
                 setFieldValue('telecom_bill_month', firstDay);
               }}
               error={touched.telecom_bill_month && errors.telecom_bill_month}
@@ -255,27 +259,27 @@ const AddExpenseItemV2: React.FC<Props> = ({
 
         {/* INCIDENTAL (Courier / Xerox) SPECIFIC FIELDS */}
         {isIncidental && (
-          <View style={{ marginTop: 10 }}>
+          <View style={{marginTop: 10}}>
             <ReusableDatePicker
               label="Bill Month"
               value={values.incidental_bill_month}
               onChange={(val: string) => {
-                const firstDay = moment(val).startOf('month').format('YYYY-MM-DD');
+                const firstDay = moment(val)
+                  .startOf('month')
+                  .format('YYYY-MM-DD');
                 setFieldValue('incidental_bill_month', firstDay);
               }}
-              error={touched.incidental_bill_month && errors.incidental_bill_month}
+              error={
+                touched.incidental_bill_month && errors.incidental_bill_month
+              }
             />
           </View>
         )}
 
         {/* HOTEL / LODGING SPECIFIC FIELDS */}
         {isHotel && (
-          <View
-            style={[
-              styles.toggleRow,
-              { marginTop: 10 },
-            ]}>
-            <View style={{ flex: 1 }}>
+          <View style={[styles.toggleRow, {marginTop: 10}]}>
+            <View style={{flex: 1}}>
               <Text style={styles.toggleTitle}>Self Arranged Stay</Text>
               <Text style={styles.toggleSub}>
                 Enable if you arranged your own lodging
@@ -283,13 +287,16 @@ const AddExpenseItemV2: React.FC<Props> = ({
             </View>
             <Switch
               value={values.is_self_arranged_stay === 1}
-              trackColor={{ false: '#CBD5E1', true: Colors.primary + '80' }}
-              thumbColor={values.is_self_arranged_stay === 1 ? Colors.primary : '#f4f3f4'}
-              onValueChange={val => setFieldValue('is_self_arranged_stay', val ? 1 : 0)}
+              trackColor={{false: '#CBD5E1', true: Colors.primary + '80'}}
+              thumbColor={
+                values.is_self_arranged_stay === 1 ? Colors.primary : '#f4f3f4'
+              }
+              onValueChange={val =>
+                setFieldValue('is_self_arranged_stay', val ? 1 : 0)
+              }
             />
           </View>
         )}
-
 
         <ReusableInput
           label="Description"
@@ -308,20 +315,16 @@ const AddExpenseItemV2: React.FC<Props> = ({
           error={touched.amount && errors.amount}
           keyboardType="numeric"
         />
-
       </View>
 
       {/* ----------------------- */}
       {/*  ATTACHMENT UPLOAD BTN */}
       {/* ----------------------- */}
 
-
-      <View style={{ marginTop: 5 }}>
+      <View style={{marginTop: 5}}>
         {/* Label row: "Attachment" + required/optional pill */}
         <View style={styles.attachmentLabelRow}>
-          <Text style={{ ...styles.label, marginBottom: 0 }}>
-            Attachment
-          </Text>
+          <Text style={{...styles.label, marginBottom: 0}}>Attachment</Text>
           {isAttachmentOptional ? (
             <View style={styles.optionalPill}>
               <Text style={styles.optionalPillText}>Optional</Text>
@@ -336,8 +339,12 @@ const AddExpenseItemV2: React.FC<Props> = ({
         {isAutoTA && (
           <Text style={styles.attachmentHint}>
             {isAttachmentOptional
-              ? `Attachment not required for TA - Auto below ₹${AUTO_TA_THRESHOLD.toLocaleString('en-IN')}.`
-              : `Attachment required for TA - Auto amounts ₹${AUTO_TA_THRESHOLD.toLocaleString('en-IN')} and above.`}
+              ? `Attachment not required for TA - Auto below ₹${AUTO_TA_THRESHOLD.toLocaleString(
+                  'en-IN',
+                )}.`
+              : `Attachment required for TA - Auto amounts ₹${AUTO_TA_THRESHOLD.toLocaleString(
+                  'en-IN',
+                )} and above.`}
           </Text>
         )}
         <TouchableOpacity
@@ -364,7 +371,9 @@ const AddExpenseItemV2: React.FC<Props> = ({
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>Upload Attachment</Text>
               <TouchableOpacity onPress={() => setShowAttachmentOptions(false)}>
-                <Text style={{ color: Colors.primary, fontWeight: '600' }}>Done</Text>
+                <Text style={{color: Colors.primary, fontWeight: '600'}}>
+                  Done
+                </Text>
               </TouchableOpacity>
             </View>
             <Pressable
@@ -374,22 +383,33 @@ const AddExpenseItemV2: React.FC<Props> = ({
                 handlePickDocument();
               }}>
               <View style={styles.optionIcon}>
-                <Text style={{ fontSize: 20 }}>📁</Text>
+                <Text style={{fontSize: 20}}>📁</Text>
               </View>
               <Text style={styles.optionText}>Select from Drive</Text>
             </Pressable>
 
             <Pressable style={styles.optionBtn} onPress={handleOpenCamera}>
-              <View style={[styles.optionIcon, { backgroundColor: '#E3F2FD' }]}>
-                <Text style={{ fontSize: 20 }}>📷</Text>
+              <View style={[styles.optionIcon, {backgroundColor: '#E3F2FD'}]}>
+                <Text style={{fontSize: 20}}>📷</Text>
               </View>
               <Text style={styles.optionText}>Click Photo</Text>
             </Pressable>
 
             <Pressable
-              style={[styles.optionBtn, { marginTop: 10 }]}
+              style={[styles.optionBtn, {marginTop: 10}]}
               onPress={() => setShowAttachmentOptions(false)}>
-              <Text style={[styles.optionText, { color: 'red', marginLeft: 0, width: '100%', textAlign: 'center' }]}>Cancel</Text>
+              <Text
+                style={[
+                  styles.optionText,
+                  {
+                    color: 'red',
+                    marginLeft: 0,
+                    width: '100%',
+                    textAlign: 'center',
+                  },
+                ]}>
+                Cancel
+              </Text>
             </Pressable>
           </View>
         </Modal>
@@ -408,7 +428,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
             </TouchableOpacity>
             {values.attachment && isImage(values.attachment.type) && (
               <Image
-                source={{ uri: values.attachment.uri }}
+                source={{uri: values.attachment.uri}}
                 style={styles.fullImage}
                 resizeMode="contain"
               />
@@ -417,20 +437,21 @@ const AddExpenseItemV2: React.FC<Props> = ({
         </Modal>
 
         {values.attachment && (
-          <View style={[flexCol, { gap: 10, marginTop: 15 }]}>
+          <View style={[flexCol, {gap: 10, marginTop: 15}]}>
             <Pressable
               style={styles.previewContainer}
-              onPress={() => isImage(values.attachment.type) && setShowImagePreview(true)}
-            >
+              onPress={() =>
+                isImage(values.attachment.type) && setShowImagePreview(true)
+              }>
               {isImage(values.attachment.type) ? (
                 <View style={styles.imageWrapper}>
                   <Image
-                    source={{ uri: values.attachment.uri }}
+                    source={{uri: values.attachment.uri}}
                     style={styles.fullWidthImage}
                     resizeMode="cover"
                   />
                   <View style={styles.zoomIcon}>
-                    <Text style={{ color: '#fff', fontSize: 10 }}>View Full</Text>
+                    <Text style={{color: '#fff', fontSize: 10}}>View Full</Text>
                   </View>
                 </View>
               ) : (
@@ -450,8 +471,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
             </Pressable>
             <TouchableOpacity
               onPress={() => setFieldValue('attachment', null)}
-              style={styles.removeBtn}
-            >
+              style={styles.removeBtn}>
               <Text style={styles.removeBtnText}>Remove Attachment</Text>
             </TouchableOpacity>
           </View>
@@ -470,7 +490,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 3,

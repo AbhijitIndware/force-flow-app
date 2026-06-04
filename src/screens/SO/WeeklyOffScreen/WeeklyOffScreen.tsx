@@ -214,7 +214,10 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
           {historyLoading ? (
             <ActivityIndicator style={{padding: 20}} color={Colors.orange} />
           ) : (
-            <CalendarView weeklyOffs={weeklyOffs} />
+            <CalendarView
+              weeklyOffs={weeklyOffs}
+              setSelectedDate={setSelectedDate}
+            />
           )}
         </View>
       </ScrollView>

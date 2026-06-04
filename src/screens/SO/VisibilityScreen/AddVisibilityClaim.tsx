@@ -109,7 +109,7 @@ const AddVisibilityScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, styles.container]}>
       <PageHeader
-        title="Add Visibility Claim"
+        title="Create Visibility Claim"
         navigation={() => navigation.goBack()}
       />
 
@@ -131,7 +131,7 @@ const AddVisibilityScreen = ({navigation}: Props) => {
         {isLoading ? (
           <ActivityIndicator size="small" color={Colors.white} />
         ) : (
-          <Text style={styles.submitText}>Submit Claim</Text>
+          <Text style={styles.submitText}>Create Claim</Text>
         )}
       </TouchableOpacity>
     </SafeAreaView>

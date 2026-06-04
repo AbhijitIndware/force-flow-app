@@ -6,11 +6,11 @@ import {
   Modal,
   View,
 } from 'react-native';
-import React, { useRef } from 'react';
-import { Colors } from '../../../utils/colors';
+import React, {useRef} from 'react';
+import {Colors} from '../../../utils/colors';
 import Toast from 'react-native-toast-message';
-import { useFormik } from 'formik';
-import { expenseItemSchema } from '../../../types/schema';
+import {useFormik} from 'formik';
+import {expenseItemSchema} from '../../../types/schema';
 import AddExpenseItemV2 from './add-expense-item-v2';
 
 const initialValues = {
@@ -29,7 +29,12 @@ const initialValues = {
   is_self_arranged_stay: 0,
 };
 
-const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) => {
+const AddExpenseModal = ({
+  visible,
+  onClose,
+  onAddExpense,
+  selectedDate,
+}: any) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const {
@@ -44,7 +49,7 @@ const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) 
   } = useFormik({
     initialValues: {
       ...initialValues,
-      date: selectedDate || '',   // ← pre-fill date
+      date: selectedDate || '', // ← pre-fill date
     },
     validationSchema: expenseItemSchema,
     onSubmit: async formValues => {
@@ -65,11 +70,11 @@ const AddExpenseModal = ({ visible, onClose, onAddExpense, selectedDate }: any) 
         is_self_arranged_stay: formValues.is_self_arranged_stay,
       });
 
-      Toast.show({
-        type: 'success',
-        text1: 'Expense Added',
-        position: 'top',
-      });
+      // Toast.show({
+      //   type: 'success',
+      //   text1: 'Expense Added',
+      //   position: 'top',
+      // });
 
       resetForm();
       onClose();
@@ -128,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  submitText: { color: Colors.white, fontSize: 16, fontWeight: 'bold' },
-  closeBtn: { padding: 10, alignItems: 'center' },
-  closeText: { fontSize: 14, color: Colors.black },
+  submitText: {color: Colors.white, fontSize: 16, fontWeight: 'bold'},
+  closeBtn: {padding: 10, alignItems: 'center'},
+  closeText: {fontSize: 14, color: Colors.black},
 });

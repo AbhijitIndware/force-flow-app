@@ -84,10 +84,6 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
     {claim_id: existingClaimId!},
     {skip: !existingClaimId},
   );
-  console.log(
-    '🚀 ~ AddExpenseComponent ~ existingDetail:',
-    existingDetail?.message?.data?.distance_km,
-  );
 
   const workflowStatus: string =
     existingDetail?.message?.data?.workflow_state || '';
@@ -143,7 +139,6 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
         pjp_store_id: pjpStoreId,
         // is_self_arranged_stay: isSelfArrangedStay ? 1 : 0,
       }).unwrap();
-      console.log('🚀 ~ handleCreateDraft ~ draftRes:', draftRes);
       const newClaimId = draftRes.message.data?.claim_id;
       const distance = draftRes.message.data?.distance_km;
       if (!newClaimId) throw new Error('Failed to obtain claim ID');
@@ -258,7 +253,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
       setLoading(true);
       setUploadStep('Finalizing submission...');
       let res = await submitExpenseClaim({claim_id: claimId}).unwrap();
-      console.log('🚀 ~ handleSubmitClaim ~ res:', res);
+      // console.log('🚀 ~ handleSubmitClaim ~ res:', res);
       Toast.show({
         type: 'success',
         text1: 'Expense claim submitted successfully',
@@ -484,7 +479,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
               ]}
               onPress={handleSubmitClaim}
               disabled={loading || expenses.length === 0}>
-              <Text style={styles.actionBtnText}>Submit Claim</Text>
+              <Text style={styles.actionBtnText}>Create Claim</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -493,7 +488,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
                 {backgroundColor: Colors.darkButton},
                 styles.disabled,
               ]}>
-              <Text style={styles.actionBtnText}>Submit Claim</Text>
+              <Text style={styles.actionBtnText}>Create Claim</Text>
             </TouchableOpacity>
           )}
         </>
