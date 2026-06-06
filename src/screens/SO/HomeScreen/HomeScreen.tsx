@@ -1,13 +1,21 @@
-/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {RefreshControl, SafeAreaView, ScrollView} from 'react-native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {useIsFocused} from '@react-navigation/native';
+import moment from 'moment';
+import Toast from 'react-native-toast-message';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import {
+  getCurrentLocation,
+  requestLocationPermission,
+} from '../../../utils/utils';
 import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {SoAppStackParamList} from '../../../types/Navigation';
+import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
+
 import {
   resetLocation,
   setSelectedStore,
@@ -26,16 +34,8 @@ import {
   usePjpInitializeMutation,
   useGetPjpNextActionQuery,
 } from '../../../features/base/base-api';
-import Toast from 'react-native-toast-message';
-import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
-import moment from 'moment';
-import {useIsFocused} from '@react-navigation/native';
-import {
-  getCurrentLocation,
-  requestLocationPermission,
-} from '../../../utils/utils';
 
-// ── Sub-components ──────────────────────────────────────────────────────────
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 import {HeaderSection} from '../../../components/SO/HomeScreen/HeaderSection';
 import {StatsOverview} from '../../../components/SO/HomeScreen/StatsOverview';
 import {FilterSection} from '../../../components/SO/HomeScreen/FilterSection';
@@ -50,54 +50,76 @@ import {SetTargetsModal} from '../../../components/SO/HomeScreen/SetTargetsModal
 import {MonthPickerModal} from '../../../components/SO/HomeScreen/MonthPickerModal';
 import {YearPickerModal} from '../../../components/SO/HomeScreen/YearPickerModal';
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'HomeScreen'
 >;
+type Props = {navigation: NavigationProp; route: any};
+type FilterMode = 'month' | 'month_range' | 'date_range';
 
-type Props = {
-  navigation: NavigationProp;
-  route: any;
-};
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const TODAY = new Date().toISOString().split('T')[0];
 
 function extractServerMessage(resp: any): string | null {
   try {
     if (!resp?._server_messages) return null;
-    const messagesArray = JSON.parse(resp._server_messages);
-    if (!messagesArray?.length) return null;
-    const messageObj = JSON.parse(messagesArray[0]);
-    return messageObj.message || null;
-  } catch (err) {
+    const arr = JSON.parse(resp._server_messages);
+    if (!arr?.length) return null;
+    return JSON.parse(arr[0])?.message ?? null;
+  } catch {
     return null;
   }
 }
 
-const today = new Date().toISOString().split('T')[0];
+async function getLocation(): Promise<string | null> {
+  const granted = await requestLocationPermission();
+  if (!granted) {
+    Toast.show({type: 'error', text1: '📍 Location permission required'});
+    return null;
+  }
+  return await getCurrentLocation();
+}
+
+async function getParsedLocation() {
+  const location = await getLocation();
+  if (!location) return null;
+  const [latitude, longitude] = location.split(',').map(Number);
+  if (isNaN(latitude) || isNaN(longitude)) return null;
+  return {latitude, longitude};
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const HomeScreen = ({navigation}: Props) => {
-  const [isStartingPjp, setIsStartingPjp] = useState(false);
+  const dispatch = useAppDispatch();
+  const isFocused = useIsFocused();
 
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const currentMonth = moment().month() + 1;
+  const currentYear = moment().year();
+
+  // ── Global state ────────────────────────────────────────────────────────────
+  const employee = useAppSelector(s => s.persistedReducer.authSlice.employee);
+  const selectedStore = useAppSelector(
+    s => s.persistedReducer.pjpSlice.selectedStore,
+  );
+
+  // ── Local state ─────────────────────────────────────────────────────────────
+  const [refreshing, setRefreshing] = useState(false);
+  const [isStartingPjp, setIsStartingPjp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedStoreValue, setSelectedStoreValue] =
     useState<StoreData | null>(null);
   const [checkoutModalVisible, setCheckoutModalVisible] = useState(false);
   const [checkoutPayload, setCheckoutPayload] = useState<ICheckOut | null>(
     null,
   );
+  const [targetModalVisible, setTargetModalVisible] = useState(false);
 
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
-  const dispatch = useAppDispatch();
-  const isFocused = useIsFocused();
-  const currentMonth = moment().month() + 1;
-  const currentYear = moment().year();
-
-  // ── Filters State ──────────────────────────────────────────────────────────
-  const [filterMode, setFilterMode] = useState<
-    'month' | 'month_range' | 'date_range'
-  >('month');
+  // ── Filter state ─────────────────────────────────────────────────────────────
+  const [filterMode, setFilterMode] = useState<FilterMode>('month');
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [fromMonth, setFromMonth] = useState(
@@ -110,79 +132,15 @@ const HomeScreen = ({navigation}: Props) => {
   const [endDate, setEndDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickingType, setPickingType] = useState<'start' | 'end'>('start');
-
   const [showMonthModal, setShowMonthModal] = useState(false);
   const [showYearModal, setShowYearModal] = useState(false);
   const [monthPickerTarget, setMonthPickerTarget] = useState<
     'single' | 'from' | 'to'
   >('single');
-  const [targetModalVisible, setTargetModalVisible] = useState(false);
 
-  const {data: pjpWorkflowData, refetch: refetchPjpWorkflow} =
-    useGetPjpNextActionQuery(undefined, {
-      refetchOnMountOrArgChange: true,
-    });
-
-  const pjpState = pjpWorkflowData?.message.data?.current_state;
-  const pjpActions = pjpWorkflowData?.message.data?.allowed_actions ?? [];
-  const pjpDocName = pjpWorkflowData?.message.data?.pjp_document_name;
-  const activeStoreId = pjpWorkflowData?.message.data?.active_store_id;
-  const activeActivityId = pjpWorkflowData?.message.data?.active_activity_id;
-
-  const apiParams = useMemo(() => {
-    const base = {employee: employee?.id as string};
-    if (filterMode === 'month') {
-      return {...base, month: selectedMonth, year: selectedYear};
-    }
-    if (filterMode === 'month_range') {
-      return {
-        ...base,
-        from_month: fromMonth,
-        to_month: toMonth,
-        year: selectedYear,
-      };
-    }
-    return {
-      ...base,
-      from_date: moment(startDate).format('YYYY-MM-DD'),
-      to_date: moment(endDate).format('YYYY-MM-DD'),
-    };
-  }, [
-    filterMode,
-    selectedMonth,
-    selectedYear,
-    fromMonth,
-    toMonth,
-    startDate,
-    endDate,
-    employee,
-  ]);
-
-  const ddnDateParams = useMemo(() => {
-    if (filterMode === 'month') {
-      const from = moment({
-        year: selectedYear,
-        month: selectedMonth - 1,
-        day: 1,
-      }).format('YYYY-MM-DD');
-      const to = moment({year: selectedYear, month: selectedMonth - 1})
-        .endOf('month')
-        .format('YYYY-MM-DD');
-      return {from_date: from, to_date: to};
-    }
-    if (filterMode === 'date_range') {
-      return {
-        from_date: moment(startDate).format('YYYY-MM-DD'),
-        to_date: moment(endDate).format('YYYY-MM-DD'),
-      };
-    }
-    return {
-      from_date: moment(startDate).format('YYYY-MM-DD'),
-      to_date: moment(endDate).format('YYYY-MM-DD'),
-    };
-  }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
-
-  const soDateParams = useMemo(() => {
+  // ── Computed date params ─────────────────────────────────────────────────────
+  // Single source of truth for from/to dates used by SO, DDN, and summary queries
+  const dateRangeParams = useMemo(() => {
     if (filterMode === 'month') {
       return {
         from_date: moment({
@@ -201,52 +159,104 @@ const HomeScreen = ({navigation}: Props) => {
     };
   }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
 
+  // Params for attendance/pjp/value-target queries (support month_range too)
+  const apiParams = useMemo(() => {
+    const base = {employee: employee?.id as string};
+    if (filterMode === 'month')
+      return {...base, month: selectedMonth, year: selectedYear};
+    if (filterMode === 'month_range')
+      return {
+        ...base,
+        from_month: fromMonth,
+        to_month: toMonth,
+        year: selectedYear,
+      };
+    return {...base, ...dateRangeParams};
+  }, [
+    filterMode,
+    selectedMonth,
+    selectedYear,
+    fromMonth,
+    toMonth,
+    dateRangeParams,
+    employee,
+  ]);
+
+  // ── Queries ──────────────────────────────────────────────────────────────────
+  const {data: pjpWorkflowData, refetch: refetchPjpWorkflow} =
+    useGetPjpNextActionQuery(undefined, {refetchOnMountOrArgChange: true});
+
+  const {data: prodData, refetch: refetchProdCount} = useGetProdCountQuery(
+    {date: TODAY},
+    {refetchOnMountOrArgChange: true},
+  );
+
+  const {
+    data: locationTrackerData,
+    isFetching: isLocationTrackerFetching,
+    refetch: refetchLocationTracker,
+  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
+
+  const {data: activityStatusData, refetch: refetchActivityStatus} =
+    useGetActivityCheckInStatusQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+    });
+
   const {data: attendanceData, refetch: refetchAttendance} =
     useGetAsmAttendanceTabQuery(apiParams, {skip: !employee?.id});
+
   const {data: pjpTargetData, refetch: refetchPjpTarget} =
     useGetAsmPjpTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+
   const {data: valueTargetData, refetch: refetchValueTarget} =
     useGetAsmTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
-  const {data: ddnData, refetch: refetchDdnStats} = useGetDdnStatsQuery(
-    ddnDateParams,
+
+  const {data: soStatsData, refetch: refetchSoStats} = useGetSoStatsQuery(
+    dateRangeParams,
     {skip: !employee?.id},
   );
+
+  const {data: ddnData, refetch: refetchDdnStats} = useGetDdnStatsQuery(
+    dateRangeParams,
+    {skip: !employee?.id},
+  );
+
   const {data: employeeTargetsData, refetch: refetchEmployeeTargets} =
     useGetEmployeeTargetsQuery(
       {month: selectedMonth, year: selectedYear},
       {skip: !employee?.id},
     );
 
-  const {data: soStatsData, refetch: refetchSoAchievement} = useGetSoStatsQuery(
-    soDateParams,
-    {skip: !employee?.id},
-  );
-  const selectedStore = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.selectedStore,
-  );
-  const {data: prodData, refetch} = useGetProdCountQuery(
-    {date: today},
-    {refetchOnMountOrArgChange: true},
-  );
-
-  const [pjpInitialize, {data, error}] = usePjpInitializeMutation();
-  const [checkOut, {isLoading}] = useCheckOutMutation();
-  const {
-    data: locationTrackerData,
-    isFetching: isLocationTrackerFetching,
-    refetch: refetchLocationTracker,
-  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
-  const {data: activityStatusData, refetch: refetchActivityStatus} =
-    useGetActivityCheckInStatusQuery(undefined, {
-      refetchOnMountOrArgChange: true,
-    });
-
+  // ── Mutations ────────────────────────────────────────────────────────────────
+  const [pjpInitialize, {data: pjpInitData}] = usePjpInitializeMutation();
+  const [checkOut, {isLoading: isCheckingOut}] = useCheckOutMutation();
+  const [startPjp] = useStartPjpMutation();
   const [activityCheckOut, {isLoading: isActivityCheckingOut}] =
     useActivityCheckOutMutation();
-  const [startPjp] = useStartPjpMutation();
+
+  // ── Derived values ───────────────────────────────────────────────────────────
+  const pjpState = pjpWorkflowData?.message.data?.current_state;
+  const pjpActions = pjpWorkflowData?.message.data?.allowed_actions ?? [];
+  const activeStoreId = pjpWorkflowData?.message.data?.active_store_id;
 
   const isActivityCheckedIn =
     activityStatusData?.message?.is_checked_in === true;
+  const isDisabled =
+    isLocationTrackerFetching || !locationTrackerData?.message?.data?.enabled;
+
+  const pjpSummary = pjpTargetData?.message?.summary;
+  const ddnStats = ddnData?.message;
+  const salesTarget = employeeTargetsData?.message?.sales_target ?? 0;
+  const ddnTarget = employeeTargetsData?.message?.ddn_target ?? 0;
+  const soAchievement = soStatsData?.message?.value ?? 0;
+  const soPct =
+    salesTarget > 0
+      ? parseFloat(((soAchievement / salesTarget) * 100).toFixed(2))
+      : 0;
+  const ddnPct =
+    ddnTarget > 0
+      ? parseFloat((((ddnStats?.value ?? 0) / ddnTarget) * 100).toFixed(2))
+      : 0;
 
   // ── Refresh ──────────────────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
@@ -254,94 +264,48 @@ const HomeScreen = ({navigation}: Props) => {
     setTimeout(() => {
       setRefreshing(false);
       pjpInitialize();
-      refetch();
+      refetchProdCount();
       refetchAttendance();
       refetchPjpTarget();
       refetchValueTarget();
       refetchLocationTracker();
       refetchDdnStats();
-      refetchSoAchievement();
+      refetchSoStats();
       refetchEmployeeTargets();
       refetchActivityStatus();
       refetchPjpWorkflow();
     }, 2000);
   }, [
     pjpInitialize,
-    refetch,
+    refetchProdCount,
     refetchAttendance,
     refetchPjpTarget,
     refetchValueTarget,
     refetchLocationTracker,
     refetchDdnStats,
-    refetchSoAchievement,
+    refetchSoStats,
     refetchEmployeeTargets,
     refetchActivityStatus,
+    refetchPjpWorkflow,
   ]);
-
-  // ── Location helpers ─────────────────────────────────────────────────────────
-  const handleCallLocationPermission = async () => {
-    let hasPermission = await requestLocationPermission();
-    if (!hasPermission) {
-      Toast.show({
-        type: 'info',
-        text1: '📍 Location permission is required',
-        text2: 'Please allow location access to continue',
-      });
-      hasPermission = await requestLocationPermission();
-    }
-    if (!hasPermission) {
-      throw new Error('Location permission not granted');
-    }
-    return await handleSetValue();
-  };
-
-  const getParsedLocation = async () => {
-    const hasPermission = await requestLocationPermission();
-    if (!hasPermission) {
-      Toast.show({
-        type: 'error',
-        text1: '📍 Location permission required',
-      });
-      return null;
-    }
-    const location = await getCurrentLocation();
-    if (!location) return null;
-    const [latitude, longitude] = location.split(',').map(Number);
-    if (isNaN(latitude) || isNaN(longitude)) return null;
-    return {latitude, longitude};
-  };
-
-  const handleSetValue = async () => {
-    const location = await getCurrentLocation();
-    return location;
-  };
 
   // ── Check-out flow ───────────────────────────────────────────────────────────
   const handleCheckOut = async () => {
     try {
-      const current_location = await handleCallLocationPermission();
-      if (!current_location) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Unable to fetch location',
-          position: 'top',
-        });
-        return;
-      }
-      const payload = {
+      const location = await getLocation();
+      if (!location) return;
+      setCheckoutPayload({
         store: selectedStore as string,
-        current_location: current_location,
+        current_location: location,
         validate_geofence: false,
-      };
-      setCheckoutPayload(payload);
-      setCheckoutModalVisible(true);
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: `❌ ${error?.message || 'Location permission denied'}`,
-        position: 'top',
       });
       setCheckoutModalVisible(true);
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: `❌ ${err?.message || 'Location permission denied'}`,
+        position: 'top',
+      });
     }
   };
 
@@ -367,10 +331,10 @@ const HomeScreen = ({navigation}: Props) => {
           position: 'top',
         });
       }
-    } catch (error: any) {
+    } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${error?.message || 'Internal Server Error'}`,
+        text1: `❌ ${err?.message || 'Internal Server Error'}`,
         position: 'top',
       });
     }
@@ -381,34 +345,22 @@ const HomeScreen = ({navigation}: Props) => {
     try {
       setIsStartingPjp(true);
       const loc = await getParsedLocation();
-      if (!loc) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Unable to fetch location',
-        });
-        return;
-      }
+      if (!loc) return;
+
       const existingPjp =
         locationTrackerData?.message?.data?.pjp_records[0]?.name;
-      if (
-        locationTrackerData?.message?.data?.pjp_records?.length === 0 ||
-        !existingPjp
-      ) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ No PJP found for today',
-        });
+      if (!existingPjp) {
+        Toast.show({type: 'error', text1: '❌ No PJP found for today'});
         return;
       }
+
       const payload: LocationPayload = {
         latitude: loc.latitude,
         longitude: loc.longitude,
-        data: {
-          document_name: existingPjp,
-        },
+        data: {document_name: existingPjp},
       };
       const res = await startPjp(payload).unwrap();
-      if (res?.message?.success === true) {
+      if (res?.message?.success) {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Started',
@@ -427,91 +379,30 @@ const HomeScreen = ({navigation}: Props) => {
     }
   };
 
-  // ── Effects ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (isFocused) {
-      pjpInitialize();
-    }
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (selectedStore) {
-      data?.message?.data?.stores?.find(
-        store => store.store === selectedStore,
-      ) &&
-        setSelectedStoreValue(
-          data?.message?.data?.stores?.find(
-            store => store.store === selectedStore,
-          ) || null,
-        );
-    }
-  }, [selectedStore, data]);
-
-  useEffect(() => {
-    if (data?._server_messages) {
-      let _data = extractServerMessage(data);
-      setErrorMessage(_data || '');
-    } else {
-      setErrorMessage('');
-    }
-    if (data?.message?.success === false) {
-      dispatch(setSelectedStore(''));
-      dispatch(resetLocation());
-    }
-  }, [data]);
-
-  // ── Derived values ───────────────────────────────────────────────────────────
-  const isDisabled =
-    isLocationTrackerFetching ||
-    locationTrackerData?.message?.data?.enabled === false;
-
-  const pjpSummary = pjpTargetData?.message?.summary;
-  const ddnStats = ddnData?.message;
-
-  const employeeTargets = employeeTargetsData?.message;
-  const salesTarget = employeeTargets?.sales_target ?? 0;
-  const ddnTarget = employeeTargets?.ddn_target ?? 0;
-  const soAchievement = soStatsData?.message?.value ?? 0;
-  const ddnPct =
-    ddnTarget > 0
-      ? parseFloat((((ddnStats?.value ?? 0) / ddnTarget) * 100).toFixed(2))
-      : 0;
-  const soPct =
-    salesTarget > 0
-      ? parseFloat(((soAchievement / salesTarget) * 100).toFixed(2))
-      : 0;
-
-  const handleOpenTargetModal = () => {
-    setTargetModalVisible(true);
-  };
-
   // ── Activity check-out ───────────────────────────────────────────────────────
   const handleActivityCheckOut = async () => {
+    const logId = activityStatusData?.message?.log_id;
+    if (!logId) return;
     try {
-      const logId = activityStatusData?.message?.log_id;
-      if (!logId) return;
-      const location = await getCurrentLocation();
-      if (!location) {
-        Toast.show({type: 'error', text1: 'Unable to fetch location'});
-        return;
-      }
+      const location = await getLocation();
+      if (!location) return;
       const res = await activityCheckOut({
         log_id: logId,
         current_location: location,
       }).unwrap();
       if (res.message.success) {
-        Toast.show({type: 'success', text1: 'Activity Checked Out'});
+        Toast.show({type: 'success', text1: '✅ Activity Checked Out'});
         refetchActivityStatus();
       }
-    } catch (error: any) {
+    } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to check out',
+        text1: err?.data?.message || 'Failed to check out',
       });
     }
   };
 
-  // ── Month picker handler ─────────────────────────────────────────────────────
+  // ── Picker handlers ──────────────────────────────────────────────────────────
   const handleMonthSelect = (mValue: number) => {
     if (monthPickerTarget === 'single') setSelectedMonth(mValue);
     else if (monthPickerTarget === 'from') setFromMonth(mValue);
@@ -519,33 +410,49 @@ const HomeScreen = ({navigation}: Props) => {
     setShowMonthModal(false);
   };
 
-  // ── Year picker handler ──────────────────────────────────────────────────────
   const handleYearSelect = (year: number) => {
     setSelectedYear(year);
     setShowYearModal(false);
   };
 
-  // ═════════════════════════════════════════════════════════════════════════════
-  // RENDER
-  // ═════════════════════════════════════════════════════════════════════════════
+  // ── Effects ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isFocused) pjpInitialize();
+  }, [isFocused]);
+
+  useEffect(() => {
+    if (activeStoreId) dispatch(setSelectedStore(activeStoreId));
+  }, [activeStoreId]);
+
+  useEffect(() => {
+    if (selectedStore && pjpInitData?.message?.data?.stores) {
+      const match = pjpInitData.message.data.stores.find(
+        s => s.store === selectedStore,
+      );
+      setSelectedStoreValue(match ?? null);
+    }
+  }, [selectedStore, pjpInitData]);
+
+  useEffect(() => {
+    const msg = extractServerMessage(pjpInitData);
+    setErrorMessage(msg ?? '');
+    if (pjpInitData?.message?.success === false) {
+      dispatch(setSelectedStore(''));
+      dispatch(resetLocation());
+    }
+  }, [pjpInitData]);
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView
-      style={[
-        flexCol,
-        {
-          flex: 1,
-          backgroundColor: Colors.lightBg,
-        },
-      ]}>
+    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       {refreshing ? (
         <LoadingScreen />
       ) : (
         <ScrollView
-          nestedScrollEnabled={true}
+          nestedScrollEnabled
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
-          {/* ── Header (greeting, store, activity status, PJP, beat plan) ── */}
           <HeaderSection
             employee={employee}
             selectedStoreValue={selectedStoreValue}
@@ -557,7 +464,7 @@ const HomeScreen = ({navigation}: Props) => {
             isStartingPjp={isStartingPjp}
             handleStartPjp={handleStartPjp}
             handleCheckOut={handleCheckOut}
-            isLoading={isLoading}
+            isLoading={isCheckingOut}
             isDisabled={isDisabled}
             errorMessage={errorMessage}
             navigation={navigation}
@@ -565,10 +472,8 @@ const HomeScreen = ({navigation}: Props) => {
             pjpActions={pjpActions}
           />
 
-          {/* ── Count boxes (Total call / Productive call) ── */}
           <StatsOverview prodData={prodData} />
 
-          {/* ── Dashboard Filters ── */}
           <FilterSection
             filterMode={filterMode}
             setFilterMode={setFilterMode}
@@ -585,24 +490,21 @@ const HomeScreen = ({navigation}: Props) => {
             setShowDatePicker={setShowDatePicker}
           />
 
-          {/* ── Native date picker (rendered conditionally) ── */}
           {showDatePicker && (
             <DateTimePicker
               value={pickingType === 'start' ? startDate : endDate}
               mode="date"
               display="default"
               maximumDate={new Date()}
-              onChange={(event, date) => {
+              onChange={(_, date) => {
                 setShowDatePicker(false);
-                if (date) {
-                  if (pickingType === 'start') setStartDate(date);
-                  else setEndDate(date);
-                }
+                if (!date) return;
+                if (pickingType === 'start') setStartDate(date);
+                else setEndDate(date);
               }}
             />
           )}
 
-          {/* ── Month Picker Modal ── */}
           <MonthPickerModal
             visible={showMonthModal}
             monthPickerTarget={monthPickerTarget}
@@ -613,7 +515,6 @@ const HomeScreen = ({navigation}: Props) => {
             onClose={() => setShowMonthModal(false)}
           />
 
-          {/* ── Year Picker Modal ── */}
           <YearPickerModal
             visible={showYearModal}
             selectedYear={selectedYear}
@@ -622,7 +523,6 @@ const HomeScreen = ({navigation}: Props) => {
             onClose={() => setShowYearModal(false)}
           />
 
-          {/* ── Checkout Confirm Modal ── */}
           <CheckoutConfirmModal
             visible={checkoutModalVisible}
             checkoutPayload={checkoutPayload}
@@ -633,27 +533,25 @@ const HomeScreen = ({navigation}: Props) => {
             onConfirm={confirmCheckOut}
           />
 
-          {/* ── Team Attendance ── */}
           <TeamAttendance
             attendanceData={attendanceData}
             filterMode={filterMode}
             selectedMonth={selectedMonth}
             startDate={startDate}
             endDate={endDate}
-            today={today}
+            today={TODAY}
             navigation={navigation}
           />
 
-          {/* ── Target vs Achievement ── */}
           <TeamPerformance
             filterMode={filterMode}
             selectedMonth={selectedMonth}
             startDate={startDate}
             endDate={endDate}
-            handleOpenTargetModal={handleOpenTargetModal}
+            handleOpenTargetModal={() => setTargetModalVisible(true)}
             pjpSummary={pjpSummary}
             apiParams={apiParams}
-            today={today}
+            today={TODAY}
             soAchievement={soAchievement}
             salesTarget={salesTarget}
             soPct={soPct}
@@ -663,31 +561,20 @@ const HomeScreen = ({navigation}: Props) => {
             navigation={navigation}
           />
 
-          {/* ── Set Targets Modal ── */}
           <SetTargetsModal
             visible={targetModalVisible}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onCancel={() => setTargetModalVisible(false)}
-            onSaveSuccess={(sales, ddn) => {
-              setTargetModalVisible(false);
-            }}
+            onSaveSuccess={() => setTargetModalVisible(false)}
           />
 
-          {/* ── Activity Check-In ── */}
-          <ActivityCheckInBlock
-            // isPjpActive={isPjpActive}
-            pjpState={pjpState}
-            navigation={navigation}
-          />
+          <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} />
 
-          {/* ── Quick Links ── */}
           <QuickLinks navigation={navigation} />
 
-          {/* ── Claims ── */}
           <ClaimsSection navigation={navigation} />
 
-          {/* ── Stock & Activity Location ── */}
           <StockAndActivityLinks navigation={navigation} />
         </ScrollView>
       )}

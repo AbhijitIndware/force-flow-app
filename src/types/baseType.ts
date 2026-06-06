@@ -2334,18 +2334,18 @@ export type PjpAllowedAction =
 export interface RGetPjpNextAction {
   message: {
     status: string;
-    data: {
-      current_state: PjpWorkflowState;
-      allowed_actions: PjpAllowedAction[];
-      message: string;
-      pjp_document_name: string | null;
-      active_store_id: string | null;
-      active_activity_id: string | null;
-      pjp_data: PjpDataResponse;
-    };
+    data: pjpWorkflowDataType;
   };
 }
-
+export interface pjpWorkflowDataType {
+  current_state: PjpWorkflowState;
+  allowed_actions: PjpAllowedAction[];
+  message: string;
+  pjp_document_name: string | null;
+  active_store_id: string | null;
+  active_activity_id: string | null;
+  pjp_data: PjpDataResponse;
+}
 export type PjpDataResponse = {
   pjp_details: {
     name: string;

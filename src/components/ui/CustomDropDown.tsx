@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState, useMemo } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   StyleSheet,
@@ -9,20 +9,22 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, ActivityIndicator, Menu, Button } from 'react-native-paper';
-import { Fonts } from '../../constants';
-import { Colors } from '../../utils/colors';
-import { Size } from '../../utils/fontSize';
-import { DropDownList } from '../../types/Navigation';
-import { ChevronDown } from 'lucide-react-native';
+import {Text, ActivityIndicator, Menu} from 'react-native-paper';
+import {Fonts} from '../../constants';
+import {Colors} from '../../utils/colors';
+import {Size} from '../../utils/fontSize';
+import {DropDownList} from '../../types/Navigation';
+import {ChevronDown} from 'lucide-react-native';
+
+// Extend DropDownList locally if you can't modify the type file
+type DropDownItem = DropDownList & {disabled?: boolean};
 
 type Props = {
   selectText: string;
-  data: DropDownList[];
+  data: DropDownItem[];
   selectedId: string | null;
   setSelectedId: (val: string) => void;
   height?: number;
-  styleType?: string;
   onLoadMore?: () => void;
   loadingMore?: boolean;
   searchText?: string;
@@ -34,8 +36,8 @@ type Props = {
   name?: string;
   disabled?: boolean;
   clearTextAfterSearch: boolean;
-  selectedLabelOverride?: string; // 👈 New prop
-  textSize?: number; // 👈 New prop for font size
+  selectedLabelOverride?: string;
+  textSize?: number;
 };
 
 const DropdownComponent = ({
@@ -55,32 +57,23 @@ const DropdownComponent = ({
   name,
   disabled = false,
   clearTextAfterSearch,
-  selectedLabelOverride, // 👈 New prop
-  textSize = Size.xs, // 👈 New prop with default
+  selectedLabelOverride,
+  textSize = Size.xs,
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
 
-  const handleSelect = (value: string) => {
-    if (value === selectedId) {
-      setSelectedId('');
-    } else {
-      setSelectedId(value);
-    }
+  const handleSelect = (item: DropDownItem) => {
+    if (item.disabled) return;
+    setSelectedId(item.value === selectedId ? '' : item.value);
     setVisible(false);
-    if (clearTextAfterSearch) {
-      setSearchText?.('');
-    }
+    if (clearTextAfterSearch) setSearchText?.('');
   };
 
   const selectedLabel =
     selectedLabelOverride ||
-    (selectedId &&
-      data.find(item => {
-        return item.value === selectedId;
-      })
-      ? data.find(item => item.value === selectedId)?.label
-      : `Select ${selectText}`);
+    data.find(item => item.value === selectedId)?.label ||
+    `Select ${selectText}`;
 
   return (
     <KeyboardAvoidingView
@@ -101,10 +94,6 @@ const DropdownComponent = ({
                 styles.dropdown,
                 {
                   height,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  width: '100%',
                   backgroundColor: disabled ? '#F3F3F3' : '#FFFFFF',
                   borderColor: disabled ? '#D4D4D4' : Colors.inputBorder,
                   opacity: disabled ? 0.6 : 1,
@@ -115,16 +104,15 @@ const DropdownComponent = ({
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
-                  { fontSize: textSize },
-                  disabled && { color: '#9E9E9E' },
-                  selectedId && styles.selectedTextActive, // 👈 add this line
+                  {fontSize: textSize},
+                  disabled && {color: '#9E9E9E'},
+                  selectedId && styles.selectedTextActive,
                 ]}>
                 {selectedLabel}
               </Text>
               <ChevronDown color={Colors.inputBorder} size={18} />
             </TouchableOpacity>
           }
-          // anchorPosition="bottom"
           contentStyle={{
             backgroundColor: Colors.white,
             width: anchorWidth || '90%',
@@ -145,16 +133,14 @@ const DropdownComponent = ({
             </TouchableOpacity>
           )}
 
-          {/* Search Input */}
+          {/* Search */}
           <View style={styles.searchContainer}>
             <TextInput
               value={searchText}
-              onChangeText={text => {
-                setSearchText?.(text);
-              }}
+              onChangeText={text => setSearchText?.(text)}
               placeholder={`Search ${selectText}...`}
               placeholderTextColor={Colors.inputBorder}
-              style={[styles.inputSearchStyle, { fontSize: textSize }]}
+              style={[styles.inputSearchStyle, {fontSize: textSize}]}
             />
           </View>
 
@@ -162,54 +148,60 @@ const DropdownComponent = ({
           <FlatList
             data={data}
             keyExtractor={(item, index) =>
-              `${item.value}-${item?.label}-${index}`
+              `${item.value}-${item.label}-${index}`
             }
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
+            style={{maxHeight: 200, minWidth: '90%', zIndex: 9999}}
+            contentContainerStyle={{zIndex: 9999}}
             ListFooterComponent={
               loadingMore ? (
                 <ActivityIndicator
                   size="small"
                   color={Colors.primary}
-                  style={{ marginVertical: 10 }}
+                  style={{marginVertical: 10}}
                 />
               ) : null
             }
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => {
-                  handleSelect(item.value);
-                  // clearTextAfterSearch && setSearchText?.('');
-                }}
-                style={[
-                  styles.item,
-                  item.value === selectedId && styles.selectedItem,
-                ]}>
-                <Text
-                  style={[
-                    styles.itemText,
-                    { fontSize: textSize },
-                    item.value === selectedId && styles.selectedItemText,
-                  ]}>
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            )}
-            style={{ maxHeight: 200, minWidth: '90%', zIndex: 9999 }}
-            contentContainerStyle={{ zIndex: 9999 }}
             ListEmptyComponent={
-              <View style={{ padding: 20, alignItems: 'center' }}>
-                <Text
-                  style={{
-                    color: Colors.inputBorder,
-                    fontFamily: Fonts.regular,
-                    fontSize: textSize,
-                  }}>
+              <View style={styles.emptyContainer}>
+                <Text style={[styles.emptyText, {fontSize: textSize}]}>
                   No {selectText} found
                 </Text>
               </View>
             }
+            renderItem={({item}) => {
+              const isSelected = item.value === selectedId;
+              const isDisabled = item.disabled;
+
+              return (
+                <TouchableOpacity
+                  onPress={() => handleSelect(item)}
+                  disabled={isDisabled}
+                  style={[
+                    styles.item,
+                    isSelected && styles.selectedItem,
+                    isDisabled && styles.disabledItem,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.itemText,
+                      {fontSize: textSize},
+                      isSelected && styles.selectedItemText,
+                      isDisabled && styles.disabledItemText,
+                    ]}>
+                    {item.label}
+                  </Text>
+                  {/* Visited badge */}
+                  {isDisabled && (
+                    <View style={styles.visitedBadge}>
+                      <Text style={styles.visitedBadgeText}>Visited</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            }}
           />
         </Menu>
       </View>
@@ -230,7 +222,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ecececff',
     justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
+    width: '100%',
   },
   selectedText: {
     color: Colors.inputBorder,
@@ -239,9 +234,8 @@ const styles = StyleSheet.create({
     width: '95%',
   },
   selectedTextActive: {
-    color: Colors.black, // make text black when selected
+    color: Colors.black,
   },
-
   addButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -256,10 +250,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     paddingHorizontal: 10,
     backgroundColor: '#eeededff',
-    // paddingVertical: 2,
   },
   inputSearchStyle: {
-    // height: 35,
     color: Colors.black,
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
@@ -269,16 +261,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   itemText: {
     color: Colors.inputBorder,
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
+    flex: 1,
   },
   selectedItem: {
     backgroundColor: Colors.orange,
   },
   selectedItemText: {
     color: Colors.white,
+  },
+  disabledItem: {
+    backgroundColor: '#F9FAFB',
+  },
+  disabledItemText: {
+    color: '#9CA3AF',
+  },
+  visitedBadge: {
+    backgroundColor: '#DCFCE7',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  visitedBadgeText: {
+    fontSize: 10,
+    color: '#15803D',
+    fontFamily: Fonts.medium,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: Colors.inputBorder,
+    fontFamily: Fonts.regular,
   },
 });

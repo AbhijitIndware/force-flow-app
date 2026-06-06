@@ -62,7 +62,7 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
             filterMode === 'month'
               ? `${moment()
                   .month(selectedMonth - 1)
-                  .format('MMMM')} Performance`
+                  .format('MMMM')}`
               : `${moment(startDate).format('DD MMM')} – ${moment(
                   endDate,
                 ).format('DD MMM')}`

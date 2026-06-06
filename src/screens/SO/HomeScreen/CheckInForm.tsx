@@ -1,39 +1,42 @@
+import React, {useEffect, useRef, useState} from 'react';
 import {
+  ActivityIndicator,
+  Animated,
+  Modal,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  ActivityIndicator,
-  Animated,
   View,
-  Modal,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {useFormik} from 'formik';
-import {
-  setSelectedStore,
-  useAddCheckInMutation,
-  useLocationVerificationMutation,
-} from '../../../features/base/base-api';
-import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
-import {checkInSchema} from '../../../types/schema';
+import moment from 'moment';
 import Toast from 'react-native-toast-message';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+
+import {Colors} from '../../../utils/colors';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import {flexCol} from '../../../utils/styles';
-import PageHeader from '../../../components/ui/PageHeader';
-import AddCheckInForm from '../../../components/SO/Home/check-in-form';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {
   getCurrentLocation,
   getStoreLabel,
   requestLocationPermission,
   windowWidth,
 } from '../../../utils/utils';
-import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import {useFormik} from 'formik';
+import {checkInSchema} from '../../../types/schema';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {
+  setSelectedStore,
+  useAddCheckInMutation,
+  useLocationVerificationMutation,
+} from '../../../features/base/base-api';
+
+import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import moment from 'moment';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import AddCheckInForm from '../../../components/SO/Home/check-in-form';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -45,16 +48,16 @@ type Props = {
   route: any;
 };
 
-// Initial values
-const initial = {
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const INITIAL_VALUES = {
   store: '',
-  image: {
-    mime: '',
-    data: '',
-  },
+  image: {mime: '', data: ''},
   current_location: '',
   bypass_store_category: 'True',
 };
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const CheckInForm = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
@@ -65,27 +68,37 @@ const CheckInForm = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const dispatch = useAppDispatch();
 
+  // ── Selectors ───────────────────────────────────────────────────────────────
   const pjpInitializedData = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.pjpInitializedData,
-  );
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
+    s => s.persistedReducer.pjpSlice.pjpInitializedData,
   );
   const selectedStore = useAppSelector(
-    state => state?.persistedReducer?.pjpSlice?.selectedStore,
+    s => s.persistedReducer.pjpSlice.selectedStore,
+  );
+  const pjpWorkflowData = useAppSelector(
+    s => s.persistedReducer.pjpSlice.pjpWorkflowData,
   );
 
+  // ── Derived data ────────────────────────────────────────────────────────────
+  const storeDailyList = (pjpWorkflowData?.pjp_data?.stores ?? [])
+    .filter(s => s.status !== 'Completed')
+    .map(s => ({
+      label: getStoreLabel(s),
+      value: s.store,
+      disabled: s.status === 'Visited',
+    }));
+
+  const pjpDate = pjpInitializedData?.message?.data?.date;
+  const formattedDate = pjpDate
+    ? moment(pjpDate).format('dddd, DD MMM YYYY')
+    : 'Today';
+
+  // ── Mutations ───────────────────────────────────────────────────────────────
   const [verifyLocation, {isLoading: verifying}] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
-  const [triggerStoreFetch, {data: storeData, isFetching, error}] =
-    useLazyGetDailyStoreQuery();
 
-  const onSelect = (field: string, val: string) => {
-    dispatch(setSelectedStore(val));
-    setFieldValue(field, val);
-  };
-
+  // ── Formik ──────────────────────────────────────────────────────────────────
   const {
     values,
     errors,
@@ -95,55 +108,117 @@ const CheckInForm = ({navigation}: Props) => {
     handleSubmit,
     setFieldValue,
   } = useFormik({
-    initialValues: initial,
+    initialValues: INITIAL_VALUES,
     validationSchema: checkInSchema,
-    onSubmit: async (formValues, actions) => {
+    onSubmit: async formValues => {
       try {
         setLoading(true);
+        const location = await getLocation();
+        if (!location) return;
 
-        const location = await ensureCurrentLocation();
-        if (!location) {
-          setLoading(false);
-          return;
-        }
-
-        const payload = {
+        setPendingPayload({
           store: formValues.store,
           image: formValues.image,
           current_location: location,
           bypass_store_category: formValues.bypass_store_category,
-        };
-        // console.log('🚀 ~ CheckInForm ~ payload:', payload);
-
-        // 🛑 DO NOT call API yet
-        setPendingPayload(payload);
-        setConfirmModalVisible(true);
-      } catch (error: any) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Unable to prepare check-in',
         });
+        setConfirmModalVisible(true);
+      } catch {
+        Toast.show({type: 'error', text1: '❌ Unable to prepare check-in'});
       } finally {
         setLoading(false);
       }
     },
   });
 
-  const handleConfirmCheckIn = async () => {
-    if (!pendingPayload) return;
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  /** Requests permission, gets coords, sets formik field. Returns coord string or null. */
+  const getLocation = async (): Promise<string | null> => {
+    try {
+      const granted = await requestLocationPermission();
+      if (!granted) throw new Error('Permission denied');
+
+      const location = await getCurrentLocation();
+      setFieldValue('current_location', location);
+      return location;
+    } catch {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Unable to fetch location',
+        text2: 'Please enable location and try again',
+      });
+      return null;
+    }
+  };
+
+  const initLocationPermission = async () => {
+    const granted = await requestLocationPermission();
+    if (!granted) {
+      Toast.show({
+        type: 'info',
+        text1: '📍 Location permission is required',
+        text2: 'Please allow location access to continue',
+      });
+      await requestLocationPermission();
+    }
+    const location = await getCurrentLocation();
+    setFieldValue('current_location', location);
+  };
+
+  const handleVerifyLocation = async () => {
+    if (!selectedStore) {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Please select a store before verifying location',
+      });
+      return;
+    }
 
     try {
-      setLoading(true);
+      const location = await getLocation();
+      if (!location) return;
 
+      const res = await verifyLocation({
+        store: selectedStore,
+        current_location: location,
+        validate_location: true,
+      }).unwrap();
+
+      const valid = res?.message?.data?.location_validation?.valid;
+      if (valid) {
+        Toast.show({type: 'success', text1: '✅ Location verified'});
+        setLocationVerified(true);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Location verification failed',
+          text2:
+            res?.message?.data?.location_validation?.message ??
+            'Please try again later.',
+        });
+      }
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: '❌ Verification error',
+        text2: err?.data?.message?.message ?? 'Please try again later.',
+      });
+    }
+  };
+
+  const handleConfirmCheckIn = async () => {
+    if (!pendingPayload) return;
+    try {
+      setLoading(true);
       const res = await addCheckIn(pendingPayload).unwrap();
 
-      if (res?.message?.success === true) {
+      if (res?.message?.success) {
         Toast.show({
           type: 'success',
           text1: `✅ ${res.message.message}`,
           position: 'top',
         });
-
         setConfirmModalVisible(false);
         setPendingPayload(null);
         setLocationVerified(false);
@@ -154,10 +229,10 @@ const CheckInForm = ({navigation}: Props) => {
           text1: `❌ ${res.message.message || 'Something went wrong'}`,
         });
       }
-    } catch (error: any) {
+    } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`,
+        text1: `❌ ${err?.data?.message?.message || 'Internal Server Error'}`,
       });
     } finally {
       setLoading(false);
@@ -165,331 +240,97 @@ const CheckInForm = ({navigation}: Props) => {
     }
   };
 
-  const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
-    label: getStoreLabel(i),
-    value: i.store,
-  }));
-
-  const ensureCurrentLocation = async (): Promise<string | null> => {
-    try {
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) {
-        throw new Error('Location permission not granted');
-      }
-
-      const location = await getCurrentLocation();
-      setFieldValue('current_location', location);
-      return location;
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: '❌ Unable to fetch location',
-        text2: 'Please enable location and try again',
-      });
-      return null;
-    }
+  const dismissConfirmModal = () => {
+    setConfirmModalVisible(false);
+    setPendingPayload(null);
+    setLocationVerified(false);
   };
 
-  const handleVerifyLocation = async ({showToast}: {showToast: boolean}) => {
-    try {
-      if (!selectedStore) {
-        if (showToast) {
-          Toast.show({
-            type: 'error',
-            text1: '❌ Please select a store before verifying location',
-          });
-        }
-        return;
-      }
-
-      // 🔥 Ensure location exists
-      const location = await ensureCurrentLocation();
-      setFieldValue('current_location', location);
-      if (!location) return;
-
-      const res = await verifyLocation({
-        store: selectedStore as string,
-        current_location: location,
-        validate_location: true,
-      }).unwrap();
-
-      if (res?.message?.data?.location_validation?.valid) {
-        if (showToast) {
-          Toast.show({
-            type: 'success',
-            text1: '✅ Location verified',
-          });
-        }
-        setLocationVerified(true);
-      } else {
-        if (showToast) {
-          Toast.show({
-            type: 'error',
-            text1: '❌ Location verification failed',
-            text2:
-              res?.message?.data?.location_validation?.message ??
-              'Please try again later.',
-          });
-        }
-      }
-    } catch (err: any) {
-      if (showToast) {
-        Toast.show({
-          type: 'error',
-          text1: '❌ Verification error',
-          text2: err?.data?.message?.message ?? 'Please try again later.',
-        });
-      }
-    }
-  };
-
-  const handleCallLocationPermission = async () => {
-    let hasPermission = await requestLocationPermission();
-
-    // 🔁 Ask again if rejected
-    if (!hasPermission) {
-      Toast.show({
-        type: 'info',
-        text1: '📍 Location permission is required',
-        text2: 'Please allow location access to continue',
-      });
-
-      hasPermission = await requestLocationPermission();
-    }
-
-    if (!hasPermission) {
-      throw new Error('Location permission not granted');
-    }
-
-    await handleSetValue();
-  };
-
-  const handleSetValue = async () => {
-    const location = await getCurrentLocation();
-    setFieldValue('current_location', location);
-  };
-
-  const pjpDate = pjpInitializedData?.message?.data?.date;
-
-  const formattedDate = pjpDate
-    ? moment(pjpDate).format('dddd, DD MMM YYYY')
-    : 'Today';
+  // ── Effects ─────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    initLocationPermission();
+  }, []);
 
   useEffect(() => {
-    handleCallLocationPermission();
-    if (user?.email && pjpInitializedData?.message?.data?.date) {
-      triggerStoreFetch({
-        user: user.email,
-        date: pjpInitializedData?.message?.data?.date,
-      });
-    }
-  }, [user?.email, pjpInitializedData?.message?.data?.date]);
-
-  useEffect(() => {
-    if (selectedStore) {
-      setFieldValue('store', selectedStore);
-    }
+    if (selectedStore) setFieldValue('store', selectedStore);
   }, [selectedStore]);
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, styles.screen]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
-      {isFetching ? (
+
+      {!pjpWorkflowData ? (
         <LoadingScreen />
+      ) : storeDailyList.length === 0 ? (
+        <NoPjpState
+          formattedDate={formattedDate}
+          onAddPjp={() => navigation.navigate('AddPjpScreen')}
+        />
       ) : (
         <>
-          {!isFetching && storeDailyList.length === 0 ? (
-            <View
-              style={{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                paddingHorizontal: 24,
-                backgroundColor: Colors.lightBg,
-              }}>
-              {/* Title */}
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: '700',
-                  color: '#111827',
-                  marginBottom: 6,
-                  textAlign: 'center',
-                }}>
-                No PJP Available
-              </Text>
+          {/* Store selector */}
+          <View style={styles.selectorPad}>
+            <ReusableDropdown
+              label="Store"
+              field="value"
+              value={values.store}
+              data={storeDailyList}
+              error={touched.store && errors.store}
+              disabled={locationVerified}
+              onChange={(val: string) => {
+                dispatch(setSelectedStore(val));
+                setFieldValue('store', val);
+              }}
+            />
+          </View>
 
-              {/* Date */}
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: '#6B7280',
-                  marginBottom: 14,
-                  textAlign: 'center',
-                }}>
-                {formattedDate}
-              </Text>
+          {/* Confirm check-in modal */}
+          <ConfirmCheckInModal
+            visible={confirmModalVisible}
+            loading={loading}
+            payload={pendingPayload}
+            onCancel={dismissConfirmModal}
+            onConfirm={handleConfirmCheckIn}
+          />
 
-              {/* Description */}
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: '#4B5563',
-                  marginBottom: 26,
-                  textAlign: 'center',
-                  lineHeight: 20,
-                }}>
-                You don’t have a Daily PJP for this date.
-                {'\n'}Please add one to continue check-in.
-              </Text>
-
-              {/* CTA */}
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={{
-                  backgroundColor: Colors.darkButton,
-                  paddingVertical: 15,
-                  paddingHorizontal: 36,
-                  borderRadius: 16,
-                  elevation: 3,
-                }}
-                onPress={() => navigation.navigate('AddPjpScreen')}>
-                <Text
-                  style={{
-                    color: Colors.white,
-                    fontWeight: '700',
-                    fontSize: 15,
-                    letterSpacing: 0.3,
-                  }}>
-                  Add PJP
-                </Text>
-              </TouchableOpacity>
-            </View>
+          {/* Verify location OR check-in form + submit */}
+          {!locationVerified ? (
+            <TouchableOpacity
+              style={[styles.submitBtn, verifying && styles.disabledBtn]}
+              onPress={handleVerifyLocation}
+              disabled={verifying}>
+              {verifying ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.submitText}>Verify Location</Text>
+              )}
+            </TouchableOpacity>
           ) : (
-            <>
-              <View style={{padding: 20}}>
-                <ReusableDropdown
-                  label="Store"
-                  field="value"
-                  value={values.store}
-                  data={storeDailyList}
-                  error={touched.store && errors.store}
-                  disabled={locationVerified}
-                  onChange={(val: string) => onSelect('store', val)}
-                />
-              </View>
-
-              <Modal
-                visible={confirmModalVisible}
-                transparent
-                animationType="fade">
-                <View style={modalStyles.overlay}>
-                  <View style={modalStyles.container}>
-                    {/* Header */}
-                    <Text style={modalStyles.title}>Confirm Check-In</Text>
-                    <Text style={modalStyles.subtitle}>
-                      Please review the details before proceeding
-                    </Text>
-
-                    {/* Divider */}
-                    <View style={modalStyles.divider} />
-
-                    {/* Store */}
-                    <View style={modalStyles.row}>
-                      <Text style={modalStyles.label}>Store</Text>
-                      <Text style={modalStyles.value}>
-                        {pendingPayload?.store}
-                      </Text>
-                    </View>
-
-                    {/* Location */}
-                    <View style={modalStyles.row}>
-                      <Text style={modalStyles.label}>Location</Text>
-                      <Text style={modalStyles.locationText}>
-                        {pendingPayload?.current_location}
-                      </Text>
-                    </View>
-
-                    {/* Divider */}
-                    <View style={modalStyles.divider} />
-
-                    {/* Actions */}
-                    <View style={modalStyles.actions}>
-                      <TouchableOpacity
-                        style={modalStyles.cancelBtn}
-                        onPress={() => {
-                          setConfirmModalVisible(false);
-                          setPendingPayload(null);
-                          setLocationVerified(false);
-                        }}>
-                        <Text style={modalStyles.cancelText}>Cancel</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={modalStyles.confirmBtn}
-                        onPress={handleConfirmCheckIn}
-                        disabled={loading}>
-                        {loading ? (
-                          <ActivityIndicator color={Colors.white} />
-                        ) : (
-                          <Text style={modalStyles.confirmText}>Confirm</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              </Modal>
-
-              {!locationVerified ? (
+            <View>
+              <AddCheckInForm
+                values={values}
+                errors={errors}
+                touched={touched}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                setFieldValue={setFieldValue}
+                scrollY={scrollY}
+                storeList={storeDailyList}
+              />
+              <View style={styles.submitBar}>
                 <TouchableOpacity
-                  style={[styles.submitBtn, verifying && {opacity: 0.7}]}
-                  onPress={() => {
-                    handleVerifyLocation({showToast: true});
-                  }}
-                  disabled={verifying}>
-                  {verifying ? (
+                  style={[styles.submitBtn, loading && styles.disabledBtn]}
+                  onPress={() => handleSubmit()}
+                  disabled={loading}>
+                  {loading ? (
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
-                    <Text style={styles.submitText}>Verify Location</Text>
+                    <Text style={styles.submitText}>Check In</Text>
                   )}
                 </TouchableOpacity>
-              ) : (
-                <View>
-                  <AddCheckInForm
-                    values={values}
-                    errors={errors}
-                    touched={touched}
-                    handleChange={handleChange}
-                    handleBlur={handleBlur}
-                    setFieldValue={setFieldValue}
-                    scrollY={scrollY}
-                    storeList={storeDailyList}
-                  />
-                  <View
-                    style={{
-                      paddingHorizontal: 20,
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: Colors.bgColor,
-                      width: '100%',
-                      height: 80,
-                    }}>
-                    <TouchableOpacity
-                      style={[styles.submitBtn, loading && {opacity: 0.7}]}
-                      onPress={() => handleSubmit()}
-                      disabled={loading}>
-                      {loading ? (
-                        <ActivityIndicator size="small" color={Colors.white} />
-                      ) : (
-                        <Text style={styles.submitText}>CheckIn</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </>
+              </View>
+            </View>
           )}
         </>
       )}
@@ -499,11 +340,108 @@ const CheckInForm = ({navigation}: Props) => {
 
 export default CheckInForm;
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const NoPjpState = ({
+  formattedDate,
+  onAddPjp,
+}: {
+  formattedDate: string;
+  onAddPjp: () => void;
+}) => (
+  <View style={emptyStyles.container}>
+    <Text style={emptyStyles.title}>No PJP Available</Text>
+    <Text style={emptyStyles.date}>{formattedDate}</Text>
+    <Text style={emptyStyles.description}>
+      You don't have a Daily PJP for this date.{'\n'}Please add one to continue
+      check-in.
+    </Text>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={emptyStyles.cta}
+      onPress={onAddPjp}>
+      <Text style={emptyStyles.ctaText}>Add PJP</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+const ConfirmCheckInModal = ({
+  visible,
+  loading,
+  payload,
+  onCancel,
+  onConfirm,
+}: {
+  visible: boolean;
+  loading: boolean;
+  payload: any;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View style={modalStyles.overlay}>
+      <View style={modalStyles.container}>
+        <Text style={modalStyles.title}>Confirm Check-In</Text>
+        <Text style={modalStyles.subtitle}>
+          Please review the details before proceeding
+        </Text>
+
+        <View style={modalStyles.divider} />
+
+        <View style={modalStyles.row}>
+          <Text style={modalStyles.label}>Store</Text>
+          <Text style={modalStyles.value}>{payload?.store}</Text>
+        </View>
+        <View style={modalStyles.row}>
+          <Text style={modalStyles.label}>Location</Text>
+          <Text style={modalStyles.locationText}>
+            {payload?.current_location}
+          </Text>
+        </View>
+
+        <View style={modalStyles.divider} />
+
+        <View style={modalStyles.actions}>
+          <TouchableOpacity style={modalStyles.cancelBtn} onPress={onCancel}>
+            <Text style={modalStyles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={modalStyles.confirmBtn}
+            onPress={onConfirm}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <Text style={modalStyles.confirmText}>Confirm</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  submitBtn: {
-    display: 'flex',
+  screen: {
+    flex: 1,
+    backgroundColor: Colors.lightBg,
+  },
+  selectorPad: {
+    padding: 20,
+  },
+  submitBar: {
+    paddingHorizontal: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.bgColor,
+    width: '100%',
+    height: 80,
+  },
+  submitBtn: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
     borderRadius: 15,
@@ -516,12 +454,60 @@ const styles = StyleSheet.create({
     zIndex: 1,
     width: windowWidth * 0.9,
   },
+  disabledBtn: {
+    opacity: 0.7,
+  },
   submitText: {
     color: Colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
+
+const emptyStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: Colors.lightBg,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  date: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginBottom: 14,
+    textAlign: 'center',
+  },
+  description: {
+    fontSize: 14,
+    color: '#4B5563',
+    marginBottom: 26,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  cta: {
+    backgroundColor: Colors.darkButton,
+    paddingVertical: 15,
+    paddingHorizontal: 36,
+    borderRadius: 16,
+    elevation: 3,
+  },
+  ctaText: {
+    color: Colors.white,
+    fontWeight: '700',
+    fontSize: 15,
+    letterSpacing: 0.3,
+  },
+});
+
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,

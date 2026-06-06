@@ -89,6 +89,7 @@ import {
   ISetEmployeeTargetsWithEmp,
   RGetTargetAchievementSummary,
   IGetTargetAchievementSummaryParams,
+  pjpWorkflowDataType,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -1725,6 +1726,7 @@ interface PjpState {
   pjpInitializedData?: RPjpInitialize | null;
   locationVerifyData?: RLocationVerify | null;
   selectedStore?: string | null;
+  pjpWorkflowData: pjpWorkflowDataType | null;
 }
 
 const initialState: PjpState = {
@@ -1734,6 +1736,7 @@ const initialState: PjpState = {
   pjpInitializedData: null,
   locationVerifyData: null,
   selectedStore: null,
+  pjpWorkflowData: null,
 };
 
 export const pjpSlice = createSlice({
@@ -1768,6 +1771,29 @@ export const pjpSlice = createSlice({
         state.error = true;
         state.pjpInitializedData = null;
       })
+
+      .addMatcher(baseApi.endpoints.getPjpNextAction.matchPending, state => {
+        state.status = 'pending';
+        state.loading = true;
+        state.error = false;
+        state.pjpWorkflowData = null;
+      })
+      .addMatcher(
+        baseApi.endpoints.getPjpNextAction.matchFulfilled,
+        (state, action) => {
+          state.status = 'fulfilled';
+          state.loading = false;
+          state.error = false;
+          state.pjpWorkflowData = action.payload?.message?.data;
+        },
+      )
+      .addMatcher(baseApi.endpoints.getPjpNextAction.matchRejected, state => {
+        state.status = 'rejected';
+        state.loading = false;
+        state.error = true;
+        state.pjpWorkflowData = null;
+      })
+
       .addMatcher(
         baseApi.endpoints.locationVerification.matchPending,
         state => {

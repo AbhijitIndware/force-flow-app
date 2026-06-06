@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../../utils/colors';
-import { Fonts } from '../../constants';
-import { Size } from '../../utils/fontSize';
+import {View, Text, StyleSheet} from 'react-native';
+import {Colors} from '../../utils/colors';
+import {Fonts} from '../../constants';
+import {Size} from '../../utils/fontSize';
 import DropdownComponent from '../ui/CustomDropDown';
 
+// Extend to support per-item disabled flag (e.g. Visited stores)
 interface DropdownOption {
   label: string;
   value: string;
+  disabled?: boolean;
 }
 
 interface ReusableDropdownProps {
@@ -30,7 +32,7 @@ interface ReusableDropdownProps {
   clearTextAfterSearch?: boolean;
   marginBottom?: number;
   selectedLabel?: string;
-  labelStyle?: any;   // 👈 add
+  labelStyle?: any;
   height?: number;
   textSize?: number;
 }
@@ -54,12 +56,12 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
   clearTextAfterSearch = true,
   marginBottom = 16,
   selectedLabel,
-  labelStyle,   // 👈 add
+  labelStyle,
   height,
-  textSize
+  textSize,
 }) => {
   return (
-    <View style={[styles.inputWrapper, { marginBottom }]}>
+    <View style={[styles.inputWrapper, {marginBottom}]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <DropdownComponent
         selectText={placeholder || label}
@@ -77,7 +79,6 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
         disabled={disabled}
         clearTextAfterSearch={clearTextAfterSearch}
         selectedLabelOverride={selectedLabel}
-
         height={height}
         textSize={textSize}
       />
@@ -85,15 +86,21 @@ const ReusableDropdown: React.FC<ReusableDropdownProps> = ({
     </View>
   );
 };
+
 const styles = StyleSheet.create({
-  inputWrapper: { marginBottom: 16 },
+  inputWrapper: {
+    marginBottom: 16,
+  },
   label: {
     fontSize: Size.xs,
-    // marginBottom: 4,
     color: Colors.black,
     fontFamily: Fonts.regular,
   },
-  error: { fontSize: Size.xs, color: 'red', marginTop: 4 },
+  error: {
+    fontSize: Size.xs,
+    color: 'red',
+    marginTop: 4,
+  },
 });
 
 export default ReusableDropdown;

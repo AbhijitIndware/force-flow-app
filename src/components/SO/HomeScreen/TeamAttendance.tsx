@@ -1,7 +1,13 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import moment from 'moment';
-import { C, SectionTitle } from './Common';
+import {C, SectionTitle} from './Common';
 
 interface TeamAttendanceProps {
   attendanceData: any;
@@ -22,7 +28,10 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
   today,
   navigation,
 }) => {
-  if (!attendanceData?.message || attendanceData?.message?.records?.length === 0) {
+  if (
+    !attendanceData?.message ||
+    attendanceData?.message?.records?.length === 0
+  ) {
     return null;
   }
 
@@ -33,13 +42,13 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
         sub={
           filterMode === 'month'
             ? `${moment()
-              .month(selectedMonth - 1)
-              .format('MMMM')} Summary`
+                .month(selectedMonth - 1)
+                .format('MMMM')}`
             : filterMode === 'date_range'
-              ? `${moment(startDate).format('DD MMM')} – ${moment(
-                endDate,
-              ).format('DD MMM')}`
-              : 'Summary'
+            ? `${moment(startDate).format('DD MMM')} – ${moment(endDate).format(
+                'DD MMM',
+              )}`
+            : 'Summary'
         }
       />
 
@@ -55,17 +64,9 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
         {attendanceData?.message?.records?.map((r: any) => {
           const rate = r.attendance_rate;
           const color =
-            rate >= 75
-              ? '#2E7D32'
-              : rate >= 50
-                ? '#F59E0B'
-                : '#EF4444';
+            rate >= 75 ? '#2E7D32' : rate >= 50 ? '#F59E0B' : '#EF4444';
           const bgColor =
-            rate >= 75
-              ? '#DCFCE7'
-              : rate >= 50
-                ? '#FEF3C7'
-                : '#FEE2E2';
+            rate >= 75 ? '#DCFCE7' : rate >= 50 ? '#FEF3C7' : '#FEE2E2';
 
           return (
             <TouchableOpacity
@@ -102,8 +103,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                     fontWeight: '700',
                     color: C.accent,
                   }}>
-                  {r.initials ||
-                    r.employee_name.charAt(0).toUpperCase()}
+                  {r.initials || r.employee_name.charAt(0).toUpperCase()}
                 </Text>
               </View>
 
@@ -127,8 +127,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                   borderRadius: 20,
                   backgroundColor: bgColor,
                 }}>
-                <Text
-                  style={{ fontSize: 10, fontWeight: '700', color }}>
+                <Text style={{fontSize: 10, fontWeight: '700', color}}>
                   {rate}%
                 </Text>
               </View>
@@ -160,7 +159,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                   width: '100%',
                   marginTop: 2,
                 }}>
-                <View style={{ alignItems: 'center', flex: 1 }}>
+                <View style={{alignItems: 'center', flex: 1}}>
                   <Text
                     style={{
                       fontSize: 13,
@@ -169,9 +168,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                     }}>
                     {r.total_working_days}
                   </Text>
-                  <Text style={{ fontSize: 9, color: C.textMuted }}>
-                    Days
-                  </Text>
+                  <Text style={{fontSize: 9, color: C.textMuted}}>Days</Text>
                 </View>
 
                 <View
@@ -182,7 +179,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                   }}
                 />
 
-                <View style={{ alignItems: 'center', flex: 1 }}>
+                <View style={{alignItems: 'center', flex: 1}}>
                   <Text
                     style={{
                       fontSize: 13,
@@ -191,9 +188,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                     }}>
                     {r.days_present}
                   </Text>
-                  <Text style={{ fontSize: 9, color: C.textMuted }}>
-                    Present
-                  </Text>
+                  <Text style={{fontSize: 9, color: C.textMuted}}>Present</Text>
                 </View>
 
                 <View
@@ -204,7 +199,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                   }}
                 />
 
-                <View style={{ alignItems: 'center', flex: 1 }}>
+                <View style={{alignItems: 'center', flex: 1}}>
                   <Text
                     style={{
                       fontSize: 13,
@@ -213,9 +208,7 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
                     }}>
                     {r.days_absent}
                   </Text>
-                  <Text style={{ fontSize: 9, color: C.textMuted }}>
-                    Absent
-                  </Text>
+                  <Text style={{fontSize: 9, color: C.textMuted}}>Absent</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -227,5 +220,5 @@ export const TeamAttendance: React.FC<TeamAttendanceProps> = ({
 };
 
 const styles = StyleSheet.create({
-  section: { paddingHorizontal: 16, paddingTop: 10 },
+  section: {paddingHorizontal: 16, paddingTop: 10},
 });
