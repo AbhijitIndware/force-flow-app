@@ -14,6 +14,7 @@ import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {flexCol, flexRow, itemsCenter} from '../../../utils/styles';
+import {PjpAllowedAction, PjpWorkflowState} from '../../../types/baseType';
 
 interface HeaderSectionProps {
   employee: any;
@@ -26,17 +27,19 @@ interface HeaderSectionProps {
   isStartingPjp: boolean;
   handleStartPjp: () => void;
   handleCheckOut: () => void;
-  isLoading: boolean; // Checkout loading state
+  isLoading: boolean;
   isDisabled: boolean;
   errorMessage: string;
   navigation: any;
+  // ── new workflow props ──
+  pjpState: PjpWorkflowState | undefined;
+  pjpActions: PjpAllowedAction[];
 }
 
 const DateBox = () => {
-  const today = moment(); // current date
-  const day = today.format('DD'); // e.g. "21"
-  const month = today.format('MMM').toUpperCase(); // e.g. "APR"
-
+  const today = moment();
+  const day = today.format('DD');
+  const month = today.format('MMM').toUpperCase();
   return (
     <View style={styles.dateBox}>
       <Text style={styles.dateText}>{day}</Text>
@@ -52,7 +55,6 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   activityStatusData,
   isActivityCheckingOut,
   handleActivityCheckOut,
-  locationTrackerData,
   isStartingPjp,
   handleStartPjp,
   handleCheckOut,
@@ -60,7 +62,11 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   isDisabled,
   errorMessage,
   navigation,
+  pjpState,
+  pjpActions,
 }) => {
+  const can = (action: PjpAllowedAction) => pjpActions.includes(action);
+
   return (
     <View style={styles.headerSec}>
       <View style={{position: 'relative', marginBottom: 0}}>
@@ -79,8 +85,8 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             <DateBox />
           </View>
 
-          {/* ── Store info row ── */}
-          {selectedStoreValue && (
+          {/* ── Store info row (only while inside a store) ── */}
+          {pjpState === 'STORE_CHECKED_IN' && selectedStoreValue && (
             <View style={styles.linkContent}>
               <Text style={styles.paraText}>
                 Store — {selectedStoreValue?.store_name}
@@ -97,10 +103,217 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             </View>
           )}
 
-          {/* ── ACTIVITY STATUS BLOCK ── */}
-          {isActivityCheckedIn && (
+          {/* ═══════════════════════════════════════════════════════════════
+              WORKFLOW-DRIVEN BUTTONS — same design, driven by pjpState
+          ═══════════════════════════════════════════════════════════════ */}
+
+          {/* ── WEEKLY_OFF ── nothing to show ── */}
+          {pjpState === 'WEEKLY_OFF' && (
+            <Text
+              style={{
+                fontSize: 14,
+                color: '#ffeaea',
+                textAlign: 'center',
+                marginTop: 8,
+              }}>
+              Today is your Weekly Off. Enjoy your day! 🎉
+            </Text>
+          )}
+
+          {/* ── NO_PJP ── Create PJP + Activity Check-in ── */}
+          {pjpState === 'NO_PJP' && (
+            <>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#ffeaea',
+                  marginBottom: 4,
+                  textAlign: 'center',
+                  marginTop: 8,
+                }}>
+                You don't have a Daily PJP for this date.
+                {'\n'}Please add one to continue check-in.
+              </Text>
+              {can('CREATE_PJP') && (
+                <TouchableOpacity
+                  style={styles.checkinButton}
+                  onPress={() => navigation.navigate('AddPjpScreen')}>
+                  <Text style={styles.checkinButtonText}>Add Daily PJP</Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+              {can('START_ACTIVITY_CHECKIN') && (
+                <TouchableOpacity
+                  style={[styles.checkinButton, {marginTop: 8}]}
+                  onPress={() => navigation.navigate('ActivityCheckInScreen')}>
+                  <Text style={styles.checkinButtonText}>
+                    Activity Check-In
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* ── NO_STORES ── PJP exists but no stores added ── */}
+          {pjpState === 'NO_STORES' && (
+            <>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#ffeaea',
+                  textAlign: 'center',
+                  marginTop: 8,
+                  marginBottom: 4,
+                }}>
+                Your PJP has no stores yet. Please add stores to continue.
+              </Text>
+              {can('ADD_STORES') && (
+                <TouchableOpacity
+                  style={styles.checkinButton}
+                  onPress={() => navigation.navigate('AddPjpScreen')}>
+                  <Text style={styles.checkinButtonText}>Add Stores</Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* ── READY_TO_START ── PJP ready, not started yet ── */}
+          {pjpState === 'READY_TO_START' && (
+            <>
+              {can('START_PJP') && (
+                <TouchableOpacity
+                  style={[
+                    styles.checkinButton,
+                    isStartingPjp && styles.checkinButtonDisabled,
+                  ]}
+                  disabled={isStartingPjp}
+                  onPress={handleStartPjp}>
+                  <Text style={styles.checkinButtonText}>
+                    {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
+                  </Text>
+                  {isStartingPjp ? (
+                    <ActivityIndicator color={Colors.white} />
+                  ) : (
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={24}
+                      color={Colors.white}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              {can('START_ACTIVITY_CHECKIN') && (
+                <TouchableOpacity
+                  style={[styles.checkinButton, {marginTop: 8}]}
+                  onPress={() => navigation.navigate('ActivityCheckInScreen')}>
+                  <Text style={styles.checkinButtonText}>
+                    Activity Check-In
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* ── PJP_RUNNING_IDLE ── travelling, can check into a store ── */}
+          {pjpState === 'PJP_RUNNING_IDLE' && (
+            <>
+              {can('START_STORE_CHECKIN') && (
+                <TouchableOpacity
+                  style={[
+                    styles.checkinButton,
+                    isDisabled && styles.checkinButtonDisabled,
+                  ]}
+                  disabled={isDisabled}
+                  onPress={() => {
+                    if (errorMessage) {
+                      Toast.show({
+                        type: 'error',
+                        text1: `❌ ${errorMessage}`,
+                        position: 'top',
+                      });
+                    } else {
+                      navigation.navigate('CheckInForm');
+                    }
+                  }}>
+                  <Text
+                    style={[
+                      styles.checkinButtonText,
+                      isDisabled && styles.checkinButtonTextDisabled,
+                    ]}>
+                    Check In
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={isDisabled ? Colors.gray : Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+              {can('START_ACTIVITY_CHECKIN') && (
+                <TouchableOpacity
+                  style={[styles.checkinButton, {marginTop: 8}]}
+                  onPress={() => navigation.navigate('ActivityCheckInScreen')}>
+                  <Text style={styles.checkinButtonText}>
+                    Activity Check-In
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward-circle-sharp"
+                    size={24}
+                    color={Colors.white}
+                  />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* ── STORE_CHECKED_IN ── inside a store, show check-out ── */}
+          {pjpState === 'STORE_CHECKED_IN' && (
+            <>
+              {can('END_STORE_CHECKOUT') && (
+                <TouchableOpacity
+                  style={styles.checkinButton}
+                  onPress={handleCheckOut}
+                  disabled={isLoading}>
+                  <Text style={styles.checkinButtonText}>
+                    {isLoading ? 'Checking Out...' : 'Check Out'}
+                  </Text>
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  ) : (
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={24}
+                      color={Colors.white}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+
+          {/* ── ACTIVITY_CHECKED_IN ── in a non-store activity ── */}
+          {pjpState === 'ACTIVITY_CHECKED_IN' && (
             <View style={{marginTop: 10, gap: 8}}>
-              {/* Compact activity info card */}
+              {/* Compact activity info card — design unchanged */}
               <View
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.22)',
@@ -110,7 +323,6 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   paddingVertical: 10,
                   paddingHorizontal: 12,
                 }}>
-                {/* Top row: location + time */}
                 <View
                   style={{
                     flexDirection: 'row',
@@ -157,8 +369,6 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                     </Text>
                   </View>
                 </View>
-
-                {/* Chips row */}
                 <View style={{flexDirection: 'row', gap: 8, marginTop: 8}}>
                   {activityStatusData?.message?.activity_type && (
                     <View
@@ -221,201 +431,45 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               </View>
 
               {/* Activity Check-Out button */}
-              <TouchableOpacity
-                style={[styles.checkinButton, {marginTop: 0}]}
-                onPress={handleActivityCheckOut}
-                disabled={isActivityCheckingOut}>
-                <Text style={styles.checkinButtonText}>
-                  {isActivityCheckingOut
-                    ? 'Checking Out...'
-                    : 'Activity Check-Out'}
-                </Text>
-                {isActivityCheckingOut ? (
-                  <ActivityIndicator size="small" color={Colors.white} />
-                ) : (
-                  <Ionicons
-                    name="log-out-outline"
-                    size={20}
-                    color={Colors.white}
-                  />
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* ── PJP SECTION ── */}
-          {locationTrackerData?.message?.data?.pjp_records?.length === 0 ? (
-            <>
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: '#ffeaea',
-                  marginBottom: 4,
-                  textAlign: 'center',
-                  marginTop: 8,
-                }}>
-                You don't have a Daily PJP for this date.
-                {'\n'}Please add one to continue check-in.
-              </Text>
-              <TouchableOpacity
-                style={[styles.checkinButton]}
-                onPress={() => navigation.navigate('AddPjpScreen')}>
-                <Text style={styles.checkinButtonText}>Add Daily PJP</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              {locationTrackerData?.message?.data?.enabled === false && (
+              {can('END_ACTIVITY_CHECKOUT') && (
                 <TouchableOpacity
-                  style={[
-                    styles.checkinButton,
-                    (isStartingPjp ||
-                      locationTrackerData?.message?.data?.pjp_records
-                        ?.length === 0 ||
-                      isActivityCheckedIn) &&
-                      styles.checkinButtonDisabled,
-                  ]}
-                  disabled={
-                    isStartingPjp ||
-                    locationTrackerData?.message?.data?.pjp_records?.length ===
-                      0 ||
-                    isActivityCheckedIn
-                  }
-                  onPress={handleStartPjp}>
+                  style={[styles.checkinButton, {marginTop: 0}]}
+                  onPress={handleActivityCheckOut}
+                  disabled={isActivityCheckingOut}>
                   <Text style={styles.checkinButtonText}>
-                    {isStartingPjp ? 'Starting PJP...' : 'Start PJP'}
+                    {isActivityCheckingOut
+                      ? 'Checking Out...'
+                      : 'Activity Check-Out'}
                   </Text>
-                  {isStartingPjp ? (
-                    <ActivityIndicator color={Colors.white} />
-                  ) : (
-                    <Ionicons
-                      name="chevron-forward-circle-sharp"
-                      size={24}
-                      color={Colors.white}
-                    />
-                  )}
-                </TouchableOpacity>
-              )}
-
-              {selectedStoreValue?.actions?.can_check_out ||
-              selectedStoreValue?.actions?.can_mark_activity ? (
-                <TouchableOpacity
-                  style={styles.checkinButton}
-                  onPress={handleCheckOut}
-                  disabled={
-                    !selectedStoreValue?.actions?.can_check_out || isLoading
-                  }>
-                  <Text style={styles.checkinButtonText}>Check Out</Text>
-                  {isLoading ? (
+                  {isActivityCheckingOut ? (
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <Ionicons
-                      name="chevron-forward-circle-sharp"
-                      size={24}
+                      name="log-out-outline"
+                      size={20}
                       color={Colors.white}
                     />
                   )}
                 </TouchableOpacity>
-              ) : (
-                <>
-                  {/* ── Check In — ghost style when locked by activity ── */}
-                  <TouchableOpacity
-                    style={[
-                      styles.checkinButton,
-                      isDisabled &&
-                        !isActivityCheckedIn &&
-                        styles.checkinButtonDisabled,
-                      isActivityCheckedIn && {
-                        backgroundColor: 'rgba(255,255,255,0.12)',
-                        borderWidth: 1.5,
-                        borderColor: 'rgba(255,255,255,0.4)',
-                      },
-                    ]}
-                    disabled={isDisabled || isActivityCheckedIn}
-                    onPress={() => {
-                      if (errorMessage !== '') {
-                        Toast.show({
-                          type: 'error',
-                          text1: `❌ ${errorMessage}`,
-                          position: 'top',
-                        });
-                      } else {
-                        navigation.navigate('CheckInForm');
-                      }
-                    }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 6,
-                        flex: 1,
-                        justifyContent: 'center',
-                      }}>
-                      {isActivityCheckedIn && (
-                        <Ionicons
-                          name="lock-closed"
-                          size={14}
-                          color="rgba(255,255,255,0.55)"
-                        />
-                      )}
-                      <Text
-                        style={[
-                          styles.checkinButtonText,
-                          isActivityCheckedIn && {
-                            color: 'rgba(255,255,255,0.55)',
-                          },
-                          isDisabled &&
-                            !isActivityCheckedIn &&
-                            styles.checkinButtonTextDisabled,
-                        ]}>
-                        Check In
-                      </Text>
-                    </View>
-                    <Ionicons
-                      name="chevron-forward-circle-sharp"
-                      size={24}
-                      color={
-                        isActivityCheckedIn
-                          ? 'rgba(255,255,255,0.35)'
-                          : isDisabled
-                          ? Colors.gray
-                          : Colors.white
-                      }
-                    />
-                  </TouchableOpacity>
-
-                  {/* Hint text */}
-                  {isActivityCheckedIn && (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 4,
-                        marginTop: -2,
-                      }}>
-                      <Ionicons
-                        name="information-circle-outline"
-                        size={12}
-                        color="#fff"
-                      />
-                      <Text
-                        style={{
-                          fontSize: 11,
-                          color: '#ffff',
-                          fontFamily: Fonts.regular,
-                        }}>
-                        PJP Check-In is disabled while Activity is active
-                      </Text>
-                    </View>
-                  )}
-                </>
               )}
-            </>
+            </View>
+          )}
+
+          {/* ── COMPLETED ── day done ── */}
+          {pjpState === 'COMPLETED' && (
+            <Text
+              style={{
+                fontSize: 14,
+                color: '#ffeaea',
+                textAlign: 'center',
+                marginTop: 8,
+              }}>
+              Your PJP for today is completed. Great work! ✅
+            </Text>
           )}
         </View>
 
-        {/* ── Beat plan link ── */}
+        {/* ── Beat plan link — unchanged ── */}
         <View style={styles.planLink}>
           <TouchableOpacity
             style={{flexDirection: 'row', alignItems: 'center'}}
@@ -444,13 +498,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
-    // iOS Shadow
     shadowColor: '#979797',
     shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
-
-    // Android Shadow
     elevation: 2,
     marginBottom: 10,
   },

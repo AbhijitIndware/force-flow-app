@@ -1,17 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
-import {
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-} from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {RefreshControl, SafeAreaView, ScrollView} from 'react-native';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { SoAppStackParamList } from '../../../types/Navigation';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useAppDispatch, useAppSelector } from '../../../store/hook';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {
   resetLocation,
   setSelectedStore,
@@ -29,30 +25,31 @@ import {
   useGetActivityCheckInStatusQuery,
   useActivityCheckOutMutation,
   usePjpInitializeMutation,
+  useGetPjpNextActionQuery,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
-import { ICheckOut, LocationPayload, StoreData } from '../../../types/baseType';
+import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
 import moment from 'moment';
-import { useIsFocused } from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 import {
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../utils/utils';
 
 // ── Sub-components ──────────────────────────────────────────────────────────
-import { HeaderSection } from '../../../components/SO/HomeScreen/HeaderSection';
-import { StatsOverview } from '../../../components/SO/HomeScreen/StatsOverview';
-import { FilterSection } from '../../../components/SO/HomeScreen/FilterSection';
-import { TeamAttendance } from '../../../components/SO/HomeScreen/TeamAttendance';
-import { TeamPerformance } from '../../../components/SO/HomeScreen/TeamPerformance';
-import { ActivityCheckInBlock } from '../../../components/SO/HomeScreen/ActivityCheckInBlock';
-import { QuickLinks } from '../../../components/SO/HomeScreen/QuickLinks';
-import { ClaimsSection } from '../../../components/SO/HomeScreen/ClaimsSection';
-import { StockAndActivityLinks } from '../../../components/SO/HomeScreen/StockAndActivityLinks';
-import { CheckoutConfirmModal } from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
-import { SetTargetsModal } from '../../../components/SO/HomeScreen/SetTargetsModal';
-import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
-import { YearPickerModal } from '../../../components/SO/HomeScreen/YearPickerModal';
+import {HeaderSection} from '../../../components/SO/HomeScreen/HeaderSection';
+import {StatsOverview} from '../../../components/SO/HomeScreen/StatsOverview';
+import {FilterSection} from '../../../components/SO/HomeScreen/FilterSection';
+import {TeamAttendance} from '../../../components/SO/HomeScreen/TeamAttendance';
+import {TeamPerformance} from '../../../components/SO/HomeScreen/TeamPerformance';
+import {ActivityCheckInBlock} from '../../../components/SO/HomeScreen/ActivityCheckInBlock';
+import {QuickLinks} from '../../../components/SO/HomeScreen/QuickLinks';
+import {ClaimsSection} from '../../../components/SO/HomeScreen/ClaimsSection';
+import {StockAndActivityLinks} from '../../../components/SO/HomeScreen/StockAndActivityLinks';
+import {CheckoutConfirmModal} from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
+import {SetTargetsModal} from '../../../components/SO/HomeScreen/SetTargetsModal';
+import {MonthPickerModal} from '../../../components/SO/HomeScreen/MonthPickerModal';
+import {YearPickerModal} from '../../../components/SO/HomeScreen/YearPickerModal';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -78,7 +75,7 @@ function extractServerMessage(resp: any): string | null {
 
 const today = new Date().toISOString().split('T')[0];
 
-const HomeScreen = ({ navigation }: Props) => {
+const HomeScreen = ({navigation}: Props) => {
   const [isStartingPjp, setIsStartingPjp] = useState(false);
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -124,10 +121,22 @@ const HomeScreen = ({ navigation }: Props) => {
   const [editSalesTarget, setEditSalesTarget] = useState('');
   const [editDdnTarget, setEditDdnTarget] = useState('');
 
+  const {data: pjpWorkflowData, refetch: refetchPjpWorkflow} =
+    useGetPjpNextActionQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+    });
+  console.log('🚀 ~ HomeScreen ~ pjpWorkflowData:', pjpWorkflowData);
+
+  const pjpState = pjpWorkflowData?.message.data?.current_state;
+  const pjpActions = pjpWorkflowData?.message.data?.allowed_actions ?? [];
+  const pjpDocName = pjpWorkflowData?.message.data?.pjp_document_name;
+  const activeStoreId = pjpWorkflowData?.message.data?.active_store_id;
+  const activeActivityId = pjpWorkflowData?.message.data?.active_activity_id;
+
   const apiParams = useMemo(() => {
-    const base = { employee: employee?.id as string };
+    const base = {employee: employee?.id as string};
     if (filterMode === 'month') {
-      return { ...base, month: selectedMonth, year: selectedYear };
+      return {...base, month: selectedMonth, year: selectedYear};
     }
     if (filterMode === 'month_range') {
       return {
@@ -160,10 +169,10 @@ const HomeScreen = ({ navigation }: Props) => {
         month: selectedMonth - 1,
         day: 1,
       }).format('YYYY-MM-DD');
-      const to = moment({ year: selectedYear, month: selectedMonth - 1 })
+      const to = moment({year: selectedYear, month: selectedMonth - 1})
         .endOf('month')
         .format('YYYY-MM-DD');
-      return { from_date: from, to_date: to };
+      return {from_date: from, to_date: to};
     }
     if (filterMode === 'date_range') {
       return {
@@ -185,7 +194,7 @@ const HomeScreen = ({ navigation }: Props) => {
           month: selectedMonth - 1,
           day: 1,
         }).format('YYYY-MM-DD'),
-        to_date: moment({ year: selectedYear, month: selectedMonth - 1 })
+        to_date: moment({year: selectedYear, month: selectedMonth - 1})
           .endOf('month')
           .format('YYYY-MM-DD'),
       };
@@ -196,50 +205,50 @@ const HomeScreen = ({ navigation }: Props) => {
     };
   }, [filterMode, selectedMonth, selectedYear, startDate, endDate]);
 
-  const { data: attendanceData, refetch: refetchAttendance } =
-    useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
-  const { data: pjpTargetData, refetch: refetchPjpTarget } =
-    useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  const { data: valueTargetData, refetch: refetchValueTarget } =
-    useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
-  const { data: ddnData, refetch: refetchDdnStats } = useGetDdnStatsQuery(
+  const {data: attendanceData, refetch: refetchAttendance} =
+    useGetAsmAttendanceTabQuery(apiParams, {skip: !employee?.id});
+  const {data: pjpTargetData, refetch: refetchPjpTarget} =
+    useGetAsmPjpTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const {data: valueTargetData, refetch: refetchValueTarget} =
+    useGetAsmTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const {data: ddnData, refetch: refetchDdnStats} = useGetDdnStatsQuery(
     ddnDateParams,
-    { skip: !employee?.id },
+    {skip: !employee?.id},
   );
-  const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
+  const {data: employeeTargetsData, refetch: refetchEmployeeTargets} =
     useGetEmployeeTargetsQuery(
-      { month: selectedMonth, year: selectedYear },
-      { skip: !employee?.id },
+      {month: selectedMonth, year: selectedYear},
+      {skip: !employee?.id},
     );
 
-  const { data: soStatsData, refetch: refetchSoAchievement } = useGetSoStatsQuery(
+  const {data: soStatsData, refetch: refetchSoAchievement} = useGetSoStatsQuery(
     soDateParams,
-    { skip: !employee?.id },
+    {skip: !employee?.id},
   );
 
-  const [setEmployeeTargets, { isLoading: isSavingTargets }] =
+  const [setEmployeeTargets, {isLoading: isSavingTargets}] =
     useSetEmployeeTargetsMutation();
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
-  const { data: prodData, refetch } = useGetProdCountQuery(
-    { date: today },
-    { refetchOnMountOrArgChange: true },
+  const {data: prodData, refetch} = useGetProdCountQuery(
+    {date: today},
+    {refetchOnMountOrArgChange: true},
   );
 
-  const [pjpInitialize, { data, error }] = usePjpInitializeMutation();
-  const [checkOut, { isLoading }] = useCheckOutMutation();
+  const [pjpInitialize, {data, error}] = usePjpInitializeMutation();
+  const [checkOut, {isLoading}] = useCheckOutMutation();
   const {
     data: locationTrackerData,
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
-  } = useGetLocationTrackerQuery(undefined, { refetchOnMountOrArgChange: true });
-  const { data: activityStatusData, refetch: refetchActivityStatus } =
+  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
+  const {data: activityStatusData, refetch: refetchActivityStatus} =
     useGetActivityCheckInStatusQuery(undefined, {
       refetchOnMountOrArgChange: true,
     });
 
-  const [activityCheckOut, { isLoading: isActivityCheckingOut }] =
+  const [activityCheckOut, {isLoading: isActivityCheckingOut}] =
     useActivityCheckOutMutation();
   const [startPjp] = useStartPjpMutation();
 
@@ -265,6 +274,7 @@ const HomeScreen = ({ navigation }: Props) => {
       refetchSoAchievement();
       refetchEmployeeTargets();
       refetchActivityStatus();
+      refetchPjpWorkflow();
     }, 2000);
   }, [
     pjpInitialize,
@@ -309,7 +319,7 @@ const HomeScreen = ({ navigation }: Props) => {
     if (!location) return null;
     const [latitude, longitude] = location.split(',').map(Number);
     if (isNaN(latitude) || isNaN(longitude)) return null;
-    return { latitude, longitude };
+    return {latitude, longitude};
   };
 
   const handleSetValue = async () => {
@@ -491,7 +501,7 @@ const HomeScreen = ({ navigation }: Props) => {
         month: selectedMonth,
         year: selectedYear,
       }).unwrap();
-      Toast.show({ type: 'success', text1: '✅ Targets saved successfully' });
+      Toast.show({type: 'success', text1: '✅ Targets saved successfully'});
       setTargetModalVisible(false);
       refetchEmployeeTargets();
     } catch (err: any) {
@@ -515,7 +525,7 @@ const HomeScreen = ({ navigation }: Props) => {
       if (!logId) return;
       const location = await getCurrentLocation();
       if (!location) {
-        Toast.show({ type: 'error', text1: 'Unable to fetch location' });
+        Toast.show({type: 'error', text1: 'Unable to fetch location'});
         return;
       }
       const res = await activityCheckOut({
@@ -523,7 +533,7 @@ const HomeScreen = ({ navigation }: Props) => {
         current_location: location,
       }).unwrap();
       if (res.message.success) {
-        Toast.show({ type: 'success', text1: 'Activity Checked Out' });
+        Toast.show({type: 'success', text1: 'Activity Checked Out'});
         refetchActivityStatus();
       }
     } catch (error: any) {
@@ -584,6 +594,8 @@ const HomeScreen = ({ navigation }: Props) => {
             isDisabled={isDisabled}
             errorMessage={errorMessage}
             navigation={navigation}
+            pjpState={pjpState}
+            pjpActions={pjpActions}
           />
 
           {/* ── Count boxes (Total call / Productive call) ── */}
@@ -698,7 +710,8 @@ const HomeScreen = ({ navigation }: Props) => {
 
           {/* ── Activity Check-In ── */}
           <ActivityCheckInBlock
-            isPjpActive={isPjpActive}
+            // isPjpActive={isPjpActive}
+            pjpState={pjpState}
             navigation={navigation}
           />
 

@@ -153,7 +153,7 @@ const SalesScreen = ({navigation, route}: Props) => {
             </View>
 
             {/* Action Links */}
-            <View style={styles.linksRow}>
+            {/* <View style={styles.linksRow}>
               <TouchableOpacity
                 style={styles.actionLink}
                 onPress={() =>
@@ -171,7 +171,7 @@ const SalesScreen = ({navigation, route}: Props) => {
                   />
                 </View>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
 
           <View style={styles.tabSection}>
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 18,
+    // paddingBottom: 18,
     borderBottomRightRadius: 32,
     borderBottomLeftRadius: 32,
     shadowColor: '#979797',

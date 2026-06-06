@@ -81,6 +81,7 @@ import {
   RGetDayOffs,
   IGetAttendanceParams,
   IAttendanceSummaryResponse,
+  RGetPjpNextAction,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -104,6 +105,15 @@ export const baseApi = createApi({
     'Activity',
   ],
   endpoints: builder => ({
+    // PJP Workflow State Machine
+    // Returns the employee's current workflow state and what actions are allowed next.
+    getPjpNextAction: builder.query<RGetPjpNextAction, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp_workflow.get_pjp_next_action',
+        method: 'GET',
+      }),
+      providesTags: ['PJP', 'Activity'],
+    }),
     //Daily PJP Activity Check-in ---
     pjpInitialize: builder.mutation<RPjpInitialize, void>({
       query: () => ({
@@ -1520,6 +1530,9 @@ export const baseApi = createApi({
 });
 
 export const {
+  // PJP Workflow
+  useGetPjpNextActionQuery,
+  useLazyGetPjpNextActionQuery,
   //Daily PJP Activity Check-in ---
   usePjpInitializeMutation,
   useLocationVerificationMutation,

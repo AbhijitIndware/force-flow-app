@@ -2299,3 +2299,48 @@ export interface RGetDayOffs {
     data: {name: string; attendance_date: string; status: string}[];
   };
 }
+
+// ─── PJP WORKFLOW TYPES ───────────────────────────────────────────────────────
+
+export type PjpWorkflowState =
+  | 'WEEKLY_OFF'
+  | 'NO_PJP'
+  | 'NO_STORES'
+  | 'READY_TO_START'
+  | 'PJP_RUNNING_IDLE'
+  | 'STORE_CHECKED_IN'
+  | 'ACTIVITY_CHECKED_IN'
+  | 'COMPLETED';
+
+export type PjpAllowedAction =
+  | 'CREATE_PJP'
+  | 'START_ACTIVITY_CHECKIN'
+  | 'MARK_WEEKLY_OFF'
+  | 'ADD_STORES'
+  | 'MODIFY_PJP'
+  | 'CANCEL_PJP'
+  | 'START_PJP'
+  | 'EDIT_STORES'
+  | 'DELETE_STORE'
+  | 'START_STORE_CHECKIN'
+  | 'END_PJP'
+  | 'END_STORE_CHECKOUT'
+  | 'CREATE_ORDER'
+  | 'MODIFY_ORDER'
+  | 'MARK_ACTIVITY'
+  | 'END_ACTIVITY_CHECKOUT'
+  | 'VIEW_REPORTS';
+
+export interface RGetPjpNextAction {
+  message: {
+    status: string;
+    data: {
+      current_state: PjpWorkflowState;
+      allowed_actions: PjpAllowedAction[];
+      message: string;
+      pjp_document_name: string | null;
+      active_store_id: string | null;
+      active_activity_id: string | null;
+    };
+  };
+}
