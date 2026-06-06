@@ -19,7 +19,6 @@ import {
   useGetProdCountQuery,
   useStartPjpMutation,
   useGetEmployeeTargetsQuery,
-  useSetEmployeeTargetsMutation,
   useGetSoStatsQuery,
   useGetDdnStatsQuery,
   useGetActivityCheckInStatusQuery,
@@ -118,14 +117,11 @@ const HomeScreen = ({navigation}: Props) => {
     'single' | 'from' | 'to'
   >('single');
   const [targetModalVisible, setTargetModalVisible] = useState(false);
-  const [editSalesTarget, setEditSalesTarget] = useState('');
-  const [editDdnTarget, setEditDdnTarget] = useState('');
 
   const {data: pjpWorkflowData, refetch: refetchPjpWorkflow} =
     useGetPjpNextActionQuery(undefined, {
       refetchOnMountOrArgChange: true,
     });
-  console.log('🚀 ~ HomeScreen ~ pjpWorkflowData:', pjpWorkflowData);
 
   const pjpState = pjpWorkflowData?.message.data?.current_state;
   const pjpActions = pjpWorkflowData?.message.data?.allowed_actions ?? [];
@@ -225,9 +221,6 @@ const HomeScreen = ({navigation}: Props) => {
     soDateParams,
     {skip: !employee?.id},
   );
-
-  const [setEmployeeTargets, {isLoading: isSavingTargets}] =
-    useSetEmployeeTargetsMutation();
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
@@ -254,10 +247,6 @@ const HomeScreen = ({navigation}: Props) => {
 
   const isActivityCheckedIn =
     activityStatusData?.message?.is_checked_in === true;
-  const isPjpActive = !!(
-    selectedStoreValue?.actions?.can_check_out ||
-    selectedStoreValue?.actions?.can_mark_activity
-  );
 
   // ── Refresh ──────────────────────────────────────────────────────────────────
   const onRefresh = useCallback(() => {
@@ -492,29 +481,7 @@ const HomeScreen = ({navigation}: Props) => {
       ? parseFloat(((soAchievement / salesTarget) * 100).toFixed(2))
       : 0;
 
-  // ── Target modal handlers ────────────────────────────────────────────────────
-  const handleSaveTargets = async () => {
-    try {
-      await setEmployeeTargets({
-        sales_target: Number(editSalesTarget),
-        ddn_target: Number(editDdnTarget),
-        month: selectedMonth,
-        year: selectedYear,
-      }).unwrap();
-      Toast.show({type: 'success', text1: '✅ Targets saved successfully'});
-      setTargetModalVisible(false);
-      refetchEmployeeTargets();
-    } catch (err: any) {
-      Toast.show({
-        type: 'error',
-        text1: `❌ ${err?.message || 'Failed to save targets'}`,
-      });
-    }
-  };
-
   const handleOpenTargetModal = () => {
-    setEditSalesTarget(String(salesTarget));
-    setEditDdnTarget(String(ddnTarget));
     setTargetModalVisible(true);
   };
 
@@ -699,13 +666,12 @@ const HomeScreen = ({navigation}: Props) => {
           {/* ── Set Targets Modal ── */}
           <SetTargetsModal
             visible={targetModalVisible}
-            editSalesTarget={editSalesTarget}
-            editDdnTarget={editDdnTarget}
-            isSavingTargets={isSavingTargets}
-            setEditSalesTarget={setEditSalesTarget}
-            setEditDdnTarget={setEditDdnTarget}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
             onCancel={() => setTargetModalVisible(false)}
-            onSave={handleSaveTargets}
+            onSaveSuccess={(sales, ddn) => {
+              setTargetModalVisible(false);
+            }}
           />
 
           {/* ── Activity Check-In ── */}

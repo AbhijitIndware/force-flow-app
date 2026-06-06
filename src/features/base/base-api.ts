@@ -82,6 +82,13 @@ import {
   IGetAttendanceParams,
   IAttendanceSummaryResponse,
   RGetPjpNextAction,
+  RGetTeamEmployees,
+  RGetEmployeeTargetsWithEmp,
+  IGetEmployeeTargetsWithEmpParams,
+  RSetEmployeeTargetsWithEmp,
+  ISetEmployeeTargetsWithEmp,
+  RGetTargetAchievementSummary,
+  IGetTargetAchievementSummaryParams,
 } from '../../types/baseType';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {PaginationInfo} from '../../types/Navigation';
@@ -1526,6 +1533,60 @@ export const baseApi = createApi({
       }),
       providesTags: ['PJP'],
     }),
+
+    // Fetch all active team employees (for manager's subordinate dropdown)
+    getTeamEmployees: builder.query<RGetTeamEmployees, void>({
+      query: () => ({
+        url: '/method/salesforce_management.api.asm_dashboard.get_team_employees',
+        method: 'GET',
+      }),
+    }),
+    // Fetch employee targets for a specific employee + month/year
+    getEmployeeTargetsForEmp: builder.query<
+      RGetEmployeeTargetsWithEmp,
+      IGetEmployeeTargetsWithEmpParams
+    >({
+      query: ({month, year, employee}) => ({
+        url: '/method/salesforce_management.api.asm_dashboard.get_employee_targets',
+        method: 'POST',
+        body: {
+          ...(month !== undefined ? {month} : {}),
+          ...(year !== undefined ? {year} : {}),
+          employee,
+        },
+      }),
+      providesTags: ['SO', 'Stock', 'Activity'],
+    }),
+
+    // Upsert targets for a specific employee or entire team ("ALL")
+    setEmployeeTargetsForEmp: builder.mutation<
+      RSetEmployeeTargetsWithEmp,
+      ISetEmployeeTargetsWithEmp
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.api.asm_dashboard.set_employee_targets',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['SO', 'Stock', 'Activity'],
+    }),
+
+    // Target achievement summary (aggregated SO + DDN vs targets)
+    getTargetAchievementSummary: builder.query<
+      RGetTargetAchievementSummary,
+      IGetTargetAchievementSummaryParams
+    >({
+      query: ({from_date, to_date, employee}) => ({
+        url: '/method/salesforce_management.api.asm_dashboard.get_target_achievement_summary',
+        method: 'POST',
+        body: {
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+          ...(employee ? {employee} : {}),
+        },
+      }),
+      providesTags: ['SO', 'Stock', 'Activity'],
+    }),
   }),
 });
 
@@ -1647,6 +1708,14 @@ export const {
   useCancelDayOffMutation,
   useGetDayOffsQuery,
   useLazyGetDayOffsQuery,
+
+  // Target Management
+  useGetTeamEmployeesQuery,
+  useGetEmployeeTargetsForEmpQuery,
+  useLazyGetEmployeeTargetsForEmpQuery,
+  useSetEmployeeTargetsForEmpMutation,
+  useGetTargetAchievementSummaryQuery,
+  useLazyGetTargetAchievementSummaryQuery,
 } = baseApi;
 
 interface PjpState {

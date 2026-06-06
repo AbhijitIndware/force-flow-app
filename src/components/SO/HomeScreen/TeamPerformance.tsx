@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import moment from 'moment';
-import { Fonts } from '../../../constants';
-import { SectionTitle, TargetMetricBox } from './Common';
+import {Fonts} from '../../../constants';
+import {SectionTitle, TargetMetricBox} from './Common';
+import {useAppSelector} from '../../../store/hook';
 
 interface TeamPerformanceProps {
   filterMode: 'month' | 'month_range' | 'date_range';
@@ -39,8 +40,15 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
   ddnPct,
   navigation,
 }) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const isAsm =
+    employee?.designation === 'ASM' ||
+    employee?.designation === 'Area Sales Executive' ||
+    employee?.designation === 'ASE';
   return (
-    <View style={[styles.section, { marginBottom: 10 }]}>
+    <View style={[styles.section, {marginBottom: 10}]}>
       <View
         style={{
           flexDirection: 'row',
@@ -53,36 +61,38 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
           sub={
             filterMode === 'month'
               ? `${moment()
-                .month(selectedMonth - 1)
-                .format('MMMM')} Performance`
+                  .month(selectedMonth - 1)
+                  .format('MMMM')} Performance`
               : `${moment(startDate).format('DD MMM')} – ${moment(
-                endDate,
-              ).format('DD MMM')}`
+                  endDate,
+                ).format('DD MMM')}`
           }
         />
         {/* Edit targets button */}
-        <TouchableOpacity
-          onPress={handleOpenTargetModal}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 4,
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            borderRadius: 20,
-            borderWidth: 0.5,
-            borderColor: '#534AB7',
-            backgroundColor: 'rgba(83,74,183,0.07)',
-          }}>
-          <Text
+        {isAsm && (
+          <TouchableOpacity
+            onPress={handleOpenTargetModal}
             style={{
-              fontSize: 11,
-              color: '#534AB7',
-              fontFamily: Fonts.medium,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 20,
+              borderWidth: 0.5,
+              borderColor: '#534AB7',
+              backgroundColor: 'rgba(83,74,183,0.07)',
             }}>
-            Set Targets
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={{
+                fontSize: 11,
+                color: '#534AB7',
+                fontFamily: Fonts.medium,
+              }}>
+              Set Targets
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.metricRow}>
@@ -103,22 +113,22 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
 
         <TargetMetricBox
           label="Orders"
-          achieved={`₹${soAchievement % 1 !== 0
-            ? soAchievement.toFixed(2)
-            : soAchievement
-            }`}
+          achieved={`₹${
+            soAchievement % 1 !== 0 ? soAchievement.toFixed(2) : soAchievement
+          }`}
           target={`₹${salesTarget}`}
           rate={soPct}
           accentColor="#0F6E56"
         />
       </View>
-      <View style={[styles.metricRow, { marginTop: 10 }]}>
+      <View style={[styles.metricRow, {marginTop: 10}]}>
         <TargetMetricBox
           label="Delivery Note"
-          achieved={`₹${(ddnStats?.value ?? 0) % 1 !== 0
-            ? (ddnStats?.value ?? 0).toFixed(2)
-            : ddnStats?.value ?? 0
-            }`}
+          achieved={`₹${
+            (ddnStats?.value ?? 0) % 1 !== 0
+              ? (ddnStats?.value ?? 0).toFixed(2)
+              : ddnStats?.value ?? 0
+          }`}
           target={`₹${ddnTarget}`}
           rate={ddnPct}
           accentColor="#185FA5"
@@ -129,6 +139,6 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
 };
 
 const styles = StyleSheet.create({
-  section: { paddingHorizontal: 16, paddingTop: 10 },
-  metricRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  section: {paddingHorizontal: 16, paddingTop: 10},
+  metricRow: {flexDirection: 'row', gap: 8, flexWrap: 'wrap'},
 });

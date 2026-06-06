@@ -2341,6 +2341,99 @@ export interface RGetPjpNextAction {
       pjp_document_name: string | null;
       active_store_id: string | null;
       active_activity_id: string | null;
+      pjp_data: PjpDataResponse;
     };
+  };
+}
+
+export type PjpDataResponse = {
+  pjp_details: {
+    name: string;
+    running_status: string;
+    start_location: string | null;
+    travel_distance: number;
+  };
+  stores: {
+    store: string;
+    store_name: string;
+    status: string;
+  }[];
+  store_times: {
+    store: string;
+    check_in_time: string;
+    check_out_time: string | null;
+    activity_marked: number;
+  }[];
+  activities: any[];
+  non_store_activities: any[];
+};
+
+// ─── TARGET MANAGEMENT TYPES (NEW APIs) ──────────────────────────────────────
+
+// API: get_team_employees
+export interface TeamEmployee {
+  name: string; // Employee ID e.g. "HR-EMP-00021"
+  employee_name: string;
+  user_id: string; // e.g. "uttam.dubey@example.com"
+}
+
+export interface RGetTeamEmployees {
+  message: TeamEmployee[];
+}
+
+// API: get_employee_targets (with employee param)
+export interface IGetEmployeeTargetsWithEmpParams {
+  month?: number; // 1–12, defaults to current month
+  year?: number; // e.g. 2026, defaults to current year
+  employee: string; // e.g. "HR-EMP-00021" or "ALL"
+}
+
+export interface RGetEmployeeTargetsWithEmp {
+  message: {
+    sales_target: number;
+    ddn_target: number;
+    source: 'personal' | 'global';
+    record: string | null; // null when no personal target exists
+    period: string; // "YYYY-MM"
+  };
+}
+
+// API: set_employee_targets (with employee param — manager setting for subordinate)
+export interface ISetEmployeeTargetsWithEmp {
+  sales_target: number;
+  ddn_target: number;
+  month?: number; // 1–12, defaults to current month
+  year?: number; // e.g. 2026, defaults to current year
+  employee: string; // specific employee ID or "ALL"
+}
+
+export interface RSetEmployeeTargetsWithEmp {
+  message:
+    | {status: 'ok'; year: number; month: number} // single employee
+    | {status: 'ok'; updated: number; year: number; month: number}; // "ALL"
+}
+
+// API: get_target_achievement_summary
+export interface IGetTargetAchievementSummaryParams {
+  from_date?: string; // "YYYY-MM-DD", defaults to 1st of current month
+  to_date?: string; // "YYYY-MM-DD", defaults to end of current month
+  employee?: string; // specific ID, "ALL", or omit for team aggregate
+}
+
+export interface RGetTargetAchievementSummary {
+  message: {
+    sales_target: number;
+    ddn_target: number;
+    so_value: number;
+    so_count: number;
+    ddn_value: number;
+    ddn_count: number;
+    is_admin: boolean;
+    scope: 'global' | 'team';
+    from_date: string;
+    to_date: string;
+    target_month: number;
+    target_year: number;
+    months_counted: number;
   };
 }
