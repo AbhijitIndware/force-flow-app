@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -15,14 +15,17 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { useGetApprovalListQuery, useGetPendingApprovalsQuery } from '../../../features/tada/tadaApiv2';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {
+  useGetApprovalListQuery,
+  useGetPendingApprovalsQuery,
+} from '../../../features/tada/tadaApiv2';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
-import { ApproverExpenseClaim } from '../../../types/tadaType';
+import {ApproverExpenseClaim} from '../../../types/tadaType';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -32,18 +35,24 @@ const MONTHS = moment.months().map((label, i) => ({
   value: i + 1,
 }));
 const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i);
+const YEARS = Array.from({length: 5}, (_, i) => CURRENT_YEAR - i);
 
-const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
-{
-  Submitted: { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
-  'Pending Approval': { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
-  Approved: { bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
-  Rejected: { bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
-};
+const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
+  {
+    Submitted: {bg: '#fffbeb', color: '#d97706', dot: '#fbbf24'},
+    'Pending Approval': {bg: '#fffbeb', color: '#d97706', dot: '#fbbf24'},
+    Approved: {bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e'},
+    Rejected: {bg: '#fff1f2', color: '#dc2626', dot: '#f87171'},
+    Draft: {bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
+    Cancelled: {bg: '#f8fafc', color: '#64748b', dot: '#94a3b8'},
+    // ✅ New HR statuses
+    'HR Pending': {bg: '#f5f3ff', color: '#7c3aed', dot: '#a78bfa'},
+    'HR Approved': {bg: '#f0f9ff', color: '#0369a1', dot: '#38bdf8'},
+    'HR Rejected': {bg: '#fff1f2', color: '#b91c1c', dot: '#fca5a5'},
+  };
 
 const getStatus = (s: string) =>
-  STATUS_CONFIG[s] ?? { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' };
+  STATUS_CONFIG[s] ?? {bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8'};
 
 // ─── Header Component ──────────────────────────────────────────────────────
 
@@ -52,17 +61,17 @@ interface HeaderProps {
   selectedYear: number;
   onMonthChange: (m: number) => void;
   onYearChange: (y: number) => void;
-  counts: { pending: number; approved: number; rejected: number };
+  counts: {pending: number; approved: number; rejected: number};
 
   setSelectedStatus: any;
-  selectedStatus: string
+  selectedStatus: string;
 }
 const FILTER_OPTIONS = [
-  { label: 'All', value: '' },
+  {label: 'All', value: ''},
   // { label: 'Draft', value: 'Draft' },
-  { label: 'Pending Approval', value: 'Pending Approval' },
-  { label: 'Approved', value: 'Approved' },
-  { label: 'Rejected', value: 'Rejected' },
+  {label: 'Pending Approval', value: 'Pending Approval'},
+  {label: 'Approved', value: 'Approved'},
+  {label: 'Rejected', value: 'Rejected'},
 ];
 const ApprovalHeader: React.FC<HeaderProps> = ({
   selectedMonth,
@@ -104,7 +113,7 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
             </Text>
             <Ionicons name="chevron-down" size={11} color={Colors.darkButton} />
           </TouchableOpacity>
-          <View style={{ flex: 1 }}>
+          <View style={{flex: 1}}>
             <ReusableDropdownv2
               label="Claim Status"
               field="claim_type"
@@ -114,8 +123,9 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
               height={35}
               marginBottom={0}
               textSize={12}
-              labelStyle={{ display: 'none' }}
-            /></View>
+              labelStyle={{display: 'none'}}
+            />
+          </View>
         </View>
       </View>
 
@@ -216,8 +226,7 @@ const ApprovalHeader: React.FC<HeaderProps> = ({
 
 // ─── Main List Component ───────────────────────────────────────────────────
 
-
-const ExpenseApprovalListComponent = ({ navigation }: any) => {
+const ExpenseApprovalListComponent = ({navigation}: any) => {
   const now = new Date();
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
@@ -226,13 +235,16 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
 
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, refetch, isFetching } = useGetApprovalListQuery({
-    month: selectedMonth,
-    year: selectedYear,
-    status: selectedStatus,
-    page: page,
-    page_size: 20,
-  }, { refetchOnMountOrArgChange: true });
+  const {data, isLoading, refetch, isFetching} = useGetApprovalListQuery(
+    {
+      month: selectedMonth,
+      year: selectedYear,
+      status: selectedStatus,
+      page: page,
+      page_size: 20,
+    },
+    {refetchOnMountOrArgChange: true},
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -262,10 +274,10 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
       else if (s === 'Rejected') acc.rejected += 1;
       return acc;
     },
-    { pending: 0, approved: 0, rejected: 0 },
+    {pending: 0, approved: 0, rejected: 0},
   );
 
-  const renderItem = ({ item }: { item: ApproverExpenseClaim }) => {
+  const renderItem = ({item}: {item: ApproverExpenseClaim}) => {
     const st = getStatus(item.workflow_state);
 
     return (
@@ -285,9 +297,9 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
           <Text style={styles.dateText}>
             {moment(item.posting_date).format('DD MMM YY')}
           </Text>
-          <View style={[styles.badge, { backgroundColor: st.bg }]}>
-            <View style={[styles.dot, { backgroundColor: st.dot }]} />
-            <Text style={[styles.badgeText, { color: st.color }]}>
+          <View style={[styles.badge, {backgroundColor: st.bg}]}>
+            <View style={[styles.dot, {backgroundColor: st.dot}]} />
+            <Text style={[styles.badgeText, {color: st.color}]}>
               {item.workflow_state}
             </Text>
           </View>
@@ -549,7 +561,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f6fa',
   },
-  loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loaderBox: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   listContent: {
     paddingTop: 12,
     paddingBottom: 20,
@@ -563,7 +575,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -594,8 +606,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 3,
   },
-  dot: { width: 5, height: 5, borderRadius: 3 },
-  badgeText: { fontSize: 10, fontFamily: Fonts.medium },
+  dot: {width: 5, height: 5, borderRadius: 3},
+  badgeText: {fontSize: 10, fontFamily: Fonts.medium},
 
   row2: {
     flexDirection: 'row',

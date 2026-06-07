@@ -479,7 +479,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
               ]}
               onPress={handleSubmitClaim}
               disabled={loading || expenses.length === 0}>
-              <Text style={styles.actionBtnText}>Create Claim</Text>
+              <Text style={styles.actionBtnText}>Submit Claim</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -488,7 +488,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
                 {backgroundColor: Colors.darkButton},
                 styles.disabled,
               ]}>
-              <Text style={styles.actionBtnText}>Create Claim</Text>
+              <Text style={styles.actionBtnText}>Submit Claim</Text>
             </TouchableOpacity>
           )}
         </>

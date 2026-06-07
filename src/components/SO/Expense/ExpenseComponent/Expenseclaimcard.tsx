@@ -39,6 +39,22 @@ const STATUS_MAP: Record<string, StatusConfig> = {
     color: '#64748b',
     dotColor: '#94a3b8',
   },
+  // ✅ New HR statuses
+  'HR Pending': {
+    label: 'HR Pending',
+    color: '#7c3aed', // purple tone to distinguish from regular Pending
+    dotColor: '#a78bfa',
+  },
+  'HR Approved': {
+    label: 'HR Approved',
+    color: '#0369a1', // blue tone to distinguish from regular Approved
+    dotColor: '#38bdf8',
+  },
+  'HR Rejected': {
+    label: 'HR Rejected',
+    color: '#b91c1c', // deeper red to distinguish from regular Rejected
+    dotColor: '#fca5a5',
+  },
 };
 
 const DEFAULT_STATUS: StatusConfig = {

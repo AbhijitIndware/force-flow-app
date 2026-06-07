@@ -44,6 +44,12 @@ const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
     'Pending Approval': {bg: '#fffbeb', color: '#d97706', dot: '#fbbf24'},
     Approved: {bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e'},
     Rejected: {bg: '#fff1f2', color: '#dc2626', dot: '#f87171'},
+    Draft: {bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
+    Cancelled: {bg: '#f8fafc', color: '#64748b', dot: '#94a3b8'},
+    // ✅ New HR statuses
+    'HR Pending': {bg: '#f5f3ff', color: '#7c3aed', dot: '#a78bfa'},
+    'HR Approved': {bg: '#f0f9ff', color: '#0369a1', dot: '#38bdf8'},
+    'HR Rejected': {bg: '#fff1f2', color: '#b91c1c', dot: '#fca5a5'},
   };
 
 const EXPENSE_ICONS: Record<string, string> = {
