@@ -79,13 +79,15 @@ export const addSalesOrderSchema = Yup.object().shape({
   items: Yup.array()
     .of(
       Yup.object().shape({
-        item_code: Yup.string().required('Item code is required'),
+        item_code: Yup.string().required('Item is required'),
         qty: Yup.number().typeError('Quantity must be a number').optional(),
         rate: Yup.number()
           .typeError('Rate must be a number')
-          .positive('Rate must be greater than 0')
-          .required('Rate is required'),
-        delivery_date: Yup.string().required('Item delivery date is required'),
+          // .positive('Rate must be greater than 0')
+          .optional(),
+        delivery_date: Yup.string()
+          .typeError('Item delivery date is required')
+          .optional(),
       }),
     )
     .min(1, 'At least one item is required'),

@@ -203,15 +203,30 @@ const AddSaleForm: React.FC<Props> = ({
 
             {/* List of Rows */}
             {values.items.map((item, index) => (
-              <SaleItemField
-                key={index}
-                index={index}
-                item={item}
-                setFieldValue={setFieldValue}
-                removeItem={removeItem}
-                allItems={allItems}
-                isStockFetching={isStockFetching}
-              />
+              <View key={index}>
+                <SaleItemField
+                  // key={index}
+                  index={index}
+                  item={item}
+                  setFieldValue={setFieldValue}
+                  removeItem={removeItem}
+                  allItems={allItems}
+                  isStockFetching={isStockFetching}
+                />{' '}
+                {touched.items?.[index] &&
+                  errors.items?.[index] &&
+                  typeof errors.items[index] === 'object' && (
+                    <View style={styles.rowErrorBox}>
+                      {Object.entries(
+                        errors.items[index] as Record<string, string>,
+                      ).map(([field, msg]) => (
+                        <Text key={field} style={styles.rowErrorText}>
+                          • {msg}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+              </View>
             ))}
           </View>
         </ScrollView>
@@ -339,4 +354,18 @@ const styles = StyleSheet.create({
   },
   summaryText: {color: '#6b7280', fontSize: 13},
   totalAmount: {color: '#111827', fontSize: 16, fontFamily: Fonts.semiBold},
+  rowErrorBox: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#fff5f5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#ef4444',
+    marginBottom: 4,
+  },
+  rowErrorText: {
+    fontSize: 11,
+    color: '#ef4444',
+    fontWeight: '500',
+    lineHeight: 18,
+  },
 });
