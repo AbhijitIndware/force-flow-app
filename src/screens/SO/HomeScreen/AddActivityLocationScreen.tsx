@@ -103,6 +103,11 @@ const AddActivityLocationScreen = ({
       if (res.message.success) {
         Toast.show({type: 'success', text1: 'Location created successfully'});
         navigation.goBack();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: res?.message?.message || 'Failed to create location',
+        });
       }
     } catch (error: any) {
       Toast.show({

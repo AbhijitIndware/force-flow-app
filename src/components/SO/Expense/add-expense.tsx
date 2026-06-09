@@ -406,26 +406,23 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
       {/* ── Expense Section Header ── */}
       {claimId && (
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Expenses</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>Expenses</Text>
+            <Text style={styles.addBtnTotal}>
+              ₹ {total.toLocaleString('en-IN')}
+            </Text>
+          </View>
           {isDraft && (
             <TouchableOpacity
               disabled={loading}
               onPress={() => setShowModal(true)}
               style={styles.addBtn}>
-              <Text style={styles.addBtnTotal}>
-                ₹ {total.toLocaleString('en-IN')}
-              </Text>
-              <CirclePlus size={20} color={Colors.darkButton} />
+              <CirclePlus size={16} color={Colors.darkButton} />
+              <Text style={styles.addBtnLabel}>Add Expense</Text>
             </TouchableOpacity>
-          )}
-          {!isDraft && (
-            <Text style={styles.addBtnTotal}>
-              ₹ {total.toLocaleString('en-IN')}
-            </Text>
           )}
         </View>
       )}
-
       <AddExpenseModal
         visible={showModal}
         onClose={() => setShowModal(false)}
@@ -570,7 +567,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    // marginBottom: 8,
     marginTop: 4,
   },
   sectionTitle: {
@@ -581,7 +578,8 @@ const styles = StyleSheet.create({
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    // justifyContent: 'flex-start',
+    gap: 4,
   },
   addBtnTotal: {
     fontSize: Size.sm,
@@ -652,6 +650,16 @@ const styles = StyleSheet.create({
   },
   readOnlyTextRejected: {
     color: '#991B1B',
+  },
+  addBtnLabel: {
+    fontSize: Size.sm,
+    fontWeight: '600',
+    color: Colors.darkButton,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });
 
