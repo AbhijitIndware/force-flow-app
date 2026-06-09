@@ -80,7 +80,9 @@ const AddExpenseItemV2: React.FC<Props> = ({
   // ── Attachment requirement logic ──
   const isAutoTA = values.claim_type === 'TA - Auto';
   const amountNum = parseFloat(values.amount) || 0;
-  const isAttachmentOptional = isAutoTA && amountNum < AUTO_TA_THRESHOLD;
+  const isAttachmentOptional =
+    (isAutoTA && amountNum < AUTO_TA_THRESHOLD) ||
+    values.claim_type === 'TA - Bike (Petrol)';
   const isAttachmentRequired = !isAttachmentOptional;
   const isImage = (type?: string) => {
     return !!type && type.startsWith('image/');

@@ -121,23 +121,27 @@ export const expenseItemSchema = Yup.object().shape({
     is: 'Incidental',
     then: schema => schema.required('Bill month is required'),
   }),
-  attachment: Yup.mixed().test(
-    'attachment-required',
-    'Attachment is required',
-    function (value) {
+  attachment: Yup.mixed()
+    .nullable()
+    .test('attachment-required', 'Attachment is required', function (value) {
       const {claim_type, amount} = this.parent;
-      const isAutoTA = claim_type === 'TA - Auto';
+      const isBike = claim_type === 'TA - Bike (Petrol)';
+      const isAuto = claim_type === 'TA - Auto';
       const amountNum = parseFloat(amount) || 0;
 
+      // TA - Bike (Petrol) → always optional
+      if (isBike) {
+        return true;
+      }
+
       // TA - Auto below threshold → optional
-      if (isAutoTA && amountNum < AUTO_TA_THRESHOLD) {
+      if (isAuto && amountNum < AUTO_TA_THRESHOLD) {
         return true;
       }
 
       // All other cases → mandatory
       return !!value;
-    },
-  ),
+    }),
 });
 
 //Promoter

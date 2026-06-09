@@ -2189,6 +2189,10 @@ export interface ActivityLocation {
   latitude: number;
   longitude: number;
   address: string;
+  activity_type: '';
+  remarks: '';
+  employee: string;
+  employee_name: string;
 }
 
 export interface RGetActivityLocations {
