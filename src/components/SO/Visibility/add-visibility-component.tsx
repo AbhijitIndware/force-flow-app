@@ -36,6 +36,7 @@ const MAX_IMAGES = 3;
 interface ImageItem {
   mime: string;
   data: string;
+  source: 'gallery' | 'camera';
 }
 
 interface Props {
@@ -153,6 +154,7 @@ const AddVisibilityComponent = ({
         newImages.push({
           mime: doc.type || 'application/octet-stream',
           data: base64,
+          source: 'gallery',
         });
       }
 
@@ -175,7 +177,11 @@ const AddVisibilityComponent = ({
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
-    appendImage(asset.uri!, {mime: asset.type || 'image/jpeg', data: base64});
+    appendImage(asset.uri!, {
+      mime: asset.type || 'image/jpeg',
+      data: base64,
+      source: 'camera',
+    });
   };
 
   return (

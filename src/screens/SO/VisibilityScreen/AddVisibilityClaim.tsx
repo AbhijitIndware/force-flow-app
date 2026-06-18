@@ -71,6 +71,9 @@ const AddVisibilityScreen = ({navigation}: Props) => {
           image: img1 ? {mime: img1.mime, data: img1.data} : null,
           image_2: img2 ? {mime: img2.mime, data: img2.data} : null,
           image_3: img3 ? {mime: img3.mime, data: img3.data} : null,
+          image_source: img1?.source ?? undefined,
+          image_source_2: img2?.source ?? undefined,
+          image_source_3: img3?.source ?? undefined,
         };
 
         const res = await createVisibilityClaim(payload).unwrap();

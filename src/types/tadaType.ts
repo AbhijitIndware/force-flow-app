@@ -277,6 +277,7 @@ export interface CreateExpenseDraftPayload {
 export interface ImagePayload {
   mime: string; // e.g. "image/jpeg"
   data: string; // base64 encoded string (without data URI prefix)
+  source?: 'gallery' | 'camera'; // image source
 }
 
 export interface AddExpenseRowPayload {
@@ -402,6 +403,9 @@ export interface CreateVisibilityClaimPayload {
   image: ImagePayload | null;
   image_2?: ImagePayload | null;
   image_3?: ImagePayload | null;
+  image_source?: 'gallery' | 'camera';
+  image_source_2?: 'gallery' | 'camera';
+  image_source_3?: 'gallery' | 'camera';
 }
 
 export interface SubmitVisibilityClaimPayload {

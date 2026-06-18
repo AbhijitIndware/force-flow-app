@@ -205,7 +205,7 @@ export const visibilityClaimSchema = Yup.object().shape({
   date: Yup.string().required('Date is required'),
 
   images: Yup.array()
-    .of(Yup.object({mime: Yup.string(), data: Yup.string()}))
+    .of(Yup.object({mime: Yup.string(), data: Yup.string(), source: Yup.string().oneOf(['gallery', 'camera']).optional()}))
     .min(1, 'At least one image required')
     .max(3)
     .required(),
