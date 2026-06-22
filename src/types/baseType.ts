@@ -1,4 +1,4 @@
-import {ApiResponse, Filters, PaginationInfo} from './Navigation';
+import { ApiResponse, Filters, PaginationInfo } from './Navigation';
 
 export interface IAddDistributorPayload {
   data: {
@@ -275,7 +275,7 @@ export type ICheckOut = {
 };
 export type IMarkActivity = {
   store: string;
-  activity_type: {activity_type: string}[];
+  activity_type: { activity_type: string }[];
 };
 
 export interface IAddDistributorResponse extends ApiResponse {
@@ -1211,7 +1211,7 @@ export interface EmployeeData {
 
 //Expense
 export type RExpenseClaimType = {
-  data: {name: string}[];
+  data: { name: string }[];
 };
 
 export type ClaimData = {
@@ -1222,7 +1222,7 @@ export type ClaimData = {
   sanctioned: number;
 };
 export type RExpenseClaimByEmp = {
-  message: {data: ClaimData[]};
+  message: { data: ClaimData[] };
 };
 
 export interface IExpenseItem {
@@ -1374,7 +1374,7 @@ export type PromoterAttendanceData = {
 
   assigned_store: any;
   attendance_date: string;
-  checkin_records: {check_in: null; check_out: null};
+  checkin_records: { check_in: null; check_out: null };
   employee: string;
   employee_name: string;
   message: string;
@@ -2289,18 +2289,18 @@ export interface IMarkDayOff {
   date: string; // YYYY-MM-DD
 }
 export interface RMarkDayOff {
-  message: {success: boolean; message: string; document_name?: string};
+  message: { success: boolean; message: string; document_name?: string };
 }
 export interface ICancelDayOff {
   date: string;
 }
 export interface RCancelDayOff {
-  message: {success: boolean; message: string};
+  message: { success: boolean; message: string };
 }
 export interface RGetDayOffs {
   message: {
     success: boolean;
-    data: {name: string; attendance_date: string; status: string}[];
+    data: { name: string; attendance_date: string; status: string }[];
   };
 }
 
@@ -2413,8 +2413,8 @@ export interface ISetEmployeeTargetsWithEmp {
 
 export interface RSetEmployeeTargetsWithEmp {
   message:
-    | {status: 'ok'; year: number; month: number} // single employee
-    | {status: 'ok'; updated: number; year: number; month: number}; // "ALL"
+  | { status: 'ok'; year: number; month: number } // single employee
+  | { status: 'ok'; updated: number; year: number; month: number }; // "ALL"
 }
 
 // API: get_target_achievement_summary
@@ -2439,5 +2439,60 @@ export interface RGetTargetAchievementSummary {
     target_month: number;
     target_year: number;
     months_counted: number;
+  };
+}
+
+
+
+// ─── LATE CHECK-IN APPROVAL TYPES ────────────────────────────────────────────
+// Add these interfaces to your existing baseType.ts
+
+// API 1 — Request Late Check-In Permission (Employee Action)
+// Employee calls this when blocked from checking in after 10:30 AM.
+export interface IRequestLateCheckin {
+  reason?: string; // Optional: brief reason for being late (e.g., "Heavy traffic")
+}
+
+export interface RRequestLateCheckin {
+  message: {
+    success: boolean;
+    message: string;
+    // success → "Late check-in approval request sent to your manager successfully."
+    // error  → "You have reached the maximum allowed late check-ins (3) for this month."
+    // error  → "You already have a Pending request for today."
+  };
+}
+
+// API 2 — Get Pending Approvals (Manager Action)
+// Single record returned in the data array.
+export interface LateCheckinApprovalRecord {
+  name: string;          // Request ID, e.g. "LCA-2026-06-0001"
+  employee: string;      // Employee ID, e.g. "EMP-0012"
+  employee_name: string; // e.g. "John Doe"
+  date: string;          // YYYY-MM-DD
+  reason: string;
+  creation: string;      // ISO datetime string, e.g. "2026-06-15 10:45:12.123456"
+}
+
+export interface RGetPendingLateApprovals {
+  message: {
+    success: boolean;
+    data: LateCheckinApprovalRecord[];
+  };
+}
+
+// API 3 — Approve or Reject Request (Manager Action)
+export interface IApproveRejectLateCheckin {
+  request_id: string;       // The `name` field from GET response, e.g. "LCA-2026-06-0001"
+  status: 'Approved' | 'Rejected';
+  manager_remarks?: string; // Optional feedback from manager
+}
+
+export interface RApproveRejectLateCheckin {
+  message: {
+    success: boolean;
+    message: string;
+    // success → "Request successfully approved."
+    // error  → "Status must be Approved or Rejected"
   };
 }

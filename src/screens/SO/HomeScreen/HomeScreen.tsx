@@ -44,6 +44,7 @@ import {TeamPerformance} from '../../../components/SO/HomeScreen/TeamPerformance
 import {ActivityCheckInBlock} from '../../../components/SO/HomeScreen/ActivityCheckInBlock';
 import {QuickLinks} from '../../../components/SO/HomeScreen/QuickLinks';
 import {ClaimsSection} from '../../../components/SO/HomeScreen/ClaimsSection';
+import LateCheckinApprovalLink from '../../../components/SO/HomeScreen/LateCheckinApprovalLink';
 import {StockAndActivityLinks} from '../../../components/SO/HomeScreen/StockAndActivityLinks';
 import {CheckoutConfirmModal} from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
 import {SetTargetsModal} from '../../../components/SO/HomeScreen/SetTargetsModal';
@@ -572,6 +573,8 @@ const HomeScreen = ({navigation}: Props) => {
           <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} />
 
           <QuickLinks navigation={navigation} />
+
+          <LateCheckinApprovalLink navigation={navigation} />
 
           <ClaimsSection navigation={navigation} />
 

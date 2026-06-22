@@ -99,6 +99,7 @@ export type SoAppStackParamList = {
   ExpenseApprovalScreen: {index?: number} | undefined;
   ExpenseApprovalDetailScreen: {claimId: string};
   WeeklyOffScreen: undefined;
+  LateCheckinApprovalScreen: undefined;
 };
 
 export type menuType = {

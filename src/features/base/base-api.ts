@@ -1,6 +1,6 @@
-import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react';
-import {baseQueryWithAuthGuard} from '../utility';
-import {apiBaseUrl} from '../apiBaseUrl';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithAuthGuard } from '../utility';
+import { apiBaseUrl } from '../apiBaseUrl';
 import {
   AttendanceResponse,
   ICopyPjpRequest,
@@ -90,9 +90,14 @@ import {
   RGetTargetAchievementSummary,
   IGetTargetAchievementSummaryParams,
   pjpWorkflowDataType,
+  RRequestLateCheckin,
+  IRequestLateCheckin,
+  RGetPendingLateApprovals,
+  IApproveRejectLateCheckin,
+  RApproveRejectLateCheckin,
 } from '../../types/baseType';
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {PaginationInfo} from '../../types/Navigation';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PaginationInfo } from '../../types/Navigation';
 
 // Base api calling ---
 export const baseApi = createApi({
@@ -111,6 +116,7 @@ export const baseApi = createApi({
     'VC',
     'Stock',
     'Activity',
+    'LateCheckin'
   ],
   endpoints: builder => ({
     // PJP Workflow State Machine
@@ -179,7 +185,7 @@ export const baseApi = createApi({
       RSoList,
       Pick<PaginationInfo, 'page' | 'page_size'>
     >({
-      query: ({page, page_size}) => ({
+      query: ({ page, page_size }) => ({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.sales_order_mobile_api.get_sales_orders_list?page=${page}&page_size=${page_size}`,
         method: 'GET',
       }),
@@ -238,9 +244,9 @@ export const baseApi = createApi({
     //Purchase Order
     getPurchaseOrderList: builder.query<
       RPoList,
-      Pick<PaginationInfo, 'page' | 'page_size'> & {status: string}
+      Pick<PaginationInfo, 'page' | 'page_size'> & { status: string }
     >({
-      query: ({page, page_size, status}) => ({
+      query: ({ page, page_size, status }) => ({
         url: `/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.get_purchase_orders_list`,
         method: 'GET',
         params: {
@@ -302,8 +308,8 @@ export const baseApi = createApi({
       }),
       providesTags: ['PO', 'SO', 'Stock', 'Activity'],
     }),
-    getProdCount: builder.query<RProdCount, {date: string}>({
-      query: ({date}) => ({
+    getProdCount: builder.query<RProdCount, { date: string }>({
+      query: ({ date }) => ({
         url: `/method/salesforce_management.mobile_app_apis.pjp_apis.productive_call.get_prod_counts`,
         method: 'GET',
         params: {
@@ -321,7 +327,7 @@ export const baseApi = createApi({
         date?: string;
       }
     >({
-      query: ({page, page_size, status, date}) => ({
+      query: ({ page, page_size, status, date }) => ({
         url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_daily_stores_list`,
         method: 'GET',
         params: {
@@ -385,13 +391,13 @@ export const baseApi = createApi({
       invalidatesTags: ['Distributor'],
     }),
     checkStoreName: builder.query<
-      {message: {exists: boolean; message?: string}},
+      { message: { exists: boolean; message?: string } },
       string
     >({
       query: store_name => ({
         url: '/method/salesforce_management.mobile_app_apis.dms_apis.store.check_store_name',
         method: 'GET',
-        params: {store_name},
+        params: { store_name },
       }),
     }),
     addStore: builder.mutation<any, IAddStorePayload>({
@@ -451,9 +457,9 @@ export const baseApi = createApi({
     }),
     getDistributorList: builder.query<
       RDistributorList,
-      {page: number; page_size: number; status: string}
+      { page: number; page_size: number; status: string }
     >({
-      query: ({page, page_size, status}) => ({
+      query: ({ page, page_size, status }) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_by_owner`,
         method: 'GET',
         params: {
@@ -516,7 +522,7 @@ export const baseApi = createApi({
       AttendanceResponse,
       Pick<PaginationInfo, 'page' | 'page_size'>
     >({
-      query: ({page_size, page}) => ({
+      query: ({ page_size, page }) => ({
         url: `/method/salesforce_management.mobile_app_apis.attendence.get_attendence.get_attendance_records`,
         method: 'GET',
         params: {
@@ -571,8 +577,8 @@ export const baseApi = createApi({
     }),
 
     //Sales
-    getSalesRepots: builder.query<RSalesReport, {view_type: string}>({
-      query: ({view_type}) => ({
+    getSalesRepots: builder.query<RSalesReport, { view_type: string }>({
+      query: ({ view_type }) => ({
         url: `/method/salesforce_management.mobile_app_apis.report_apis.report_apis.get_daily_secondary_report`,
         method: 'GET',
         params: {
@@ -589,11 +595,11 @@ export const baseApi = createApi({
       }),
       providesTags: ['VC'],
     }),
-    getVisibilityClaimDetail: builder.query<any, {claim_id: string}>({
-      query: ({claim_id}) => ({
+    getVisibilityClaimDetail: builder.query<any, { claim_id: string }>({
+      query: ({ claim_id }) => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.get_visibility_claim_details`,
         method: 'GET',
-        params: {claim_id},
+        params: { claim_id },
       }),
       providesTags: ['VC'],
     }),
@@ -605,7 +611,7 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['VC'],
     }),
-    submitVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+    submitVisibilityClaim: builder.mutation<any, { claim_id: string }>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.submit_visibility_claim`,
         method: 'POST',
@@ -613,7 +619,7 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['VC'],
     }),
-    cancelVisibilityClaim: builder.mutation<any, {claim_id: string}>({
+    cancelVisibilityClaim: builder.mutation<any, { claim_id: string }>({
       query: body => ({
         url: `/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api.cancel_visibility_claim`,
         method: 'POST',
@@ -679,13 +685,13 @@ export const baseApi = createApi({
         url: `/method/salesforce_management.api.asm_dashboard.get_asm_dashboard`,
         method: 'GET',
         params: {
-          ...(date ? {date} : {}),
+          ...(date ? { date } : {}),
           employee,
-          ...(from_date ? {from_date} : {}),
-          ...(to_date ? {to_date} : {}),
-          ...(store_type ? {store_type} : {}),
-          ...(zone ? {zone} : {}),
-          ...(view_type ? {view_type} : {}),
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
+          ...(store_type ? { store_type } : {}),
+          ...(zone ? { zone } : {}),
+          ...(view_type ? { view_type } : {}),
         },
       }),
     }),
@@ -696,15 +702,15 @@ export const baseApi = createApi({
         message: {
           success: boolean;
           zones: string[];
-          store_types: {name: string; store_type: string}[];
+          store_types: { name: string; store_type: string }[];
         };
       },
-      {employee: string}
+      { employee: string }
     >({
-      query: ({employee}) => ({
+      query: ({ employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_zones`,
         method: 'GET',
-        params: {employee},
+        params: { employee },
       }),
     }),
 
@@ -740,12 +746,12 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string; zone?: string; store_type?: string}
+      { date: string; employee: string; zone?: string; store_type?: string }
     >({
-      query: ({date, employee, zone, store_type}) => ({
+      query: ({ date, employee, zone, store_type }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_asm_overview`,
         method: 'GET',
-        params: {date, employee, zone, store_type},
+        params: { date, employee, zone, store_type },
       }),
     }),
 
@@ -773,12 +779,12 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_key_metrics`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -788,15 +794,15 @@ export const baseApi = createApi({
         message: {
           success: boolean;
           date: string;
-          data: {created: number; successful: number};
+          data: { created: number; successful: number };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_created`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -815,12 +821,12 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_planning`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -841,12 +847,12 @@ export const baseApi = createApi({
           };
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_business_generated`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -879,14 +885,14 @@ export const baseApi = createApi({
         to_date?: string;
       }
     >({
-      query: ({date, employee, from_date, to_date}) => ({
+      query: ({ date, employee, from_date, to_date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_order_status`,
         method: 'GET',
         params: {
           employee,
           ...(from_date && to_date && from_date !== to_date
-            ? {from_date, to_date}
-            : {date: date ?? from_date}),
+            ? { from_date, to_date }
+            : { date: date ?? from_date }),
         },
       }),
     }),
@@ -923,12 +929,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_team_performance`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -992,12 +998,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {date: string; employee: string}
+      { date: string; employee: string }
     >({
-      query: ({date, employee}) => ({
+      query: ({ date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_daily_pjp_tab`,
         method: 'GET',
-        params: {date, employee},
+        params: { date, employee },
       }),
     }),
 
@@ -1006,7 +1012,7 @@ export const baseApi = createApi({
       {
         message: {
           success: boolean;
-          period: {month: number; year: number; from: string; to: string};
+          period: { month: number; year: number; from: string; to: string };
           summary: {
             total_planned: number;
             total_visited: number;
@@ -1046,7 +1052,7 @@ export const baseApi = createApi({
       {
         message: {
           success: boolean;
-          period: {month: number; year: number; from: string; to: string};
+          period: { month: number; year: number; from: string; to: string };
           summary: {
             total_target: number;
             total_so: number;
@@ -1117,9 +1123,9 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {order_id: string}
+      { order_id: string }
     >({
-      query: ({order_id}) => ({
+      query: ({ order_id }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_order_detail?order_id=${order_id}`,
         method: 'GET',
       }),
@@ -1139,7 +1145,7 @@ export const baseApi = createApi({
             check_in_time: string | null;
             check_out_time: string | null;
           };
-          summary: {total_store: number; visited: number; pending: number};
+          summary: { total_store: number; visited: number; pending: number };
           orders_summary: {
             orders: number;
             draft: number;
@@ -1162,12 +1168,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; date: string}
+      { employee: string; date: string }
     >({
-      query: ({employee, date}) => ({
+      query: ({ employee, date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_team_detail`,
         method: 'GET',
-        params: {employee, date},
+        params: { employee, date },
       }),
     }),
 
@@ -1209,12 +1215,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {store_id: string; date: string; employee?: string}
+      { store_id: string; date: string; employee?: string }
     >({
-      query: ({store_id, date, employee}) => ({
+      query: ({ store_id, date, employee }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_store_detail`,
         method: 'GET',
-        params: {store_id, date, employee},
+        params: { store_id, date, employee },
       }),
     }),
 
@@ -1246,7 +1252,7 @@ export const baseApi = createApi({
             delivered: number;
             pending: number;
           };
-          stores_created: {created: number; successful: number};
+          stores_created: { created: number; successful: number };
           orders: {
             order_id: string;
             time: string;
@@ -1268,12 +1274,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {employee: string; date: string}
+      { employee: string; date: string }
     >({
-      query: ({employee, date}) => ({
+      query: ({ employee, date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.api_get_user_detail`,
         method: 'GET',
-        params: {employee, date},
+        params: { employee, date },
       }),
     }),
 
@@ -1308,12 +1314,12 @@ export const baseApi = createApi({
           }[];
         };
       },
-      {latitude: number; longitude: number; radius?: number}
+      { latitude: number; longitude: number; radius?: number }
     >({
-      query: ({latitude, longitude, radius = 500}) => ({
+      query: ({ latitude, longitude, radius = 500 }) => ({
         url: `/method/salesforce_management.mobile_app_apis.dms_apis.store.get_nearby_stores`,
         method: 'GET',
-        params: {latitude, longitude, radius},
+        params: { latitude, longitude, radius },
       }),
     }),
     //TARGET VS achievement
@@ -1321,10 +1327,10 @@ export const baseApi = createApi({
       RGetEmployeeTargets,
       IGetEmployeeTargetsParams
     >({
-      query: ({month, year}) => ({
+      query: ({ month, year }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_employee_targets`,
         method: 'POST',
-        body: {month, year},
+        body: { month, year },
       }),
     }),
 
@@ -1343,10 +1349,10 @@ export const baseApi = createApi({
     // API 3 — Fetch SO stats for a date range
     // Use data.message.value for total SO achievement (₹)
     getSoStats: builder.query<RGetSoStats, ISoStatsParams>({
-      query: ({from_date, to_date}) => ({
+      query: ({ from_date, to_date }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_so_stats`,
         method: 'POST',
-        body: {from_date, to_date},
+        body: { from_date, to_date },
       }),
       providesTags: ['SO'],
     }),
@@ -1355,14 +1361,14 @@ export const baseApi = createApi({
     // Use data.message.value for total DDN achievement (₹)
     // fill_rate = (del_qty / ord_qty) × 100
     getDdnStats: builder.query<RGetDdnStats, IDdnStatsParams>({
-      query: ({from_date, to_date, zone, store}) => ({
+      query: ({ from_date, to_date, zone, store }) => ({
         url: `/method/salesforce_management.api.asm_dashboard.get_ddn_stats`,
         method: 'POST',
         body: {
           from_date,
           to_date,
-          ...(zone ? {zone} : {}),
-          ...(store ? {store} : {}),
+          ...(zone ? { zone } : {}),
+          ...(store ? { store } : {}),
         },
       }),
     }),
@@ -1379,16 +1385,16 @@ export const baseApi = createApi({
         search?: string;
       }
     >({
-      query: ({page, page_size, status, from_date, to_date, search}) => ({
+      query: ({ page, page_size, status, from_date, to_date, search }) => ({
         url: '/method/salesforce_management.mobile_app_apis.order_apis.delivery_note_mobile_api.get_delivery_notes_list',
         method: 'GET',
         params: {
           page,
           page_size,
-          ...(status ? {status} : {}),
-          ...(from_date ? {from_date} : {}),
-          ...(to_date ? {to_date} : {}),
-          ...(search ? {search} : {}),
+          ...(status ? { status } : {}),
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
+          ...(search ? { search } : {}),
         },
       }),
       providesTags: ['SO'],
@@ -1407,11 +1413,11 @@ export const baseApi = createApi({
 
     // Stock A — Get Items with Current Stock
     // Call this first to show the item list before employee enters physical count.
-    getStockItems: builder.query<RGetStockItems, {store: string}>({
-      query: ({store}) => ({
+    getStockItems: builder.query<RGetStockItems, { store: string }>({
+      query: ({ store }) => ({
         url: '/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.get_items',
         method: 'GET',
-        params: {store},
+        params: { store },
       }),
       providesTags: ['Stock'],
     }),
@@ -1435,12 +1441,12 @@ export const baseApi = createApi({
     // Stock C — Get Stock Dashboard
     // Only items with activity or stock are returned (zero-zero items filtered out).
     // Mobile flow: getStockItems → employee counts → createStockBalance → getStoreStockStatus
-    getStoreStockStatus: builder.query<RGetStoreStockStatus, {store: string}>({
-      query: ({store}) => {
+    getStoreStockStatus: builder.query<RGetStoreStockStatus, { store: string }>({
+      query: ({ store }) => {
         return {
           url: `/method/salesforce_management.mobile_app_apis.pjp_apis.stock_api.get_store_stock_status`,
           method: 'GET',
-          params: {store},
+          params: { store },
         };
       },
       providesTags: ['Stock', 'SO', 'Store'],
@@ -1522,14 +1528,14 @@ export const baseApi = createApi({
     }),
     getDayOffs: builder.query<
       RGetDayOffs,
-      {from_date?: string; to_date?: string}
+      { from_date?: string; to_date?: string }
     >({
-      query: ({from_date, to_date} = {}) => ({
+      query: ({ from_date, to_date } = {}) => ({
         url: '/method/salesforce_management.mobile_app_apis.attendence.weekly_off.get_weekly_offs',
         method: 'GET',
         params: {
-          ...(from_date ? {from_date} : {}),
-          ...(to_date ? {to_date} : {}),
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
         },
       }),
       providesTags: ['PJP'],
@@ -1547,12 +1553,12 @@ export const baseApi = createApi({
       RGetEmployeeTargetsWithEmp,
       IGetEmployeeTargetsWithEmpParams
     >({
-      query: ({month, year, employee}) => ({
+      query: ({ month, year, employee }) => ({
         url: '/method/salesforce_management.api.asm_dashboard.get_employee_targets',
         method: 'POST',
         body: {
-          ...(month !== undefined ? {month} : {}),
-          ...(year !== undefined ? {year} : {}),
+          ...(month !== undefined ? { month } : {}),
+          ...(year !== undefined ? { year } : {}),
           employee,
         },
       }),
@@ -1577,16 +1583,53 @@ export const baseApi = createApi({
       RGetTargetAchievementSummary,
       IGetTargetAchievementSummaryParams
     >({
-      query: ({from_date, to_date, employee}) => ({
+      query: ({ from_date, to_date, employee }) => ({
         url: '/method/salesforce_management.api.asm_dashboard.get_target_achievement_summary',
         method: 'POST',
         body: {
-          ...(from_date ? {from_date} : {}),
-          ...(to_date ? {to_date} : {}),
-          ...(employee ? {employee} : {}),
+          ...(from_date ? { from_date } : {}),
+          ...(to_date ? { to_date } : {}),
+          ...(employee ? { employee } : {}),
         },
       }),
       providesTags: ['SO', 'Stock', 'Activity'],
+    }),
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // LATE CHECK-IN APPROVAL ADDITIONS FOR baseApi.ts
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    // LateCheckin A — Request Late Check-In Permission (Employee Action)
+    // Employee calls this when mobile_check_in returns a "past 10:30 AM" error.
+    // Monthly limit is 3 requests; duplicate pending/approved requests are blocked.
+    requestLateCheckin: builder.mutation<RRequestLateCheckin, IRequestLateCheckin>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.late_checkin_api.request_late_checkin_approval',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['LateCheckin'],
+    }),
+
+    // LateCheckin B — Get Pending Late Check-In Requests (Manager Action)
+    // Returns all pending requests from the manager's direct reports.
+    getPendingLateApprovals: builder.query<RGetPendingLateApprovals, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.late_checkin_api.get_pending_late_approvals',
+        method: 'GET',
+      }),
+      providesTags: ['LateCheckin'],
+    }),
+
+    // LateCheckin C — Approve or Reject a Late Check-In Request (Manager Action)
+    // Once approved, the employee can immediately retry mobile_check_in.
+    approveRejectLateCheckin: builder.mutation<RApproveRejectLateCheckin, IApproveRejectLateCheckin>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.late_checkin_api.approve_reject_late_checkin',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['LateCheckin'],
     }),
   }),
 });
@@ -1717,6 +1760,12 @@ export const {
   useSetEmployeeTargetsForEmpMutation,
   useGetTargetAchievementSummaryQuery,
   useLazyGetTargetAchievementSummaryQuery,
+
+  //   // Late Check-In Approval
+  useRequestLateCheckinMutation,
+  useGetPendingLateApprovalsQuery,
+  useApproveRejectLateCheckinMutation,
+
 } = baseApi;
 
 interface PjpState {
@@ -1823,6 +1872,6 @@ export const pjpSlice = createSlice({
   },
 });
 
-export const {resetPjpState, setSelectedStore, resetLocation} =
+export const { resetPjpState, setSelectedStore, resetLocation } =
   pjpSlice.actions;
 export default pjpSlice.reducer;
