@@ -2334,13 +2334,18 @@ export type PjpAllowedAction =
   | 'MODIFY_ORDER'
   | 'MARK_ACTIVITY'
   | 'END_ACTIVITY_CHECKOUT'
-  | 'VIEW_REPORTS';
+  | 'VIEW_REPORTS'
+  | 'REQUEST_LATE_CHECKIN';
 
 export interface RGetPjpNextAction {
   message: {
     status: string;
     data: pjpWorkflowDataType;
   };
+}
+export interface LateCheckInInfo {
+  allowed: boolean;
+  message: string;
 }
 export interface pjpWorkflowDataType {
   current_state: PjpWorkflowState;
@@ -2350,6 +2355,7 @@ export interface pjpWorkflowDataType {
   active_store_id: string | null;
   active_activity_id: string | null;
   pjp_data: PjpDataResponse;
+  late_checkin_info: LateCheckInInfo;
 }
 export type PjpDataResponse = {
   pjp_details: {

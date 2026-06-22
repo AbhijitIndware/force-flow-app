@@ -46,22 +46,30 @@ const LateCheckinApprovalListComponent = () => {
   const confirmAction = async () => {
     if (!selectedRequest || !actionType) return;
     try {
-      await approveReject({
+      let res = await approveReject({
         request_id: selectedRequest.name,
         status: actionType,
         manager_remarks: managerRemarks || undefined,
       }).unwrap();
-      Toast.show({
-        type: 'success',
-        text1: actionType === 'Approved'
-          ? '✅ Late check-in request approved.'
-          : '✅ Late check-in request rejected.',
-        position: 'top',
-      });
-      setSelectedRequest(null);
-      setActionType(null);
-      setManagerRemarks('');
-      refetch();
+      if (res?.message.success) {
+        Toast.show({
+          type: 'success',
+          text1: actionType === 'Approved'
+            ? '✅ Late check-in request approved.'
+            : '✅ Late check-in request rejected.',
+          position: 'top',
+        });
+        setSelectedRequest(null);
+        setActionType(null);
+        setManagerRemarks('');
+        refetch();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: res?.message?.message || 'Something went wrong. Please try again.',
+          position: 'top',
+        });
+      }
     } catch (err: any) {
       Toast.show({
         type: 'error',

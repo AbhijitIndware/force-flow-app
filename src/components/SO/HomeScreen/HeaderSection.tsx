@@ -14,7 +14,7 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
-import { PjpAllowedAction, PjpWorkflowState } from '../../../types/baseType';
+import { LateCheckInInfo, PjpAllowedAction, PjpWorkflowState } from '../../../types/baseType';
 
 interface HeaderSectionProps {
   employee: any;
@@ -34,6 +34,7 @@ interface HeaderSectionProps {
   // ── new workflow props ──
   pjpState: PjpWorkflowState | undefined;
   pjpActions: PjpAllowedAction[];
+  lateCheckInInfo: LateCheckInInfo | undefined;
 }
 
 const DateBox = () => {
@@ -63,7 +64,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   errorMessage,
   navigation,
   pjpState,
-  pjpActions,
+  pjpActions, lateCheckInInfo
 }) => {
   const can = (action: PjpAllowedAction) => pjpActions.includes(action);
 
@@ -286,17 +287,23 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
           )}
 
           {/* ── LATE_CHECKIN ── Employee is past check-in window ── */}
-          {pjpState === 'REQUEST_LATE_CHECKIN' && (
-            <TouchableOpacity
-              style={styles.checkinButton}
-              onPress={() => navigation.navigate('LateCheckinRequestScreen')}>
-              <Text style={styles.checkinButtonText}>Late Check-In</Text>
-              <Ionicons
-                name="chevron-forward-circle-sharp"
-                size={24}
-                color={Colors.white}
-              />
-            </TouchableOpacity>
+          {pjpState === 'PJP_RUNNING_IDLE' && pjpActions?.includes('REQUEST_LATE_CHECKIN') && (
+            <>
+              <TouchableOpacity
+                style={styles.checkinButton}
+                onPress={() => navigation.navigate('LateCheckinRequestScreen')}>
+                <Text style={styles.checkinButtonText}>Request Late Check-In</Text>
+                <Ionicons
+                  name="chevron-forward-circle-sharp"
+                  size={24}
+                  color={Colors.white}
+                />
+              </TouchableOpacity>
+
+              {lateCheckInInfo?.message && (
+                <Text style={styles.checkinMessageText}>{lateCheckInInfo.message}</Text>
+              )}
+            </>
           )}
 
           {/* ── STORE_CHECKED_IN ── inside a store, show check-out ── */}
@@ -603,5 +610,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: Colors.white,
     fontSize: Size.xs,
+  },
+  checkinMessageText: {
+    color: Colors.white, // or Colors.white with opacity
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 12,
   },
 });
