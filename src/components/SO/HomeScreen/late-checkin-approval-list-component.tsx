@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   RefreshControl,
@@ -11,6 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Toast from 'react-native-toast-message';
 import moment from 'moment';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -50,37 +51,52 @@ const LateCheckinApprovalListComponent = () => {
         status: actionType,
         manager_remarks: managerRemarks || undefined,
       }).unwrap();
-      Alert.alert(
-        'Success',
-        actionType === 'Approved'
-          ? 'Late check-in request approved.'
-          : 'Late check-in request rejected.',
-      );
+      Toast.show({
+        type: 'success',
+        text1: actionType === 'Approved'
+          ? '✅ Late check-in request approved.'
+          : '✅ Late check-in request rejected.',
+        position: 'top',
+      });
       setSelectedRequest(null);
       setActionType(null);
       setManagerRemarks('');
       refetch();
     } catch (err: any) {
-      Alert.alert(
-        'Error',
-        err?.data?.message?.message || 'Something went wrong. Please try again.',
-      );
+      Toast.show({
+        type: 'error',
+        text1: '❌ Error',
+        text2: err?.data?.message?.message || 'Something went wrong. Please try again.',
+        position: 'top',
+      });
     }
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.darkButton} />
+      </View>
+    );
+  }
+
   const renderItem = ({ item }: { item: LateCheckinApprovalRecord }) => (
     <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {item.employee_name?.charAt(0)?.toUpperCase() || '?'}
-          </Text>
+      <View style={styles.cardRow}>
+        <View style={styles.avatarWrap}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {item.employee_name?.charAt(0)?.toUpperCase() || '?'}
+            </Text>
+          </View>
+          <View style={styles.statusDot} />
         </View>
         <View style={styles.cardInfo}>
           <Text style={styles.employeeName}>{item.employee_name}</Text>
           <Text style={styles.employeeId}>{item.employee}</Text>
         </View>
         <View style={styles.dateBadge}>
+          <Ionicons name="calendar-outline" size={12} color={Colors.textTertiary} />
           <Text style={styles.dateBadgeText}>
             {item.date ? moment(item.date).format('DD MMM') : '—'}
           </Text>
@@ -89,7 +105,7 @@ const LateCheckinApprovalListComponent = () => {
 
       {item.reason ? (
         <View style={styles.reasonRow}>
-          <Text style={styles.reasonLabel}>Reason: </Text>
+          <Ionicons name="chatbox-ellipses-outline" size={14} color={Colors.textTertiary} />
           <Text style={styles.reasonText}>{item.reason}</Text>
         </View>
       ) : null}
@@ -99,12 +115,14 @@ const LateCheckinApprovalListComponent = () => {
           style={[styles.actionBtn, styles.approveBtn]}
           onPress={() => handleAction(item, 'Approved')}
           activeOpacity={0.8}>
+          <Ionicons name="checkmark-circle-outline" size={16} color={Colors.white} />
           <Text style={styles.actionBtnText}>Approve</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.actionBtn, styles.rejectBtn]}
           onPress={() => handleAction(item, 'Rejected')}
           activeOpacity={0.8}>
+          <Ionicons name="close-circle-outline" size={16} color={Colors.white} />
           <Text style={styles.actionBtnText}>Reject</Text>
         </TouchableOpacity>
       </View>
@@ -122,14 +140,6 @@ const LateCheckinApprovalListComponent = () => {
       </View>
     );
   };
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.darkButton} />
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -221,29 +231,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 40,
   },
 
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 10,
+    elevation: 3,
   },
-  cardHeader: {
+  cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+  },
+  avatarWrap: {
+    position: 'relative',
   },
   avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.darkButton,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.orange,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -251,6 +265,17 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
     fontFamily: Fonts.semiBold,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#fbbf24',
+    borderWidth: 2,
+    borderColor: Colors.white,
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
   },
   cardInfo: {
     flex: 1,
@@ -264,13 +289,16 @@ const styles = StyleSheet.create({
     fontSize: Size.xxs,
     fontFamily: Fonts.regular,
     color: '#64748b',
-    marginTop: 1,
+    marginTop: 2,
   },
   dateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: '#f1f5f9',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   dateBadgeText: {
     fontSize: Size.xxs,
@@ -280,33 +308,34 @@ const styles = StyleSheet.create({
 
   reasonRow: {
     flexDirection: 'row',
-    marginTop: 10,
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 12,
     backgroundColor: '#f8fafc',
-    padding: 10,
-    borderRadius: 8,
-  },
-  reasonLabel: {
-    fontSize: Size.xxs,
-    fontFamily: Fonts.semiBold,
-    color: '#475569',
+    padding: 12,
+    borderRadius: 10,
   },
   reasonText: {
     flex: 1,
     fontSize: Size.xxs,
     fontFamily: Fonts.regular,
     color: '#334155',
+    lineHeight: 18,
   },
 
   actionRow: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 12,
+    marginTop: 14,
   },
   actionBtn: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 11,
+    borderRadius: 10,
   },
   approveBtn: {
     backgroundColor: '#16a34a',

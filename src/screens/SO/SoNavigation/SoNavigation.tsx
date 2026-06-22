@@ -47,6 +47,7 @@ import ExpenseApprovalScreen from '../ExpenseScreen/ExpenseApprovalScreen';
 import ExpenseApprovalDetailScreen from '../ExpenseScreen/ExpenseApprovalDetailScreen';
 import WeeklyOffScreen from '../WeeklyOffScreen/WeeklyOffScreen';
 import LateCheckinApprovalScreen from '../HomeScreen/LateCheckinApprovalScreen';
+import LateCheckinRequestScreen from '../HomeScreen/LateCheckinRequestScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -293,6 +294,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="LateCheckinApprovalScreen"
         component={LateCheckinApprovalScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="LateCheckinRequestScreen"
+        component={LateCheckinRequestScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

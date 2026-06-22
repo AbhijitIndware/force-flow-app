@@ -5,21 +5,21 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import React, {useRef} from 'react';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import React, { useRef } from 'react';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {useFormik} from 'formik';
-import {Animated} from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { useFormik } from 'formik';
+import { Animated } from 'react-native';
 import Toast from 'react-native-toast-message';
 import {
   useCreateVisibilityClaimMutation,
   useSubmitVisibilityClaimMutation,
 } from '../../../features/tada/tadaApiv2';
 import AddVisibilityComponent from '../../../components/SO/Visibility/add-visibility-component';
-import {visibilityClaimSchema} from '../../../types/schema';
+import { visibilityClaimSchema } from '../../../types/schema';
 import moment from 'moment';
 import {
   CreateVisibilityClaimPayload,
@@ -43,8 +43,8 @@ const initialValues = {
   images: [] as ImagePayload[],
 };
 
-const AddVisibilityScreen = ({navigation}: Props) => {
-  const [createVisibilityClaim, {isLoading: isCreating}] =
+const AddVisibilityScreen = ({ navigation }: Props) => {
+  const [createVisibilityClaim, { isLoading: isCreating }] =
     useCreateVisibilityClaimMutation();
 
   const {
@@ -68,13 +68,14 @@ const AddVisibilityScreen = ({navigation}: Props) => {
           pjp_store_id: formValues.pjp_store_id,
           date: formValues.date,
           do_submit: true,
-          image: img1 ? {mime: img1.mime, data: img1.data} : null,
-          image_2: img2 ? {mime: img2.mime, data: img2.data} : null,
-          image_3: img3 ? {mime: img3.mime, data: img3.data} : null,
+          image: img1 ? { mime: img1.mime, data: img1.data } : null,
+          image_2: img2 ? { mime: img2.mime, data: img2.data } : null,
+          image_3: img3 ? { mime: img3.mime, data: img3.data } : null,
           image_source: img1?.source ?? undefined,
           image_source_2: img2?.source ?? undefined,
           image_source_3: img3?.source ?? undefined,
         };
+        // console.log("🚀 ~ AddVisibilityScreen ~ payload:", payload)
 
         const res = await createVisibilityClaim(payload).unwrap();
         if (res?.message.success) {
@@ -128,7 +129,7 @@ const AddVisibilityScreen = ({navigation}: Props) => {
 
       {/* SUBMIT BUTTON */}
       <TouchableOpacity
-        style={[styles.submitBtn, isLoading && {opacity: 0.7}]}
+        style={[styles.submitBtn, isLoading && { opacity: 0.7 }]}
         onPress={() => handleSubmit()}
         disabled={isLoading}>
         {isLoading ? (

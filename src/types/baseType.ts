@@ -2314,7 +2314,8 @@ export type PjpWorkflowState =
   | 'PJP_RUNNING_IDLE'
   | 'STORE_CHECKED_IN'
   | 'ACTIVITY_CHECKED_IN'
-  | 'COMPLETED';
+  | 'COMPLETED'
+  | 'REQUEST_LATE_CHECKIN';
 
 export type PjpAllowedAction =
   | 'CREATE_PJP'

@@ -7,14 +7,14 @@ import {
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {ArrowRight, Clock} from 'lucide-react-native';
+import { ArrowRight, Clock } from 'lucide-react-native';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {flexCol, flexRow, itemsCenter} from '../../../utils/styles';
-import {PjpAllowedAction, PjpWorkflowState} from '../../../types/baseType';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
+import { PjpAllowedAction, PjpWorkflowState } from '../../../types/baseType';
 
 interface HeaderSectionProps {
   employee: any;
@@ -69,7 +69,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
 
   return (
     <View style={styles.headerSec}>
-      <View style={{position: 'relative', marginBottom: 0}}>
+      <View style={{ position: 'relative', marginBottom: 0 }}>
         <View style={styles.welcomBox}>
           {/* ── Greeting + Date Row ── */}
           <View
@@ -148,7 +148,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               )}
               {can('START_ACTIVITY_CHECKIN') && (
                 <TouchableOpacity
-                  style={[styles.checkinButton, {marginTop: 8}]}
+                  style={[styles.checkinButton, { marginTop: 8 }]}
                   onPress={() => navigation.navigate('ActivityCheckInScreen')}>
                   <Text style={styles.checkinButtonText}>
                     Activity Check-In
@@ -218,7 +218,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               )}
               {can('START_ACTIVITY_CHECKIN') && (
                 <TouchableOpacity
-                  style={[styles.checkinButton, {marginTop: 8}]}
+                  style={[styles.checkinButton, { marginTop: 8 }]}
                   onPress={() => navigation.navigate('ActivityCheckInScreen')}>
                   <Text style={styles.checkinButtonText}>
                     Activity Check-In
@@ -270,7 +270,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               )}
               {can('START_ACTIVITY_CHECKIN') && (
                 <TouchableOpacity
-                  style={[styles.checkinButton, {marginTop: 8}]}
+                  style={[styles.checkinButton, { marginTop: 8 }]}
                   onPress={() => navigation.navigate('ActivityCheckInScreen')}>
                   <Text style={styles.checkinButtonText}>
                     Activity Check-In
@@ -283,6 +283,20 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                 </TouchableOpacity>
               )}
             </>
+          )}
+
+          {/* ── LATE_CHECKIN ── Employee is past check-in window ── */}
+          {pjpState === 'REQUEST_LATE_CHECKIN' && (
+            <TouchableOpacity
+              style={styles.checkinButton}
+              onPress={() => navigation.navigate('LateCheckinRequestScreen')}>
+              <Text style={styles.checkinButtonText}>Late Check-In</Text>
+              <Ionicons
+                name="chevron-forward-circle-sharp"
+                size={24}
+                color={Colors.white}
+              />
+            </TouchableOpacity>
           )}
 
           {/* ── STORE_CHECKED_IN ── inside a store, show check-out ── */}
@@ -312,7 +326,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
 
           {/* ── ACTIVITY_CHECKED_IN ── in a non-store activity ── */}
           {pjpState === 'ACTIVITY_CHECKED_IN' && (
-            <View style={{marginTop: 10, gap: 8}}>
+            <View style={{ marginTop: 10, gap: 8 }}>
               {/* Compact activity info card — design unchanged */}
               <View
                 style={{
@@ -369,7 +383,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                     </Text>
                   </View>
                 </View>
-                <View style={{flexDirection: 'row', gap: 8, marginTop: 8}}>
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                   {activityStatusData?.message?.activity_type && (
                     <View
                       style={{
@@ -433,7 +447,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               {/* Activity Check-Out button */}
               {can('END_ACTIVITY_CHECKOUT') && (
                 <TouchableOpacity
-                  style={[styles.checkinButton, {marginTop: 0}]}
+                  style={[styles.checkinButton, { marginTop: 0 }]}
                   onPress={handleActivityCheckOut}
                   disabled={isActivityCheckingOut}>
                   <Text style={styles.checkinButtonText}>
@@ -472,7 +486,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
         {/* ── Beat plan link — unchanged ── */}
         <View style={styles.planLink}>
           <TouchableOpacity
-            style={{flexDirection: 'row', alignItems: 'center'}}
+            style={{ flexDirection: 'row', alignItems: 'center' }}
             onPress={() => navigation.navigate('AttendanceScreen')}>
             <Text
               style={{
@@ -499,7 +513,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
@@ -511,7 +525,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
+  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -531,7 +545,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     width: '80%',
   },
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
   checkinButton: {
     display: 'flex',
     alignItems: 'center',

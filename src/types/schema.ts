@@ -199,6 +199,10 @@ export const addSalesInvoiceSchema = Yup.object({
     .min(1, 'At least one item is required')
     .required('Items are required'),
 });
+export const LateCheckinRequestSchema = Yup.object().shape({
+  reason: Yup.string().max(500, 'Reason must be at most 500 characters'),
+});
+
 export const visibilityClaimSchema = Yup.object().shape({
   store: Yup.string().required('Store is required'),
   pjp_store_id: Yup.string().required('PJP is required'),
