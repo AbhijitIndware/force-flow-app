@@ -107,6 +107,7 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
       }
     },
   });
+  console.log("🚀 ~ AddVisibilityScreen ~ errors:", errors)
 
   const isLoading = isCreating;
 

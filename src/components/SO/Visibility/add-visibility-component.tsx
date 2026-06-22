@@ -9,9 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
+import React, { useEffect, useState } from 'react';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
 import {
   Upload,
   Calendar,
@@ -20,23 +20,23 @@ import {
   X,
   Plus,
 } from 'lucide-react-native';
-import {pick} from '@react-native-documents/picker';
-import {launchCamera} from 'react-native-image-picker';
+import { pick } from '@react-native-documents/picker';
+import { launchCamera } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
-import {useLazyGetDailyStoreQuery} from '../../../features/dropdown/dropdown-api';
-import {useAppSelector} from '../../../store/hook';
-import {useGetDailyPjpListQuery} from '../../../features/base/base-api';
-import {useLazyGetVCDistributorDetailsQuery} from '../../../features/tada/tadaApiv2';
+import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
+import { useAppSelector } from '../../../store/hook';
+import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
+import { useLazyGetVCDistributorDetailsQuery } from '../../../features/tada/tadaApiv2';
 
 const MAX_IMAGES = 3;
 
 interface ImageItem {
   mime: string;
   data: string;
-  source: 'gallery' | 'camera';
+  source: 'Gallery' | 'Camera';
 }
 
 interface Props {
@@ -78,16 +78,16 @@ const AddVisibilityComponent = ({
     state => state?.persistedReducer?.authSlice?.user,
   );
 
-  const [triggerStoreFetch, {data: storeData, isFetching: storesFetching}] =
+  const [triggerStoreFetch, { data: storeData, isFetching: storesFetching }] =
     useLazyGetDailyStoreQuery();
   const [
     triggerStoreDetails,
-    {data: storeDetails, isFetching: storeDetailsFetching},
+    { data: storeDetails, isFetching: storeDetailsFetching },
   ] = useLazyGetVCDistributorDetailsQuery(); // ← your actual hook
 
-  const {data: pjpListData, isFetching: pjpFetching} = useGetDailyPjpListQuery(
-    {page: 1, page_size: 20, status: 'All', date: selectedDate},
-    {skip: !selectedDate},
+  const { data: pjpListData, isFetching: pjpFetching } = useGetDailyPjpListQuery(
+    { page: 1, page_size: 20, status: 'All', date: selectedDate },
+    { skip: !selectedDate },
   );
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const AddVisibilityComponent = ({
       setFieldValue('pjp_store_id', '');
     }
     if (user?.email && selectedDate) {
-      triggerStoreFetch({user: user.email, date: selectedDate});
+      triggerStoreFetch({ user: user.email, date: selectedDate });
     }
   }, [pjpListData, selectedDate, user?.email]);
 
@@ -138,7 +138,7 @@ const AddVisibilityComponent = ({
     setShowOptions(false);
     if (!canAddMore) return;
     try {
-      const docs = await pick({allowMultiSelection: true});
+      const docs = await pick({ allowMultiSelection: true });
       if (!docs?.length) return;
 
       // Only take as many as we still have slots for
@@ -154,7 +154,7 @@ const AddVisibilityComponent = ({
         newImages.push({
           mime: doc.type || 'application/octet-stream',
           data: base64,
-          source: 'gallery',
+          source: 'Gallery',
         });
       }
 
@@ -173,14 +173,14 @@ const AddVisibilityComponent = ({
   const handleOpenCamera = async () => {
     setShowOptions(false);
     if (!canAddMore) return;
-    const res = await launchCamera({mediaType: 'photo', quality: 0.8});
+    const res = await launchCamera({ mediaType: 'photo', quality: 0.8 });
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
     appendImage(asset.uri!, {
       mime: asset.type || 'image/jpeg',
       data: base64,
-      source: 'camera',
+      source: 'Camera',
     });
   };
 
@@ -226,7 +226,7 @@ const AddVisibilityComponent = ({
                     storeData.message.pjp_daily_store_doc,
                   );
                 }
-                triggerStoreDetails({store: val});
+                triggerStoreDetails({ store: val });
               }}
               error={touched.store && errors.store}
               disabled={storesFetching || storeDailyList.length === 0}
@@ -283,7 +283,7 @@ const AddVisibilityComponent = ({
       </View>
 
       {/* ── DISTRIBUTOR + COLLECTION (auto-filled) ── */}
-      <View style={[styles.row, {marginTop: 0}]}>
+      <View style={[styles.row, { marginTop: 0 }]}>
         <View style={styles.halfWrapper}>
           <Text style={styles.inputLabel}>Distributor</Text>
           <View style={styles.readOnlyField}>
@@ -329,7 +329,7 @@ const AddVisibilityComponent = ({
               onPress={() => setPreviewIndex(index)}
               activeOpacity={0.85}>
               <Image
-                source={{uri}}
+                source={{ uri }}
                 style={styles.thumbImage}
                 resizeMode="cover"
               />
@@ -404,7 +404,7 @@ const AddVisibilityComponent = ({
           {/* Full image */}
           {previewIndex !== null && (
             <Image
-              source={{uri: previewUris[previewIndex]}}
+              source={{ uri: previewUris[previewIndex] }}
               style={styles.fullImage}
               resizeMode="contain"
             />
@@ -441,7 +441,7 @@ const AddVisibilityComponent = ({
               style={[
                 styles.previewNavBtn,
                 previewIndex === previewUris.length - 1 &&
-                  styles.previewNavBtnDisabled,
+                styles.previewNavBtnDisabled,
               ]}
               disabled={previewIndex === previewUris.length - 1}
               onPress={() =>
@@ -478,9 +478,9 @@ export default AddVisibilityComponent;
 const THUMB_SIZE = 90;
 
 const styles = StyleSheet.create({
-  scroll: {flex: 1},
-  container: {padding: 16, paddingBottom: 40},
-  inputWrapper: {marginBottom: 10},
+  scroll: { flex: 1 },
+  container: { padding: 16, paddingBottom: 40 },
+  inputWrapper: { marginBottom: 10 },
 
   inputLabel: {
     fontSize: 12,
@@ -494,9 +494,9 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
   },
 
-  row: {flexDirection: 'row', gap: 8, marginBottom: 10},
-  halfWrapper: {flex: 1},
-  thirdWrapper: {flex: 1},
+  row: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  halfWrapper: { flex: 1 },
+  thirdWrapper: { flex: 1 },
 
   // Date row
   dateRow: {
@@ -657,7 +657,7 @@ const styles = StyleSheet.create({
   },
   // ────────────────────────────────────────────────────────────────
 
-  modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.4)'},
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   bottomSheet: {
     backgroundColor: '#fff',
     paddingVertical: 10,
@@ -672,9 +672,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
     marginBottom: 8,
   },
-  optionBtn: {width: '100%', paddingVertical: 14, alignItems: 'center'},
-  optionText: {fontSize: 14, fontWeight: '600'},
-  errorText: {color: 'red', fontSize: 11, marginTop: 4},
+  optionBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },
+  optionText: { fontSize: 14, fontWeight: '600' },
+  errorText: { color: 'red', fontSize: 11, marginTop: 4 },
 
   thumbViewHint: {
     position: 'absolute',
