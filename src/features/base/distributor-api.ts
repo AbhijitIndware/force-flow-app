@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithAuthGuard } from '../utility';
 import { createSlice } from '@reduxjs/toolkit';
-import { DistributorInfo, IApproveAndCreateDDNRequest, ILoginRequest, RApproveAndCreateDDN, RDashboardCounts, RDeliveryNoteList, RLoginResponse, RPendingCounts, RPurchaseOrderList } from '../../types/distributorType';
+import { DistributorInfo, IApproveAndCreateDDNRequest, ILoginRequest, RApproveAndCreateDDN, RDashboardCounts, RDeliveryNoteList, RLoginResponse, RPendingCounts, RPurchaseOrderList, RGetWarehousesForPO } from '../../types/distributorType';
 
 
 
@@ -109,6 +109,15 @@ export const distributorBaseApi = createApi({
                 providesTags: ['Distributor'],
             }),
 
+        // 6. Warehouses for PO
+        getWarehousesForPO: builder.query<RGetWarehousesForPO, void>({
+            query: () => ({
+                url: '/method/salesforce_management.mobile_app_apis.order_apis.purchase_order_mobile_api.get_warehouses_for_po',
+                method: 'GET',
+            }),
+            providesTags: ['Distributor'],
+        }),
+
     }),
 });
 
@@ -117,7 +126,8 @@ export const {
     useGetPurchaseOrdersListQuery,
     useGetDeliveryNotesListQuery,
     useApproveAndCreateDDNMutation,
-    useGetPendingCountsQuery
+    useGetPendingCountsQuery,
+    useGetWarehousesForPOQuery,
 } = distributorBaseApi;
 
 // ---------- Slice ----------

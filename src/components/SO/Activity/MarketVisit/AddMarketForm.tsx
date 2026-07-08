@@ -8,10 +8,10 @@ import { Text } from 'react-native';
 import moment from 'moment';
 import { Colors } from '../../../../utils/colors';
 import { View } from 'react-native';
-
+import StoreImagePicker from '../../Partner/Store/StoreImagePicker';
 
 interface Props {
-  values: Record<string, string>;
+  values: Record<string, any>;
   errors: Record<string, string>;
   touched: Record<string, boolean>;
   handleBlur: {
@@ -103,6 +103,12 @@ const AddMarketForm: React.FC<Props> = ({
       <ReusableInput label="GST No" value={values.gst_no} onChangeText={handleChange('gst_no')} onBlur={() => handleBlur('gst_no')} error={touched.gst_no && errors.gst_no} />
       <ReusableInput label="PIN Code" value={values.pin_code} onChangeText={handleChange('pin_code')} onBlur={() => handleBlur('pin_code')} error={touched.pin_code && errors.pin_code} keyboardType="numeric" />
       <ReusableInput label="Address" value={values.address} onChangeText={handleChange('address')} onBlur={() => handleBlur('address')} error={touched.address && errors.address} />
+
+      <StoreImagePicker
+        value={values.store_image}
+        onChange={(val) => setFieldValue('store_image', val)}
+        error={touched.store_image && errors.store_image}
+      />
     </Animated.ScrollView>
   );
 };

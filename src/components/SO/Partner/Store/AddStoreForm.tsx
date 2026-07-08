@@ -9,9 +9,10 @@ import { Size } from '../../../../utils/fontSize';
 import { Fonts } from '../../../../constants';
 import { useCheckStoreNameQuery } from '../../../../features/base/base-api';
 import StoreNameField from './StoreNameField';
+import StoreImagePicker from './StoreImagePicker';
 
 interface Props {
-  values: Record<string, string>;
+  values: Record<string, any>;
   errors: any;
   touched: any;
   handleBlur: {
@@ -363,6 +364,12 @@ const AddStoreForm: React.FC<Props> = memo(({
         showAddButton={true}
         addButtonText="Add New Distributor"
         onAddPress={handleAddStore}
+      />
+
+      <StoreImagePicker
+        value={values.store_image}
+        onChange={(val) => setFieldValue('store_image', val)}
+        error={touched.store_image && errors.store_image}
       />
 
       {/* <View style={styles.inputWrapper}>

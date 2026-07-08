@@ -97,6 +97,7 @@ export type StoreType = {
   city: string;
   state: string;
   store_name: string;
+  store_image: string;
 };
 export type RStore = {
   message: {
@@ -120,6 +121,7 @@ export type DailyStoreType = {
     created_by_employee_name: string;
     store_owner_name: string;
     outstanding_amount: number;
+    store_image: string;
   }[];
   pjp_daily_store_doc: string;
 };
@@ -150,6 +152,7 @@ export interface SoStore {
   store_category: string;
   distributor_id: string;
   distributor_name: string;
+  store_image: string;
 }
 
 export interface SoItem {

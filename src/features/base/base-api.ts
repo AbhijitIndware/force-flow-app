@@ -1311,6 +1311,7 @@ export const baseApi = createApi({
             latitude: number;
             longitude: number;
             distance_meters: number;
+            store_image: string;
           }[];
         };
       },

@@ -23,11 +23,11 @@ import {
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
 import { useAddStoreMutation } from '../../../features/base/base-api';
+import { IAddStorePayload } from '../../../types/baseType';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 import { useAppSelector } from '../../../store/hook';
 import { Animated } from 'react-native';
-import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import AddMarketForm from '../../../components/SO/Activity/MarketVisit/AddMarketForm';
 
 const initial = {
@@ -50,6 +50,7 @@ const initial = {
   created_by_employee: '',
   created_by_employee_name: '',
   created_by_employee_designation: '',
+  store_image: null,
 };
 
 const weekOffList = [
@@ -97,15 +98,17 @@ const AddMarketVisitScreen = ({
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
+        if (!formValues.store_image) return;
+
         let value = {
           ...formValues,
           store_owner_name: '',
-          created_by_employee: employee?.id as string, // Replace with actual user ID
-          created_by_employee_name: user?.full_name, // Replace with actual user name
-          created_by_employee_designation: employee?.designation as string, // Replace with actual designation
+          created_by_employee: employee?.id as string,
+          created_by_employee_name: user?.full_name,
+          created_by_employee_designation: employee?.designation as string,
         };
 
-        const payload = { data: value };
+        const payload = { data: value } as unknown as IAddStorePayload;
         console.log('🚀 ~ onSubmit: ~ payload:', payload);
         const res = await addStore(payload).unwrap();
         console.log('Store API Response:', res);

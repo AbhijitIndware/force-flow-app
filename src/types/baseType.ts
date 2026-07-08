@@ -38,6 +38,10 @@ export interface IAddStorePayload {
     created_by_employee: string;
     created_by_employee_name: string;
     created_by_employee_designation: string;
+    store_image: {
+      mime: string;
+      data: string;
+    };
   };
 }
 export interface IUpdateStorePayload {
@@ -62,6 +66,10 @@ export interface IUpdateStorePayload {
     created_by_employee: string;
     created_by_employee_name: string;
     created_by_employee_designation: string;
+    store_image: {
+      mime: string;
+      data: string;
+    };
   };
 }
 export interface ModifyStoreResponse {
@@ -178,6 +186,7 @@ export type StoreData = {
   times: StoreTimes;
   targets: StoreTargets;
   store_name: string;
+  store_image: string;
 };
 export type RPjpInitialize = {
   message: {
@@ -246,6 +255,10 @@ export type IAddCheckIn = {
   };
   current_location: string;
   bypass_store_category: string;
+  store_image?: {
+    mime: string;
+    data: string;
+  };
 };
 export type RAddCheckIn = {
   message: {
@@ -314,6 +327,7 @@ export interface SalesOrderType {
   purchase_order: string | null;
   created_by: string;
   item_count: number;
+  store_image?: string;
 }
 export type RSoList = {
   message: {
@@ -361,6 +375,7 @@ export type RSoDetailData = {
     warehouse_name: string;
     store: string;
     distributor: string;
+    store_image?: string;
   };
   totals: {
     total: number;
@@ -711,6 +726,7 @@ export interface Store {
   state: string | null;
   outstanding_amount: number;
   warehouse: Warehouse[];
+  store_image?: string;
 }
 
 export interface Warehouse {
@@ -805,6 +821,7 @@ export interface LastPjpStore {
   created_by_employee_name: string;
   warehouse_id: string;
   is_unplanned: number;
+  store_image?: string;
 }
 
 export interface RLastPjpStores {
@@ -1469,6 +1486,7 @@ export interface AvailableStore {
   state: string;
   map_location: string; // "lat,long" as string
   is_primary: boolean;
+  store_image: string;
 }
 
 export interface ShiftAssignment {
@@ -1525,6 +1543,7 @@ export interface ShiftInfo {
   start_time: string | null;
   end_time: string | null;
   is_floater: number;
+  store_image: string;
 }
 
 export interface StoreInfo {
@@ -1534,6 +1553,7 @@ export interface StoreInfo {
   state: string;
   map_location: string;
   is_primary: boolean;
+  store_image: string;
 }
 
 export interface CheckinRecords {
@@ -1749,6 +1769,7 @@ export interface VisibilityClaim {
   price_difference_amount: number;
   damage_claim: number;
   visibility_image: string; // file path
+  store_image: string;
   docstatus: 0 | 1 | 2; // Draft | Submitted | Cancelled
 }
 
@@ -2061,6 +2082,7 @@ export interface IDistributorDeliveryNote {
   purchase_order: string | null;
   item_count: number;
   docstatus: number;
+  store_image?: string;
 }
 
 export interface RDistributorDeliveryNoteList {
@@ -2100,6 +2122,7 @@ export type OrderDetails = {
   purchase_order: string;
   docstatus: number;
   item_count: number;
+  store_image?: string;
 };
 
 export type Item = {
@@ -2368,6 +2391,7 @@ export type PjpDataResponse = {
     store: string;
     store_name: string;
     status: string;
+    store_image?: string;
   }[];
   store_times: {
     store: string;

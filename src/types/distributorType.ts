@@ -125,6 +125,7 @@ export interface DeliveryNoteItem {
     purchase_order: string;
     item_count: number;
     docstatus: number;
+    store_image?: string;
 }
 
 export interface RDeliveryNoteList {
@@ -170,5 +171,19 @@ export interface RPendingCounts {
         pending_purchase_orders: number;
         pending_delivery_notes: number;
         total_pending: number;
+    };
+}
+
+// Warehouse for PO
+export interface WarehouseForPO {
+    name: string;
+    store: string;
+    store_image: string;
+}
+
+export interface RGetWarehousesForPO {
+    message: {
+        success: boolean;
+        data: WarehouseForPO[];
     };
 }

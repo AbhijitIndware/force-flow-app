@@ -64,8 +64,11 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   errorMessage,
   navigation,
   pjpState,
-  pjpActions, lateCheckInInfo
+  pjpActions,
+  lateCheckInInfo
 }) => {
+  console.log("🚀 ~ HeaderSection ~ lateCheckInInfo:", lateCheckInInfo, pjpState,
+    pjpActions,)
   const can = (action: PjpAllowedAction) => pjpActions.includes(action);
 
   return (
@@ -286,6 +289,14 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             </>
           )}
 
+
+          {/* ── REQUEST_LATE_CHECKIN ── waiting for manager approval ── */}
+          {pjpState === 'PJP_RUNNING_IDLE' && lateCheckInInfo?.message && (
+            <Text style={styles.checkinMessageText}>
+              {lateCheckInInfo?.message || 'Late check-in request sent. Waiting for manager approval.'}
+            </Text>
+          )}
+
           {/* ── LATE_CHECKIN ── Employee is past check-in window ── */}
           {pjpState === 'PJP_RUNNING_IDLE' && pjpActions?.includes('REQUEST_LATE_CHECKIN') && (
             <>
@@ -300,9 +311,9 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                 />
               </TouchableOpacity>
 
-              {lateCheckInInfo?.message && (
+              {/* {lateCheckInInfo?.message && (
                 <Text style={styles.checkinMessageText}>{lateCheckInInfo.message}</Text>
-              )}
+              )} */}
             </>
           )}
 
@@ -613,7 +624,7 @@ const styles = StyleSheet.create({
   },
   checkinMessageText: {
     color: Colors.white, // or Colors.white with opacity
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 8,
     textAlign: 'center',
     paddingHorizontal: 12,

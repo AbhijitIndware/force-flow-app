@@ -40,6 +40,12 @@ export const storeSchema = Yup.object().shape({
   address: Yup.string().required('Address is required'),
   // weekly_off: Yup.string().required('Weekly off is required'),
 
+  store_image: Yup.object()
+    .shape({
+      mime: Yup.string().required(),
+      data: Yup.string().required(),
+    })
+    .required('Store image is required'),
   created_by_employee: Yup.string().nullable(),
   created_by_employee_name: Yup.string().nullable(),
   created_by_employee_designation: Yup.string().nullable(),

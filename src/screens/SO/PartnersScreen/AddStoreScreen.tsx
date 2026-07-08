@@ -45,6 +45,8 @@ import {uniqueByValue} from '../../../utils/utils';
 import {
   Distributor,
   ICity,
+  IAddStorePayload,
+  IUpdateStorePayload,
   Store,
   StoreDataById,
 } from '../../../types/baseType';
@@ -84,6 +86,7 @@ const initial = {
   created_by_employee: '',
   created_by_employee_name: '',
   created_by_employee_designation: '',
+  store_image: null,
 };
 
 const weekOffList = [
@@ -228,6 +231,8 @@ const AddStoreScreen = ({navigation, route}: Props) => {
           // }
         }
 
+        if (!formValues.store_image) return;
+
         let value = {
           ...formValues,
           created_by_employee: employee?.id as string, // Replace with actual user ID
@@ -235,7 +240,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
           created_by_employee_designation: employee?.designation as string, // Replace with actual designation
         };
 
-        const payload = {data: value};
+        const payload = {data: value as IAddStorePayload['data']};
         let res;
 
         if (storeId) {
@@ -243,7 +248,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
             data: {
               ...formValues,
               name: storeId,
-            },
+            } as IUpdateStorePayload['data'],
           }).unwrap();
         } else {
           res = await addStore(payload).unwrap();
