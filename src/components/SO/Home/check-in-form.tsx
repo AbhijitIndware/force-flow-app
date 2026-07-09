@@ -11,7 +11,7 @@ import { launchCamera } from 'react-native-image-picker';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { Camera } from 'lucide-react-native';
+import { Camera, Store } from 'lucide-react-native';
 
 interface FormValues {
   store: string;
@@ -20,6 +20,10 @@ interface FormValues {
     data: string;
   };
   current_location: string;
+  store_image: {
+    mime: string;
+    data: string;
+  };
 }
 
 interface Props {
@@ -31,6 +35,7 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
   storeList: { label: string; value: string }[];
+  needsStoreImage?: boolean;
 }
 
 const AddCheckInForm: React.FC<Props> = ({
@@ -39,12 +44,13 @@ const AddCheckInForm: React.FC<Props> = ({
   touched,
   setFieldValue,
   scrollY,
+  needsStoreImage,
 }) => {
-  const handleOpenCamera = async () => {
+  const handleOpenCamera = (fieldName: 'image' | 'store_image', cameraType: 'front' | 'back') => async () => {
     launchCamera(
       {
         mediaType: 'photo',
-        cameraType: 'front', // Switching to front camera for selfie consistency
+        cameraType,
         quality: 0.8,
         includeBase64: true,
         saveToPhotos: false,
@@ -58,7 +64,7 @@ const AddCheckInForm: React.FC<Props> = ({
         if (response.assets && response.assets.length > 0) {
           const photo = response.assets[0];
           if (photo.base64 && photo.type) {
-            setFieldValue('image', {
+            setFieldValue(fieldName, {
               data: photo.base64,
               mime: photo.type,
             });
@@ -75,17 +81,15 @@ const AddCheckInForm: React.FC<Props> = ({
       })}
       scrollEventThrottle={16}
       contentContainerStyle={styles.scrollContent}>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Required Selfie</Text>
         <Text style={styles.sectionSubtitle}>Please take a photo at the store location</Text>
-        
-        <TouchableOpacity style={styles.cameraBtn} onPress={handleOpenCamera}>
+
+        <TouchableOpacity style={styles.cameraBtn} onPress={handleOpenCamera('image', 'front')}>
           {values.image?.data ? (
             <Image
-              source={{
-                uri: `data:${values.image.mime};base64,${values.image.data}`,
-              }}
+              source={{ uri: `data:${values.image.mime};base64,${values.image.data}` }}
               style={styles.previewImage}
             />
           ) : (
@@ -95,11 +99,32 @@ const AddCheckInForm: React.FC<Props> = ({
             </View>
           )}
         </TouchableOpacity>
-        
+
         {touched?.image && errors?.image && (
           <Text style={styles.errorText}>{errors.image as string}</Text>
         )}
       </View>
+
+      {needsStoreImage && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Store Image  <Text style={styles.optional}>(Required)</Text></Text>
+          <Text style={styles.sectionSubtitle}>Please capture a photo of the store</Text>
+
+          <TouchableOpacity style={styles.cameraBtn} onPress={handleOpenCamera('store_image', 'back')}>
+            {values.store_image?.data ? (
+              <Image
+                source={{ uri: `data:${values.store_image.mime};base64,${values.store_image.data}` }}
+                style={styles.previewImage}
+              />
+            ) : (
+              <View style={styles.cameraPlaceholder}>
+                <Store size={40} color={Colors.gray} />
+                <Text style={styles.cameraText}>Tap to capture store</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
     </Animated.ScrollView>
   );
 };
@@ -108,13 +133,13 @@ export default AddCheckInForm;
 
 const styles = StyleSheet.create({
   scrollContent: {
-    padding: 20,
-    paddingBottom: 100, // Space for the absolute positioned submit button
+    // padding: 20,
+    paddingBottom: 10, // Space for the absolute positioned submit button
   },
   section: {
     alignItems: 'center',
     paddingVertical: 10,
-    marginTop: 10,
+    // marginTop: 10,
   },
   sectionTitle: {
     fontFamily: Fonts.semiBold,
@@ -131,7 +156,7 @@ const styles = StyleSheet.create({
   },
   cameraBtn: {
     width: 250,
-    height: 250,
+    height: 150,
     borderRadius: 20,
     backgroundColor: '#F8F9FB',
     borderWidth: 2,
@@ -160,5 +185,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
     fontFamily: Fonts.regular,
+  },
+  optional: {
+    fontSize: 11,
+    fontFamily: Fonts.regular,
+    color: Colors.error,
   },
 });

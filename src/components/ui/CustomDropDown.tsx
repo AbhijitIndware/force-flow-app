@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Modal,
 } from 'react-native';
 import { Text, ActivityIndicator, Menu } from 'react-native-paper';
 import { Fonts } from '../../constants';
@@ -63,6 +64,8 @@ const DropdownComponent = ({
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  console.log("🚀 ~ DropdownComponent ~ previewImageUrl:", previewImageUrl)
 
   const handleSelect = (item: DropDownItem) => {
     if (item.disabled) return;
@@ -176,46 +179,79 @@ const DropdownComponent = ({
               const isSelected = item.value === selectedId;
               const isDisabled = item.disabled;
 
+              const image = item.imageUrl
+
               return (
-                <TouchableOpacity
-                  onPress={() => handleSelect(item)}
-                  disabled={isDisabled}
+                <View
                   style={[
                     styles.item,
                     isSelected && styles.selectedItem,
                     isDisabled && styles.disabledItem,
                   ]}>
-                  {item.imageUrl ? (
-                    <Image
-                      source={{ uri: item.imageUrl }}
-                      style={styles.storeImage}
-                      resizeMode="cover"
-                    />
+                  {image ? (
+                    <TouchableOpacity
+                      onPress={() => setPreviewImageUrl(image!)}
+                      activeOpacity={0.7}
+                      style={styles.imageWrapper}>
+                      <Image
+                        source={{ uri: image }}
+                        style={styles.storeImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   ) : (
                     <View style={[styles.storeImage, styles.storeImagePlaceholder]}>
                       <Text style={styles.storeImagePlaceholderText}>🏪</Text>
                     </View>
                   )}
-                  <Text
-                    style={[
-                      styles.itemText,
-                      { fontSize: textSize },
-                      isSelected && styles.selectedItemText,
-                      isDisabled && styles.disabledItemText,
-                    ]}>
-                    {item.label}
-                  </Text>
-                  {/* Visited badge */}
-                  {isDisabled && (
-                    <View style={styles.visitedBadge}>
-                      <Text style={styles.visitedBadgeText}>Visited</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleSelect(item)}
+                    disabled={isDisabled}
+                    style={styles.labelWrapper}>
+                    <Text
+                      style={[
+                        styles.itemText,
+                        { fontSize: textSize },
+                        isSelected && styles.selectedItemText,
+                        isDisabled && styles.disabledItemText,
+                      ]}
+                      numberOfLines={1}>
+                      {item.label}
+                    </Text>
+                    {/* Visited badge */}
+                    {isDisabled && (
+                      <View style={styles.visitedBadge}>
+                        <Text style={styles.visitedBadgeText}>Visited</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
               );
             }}
           />
         </Menu>
+
+        {/* Image Preview Modal */}
+        <Modal
+          visible={!!previewImageUrl}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setPreviewImageUrl(null)}>
+          <View style={styles.previewOverlay}>
+            <TouchableOpacity
+              style={styles.previewCloseButton}
+              onPress={() => setPreviewImageUrl(null)}>
+              <Text style={styles.previewCloseText}>✕</Text>
+            </TouchableOpacity>
+            {previewImageUrl && (
+              <Image
+                source={{ uri: previewImageUrl }}
+                style={styles.previewImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
       </View>
     </KeyboardAvoidingView>
   );
@@ -275,7 +311,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  imageWrapper: {
+    marginRight: 5,
+  },
+  labelWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   itemText: {
     color: Colors.inputBorder,
@@ -312,7 +355,7 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     borderRadius: 0,
-    marginRight: 5,
+    marginRight: 5
   },
   storeImagePlaceholder: {
     backgroundColor: '#f1f5f9',
@@ -329,5 +372,33 @@ const styles = StyleSheet.create({
   emptyText: {
     color: Colors.inputBorder,
     fontFamily: Fonts.regular,
+  },
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  previewImage: {
+    width: '100%',
+    height: '80%',
+  },
+  previewCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });

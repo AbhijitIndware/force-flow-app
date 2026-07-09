@@ -4,6 +4,7 @@ import {
   Animated,
   Modal,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,6 +21,7 @@ import {
   getCurrentLocation,
   getStoreLabel,
   requestLocationPermission,
+  windowHeight,
   windowWidth,
 } from '../../../utils/utils';
 import { useFormik } from 'formik';
@@ -56,6 +58,7 @@ const INITIAL_VALUES = {
   image: { mime: '', data: '' },
   current_location: '',
   bypass_store_category: 'True',
+  store_image: { mime: '', data: '' },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -79,7 +82,7 @@ const CheckInForm = ({ navigation }: Props) => {
   const pjpWorkflowData = useAppSelector(
     s => s.persistedReducer.pjpSlice.pjpWorkflowData,
   );
-  console.log("🚀 ~ CheckInForm ~ pjpWorkflowData:", pjpWorkflowData)
+  // console.log("🚀 ~ CheckInForm ~ pjpWorkflowData:", pjpWorkflowData)
 
   // ── Derived data ────────────────────────────────────────────────────────────
   const storeDailyList = (pjpWorkflowData?.pjp_data?.stores ?? [])
@@ -92,6 +95,12 @@ const CheckInForm = ({ navigation }: Props) => {
         ? `${imageBaseUrl}${s.store_image}`
         : undefined,
     }));
+
+  const storesWithoutImage = new Set(
+    (pjpWorkflowData?.pjp_data?.stores ?? [])
+      .filter(s => !s.store_image && s.status !== 'Completed')
+      .map(s => s.store),
+  );
 
   const pjpDate = pjpInitializedData?.message?.data?.date;
   const formattedDate = pjpDate
@@ -116,17 +125,33 @@ const CheckInForm = ({ navigation }: Props) => {
     initialValues: INITIAL_VALUES,
     validationSchema: checkInSchema,
     onSubmit: async formValues => {
+      console.log("🚀 ~ CheckInForm ~ formValues:", formValues)
+      if (
+        storesWithoutImage.has(formValues.store) &&
+        !formValues.store_image?.data
+      ) {
+        Toast.show({
+          type: 'error',
+          text1: '❌ Please capture a store image before check-in',
+        });
+        return;
+      }
+
+      const location = await getLocation();
+      if (!location) return;
       try {
         setLoading(true);
-        const location = await getLocation();
-        if (!location) return;
 
         setPendingPayload({
           store: formValues.store,
           image: formValues.image,
           current_location: location,
           bypass_store_category: formValues.bypass_store_category,
+          ...(storesWithoutImage.has(formValues.store) && formValues.store_image?.data
+            ? { store_image: formValues.store_image }
+            : {}),
         });
+
         setConfirmModalVisible(true);
       } catch {
         Toast.show({ type: 'error', text1: '❌ Unable to prepare check-in' });
@@ -214,6 +239,7 @@ const CheckInForm = ({ navigation }: Props) => {
 
   const handleConfirmCheckIn = async () => {
     if (!pendingPayload) return;
+
     try {
       setLoading(true);
       const res = await addCheckIn(pendingPayload).unwrap();
@@ -265,80 +291,86 @@ const CheckInForm = ({ navigation }: Props) => {
     <SafeAreaView style={[flexCol, styles.screen]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
 
-      {!pjpWorkflowData ? (
-        <LoadingScreen />
-      ) : storeDailyList.length === 0 ? (
-        <NoPjpState
-          formattedDate={formattedDate}
-          onAddPjp={() => navigation.navigate('AddPjpScreen')}
-        />
-      ) : (
-        <>
-          {/* Store selector */}
-          <View style={styles.selectorPad}>
-            <ReusableDropdown
-              label="Store"
-              field="value"
-              value={values.store}
-              data={storeDailyList}
-              error={touched.store && errors.store}
-              disabled={locationVerified}
-              onChange={(val: string) => {
-                dispatch(setSelectedStore(val));
-                setFieldValue('store', val);
-              }}
-            />
-          </View>
-
-          {/* Confirm check-in modal */}
-          <ConfirmCheckInModal
-            visible={confirmModalVisible}
-            loading={loading}
-            payload={pendingPayload}
-            onCancel={dismissConfirmModal}
-            onConfirm={handleConfirmCheckIn}
+      <ScrollView>
+        {!pjpWorkflowData ? (
+          <LoadingScreen />
+        ) : storeDailyList.length === 0 ? (
+          <NoPjpState
+            formattedDate={formattedDate}
+            onAddPjp={() => navigation.navigate('AddPjpScreen')}
           />
-
-          {/* Verify location OR check-in form + submit */}
-          {!locationVerified ? (
-            <TouchableOpacity
-              style={[styles.submitBtn, verifying && styles.disabledBtn]}
-              onPress={handleVerifyLocation}
-              disabled={verifying}>
-              {verifying ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.submitText}>Verify Location</Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <View>
-              <AddCheckInForm
-                values={values}
-                errors={errors}
-                touched={touched}
-                handleChange={handleChange}
-                handleBlur={handleBlur}
-                setFieldValue={setFieldValue}
-                scrollY={scrollY}
-                storeList={storeDailyList}
+        ) : (
+          <>
+            {/* Store selector */}
+            <View style={styles.selectorPad}>
+              <ReusableDropdown
+                label="Store"
+                field="value"
+                value={values.store}
+                data={storeDailyList}
+                error={touched.store && errors.store}
+                disabled={locationVerified}
+                onChange={(val: string) => {
+                  dispatch(setSelectedStore(val));
+                  setFieldValue('store', val);
+                }}
               />
-              <View style={styles.submitBar}>
+            </View>
+
+            <View style={{ flex: 1, minHeight: windowHeight * 0.8 }}>
+
+              {/* Confirm check-in modal */}
+              <ConfirmCheckInModal
+                visible={confirmModalVisible}
+                loading={loading}
+                payload={pendingPayload}
+                onCancel={dismissConfirmModal}
+                onConfirm={handleConfirmCheckIn}
+              />
+
+              {/* Verify location OR check-in form + submit */}
+              {!locationVerified ? (
                 <TouchableOpacity
-                  style={[styles.submitBtn, loading && styles.disabledBtn]}
-                  onPress={() => handleSubmit()}
-                  disabled={loading}>
-                  {loading ? (
+                  style={[styles.submitBtn, verifying && styles.disabledBtn]}
+                  onPress={handleVerifyLocation}
+                  disabled={verifying}>
+                  {verifying ? (
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
-                    <Text style={styles.submitText}>Check In</Text>
+                    <Text style={styles.submitText}>Verify Location</Text>
                   )}
                 </TouchableOpacity>
-              </View>
+              ) : (
+                <View>
+                  <AddCheckInForm
+                    values={values}
+                    errors={errors}
+                    touched={touched}
+                    handleChange={handleChange}
+                    handleBlur={handleBlur}
+                    setFieldValue={setFieldValue}
+                    scrollY={scrollY}
+                    storeList={storeDailyList}
+                    needsStoreImage={storesWithoutImage.has(values.store)}
+                  />
+                  <View style={styles.submitBar}>
+                    <TouchableOpacity
+                      style={[styles.submitBtn, loading && styles.disabledBtn]}
+                      onPress={() => handleSubmit()}
+                      disabled={loading}>
+                      {loading ? (
+                        <ActivityIndicator size="small" color={Colors.white} />
+                      ) : (
+                        <Text style={styles.submitText}>Check In</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
-          )}
-        </>
-      )}
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -435,6 +467,7 @@ const styles = StyleSheet.create({
   },
   selectorPad: {
     padding: 20,
+    paddingBottom: 0,
   },
   submitBar: {
     paddingHorizontal: 20,
