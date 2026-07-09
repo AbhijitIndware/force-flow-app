@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,16 +8,17 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
-import {Text, ActivityIndicator, Menu} from 'react-native-paper';
-import {Fonts} from '../../constants';
-import {Colors} from '../../utils/colors';
-import {Size} from '../../utils/fontSize';
-import {DropDownList} from '../../types/Navigation';
-import {ChevronDown} from 'lucide-react-native';
+import { Text, ActivityIndicator, Menu } from 'react-native-paper';
+import { Fonts } from '../../constants';
+import { Colors } from '../../utils/colors';
+import { Size } from '../../utils/fontSize';
+import { DropDownList } from '../../types/Navigation';
+import { ChevronDown } from 'lucide-react-native';
 
 // Extend DropDownList locally if you can't modify the type file
-type DropDownItem = DropDownList & {disabled?: boolean};
+type DropDownItem = DropDownList & { disabled?: boolean; imageUrl?: string };
 
 type Props = {
   selectText: string;
@@ -104,8 +105,8 @@ const DropdownComponent = ({
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
-                  {fontSize: textSize},
-                  disabled && {color: '#9E9E9E'},
+                  { fontSize: textSize },
+                  disabled && { color: '#9E9E9E' },
                   selectedId && styles.selectedTextActive,
                 ]}>
                 {selectedLabel}
@@ -140,7 +141,7 @@ const DropdownComponent = ({
               onChangeText={text => setSearchText?.(text)}
               placeholder={`Search ${selectText}...`}
               placeholderTextColor={Colors.inputBorder}
-              style={[styles.inputSearchStyle, {fontSize: textSize}]}
+              style={[styles.inputSearchStyle, { fontSize: textSize }]}
             />
           </View>
 
@@ -153,25 +154,25 @@ const DropdownComponent = ({
             keyboardShouldPersistTaps="handled"
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
-            style={{maxHeight: 200, minWidth: '90%', zIndex: 9999}}
-            contentContainerStyle={{zIndex: 9999}}
+            style={{ maxHeight: 200, minWidth: '90%', zIndex: 9999 }}
+            contentContainerStyle={{ zIndex: 9999 }}
             ListFooterComponent={
               loadingMore ? (
                 <ActivityIndicator
                   size="small"
                   color={Colors.primary}
-                  style={{marginVertical: 10}}
+                  style={{ marginVertical: 10 }}
                 />
               ) : null
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, {fontSize: textSize}]}>
+                <Text style={[styles.emptyText, { fontSize: textSize }]}>
                   No {selectText} found
                 </Text>
               </View>
             }
-            renderItem={({item}) => {
+            renderItem={({ item }) => {
               const isSelected = item.value === selectedId;
               const isDisabled = item.disabled;
 
@@ -184,10 +185,21 @@ const DropdownComponent = ({
                     isSelected && styles.selectedItem,
                     isDisabled && styles.disabledItem,
                   ]}>
+                  {item.imageUrl ? (
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={styles.storeImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.storeImage, styles.storeImagePlaceholder]}>
+                      <Text style={styles.storeImagePlaceholderText}>🏪</Text>
+                    </View>
+                  )}
                   <Text
                     style={[
                       styles.itemText,
-                      {fontSize: textSize},
+                      { fontSize: textSize },
                       isSelected && styles.selectedItemText,
                       isDisabled && styles.disabledItemText,
                     ]}>
@@ -295,6 +307,20 @@ const styles = StyleSheet.create({
     color: '#15803D',
     fontFamily: Fonts.medium,
     fontWeight: '600',
+  },
+  storeImage: {
+    width: 45,
+    height: 45,
+    borderRadius: 0,
+    marginRight: 5,
+  },
+  storeImagePlaceholder: {
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  storeImagePlaceholderText: {
+    fontSize: 14,
   },
   emptyContainer: {
     padding: 20,

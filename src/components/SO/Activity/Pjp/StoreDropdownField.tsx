@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useGetStoreListQuery } from '../../../../features/base/base-api';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 import { getStoreLabel } from '../../../../utils/utils';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 
 interface StoreItem {
   store_name: string;
@@ -11,11 +12,13 @@ interface StoreItem {
   store_type: string;
   pin_code: string;
   store_owner_name?: string;
+  store_image?: string;
 }
 
 interface DropdownOption {
   label: string;
   value: string;
+  imageUrl?: string;
 }
 
 interface Pagination {
@@ -47,6 +50,9 @@ const transformStores = (arr: StoreItem[] = []): DropdownOption[] =>
   arr.map(item => ({
     label: getStoreLabel(item),
     value: item.name,
+    imageUrl: item.store_image
+      ? `${imageBaseUrl}${item.store_image}`
+      : undefined,
   }));
 
 const StoreDropdownField = ({

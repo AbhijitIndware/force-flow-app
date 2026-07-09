@@ -155,8 +155,8 @@ export const getStoreLabel = (item: any) => {
   let label = item.store_name || '';
   if (item.pin_code) label += ` (${item.pin_code})`;
   if (item.store_type) label += ` — ${item.store_type}`;
-  if (item.created_by_employee_name)
-    label += ` | ${item.created_by_employee_name}`;
+  // if (item.created_by_employee_name)
+  //   label += ` | ${item.created_by_employee_name}`;
   if (item.store_owner_name) label += ` (${item.store_owner_name})`;
   return label;
 };

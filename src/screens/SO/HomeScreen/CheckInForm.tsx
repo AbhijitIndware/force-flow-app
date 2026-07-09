@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -11,20 +11,20 @@ import {
 } from 'react-native';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import {Colors} from '../../../utils/colors';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {flexCol} from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { flexCol } from '../../../utils/styles';
 import {
   getCurrentLocation,
   getStoreLabel,
   requestLocationPermission,
   windowWidth,
 } from '../../../utils/utils';
-import {useFormik} from 'formik';
-import {checkInSchema} from '../../../types/schema';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import { useFormik } from 'formik';
+import { checkInSchema } from '../../../types/schema';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
   setSelectedStore,
   useAddCheckInMutation,
@@ -35,6 +35,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import AddCheckInForm from '../../../components/SO/Home/check-in-form';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,14 +53,14 @@ type Props = {
 
 const INITIAL_VALUES = {
   store: '',
-  image: {mime: '', data: ''},
+  image: { mime: '', data: '' },
   current_location: '',
   bypass_store_category: 'True',
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const CheckInForm = ({navigation}: Props) => {
+const CheckInForm = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
   const [locationVerified, setLocationVerified] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -78,6 +79,7 @@ const CheckInForm = ({navigation}: Props) => {
   const pjpWorkflowData = useAppSelector(
     s => s.persistedReducer.pjpSlice.pjpWorkflowData,
   );
+  console.log("🚀 ~ CheckInForm ~ pjpWorkflowData:", pjpWorkflowData)
 
   // ── Derived data ────────────────────────────────────────────────────────────
   const storeDailyList = (pjpWorkflowData?.pjp_data?.stores ?? [])
@@ -86,6 +88,9 @@ const CheckInForm = ({navigation}: Props) => {
       label: getStoreLabel(s),
       value: s.store,
       disabled: s.status === 'Visited',
+      imageUrl: s.store_image
+        ? `${imageBaseUrl}${s.store_image}`
+        : undefined,
     }));
 
   const pjpDate = pjpInitializedData?.message?.data?.date;
@@ -94,7 +99,7 @@ const CheckInForm = ({navigation}: Props) => {
     : 'Today';
 
   // ── Mutations ───────────────────────────────────────────────────────────────
-  const [verifyLocation, {isLoading: verifying}] =
+  const [verifyLocation, { isLoading: verifying }] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
 
@@ -124,7 +129,7 @@ const CheckInForm = ({navigation}: Props) => {
         });
         setConfirmModalVisible(true);
       } catch {
-        Toast.show({type: 'error', text1: '❌ Unable to prepare check-in'});
+        Toast.show({ type: 'error', text1: '❌ Unable to prepare check-in' });
       } finally {
         setLoading(false);
       }
@@ -187,7 +192,7 @@ const CheckInForm = ({navigation}: Props) => {
 
       const valid = res?.message?.data?.location_validation?.valid;
       if (valid) {
-        Toast.show({type: 'success', text1: '✅ Location verified'});
+        Toast.show({ type: 'success', text1: '✅ Location verified' });
         setLocationVerified(true);
       } else {
         Toast.show({
@@ -522,7 +527,7 @@ const modalStyles = StyleSheet.create({
     padding: 20,
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
   },
