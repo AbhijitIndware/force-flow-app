@@ -1,6 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -18,6 +19,8 @@ import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
 import {Eye, EyeOff, Lock, LogIn, UserRound} from 'lucide-react-native';
 import {useLoginMutation} from '../../features/auth/auth';
+import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
+import {getFcmToken} from '../../utils/fcm';
 import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {loginSchema} from '../../types/schema';
@@ -27,6 +30,7 @@ let initial = {usr: '', pwd: ''};
 
 const LoginScreen = () => {
   const [login, {isLoading}] = useLoginMutation();
+  const [registerFcmToken] = useRegisterFcmTokenMutation();
   const [secureText, setSecureText] = useState(true);
 
   // Form handling & validation using formik & yup schemas
@@ -51,6 +55,12 @@ const LoginScreen = () => {
               position: 'top',
             });
             action.resetForm();
+
+            const fcmToken = await getFcmToken();
+            if (fcmToken) {
+              const deviceOs = Platform.OS === 'ios' ? 'iOS' : 'Android';
+              registerFcmToken({fcm_token: fcmToken, device_os: deviceOs});
+            }
           } else {
             Toast.show({
               type: 'error',

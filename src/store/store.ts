@@ -11,6 +11,7 @@ import {
 } from '../features/base/promoter-base-api';
 import { distributorBaseApi, distributorSlice } from '../features/base/distributor-api';
 import { tadaApiV2, tadaV2Slice } from '../features/tada/tadaApiv2';
+import { fcmApi } from '../features/fcm/fccm-api';
 
 const persistConfig = {
   key: 'root',
@@ -37,7 +38,8 @@ export const store = configureStore({
     [promoterBaseApi.reducerPath]: promoterBaseApi.reducer,
     [tadaApi.reducerPath]: tadaApi.reducer,
     [distributorBaseApi.reducerPath]: distributorBaseApi.reducer,
-    [tadaApiV2.reducerPath]: tadaApiV2.reducer
+    [tadaApiV2.reducerPath]: tadaApiV2.reducer,
+    [fcmApi.reducerPath]: fcmApi.reducer
   },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({ serializableCheck: false }).concat([
@@ -47,7 +49,8 @@ export const store = configureStore({
       tadaApi.middleware,
       promoterBaseApi.middleware,
       distributorBaseApi.middleware,
-      tadaApiV2.middleware
+      tadaApiV2.middleware,
+      fcmApi.middleware
     ]),
 });
 
