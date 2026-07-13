@@ -1,6 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useState } from 'react';
-import { Animated, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import {
+  Animated,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
@@ -11,13 +18,15 @@ import { SoAppStackParamList } from '../../../../types/Navigation';
 import StoreDropdownField from './StoreDropdownField';
 import { useAppSelector } from '../../../../store/hook';
 import { useLazyGetLastPjpStoresQuery } from '../../../../features/base/base-api';
-import { Square, CheckSquare } from 'lucide-react-native';
+import { Square, CheckSquare, Plus, Trash2 } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import { PlannedActivity } from '../../../../types/baseType';
 
 interface FormValues {
   employee: string;
   date: string;
   stores: { store: string }[];
+  planned_activities?: PlannedActivity[];
 }
 
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'AddPjpScreen'>;
@@ -47,6 +56,15 @@ interface Props {
   isPjpStarted: boolean;
 }
 
+const ACTIVITY_TYPES = [
+  'Store Inauguration',
+  'Distributor Meeting',
+  'Office Visit',
+  'Key Account Visit',
+  'New Distributor Opening',
+  'Miscellaneous Visit',
+];
+
 const AddPjpForm: React.FC<Props> = ({
   values,
   errors,
@@ -64,6 +82,7 @@ const AddPjpForm: React.FC<Props> = ({
   const employeeName = employee?.full_name || '—';
   const employeeId = employee?.company_emp_id || '—';
   const totalStores = values.stores.length;
+  const plannedActivities = values.planned_activities ?? [];
 
   const [useLastPjp, setUseLastPjp] = useState(false);
   const [getLastPjpStores, { isFetching: isFetchingLastPjp }] =
@@ -75,7 +94,7 @@ const AddPjpForm: React.FC<Props> = ({
 
     if (newValue) {
       try {
-        const response = await getLastPjpStores().unwrap();
+        const response = await getLastPjpStores({ employee: values.employee }).unwrap();
         if (
           response?.message?.status === 'success' &&
           response?.message?.data?.length > 0
@@ -107,6 +126,30 @@ const AddPjpForm: React.FC<Props> = ({
     }
   };
 
+  // ── Planned Activity helpers ─────────────────────────────────────────────
+  const addActivity = () => {
+    setFieldValue('planned_activities', [
+      ...plannedActivities,
+      { activity_type: '', activity_location: '' },
+    ]);
+  };
+
+  const removeActivity = (index: number) => {
+    const updated = [...plannedActivities];
+    updated.splice(index, 1);
+    setFieldValue('planned_activities', updated);
+  };
+
+  const updateActivity = (
+    index: number,
+    field: keyof PlannedActivity,
+    val: string,
+  ) => {
+    const updated = [...plannedActivities];
+    updated[index] = { ...updated[index], [field]: val };
+    setFieldValue('planned_activities', updated);
+  };
+
   return (
     <Animated.ScrollView
       onScroll={Animated.event(
@@ -114,7 +157,7 @@ const AddPjpForm: React.FC<Props> = ({
         { useNativeDriver: false },
       )}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 40 }}>
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 }}>
 
       {/* ── Employee Strip ── */}
       <View style={{
@@ -188,7 +231,9 @@ const AddPjpForm: React.FC<Props> = ({
         </Text>
       </TouchableOpacity>
 
-      {/* ── Stores Section Header ── */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          STORES SECTION
+      ═══════════════════════════════════════════════════════════════════ */}
       <View style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -196,74 +241,63 @@ const AddPjpForm: React.FC<Props> = ({
         marginTop: 6,
         marginBottom: 4,
       }}>
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 5
-        }}>
-          {/* <Text style={{ fontSize: 12, fontFamily: Fonts.medium, color: '#333' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+          <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: '#333' }}>
             Stores
-          </Text> */}
-          {/* Warning message */}
-          {values.stores.length < 15 && (
-            <Text
-              style={{
-                color: '#F59E0B',
-                fontSize: 12,
-              }}>
-              ⚠️ Minimum 15 stores required
+          </Text>
+          {plannedActivities.length === 0 && totalStores < 15 && (
+            <Text style={{ color: '#F59E0B', fontSize: 11 }}>
+              ⚠️ Min 15 stores
             </Text>
-          )}</View>
+          )}
+          {plannedActivities.length > 0 && totalStores === 0 && (
+            <Text style={{ color: Colors.success ?? '#16a34a', fontSize: 11 }}>
+              ✓ Stores optional (activity planned)
+            </Text>
+          )}
+        </View>
         <Text style={{
           fontSize: 11,
           fontFamily: Fonts.medium,
-          color: totalStores >= 15 ? Colors.Orangelight : '#F59E0B',
+          color: totalStores >= 15 || plannedActivities.length > 0
+            ? Colors.Orangelight
+            : '#F59E0B',
         }}>
           {totalStores} / 15
         </Text>
       </View>
 
-      {/* ── Warning ── */}
-      {/* {totalStores < 15 && (
-        <Text style={{ color: '#F59E0B', fontSize: 10, fontFamily: Fonts.medium, marginBottom: 6 }}>
-          ⚠️  {15 - totalStores} more store{15 - totalStores > 1 ? 's' : ''} needed
-        </Text>
-      )} */}
-
       {/* ── Store List ── */}
-      {
-        values.stores.map((storeItem, index) => (
-          <View key={index} style={{}}>
-            <StoreDropdownField
-              label={`Store ${index + 1}`}
-              field={`stores[${index}].store`}
-              value={storeItem.store}
-              error={touched.stores?.[index]?.store && errors.stores?.[index]?.store}
-              onChange={(val: string) => {
-                const updatedStores = [...values.stores];
-                updatedStores[index].store = val;
-                setFieldValue('stores', updatedStores);
-              }}
-              navigation={navigation}
-            />
+      {values.stores.map((storeItem, index) => (
+        <View key={index} style={{}}>
+          <StoreDropdownField
+            label={`Store ${index + 1}`}
+            field={`stores[${index}].store`}
+            value={storeItem.store}
+            error={touched.stores?.[index]?.store && errors.stores?.[index]?.store}
+            onChange={(val: string) => {
+              const updatedStores = [...values.stores];
+              updatedStores[index].store = val;
+              setFieldValue('stores', updatedStores);
+            }}
+            navigation={navigation}
+          />
 
-            {values.stores.length > 1 && index !== 0 && !(isPjpStarted && storeItem.store) && (
-              <TouchableOpacity
-                onPress={() => {
-                  const updated = [...values.stores];
-                  updated.splice(index, 1);
-                  setFieldValue('stores', updated);
-                }}
-                style={{ alignSelf: 'flex-end', marginTop: 0 }}>
-                <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
-                  Remove
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))
-      }
+          {values.stores.length > 1 && index !== 0 && !(isPjpStarted && storeItem.store) && (
+            <TouchableOpacity
+              onPress={() => {
+                const updated = [...values.stores];
+                updated.splice(index, 1);
+                setFieldValue('stores', updated);
+              }}
+              style={{ alignSelf: 'flex-end', marginTop: 0 }}>
+              <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
+                Remove
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
 
       {/* ── Add Store Button ── */}
       <TouchableOpacity
@@ -274,13 +308,182 @@ const AddPjpForm: React.FC<Props> = ({
           paddingHorizontal: 10,
           paddingVertical: 5,
           borderRadius: 6,
+          marginBottom: 20,
         }}>
         <Text style={{ fontFamily: Fonts.medium, fontSize: Size.xs, color: '#fff' }}>
           + Add Store
         </Text>
       </TouchableOpacity>
 
-    </Animated.ScrollView >
+      {/* ═══════════════════════════════════════════════════════════════════
+          PLANNED ACTIVITIES SECTION
+      ═══════════════════════════════════════════════════════════════════ */}
+      <View style={{
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+        paddingTop: 14,
+        marginBottom: 10,
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        }}>
+          <View>
+            <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: '#333' }}>
+              Planned Activities
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: Fonts.regular, color: '#888', marginTop: 1 }}>
+              {plannedActivities.length === 0
+                ? 'Optional if stores are added'
+                : `${plannedActivities.length} activity${plannedActivities.length > 1 ? 'ies' : ''} planned`}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={addActivity}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              backgroundColor: '#EFF6FF',
+              paddingHorizontal: 10,
+              paddingVertical: 5,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: '#BFDBFE',
+            }}>
+            <Plus size={13} color="#3B82F6" />
+            <Text style={{ fontFamily: Fonts.medium, fontSize: Size.xs, color: '#3B82F6' }}>
+              Add Activity
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {plannedActivities.length === 0 && (
+          <View style={{
+            backgroundColor: '#F9FAFB',
+            borderRadius: 8,
+            padding: 12,
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: '#E5E7EB',
+            borderStyle: 'dashed',
+          }}>
+            <Text style={{ fontSize: 11, color: '#9CA3AF', fontFamily: Fonts.regular, textAlign: 'center' }}>
+              No activities planned.{'\n'}Add an activity like "Store Inauguration" or "Distributor Meeting".
+            </Text>
+          </View>
+        )}
+
+        {plannedActivities.map((activity, index) => (
+          <View
+            key={index}
+            style={{
+              backgroundColor: '#F0F7FF',
+              borderRadius: 10,
+              padding: 12,
+              marginBottom: 10,
+              borderWidth: 1,
+              borderColor: '#BFDBFE',
+            }}>
+            <View style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 8,
+            }}>
+              <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: '#1D4ED8' }}>
+                Activity {index + 1}
+              </Text>
+              <TouchableOpacity onPress={() => removeActivity(index)}>
+                <Trash2 size={15} color="#DC2626" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Activity Type */}
+            <Text style={{ fontSize: 10, fontFamily: Fonts.medium, color: '#6B7280', marginBottom: 4 }}>
+              ACTIVITY TYPE
+            </Text>
+            <View style={{ marginBottom: 8 }}>
+              {/* Quick-select chips */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                {ACTIVITY_TYPES.map(type => (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => updateActivity(index, 'activity_type', type)}
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 20,
+                      borderWidth: 1,
+                      borderColor: activity.activity_type === type ? '#3B82F6' : '#D1D5DB',
+                      backgroundColor: activity.activity_type === type ? '#3B82F6' : '#fff',
+                    }}>
+                    <Text style={{
+                      fontSize: 10,
+                      fontFamily: Fonts.medium,
+                      color: activity.activity_type === type ? '#fff' : '#374151',
+                    }}>
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {/* Free text input */}
+              <TextInput
+                placeholder="Or type custom activity type..."
+                placeholderTextColor="#9CA3AF"
+                value={activity.activity_type}
+                onChangeText={val => updateActivity(index, 'activity_type', val)}
+                style={{
+                  borderWidth: 1,
+                  borderColor: '#D1D5DB',
+                  borderRadius: 8,
+                  padding: 8,
+                  fontSize: 12,
+                  fontFamily: Fonts.regular,
+                  color: '#111',
+                  backgroundColor: '#fff',
+                }}
+              />
+              {(touched as any)?.planned_activities?.[index]?.activity_type && (errors as any)?.planned_activities?.[index]?.activity_type && (
+                <Text style={{ color: '#EF4444', fontSize: 10, marginTop: 2 }}>
+                  {(errors as any).planned_activities[index].activity_type}
+                </Text>
+              )}
+            </View>
+
+            {/* Activity Location */}
+            <Text style={{ fontSize: 10, fontFamily: Fonts.medium, color: '#6B7280', marginBottom: 4 }}>
+              ACTIVITY LOCATION
+            </Text>
+            <TextInput
+              placeholder="e.g. Delhi HQ, Mumbai Branch..."
+              placeholderTextColor="#9CA3AF"
+              value={activity.activity_location}
+              onChangeText={val => updateActivity(index, 'activity_location', val)}
+              style={{
+                borderWidth: 1,
+                borderColor: '#D1D5DB',
+                borderRadius: 8,
+                padding: 8,
+                fontSize: 12,
+                fontFamily: Fonts.regular,
+                color: '#111',
+                backgroundColor: '#fff',
+              }}
+            />
+            {(touched as any)?.planned_activities?.[index]?.activity_location && (errors as any)?.planned_activities?.[index]?.activity_location && (
+              <Text style={{ color: '#EF4444', fontSize: 10, marginTop: 2 }}>
+                {(errors as any).planned_activities[index].activity_location}
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
+
+    </Animated.ScrollView>
   );
 };
 

@@ -1,14 +1,22 @@
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  requestPermission,
+  getToken,
+  onTokenRefresh,
+  AuthorizationStatus,
+} from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import { Platform } from 'react-native';
+
+const firebaseMessaging = getMessaging();
 
 export async function requestFCMPermission(): Promise<boolean> {
   try {
     if (Platform.OS === 'ios') {
-      const authStatus = await messaging().requestPermission();
+      const authStatus = await requestPermission(firebaseMessaging);
       return (
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL
       );
     }
     return true;
@@ -25,7 +33,7 @@ export async function getFcmToken(): Promise<string | null> {
       console.log('FCM permission not granted');
       return null;
     }
-    const token = await messaging().getToken();
+    const token = await getToken(firebaseMessaging);
     return token;
   } catch (error) {
     console.log('FCM token retrieval error:', error);
@@ -34,7 +42,7 @@ export async function getFcmToken(): Promise<string | null> {
 }
 
 export function onFcmTokenRefresh(callback: (token: string) => void) {
-  return messaging().onTokenRefresh(callback);
+  return onTokenRefresh(firebaseMessaging, callback);
 }
 
 export async function createNotificationChannel() {

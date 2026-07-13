@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -29,10 +30,8 @@ import {
 import Toast from 'react-native-toast-message';
 import {
   Camera,
-  MapPin,
-  MapPinPlus,
-  Navigation,
-  PlayCircle,
+  FileCheck,
+  Layers,
 } from 'lucide-react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
@@ -44,10 +43,11 @@ type NavigationProp = NativeStackNavigationProp<
   'ActivityCheckInScreen'
 >;
 
-const LOCATION_TYPES = [
+const ACTIVITY_TYPES = [
+  {label: 'Store Inauguration', value: 'Store Inauguration'},
+  {label: 'Distributor Meeting', value: 'Distributor Meeting'},
   {label: 'Office Visit', value: 'Office Visit'},
   {label: 'Miscellaneous Visit', value: 'Miscellaneous Visit'},
-  {label: 'Distributor Point', value: 'Distributor Point'},
   {label: 'Key Account', value: 'Key Account'},
   {label: 'New Store Opening', value: 'New Store Opening'},
   {label: 'New Distributor Opening', value: 'New Distributor Opening'},
@@ -58,7 +58,11 @@ const TYPES_WITH_TEXT_INPUT = [
   'Miscellaneous Visit',
   'Key Account',
 ];
+
+type CheckInMode = 'activity';
+
 const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
+  // ── State ────────────────────────────────────────────────────────────────────
   const [selectedLocation, setSelectedLocation] = useState('');
   const [image, setImage] = useState<{mime: string; data: string} | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,14 +71,16 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
 
   const [locationName, setLocationName] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
+  const [activityTypeSearch, setActivityTypeSearch] = useState('');
   const [locationDetail, setLocationDetail] = useState('');
 
   const showDetailInput = TYPES_WITH_TEXT_INPUT.includes(locationName);
 
-  const filteredLocationTypes = LOCATION_TYPES.filter(item =>
-    item.label.toLowerCase().includes(locationSearch.toLowerCase()),
+  const filteredActivityTypes = ACTIVITY_TYPES.filter(item =>
+    item.label.toLowerCase().includes(activityTypeSearch.toLowerCase()),
   );
 
+  // ── Queries / Mutations ───────────────────────────────────────────────────────
   const {data: locationsData, isLoading: isLocationsLoading} =
     useGetActivityLocationsQuery();
   const [checkIn] = useActivityCheckInMutation();
@@ -85,6 +91,7 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
       value: loc.location_name,
     })) || [];
 
+  // ── Helpers ───────────────────────────────────────────────────────────────────
   const fetchLatestLocation = async () => {
     try {
       const hasPermission = await requestLocationPermission();
@@ -129,8 +136,12 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
   };
 
   const handleConfirmCheckIn = async () => {
+    if (!locationName) {
+      Toast.show({type: 'error', text1: 'Please select an activity type'});
+      return;
+    }
     if (!selectedLocation) {
-      Toast.show({type: 'error', text1: 'Please select a location'});
+      Toast.show({type: 'error', text1: 'Please select an activity location'});
       return;
     }
     if (!image) {
@@ -162,23 +173,20 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
       }).unwrap();
 
       if (res.message.success) {
-        Toast.show({type: 'success', text1: 'Checked in successfully'});
+        Toast.show({type: 'success', text1: 'Activity check-in successful!'});
         setConfirmModalVisible(false);
-
-        if (locationName === 'New Account Opening') {
-          navigation.navigate('PartnersScreen', {index: 1});
-        } else if (locationName === 'Distributor Opening') {
-          navigation.navigate('PartnersScreen', {index: 0});
-        } else {
-          navigation.goBack();
-        }
+        navigation.goBack();
       } else {
         Alert.alert('Check-In Failed', res.message.message);
       }
     } catch (error: any) {
+      const errMsg =
+        error?.data?.message?.message ||
+        error?.data?.message ||
+        'Failed to check in';
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to check in',
+        text1: errMsg,
       });
     } finally {
       setIsSubmitting(false);
@@ -192,40 +200,53 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
         title="Activity Check-In"
         navigation={() => navigation.goBack()}
       />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{flex: 1}}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
+
+          {/* ── Info Banner ── */}
+          <View style={styles.infoBanner}>
+            <Layers size={16} color="#3B82F6" />
+            <Text style={styles.infoBannerText}>
+              Check into a non-store activity location. Your PJP must be running.
+            </Text>
+          </View>
+
           <View style={styles.form}>
-            {/* Location Name Dropdown */}
+            {/* ── Activity Type Dropdown ── */}
             <ReusableDropdown
               label="Activity Type"
               field="value"
               value={locationName}
-              data={filteredLocationTypes}
+              data={filteredActivityTypes}
               onChange={(item: any) => {
                 setLocationName(item);
               }}
-              searchText={locationSearch}
-              setSearchText={setLocationSearch}
+              searchText={activityTypeSearch}
+              setSearchText={setActivityTypeSearch}
               marginBottom={0}
             />
-            {/* Conditional Detail Text Input */}
+
+            {/* Conditional Remarks Input */}
             {showDetailInput && (
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Remarks For {locationName}</Text>
+                <Text style={styles.label}>Remarks for {locationName}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder={`Enter remarks`}
+                  placeholder="Enter remarks"
                   placeholderTextColor={Colors.gray}
                   value={locationDetail}
                   onChangeText={setLocationDetail}
                 />
               </View>
             )}
+
+            {/* ── Activity Location Dropdown ── */}
             <View style={styles.inputGroup}>
               <ReusableDropdown
-                label="Select Activity Location"
+                label="Activity Location"
                 placeholder="Choose location"
                 data={locations}
                 value={selectedLocation}
@@ -241,10 +262,11 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
               />
             </View>
 
+            {/* ── Selfie ── */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Required Selfie</Text>
               <Text style={styles.sectionSubtitle}>
-                Please take a photo at the location
+                Please take a photo at the activity location
               </Text>
 
               <TouchableOpacity
@@ -266,20 +288,33 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
           </View>
         </ScrollView>
 
+        {/* ── Confirm Modal ── */}
         <Modal visible={confirmModalVisible} transparent animationType="fade">
           <View style={modalStyles.overlay}>
             <View style={modalStyles.container}>
-              <Text style={modalStyles.title}>Confirm Activity</Text>
+              <Text style={modalStyles.title}>Confirm Activity Check-In</Text>
               <Text style={modalStyles.subtitle}>
-                Please verify your activity location
+                Please verify your activity details
               </Text>
 
               <View style={modalStyles.divider} />
 
               <View style={modalStyles.row}>
+                <Text style={modalStyles.label}>Activity Type</Text>
+                <Text style={modalStyles.value}>{locationName}</Text>
+              </View>
+
+              <View style={modalStyles.row}>
                 <Text style={modalStyles.label}>Activity Location</Text>
                 <Text style={modalStyles.value}>{selectedLocation}</Text>
               </View>
+
+              {locationDetail ? (
+                <View style={modalStyles.row}>
+                  <Text style={modalStyles.label}>Remarks</Text>
+                  <Text style={modalStyles.value}>{locationDetail}</Text>
+                </View>
+              ) : null}
 
               <View style={modalStyles.row}>
                 <Text style={modalStyles.label}>Current Location</Text>
@@ -312,6 +347,7 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
           </View>
         </Modal>
 
+        {/* ── Footer Submit ── */}
         <View style={styles.footer}>
           <TouchableOpacity
             style={[
@@ -324,12 +360,12 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
               <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <PlayCircle
+                <FileCheck
                   size={20}
                   color={Colors.white}
                   style={{marginRight: 8}}
                 />
-                <Text style={styles.submitText}>Confirm Check-In</Text>
+                <Text style={styles.submitText}>Confirm Activity Check-In</Text>
               </>
             )}
           </TouchableOpacity>
@@ -349,16 +385,33 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
   },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  infoBannerText: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    color: '#1D4ED8',
+    lineHeight: 18,
+  },
   form: {
-    gap: 24,
+    gap: 20,
   },
-  inputGroup: {
-    // marginTop: 10,
-  },
+  inputGroup: {},
   label: {
     fontFamily: Fonts.medium,
     fontSize: Size.xs,
     color: '#374151',
+    marginBottom: 4,
   },
   input: {
     backgroundColor: Colors.white,
@@ -369,7 +422,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: Size.sm,
     color: Colors.darkButton,
-    marginBottom: 0,
   },
   section: {
     alignItems: 'center',
@@ -453,7 +505,7 @@ const modalStyles = StyleSheet.create({
     shadowRadius: 12,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#111827',
     textAlign: 'center',

@@ -51,15 +51,33 @@ export const storeSchema = Yup.object().shape({
   created_by_employee_designation: Yup.string().nullable(),
 });
 
-export const dailyPjpSchema = Yup.object().shape({
-  date: Yup.string().required('Date is required'),
-  employee: Yup.string().optional(),
-  stores: Yup.array().of(
-    Yup.object().shape({
-      store: Yup.string().required('Store is required'),
-    }),
-  ),
+export const plannedActivityItemSchema = Yup.object().shape({
+  activity_type: Yup.string().required('Activity type is required'),
+  activity_location: Yup.string().required('Activity location is required'),
 });
+
+export const dailyPjpSchema = Yup.object()
+  .shape({
+    date: Yup.string().required('Date is required'),
+    employee: Yup.string().optional(),
+    stores: Yup.array().of(
+      Yup.object().shape({
+        store: Yup.string().required('Store is required'),
+      }),
+    ),
+    planned_activities: Yup.array().of(plannedActivityItemSchema),
+  })
+  .test(
+    'stores-or-activities',
+    'At least one store or one planned activity is required.',
+    function (values) {
+      const hasStores = (values.stores ?? []).some(s => (s as any).store?.trim());
+      const hasActivities = (values.planned_activities ?? []).some(
+        (a: any) => a.activity_type?.trim() || a.activity_location?.trim(),
+      );
+      return hasStores || hasActivities;
+    },
+  );
 
 export const checkInSchema = Yup.object().shape({
   // date: Yup.string().required('Date is required'),

@@ -20,14 +20,13 @@ import { dailyPjpSchema } from '../../../types/schema';
 import { useGetEmployeeQuery } from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
-  useGetDailyPjpByIdQuery,
+  useGetPjpDailyStoresForEditQuery,
   useLazyGetDailyPjpListQuery,
   useUpdateDailyPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 import { useAppSelector } from '../../../store/hook';
-import { PjpDailyStore } from '../../../types/baseType';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { uniqueByValue } from '../../../utils/utils';
@@ -55,15 +54,20 @@ const getInitial = () => ({
   date: getLocalDateString(),
   employee: '',
   stores: [{ store: '' }],
+  planned_activities: [] as { activity_type: string; activity_location: string }[],
 });
 
 // helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
-const mapPjpDetailToForm = (detail: PjpDailyStore): any => {
+const mapPjpDetailToForm = (detail: any): any => {
   return {
     date: detail.date,
     employee: detail.employee,
-    stores: detail.stores.map(s => ({
-      store: s.store_id, // or s.store if API expects that
+    stores: (detail.stores ?? []).map((s: any) => ({
+      store: s.store ?? s.store_id,
+    })),
+    planned_activities: (detail.planned_activities ?? []).map((a: any) => ({
+      activity_type: a.activity_type ?? '',
+      activity_location: a.activity_location ?? '',
     })),
   };
 };
@@ -119,10 +123,12 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
     name: employeeSearch,
   });
 
-  const { data: pjpDetails } = useGetDailyPjpByIdQuery(id, {
-    skip: id === null || id === undefined,
-  });
-  const pjpStatus = pjpDetails?.message?.data?.running_status;
+  // Use the edit endpoint to fetch PJP data including planned_activities
+  const { data: pjpDetails } = useGetPjpDailyStoresForEditQuery(
+    { document_name: id! },
+    { skip: id === null || id === undefined },
+  );
+  const pjpStatus = (pjpDetails as any)?.message?.data?.running_status;
   const isRunning = pjpStatus === 'Running';
 
   const [addDailyPjp] = useAddDailyPjpMutation();
@@ -358,7 +364,9 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         <TouchableOpacity
           style={[styles.submitBtn, loading && { opacity: 0.7 }]}
           onPress={() => {
-            if (values.stores.length < 15) setShowMinStoreModal(true);
+            // Only show min-stores warning when there are no planned activities
+            const hasActivities = (values.planned_activities ?? []).length > 0;
+            if (!hasActivities && values.stores.length < 15) setShowMinStoreModal(true);
             else handleSubmit();
           }}
           disabled={loading}>

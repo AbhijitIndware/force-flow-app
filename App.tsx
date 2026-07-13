@@ -12,15 +12,29 @@ import { PaperProvider } from 'react-native-paper';
 import DisclaimerModal from './DisclaimerModal';
 import { useNetworkStatus } from './src/hooks/useNetworkStatus';
 import { SlowNetworkBanner } from './src/components/ui-lib/slow-network-banner';
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  setBackgroundMessageHandler,
+  getInitialNotification,
+  onNotificationOpenedApp,
+  onMessage,
+} from '@react-native-firebase/messaging';
 import notifee, { EventType } from '@notifee/react-native';
 import { displayNotification, createNotificationChannel, requestFCMPermission } from './src/utils/fcm';
 
+const firebaseMessaging = getMessaging();
+
 // Register background message handler (fires when app is in background/killed)
-messaging().setBackgroundMessageHandler(async remoteMessage => {
+setBackgroundMessageHandler(firebaseMessaging, async remoteMessage => {
   const title = (remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification') as string;
   const body = (remoteMessage.notification?.body || remoteMessage.data?.body || '') as string;
   await displayNotification(title, body, remoteMessage.data);
+});
+
+// Register Notifee background event handler
+notifee.onBackgroundEvent(async ({ type, detail }) => {
+  const { notification, pressAction } = detail;
+  console.log('Notifee background event:', type, notification?.data);
 });
 
 function App(): React.JSX.Element {
@@ -29,8 +43,7 @@ function App(): React.JSX.Element {
     createNotificationChannel();
 
     // Handle notification tap when app was opened from a killed state
-    messaging()
-      .getInitialNotification()
+    getInitialNotification(firebaseMessaging)
       .then(remoteMessage => {
         if (remoteMessage) {
           console.log('FCM opened from quit state:', remoteMessage.data);
@@ -38,14 +51,14 @@ function App(): React.JSX.Element {
       });
 
     // Handle notification tap when app is in background (FCM)
-    const unsubscribeOnOpened = messaging().onNotificationOpenedApp(
+    const unsubscribeOnOpened = onNotificationOpenedApp(firebaseMessaging,
       remoteMessage => {
         console.log('FCM opened from background:', remoteMessage.data);
       },
     );
 
     // Display foreground FCM messages as local notifications
-    const unsubscribeOnMessage = messaging().onMessage(async remoteMessage => {
+    const unsubscribeOnMessage = onMessage(firebaseMessaging, async remoteMessage => {
       const title = (remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification') as string;
       const body = (remoteMessage.notification?.body || remoteMessage.data?.body || '') as string;
       await displayNotification(title, body, remoteMessage.data);
@@ -53,8 +66,8 @@ function App(): React.JSX.Element {
 
     // Handle Notifee notification press (foreground)
     const unsubscribeNotifee = notifee.onForegroundEvent(({ type, detail }) => {
-      if (type === EventType.PRESS && detail.notification?.data) {
-        console.log('Notifee pressed:', detail.notification.data);
+      if ((type === EventType.PRESS || type === EventType.ACTION_PRESS) && detail.notification) {
+        console.log('Notifee foreground event:', type, detail.notification.data);
       }
     });
 
