@@ -95,6 +95,9 @@ import {
   RGetPendingLateApprovals,
   IApproveRejectLateCheckin,
   RApproveRejectLateCheckin,
+  RPjpCreateResponse,
+  RPjpUpdateResponse,
+  RPjpDailyStoresForEdit,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -127,6 +130,14 @@ export const baseApi = createApi({
         method: 'GET',
       }),
       providesTags: ['PJP', 'Activity'],
+    }),
+    fetchPjpNextAction: builder.mutation<RGetPjpNextAction, { employee: string; date: string }>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp_workflow.get_pjp_next_action',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PJP', 'Activity'],
     }),
     //Daily PJP Activity Check-in ---
     pjpInitialize: builder.mutation<RPjpInitialize, void>({
@@ -349,14 +360,15 @@ export const baseApi = createApi({
       }),
       providesTags: ['PJP'],
     }),
-    getLastPjpStores: builder.query<RLastPjpStores, void>({
-      query: () => ({
+    getLastPjpStores: builder.query<RLastPjpStores, { employee?: string }>({
+      query: ({ employee }) => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.get_last_pjp_stores',
         method: 'GET',
+        params: employee ? { employee } : undefined,
       }),
       providesTags: ['PJP'],
     }),
-    addDailyPjp: builder.mutation<any, IAddPjpPayload>({
+    addDailyPjp: builder.mutation<RPjpCreateResponse, IAddPjpPayload>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.create_pjp_daily_stores',
         method: 'POST',
@@ -364,13 +376,21 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
-    updateDailyPjp: builder.mutation<any, IUpdatePjpPayload>({
+    updateDailyPjp: builder.mutation<RPjpUpdateResponse, IUpdatePjpPayload>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.modify_pjp_daily_stores',
         method: 'PUT',
         body,
       }),
       invalidatesTags: ['PJP'],
+    }),
+    getPjpDailyStoresForEdit: builder.query<RPjpDailyStoresForEdit, { document_name: string }>({
+      query: ({ document_name }) => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.get_pjp_daily_stores_for_edit',
+        method: 'GET',
+        params: { document_name },
+      }),
+      providesTags: ['PJP'],
     }),
     updatePjpRoute: builder.mutation<RUpdatePjpRoute, IUpdatePjpRoutePayload>({
       query: body => ({
@@ -1639,6 +1659,7 @@ export const {
   // PJP Workflow
   useGetPjpNextActionQuery,
   useLazyGetPjpNextActionQuery,
+  useFetchPjpNextActionMutation,
   //Daily PJP Activity Check-in ---
   usePjpInitializeMutation,
   useLocationVerificationMutation,
@@ -1669,6 +1690,8 @@ export const {
   useGetLastPjpStoresQuery,
   useUpdateDailyPjpMutation,
   useAddDailyPjpMutation,
+  useGetPjpDailyStoresForEditQuery,
+  useLazyGetPjpDailyStoresForEditQuery,
   useGetProdCountQuery,
   useUpdatePjpRouteMutation,
   useLazyGetLastPjpStoresQuery,

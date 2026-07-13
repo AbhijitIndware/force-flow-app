@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "666580716416",
+    "project_id": "softsens-3d299",
+    "storage_bucket": "softsens-3d299.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:666580716416:android:e7710ff8c8bd5bc0ec8f65",
+        "android_client_info": {
+          "package_name": "com.forceflow"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHerCkE47sOlN4SzFavim35J_TpYB8_2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

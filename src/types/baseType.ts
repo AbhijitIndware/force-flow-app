@@ -739,11 +739,17 @@ export interface Warehouse {
   company: string;
 }
 
+export type PlannedActivity = {
+  activity_type: string;
+  activity_location: string;
+};
+
 export type IAddPjpPayload = {
   data: {
     date: string;
     employee: string;
     stores: StoreEntry[];
+    planned_activities?: PlannedActivity[];
   };
 };
 
@@ -753,6 +759,7 @@ export type IUpdatePjpPayload = {
     employee: string;
     stores: StoreEntry[];
     document_name: string;
+    planned_activities?: PlannedActivity[];
   };
 };
 
@@ -772,6 +779,55 @@ export type RUpdatePjpRoute = {
     updated_fields: string[];
   };
 };
+
+export interface RPjpCreateResponse {
+  message: {
+    status: string;
+    message: string;
+    document_name: string;
+  };
+}
+
+export interface RPjpUpdateResponse {
+  message: {
+    status: string;
+    message: string;
+    document_name: string;
+    updated_fields: string[];
+  };
+}
+
+export interface RPjpDailyStoresForEdit {
+  message: {
+    status: string;
+    data: {
+      document_name: string;
+      date: string;
+      employee: string;
+      total_stores: number;
+      total_activities: number;
+      stores: {
+        store: string;
+        store_name: string;
+        store_owner_name: string | null;
+        store_category: string;
+        city: string;
+        state: string;
+        pin_code: string;
+        created_by_employee: string;
+        created_by_employee_name: string;
+        warehouse_id: string;
+      }[];
+      planned_activities: {
+        activity_type: string;
+        activity_location: string;
+      }[];
+      creation: string;
+      modified: string;
+      modified_by: string;
+    };
+  };
+}
 
 export interface RUpdateProdCount {
   message: {
@@ -2270,13 +2326,14 @@ export interface RActivityCheckIn {
   message: {
     success: boolean;
     message: string;
-    /** Present on success, absent on geofence failure */
     data?: {
       log_id: string;
       activity_location: string;
+      activity_type: string;
       employee: string;
       image_url: string;
       check_in_time: string;
+      remarks: string;
     };
   };
 }
@@ -2371,6 +2428,7 @@ export interface LateCheckInInfo {
   message: string;
 }
 export interface pjpWorkflowDataType {
+  date: string;
   current_state: PjpWorkflowState;
   allowed_actions: PjpAllowedAction[];
   message: string;
@@ -2385,6 +2443,7 @@ export type PjpDataResponse = {
     name: string;
     running_status: string;
     start_location: string | null;
+    end_location: string | null;
     travel_distance: number;
   };
   stores: {
@@ -2400,6 +2459,10 @@ export type PjpDataResponse = {
     activity_marked: number;
   }[];
   activities: any[];
+  planned_activities: {
+    activity_type: string;
+    activity_location: string;
+  }[];
   non_store_activities: any[];
 };
 
