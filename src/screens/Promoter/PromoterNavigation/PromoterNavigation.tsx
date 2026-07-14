@@ -14,6 +14,7 @@ import CheckingScreen from '../CheckingScreen/CheckingScreen';
 import CheckOutScreen from '../CheckingScreen/CheckOutScreen';
 import AddSalesScreen from '../Sales/AddSales';
 import PromoterSaleDetailScreen from '../Sales/SaleDetailScreen';
+import NotificationListScreen from '../../NotificationListScreen';
 
 const Stack = createNativeStackNavigator<PromoterAppStackParamList>();
 
@@ -83,6 +84,11 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="AddSalesScreen"
         component={AddSalesScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="NotificationListScreen"
+        component={NotificationListScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

@@ -151,7 +151,9 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
         />
       </View>
       <View style={styles.alignment}>
-        <TouchableOpacity style={styles.notification}>
+        <TouchableOpacity
+          style={styles.notification}
+          onPress={() => props.navigation.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
             <Text style={styles.notificationCount}>5</Text>
           </View>

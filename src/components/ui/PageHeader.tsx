@@ -71,7 +71,9 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
           <Feather name="home" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.notification}>
+        <TouchableOpacity
+          style={styles.notification}
+          onPress={() => navigations.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
             <Text style={styles.notificationCount}>0</Text>
           </View>

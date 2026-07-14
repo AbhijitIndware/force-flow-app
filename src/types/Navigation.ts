@@ -22,6 +22,7 @@ export type PromoterAppStackParamList = {
   DownloadScreen: undefined;
   ProductFeedbackScreen: undefined;
   ProfileScreen: undefined;
+  NotificationListScreen: undefined;
 };
 export type DistributorAppStackParamList = {
   DistributorHome: undefined;
@@ -31,6 +32,7 @@ export type DistributorAppStackParamList = {
   DistributorProfileScreen: undefined;
   PurchaseOrderDetailScreen: {order_id?: string};
   DeliveryNoteDetailScreen: {id: string};
+  NotificationListScreen: undefined;
 };
 export type SoAppStackParamList = {
   Home: undefined;
@@ -49,6 +51,7 @@ export type SoAppStackParamList = {
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;
   MarkActivityScreen: undefined;
+  NotificationListScreen: undefined;
   SaleDetailScreen: {id: string};
   PurchaseDetailScreen: {id: string};
   PjpDetailScreen: {details: PjpDailyStore};

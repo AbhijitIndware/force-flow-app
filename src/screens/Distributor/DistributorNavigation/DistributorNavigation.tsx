@@ -8,6 +8,7 @@ import DeliveryNotesScreen from '../DeliveryNote/Deliverynotesscreen';
 import DistributorProfileScreen from '../Profile/Distributorprofilescreen';
 import PurchaseOrderDetailScreen from '../Purchase/PurchaseOrderDetailScreen';
 import DeliveryNoteDetailScreen from '../DeliveryNote/DeliveryNoteDetailScreen';
+import NotificationListScreen from '../../NotificationListScreen';
 
 const Stack = createNativeStackNavigator<DistributorAppStackParamList>();
 
@@ -47,6 +48,11 @@ const DistributorNavigation = () => {
       <Stack.Screen
         name="DistributorProfileScreen"
         component={DistributorProfileScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NotificationListScreen"
+        component={NotificationListScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
