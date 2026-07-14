@@ -42,6 +42,7 @@ interface Props {
   error?: string;
   onChange: (val: string) => void;
   navigation: any;
+  disabled?: boolean;
 }
 
 const PAGE_SIZE = '20';
@@ -62,6 +63,7 @@ const StoreDropdownField = ({
   error,
   onChange,
   navigation,
+  disabled = false,
 }: Props) => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -182,6 +184,7 @@ const StoreDropdownField = ({
         showAddButton
         addButtonText="Add New Store"
         onAddPress={handleAddStore}
+        disabled={disabled}
       />
     </View>
   );

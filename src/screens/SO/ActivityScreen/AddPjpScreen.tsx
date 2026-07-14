@@ -131,6 +131,9 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   const pjpStatus = (pjpDetails as any)?.message?.data?.running_status;
   const isRunning = pjpStatus === 'Running';
 
+  const initialStoreCount = (pjpDetails as any)?.message?.data?.stores?.length ?? 0;
+  const initialActivityCount = (pjpDetails as any)?.message?.data?.planned_activities?.length ?? 0;
+
   const [addDailyPjp] = useAddDailyPjpMutation();
   const [updateDailyPjp] = useUpdateDailyPjpMutation();
 
@@ -339,6 +342,8 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
         isPjpStarted={isRunning}
+        initialStoreCount={initialStoreCount}
+        initialActivityCount={initialActivityCount}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}

@@ -57,6 +57,8 @@ interface Props {
   onLoadMoreEmployees: () => void;
   loadingMoreEmployees: boolean;
   isPjpStarted: boolean;
+  initialStoreCount?: number;
+  initialActivityCount?: number;
 }
 
 const ACTIVITY_TYPES = [
@@ -74,6 +76,8 @@ const AddPjpForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   isPjpStarted,
+  initialStoreCount = 0,
+  initialActivityCount = 0,
 }) => {
   const navigation = useNavigation<NavigationProp>();
 
@@ -294,9 +298,10 @@ const AddPjpForm: React.FC<Props> = ({
               setFieldValue('stores', updatedStores);
             }}
             navigation={navigation}
+            disabled={index < initialStoreCount}
           />
 
-          {values.stores.length > 1 && index !== 0 && !(isPjpStarted && storeItem.store) && (
+          {values.stores.length > 1 && index !== 0 && index >= initialStoreCount && !(isPjpStarted && storeItem.store) && (
             <TouchableOpacity
               onPress={() => {
                 const updated = [...values.stores];
@@ -409,9 +414,11 @@ const AddPjpForm: React.FC<Props> = ({
               <Text style={{ fontSize: 11, fontFamily: Fonts.semiBold, color: '#1D4ED8' }}>
                 Activity {index + 1}
               </Text>
-              <TouchableOpacity onPress={() => removeActivity(index)}>
-                <Trash2 size={15} color="#DC2626" />
-              </TouchableOpacity>
+              {index >= initialActivityCount && (
+                <TouchableOpacity onPress={() => removeActivity(index)}>
+                  <Trash2 size={15} color="#DC2626" />
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={{ flexDirection: 'row', gap: 5 }}>
@@ -430,6 +437,7 @@ const AddPjpForm: React.FC<Props> = ({
                   }
                   marginBottom={0}
                   textSize={12}
+                  disabled={index < initialActivityCount}
                   error={
                     (touched as any)?.planned_activities?.[index]?.activity_type &&
                       (errors as any)?.planned_activities?.[index]?.activity_type
@@ -457,6 +465,7 @@ const AddPjpForm: React.FC<Props> = ({
                   onAddPress={() => navigation.navigate('AddActivityLocationScreen')}
                   marginBottom={0}
                   textSize={12}
+                  disabled={index < initialActivityCount}
                   error={
                     (touched as any)?.planned_activities?.[index]?.activity_location &&
                       (errors as any)?.planned_activities?.[index]?.activity_location
