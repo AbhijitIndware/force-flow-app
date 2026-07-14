@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -16,12 +16,12 @@ import {
   TextInput,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
-  useGetActivityLocationsQuery,
   useActivityCheckInMutation,
+  useGetPjpNextActionQuery,
 } from '../../../features/base/base-api';
 import {
   getCurrentLocation,
@@ -33,63 +33,64 @@ import {
   FileCheck,
   Layers,
 } from 'lucide-react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
-import {launchCamera} from 'react-native-image-picker';
+import { launchCamera } from 'react-native-image-picker';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'ActivityCheckInScreen'
 >;
-
-const ACTIVITY_TYPES = [
-  {label: 'Store Inauguration', value: 'Store Inauguration'},
-  {label: 'Distributor Meeting', value: 'Distributor Meeting'},
-  {label: 'Office Visit', value: 'Office Visit'},
-  {label: 'Miscellaneous Visit', value: 'Miscellaneous Visit'},
-  {label: 'Key Account', value: 'Key Account'},
-  {label: 'New Store Opening', value: 'New Store Opening'},
-  {label: 'New Distributor Opening', value: 'New Distributor Opening'},
-];
-
-const TYPES_WITH_TEXT_INPUT = [
-  'Office Visit',
-  'Miscellaneous Visit',
-  'Key Account',
-];
-
 type CheckInMode = 'activity';
 
-const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
+const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) => {
   // ── State ────────────────────────────────────────────────────────────────────
   const [selectedLocation, setSelectedLocation] = useState('');
-  const [image, setImage] = useState<{mime: string; data: string} | null>(null);
+  const [image, setImage] = useState<{ mime: string; data: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('');
 
   const [locationName, setLocationName] = useState('');
-  const [locationSearch, setLocationSearch] = useState('');
   const [activityTypeSearch, setActivityTypeSearch] = useState('');
   const [locationDetail, setLocationDetail] = useState('');
 
-  const showDetailInput = TYPES_WITH_TEXT_INPUT.includes(locationName);
+  // ── Queries / Mutations ───────────────────────────────────────────────────────
+  const [checkIn] = useActivityCheckInMutation();
+  const { data: pjpNextActionData } = useGetPjpNextActionQuery();
 
-  const filteredActivityTypes = ACTIVITY_TYPES.filter(item =>
-    item.label.toLowerCase().includes(activityTypeSearch.toLowerCase()),
+  // ── Derived data ──────────────────────────────────────────────────────────────
+  const plannedActivities =
+    pjpNextActionData?.message?.data?.pjp_data?.planned_activities ?? [];
+  const hasPlannedActivities = plannedActivities.length > 0;
+
+  const plannedActivityOptions = React.useMemo(
+    () =>
+      plannedActivities.map(pa => ({
+        label: `${pa.activity_type} — ${pa.activity_location}`,
+        value: JSON.stringify({ type: pa.activity_type, location: pa.activity_location }),
+      })),
+    [plannedActivities],
   );
 
-  // ── Queries / Mutations ───────────────────────────────────────────────────────
-  const {data: locationsData, isLoading: isLocationsLoading} =
-    useGetActivityLocationsQuery();
-  const [checkIn] = useActivityCheckInMutation();
+  const plannedActivityValue = React.useMemo(() => {
+    if (!hasPlannedActivities || !locationName) return '';
+    const found = plannedActivityOptions.find(o => {
+      try {
+        return JSON.parse(o.value).type === locationName;
+      } catch {
+        return false;
+      }
+    });
+    return found?.value || '';
+  }, [locationName, plannedActivityOptions, hasPlannedActivities]);
 
-  const locations =
-    locationsData?.message?.data?.map(loc => ({
-      label: `${loc.location_name} — Created by ${loc.employee_name}`,
-      value: loc.location_name,
-    })) || [];
+  const filteredOptions = hasPlannedActivities
+    ? plannedActivityOptions.filter(item =>
+      item.label.toLowerCase().includes(activityTypeSearch.toLowerCase()),
+    )
+    : [];
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
   const fetchLatestLocation = async () => {
@@ -136,16 +137,12 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
   };
 
   const handleConfirmCheckIn = async () => {
-    if (!locationName) {
-      Toast.show({type: 'error', text1: 'Please select an activity type'});
-      return;
-    }
-    if (!selectedLocation) {
-      Toast.show({type: 'error', text1: 'Please select an activity location'});
+    if (!locationName || !selectedLocation) {
+      Toast.show({ type: 'error', text1: 'Please select a planned activity' });
       return;
     }
     if (!image) {
-      Toast.show({type: 'error', text1: 'Please take a selfie'});
+      Toast.show({ type: 'error', text1: 'Please take a selfie' });
       return;
     }
     setConfirmModalVisible(true);
@@ -160,28 +157,27 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
       setCurrentLocation(locationStr);
 
       if (!locationStr) {
-        Toast.show({type: 'error', text1: 'Unable to fetch location'});
+        Toast.show({ type: 'error', text1: 'Unable to fetch location' });
         return;
       }
 
       const res = await checkIn({
         activity_location: selectedLocation,
-        current_location: locationStr,
-        image: image as {mime: string; data: string},
         activity_type: locationName,
+        current_location: locationStr,
         remarks: locationDetail,
+        image: image as { mime: string; data: string },
       }).unwrap();
 
-      if (res.message.success) {
-        Toast.show({type: 'success', text1: 'Activity check-in successful!'});
+      if (res.success) {
+        Toast.show({ type: 'success', text1: res.message || 'Activity check-in successful!' });
         setConfirmModalVisible(false);
         navigation.goBack();
       } else {
-        Alert.alert('Check-In Failed', res.message.message);
+        Alert.alert('Check-In Failed', res.message);
       }
     } catch (error: any) {
       const errMsg =
-        error?.data?.message?.message ||
         error?.data?.message ||
         'Failed to check in';
       Toast.show({
@@ -203,62 +199,46 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
 
           {/* ── Info Banner ── */}
-          <View style={styles.infoBanner}>
+          {/* <View style={styles.infoBanner}>
             <Layers size={16} color="#3B82F6" />
             <Text style={styles.infoBannerText}>
               Check into a non-store activity location. Your PJP must be running.
             </Text>
-          </View>
+          </View> */}
 
           <View style={styles.form}>
-            {/* ── Activity Type Dropdown ── */}
+            {/* ── Planned Activity Dropdown ── */}
             <ReusableDropdown
-              label="Activity Type"
+              label="Activity"
               field="value"
-              value={locationName}
-              data={filteredActivityTypes}
+              value={plannedActivityValue}
+              data={filteredOptions}
               onChange={(item: any) => {
-                setLocationName(item);
+                try {
+                  const parsed = JSON.parse(item);
+                  setLocationName(parsed.type);
+                  setSelectedLocation(parsed.location);
+                } catch {
+                  setLocationName(item);
+                }
               }}
               searchText={activityTypeSearch}
               setSearchText={setActivityTypeSearch}
               marginBottom={0}
             />
 
-            {/* Conditional Remarks Input */}
-            {showDetailInput && (
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Remarks for {locationName}</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter remarks"
-                  placeholderTextColor={Colors.gray}
-                  value={locationDetail}
-                  onChangeText={setLocationDetail}
-                />
-              </View>
-            )}
-
-            {/* ── Activity Location Dropdown ── */}
             <View style={styles.inputGroup}>
-              <ReusableDropdown
-                label="Activity Location"
-                placeholder="Choose location"
-                data={locations}
-                value={selectedLocation}
-                onChange={setSelectedLocation}
-                field="value"
-                showAddButton={true}
-                addButtonText="Register New Location"
-                onAddPress={() =>
-                  navigation.navigate('AddActivityLocationScreen')
-                }
-                marginBottom={0}
-                textSize={Size.xs}
+              <Text style={styles.label}>Remarks {locationName ? `for ${locationName}` : ''}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter remarks"
+                placeholderTextColor={Colors.gray}
+                value={locationDetail}
+                onChangeText={setLocationDetail}
               />
             </View>
 
@@ -274,7 +254,7 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
                 onPress={handleTakeSelfie}>
                 {image ? (
                   <Image
-                    source={{uri: `data:${image.mime};base64,${image.data}`}}
+                    source={{ uri: `data:${image.mime};base64,${image.data}` }}
                     style={styles.previewImage}
                   />
                 ) : (
@@ -309,12 +289,12 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
                 <Text style={modalStyles.value}>{selectedLocation}</Text>
               </View>
 
-              {locationDetail ? (
-                <View style={modalStyles.row}>
-                  <Text style={modalStyles.label}>Remarks</Text>
-                  <Text style={modalStyles.value}>{locationDetail}</Text>
-                </View>
-              ) : null}
+              {/* {locationDetail ? ( */}
+              <View style={modalStyles.row}>
+                <Text style={modalStyles.label}>Remarks</Text>
+                <Text style={modalStyles.value}>{locationDetail}</Text>
+              </View>
+              {/* ) : null} */}
 
               <View style={modalStyles.row}>
                 <Text style={modalStyles.label}>Current Location</Text>
@@ -352,10 +332,10 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
           <TouchableOpacity
             style={[
               styles.submitBtn,
-              (isSubmitting || isLocationsLoading) && {opacity: 0.7},
+              isSubmitting && { opacity: 0.7 },
             ]}
             onPress={handleConfirmCheckIn}
-            disabled={isSubmitting || isLocationsLoading}>
+            disabled={isSubmitting}>
             {isSubmitting ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
@@ -363,7 +343,7 @@ const ActivityCheckInScreen = ({navigation}: {navigation: NavigationProp}) => {
                 <FileCheck
                   size={20}
                   color={Colors.white}
-                  style={{marginRight: 8}}
+                  style={{ marginRight: 8 }}
                 />
                 <Text style={styles.submitText}>Confirm Activity Check-In</Text>
               </>
@@ -406,23 +386,7 @@ const styles = StyleSheet.create({
   form: {
     gap: 20,
   },
-  inputGroup: {},
-  label: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.xs,
-    color: '#374151',
-    marginBottom: 4,
-  },
-  input: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 12,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-  },
+
   section: {
     alignItems: 'center',
     paddingVertical: 10,
@@ -483,6 +447,22 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
     color: Colors.white,
+  }, inputGroup: {},
+  label: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: '#374151',
+    marginBottom: 4,
+  },
+  input: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.inputBorder,
+    borderRadius: 8,
+    padding: 8,
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
   },
 });
 
@@ -500,7 +480,7 @@ const modalStyles = StyleSheet.create({
     padding: 20,
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
   },
@@ -566,4 +546,5 @@ const modalStyles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '700',
   },
+
 });
