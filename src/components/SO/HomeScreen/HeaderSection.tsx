@@ -263,7 +263,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                       styles.checkinButtonText,
                       isDisabled && styles.checkinButtonTextDisabled,
                     ]}>
-                    Check In
+                    Store Check-In
                   </Text>
                   <Ionicons
                     name="chevron-forward-circle-sharp"
@@ -326,7 +326,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   onPress={handleCheckOut}
                   disabled={isLoading}>
                   <Text style={styles.checkinButtonText}>
-                    {isLoading ? 'Checking Out...' : 'Check Out'}
+                    {isLoading ? 'Store Checking Out...' : 'Store Check Out'}
                   </Text>
                   {isLoading ? (
                     <ActivityIndicator size="small" color={Colors.white} />
@@ -470,7 +470,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   disabled={isActivityCheckingOut}>
                   <Text style={styles.checkinButtonText}>
                     {isActivityCheckingOut
-                      ? 'Checking Out...'
+                      ? 'Activity Checking Out...'
                       : 'Activity Check-Out'}
                   </Text>
                   {isActivityCheckingOut ? (

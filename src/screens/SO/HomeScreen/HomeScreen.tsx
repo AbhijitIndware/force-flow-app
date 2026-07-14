@@ -574,7 +574,7 @@ const HomeScreen = ({ navigation }: Props) => {
             onSaveSuccess={() => setTargetModalVisible(false)}
           />
 
-          <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} />
+          {/* <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} /> */}
 
           <QuickLinks navigation={navigation} />
 
