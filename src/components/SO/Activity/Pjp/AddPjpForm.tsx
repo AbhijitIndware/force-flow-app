@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
-  TextInput,
 } from 'react-native';
 import ReusableDatePicker from '../../../ui-lib/reusable-date-picker';
 import { Fonts } from '../../../../constants';
@@ -17,10 +16,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../../types/Navigation';
 import StoreDropdownField from './StoreDropdownField';
 import { useAppSelector } from '../../../../store/hook';
-import { useLazyGetLastPjpStoresQuery } from '../../../../features/base/base-api';
+import {
+  useLazyGetLastPjpStoresQuery,
+  useGetActivityLocationsQuery,
+} from '../../../../features/base/base-api';
 import { Square, CheckSquare, Plus, Trash2 } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { PlannedActivity } from '../../../../types/baseType';
+import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
 
 interface FormValues {
   employee: string;
@@ -57,14 +60,13 @@ interface Props {
 }
 
 const ACTIVITY_TYPES = [
-  'Store Inauguration',
-  'Distributor Meeting',
-  'Office Visit',
-  'Key Account Visit',
-  'New Distributor Opening',
-  'Miscellaneous Visit',
+  { label: 'New Store Inauguration', value: 'New Store Inauguration' },
+  { label: 'Distributor Onboarding', value: 'Distributor Onboarding' },
+  { label: 'Promoter Meet', value: 'Promoter Meet' },
+  { label: 'Team Meeting', value: 'Team Meeting' },
+  { label: 'Work From Home', value: 'Work From Home' },
+  { label: 'Office Visit', value: 'Office Visit' },
 ];
-
 const AddPjpForm: React.FC<Props> = ({
   values,
   errors,
@@ -87,6 +89,19 @@ const AddPjpForm: React.FC<Props> = ({
   const [useLastPjp, setUseLastPjp] = useState(false);
   const [getLastPjpStores, { isFetching: isFetchingLastPjp }] =
     useLazyGetLastPjpStoresQuery();
+
+  const [activityTypeSearches, setActivityTypeSearches] = useState<Record<number, string>>({});
+  const [locationSearches, setLocationSearches] = useState<Record<number, string>>({});
+
+  const { data: locationsData } = useGetActivityLocationsQuery();
+  const locations = React.useMemo(
+    () =>
+      locationsData?.message?.data?.map(loc => ({
+        label: `${loc.location_name} — Created by ${loc.employee_name}`,
+        value: loc.location_name,
+      })) || [],
+    [locationsData],
+  );
 
   const handleToggleLastPjp = async () => {
     const newValue = !useLastPjp;
@@ -159,49 +174,47 @@ const AddPjpForm: React.FC<Props> = ({
       scrollEventThrottle={16}
       contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 100 }}>
 
-      {/* ── Employee Strip ── */}
+      {/* ── Employee + Date Row ── */}
       <View style={{
         flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: Colors.Orangelight + '10',
-        borderWidth: 1,
-        borderColor: Colors.Orangelight + '30',
-        borderRadius: 7,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        marginBottom: 8,
         gap: 10,
+        marginBottom: 8,
       }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 8, color: Colors.Orangelight, fontFamily: Fonts.medium }}>
+          <Text style={{ fontSize: 11, color: Colors.Orangelight, fontFamily: Fonts.medium, marginBottom: 4 }}>
             EMPLOYEE
           </Text>
-          <Text style={{ fontSize: 12, color: '#111', fontFamily: Fonts.medium, marginTop: 1 }}
-            numberOfLines={1}>
-            {employeeName}
-          </Text>
+          <View style={{
+            // flex: 1,
+            flexDirection: 'column',
+            backgroundColor: Colors.Orangelight + '10',
+            borderWidth: 1,
+            borderColor: Colors.Orangelight + '30',
+            borderRadius: 7,
+            paddingHorizontal: 5,
+            paddingVertical: 4,
+          }}>
+            <Text style={{ fontSize: 12, color: '#111', fontFamily: Fonts.medium, marginTop: 1 }}
+              numberOfLines={1}>
+              {employeeName}
+            </Text>
+            <Text style={{ fontSize: 10, color: '#111', fontFamily: Fonts.medium }}>
+              ({employeeId})
+            </Text>
+          </View>
+
         </View>
-
-        <View style={{ width: 1, height: 22, backgroundColor: '#ddd' }} />
-
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ fontSize: 8, color: Colors.Orangelight, fontFamily: Fonts.medium }}>
-            EMP ID
-          </Text>
-          <Text style={{ fontSize: 12, color: '#111', fontFamily: Fonts.medium, marginTop: 1 }}>
-            {employeeId}
-          </Text>
+        <View style={{ flex: 1 }}>
+          <ReusableDatePicker
+            label="Date"
+            value={values.date}
+            onChange={(val: string) => setFieldValue('date', val)}
+            error={touched.date && errors.date}
+            marginBottom={0}
+            textSize={Size.xs}
+          />
         </View>
       </View>
-
-      {/* ── Date Picker ── */}
-      <ReusableDatePicker
-        label="Date"
-        value={values.date}
-        onChange={(val: string) => setFieldValue('date', val)}
-        error={touched.date && errors.date}
-        marginBottom={5}
-      />
 
       {/* ── Use Previous PJP Checkbox ── */}
       <TouchableOpacity
@@ -382,8 +395,8 @@ const AddPjpForm: React.FC<Props> = ({
             style={{
               backgroundColor: '#F0F7FF',
               borderRadius: 10,
-              padding: 12,
-              marginBottom: 10,
+              padding: 8,
+              marginBottom: 5,
               borderWidth: 1,
               borderColor: '#BFDBFE',
             }}>
@@ -391,9 +404,9 @@ const AddPjpForm: React.FC<Props> = ({
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 8,
+              marginBottom: 2,
             }}>
-              <Text style={{ fontSize: 12, fontFamily: Fonts.semiBold, color: '#1D4ED8' }}>
+              <Text style={{ fontSize: 11, fontFamily: Fonts.semiBold, color: '#1D4ED8' }}>
                 Activity {index + 1}
               </Text>
               <TouchableOpacity onPress={() => removeActivity(index)}>
@@ -401,84 +414,58 @@ const AddPjpForm: React.FC<Props> = ({
               </TouchableOpacity>
             </View>
 
-            {/* Activity Type */}
-            <Text style={{ fontSize: 10, fontFamily: Fonts.medium, color: '#6B7280', marginBottom: 4 }}>
-              ACTIVITY TYPE
-            </Text>
-            <View style={{ marginBottom: 8 }}>
-              {/* Quick-select chips */}
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
-                {ACTIVITY_TYPES.map(type => (
-                  <TouchableOpacity
-                    key={type}
-                    onPress={() => updateActivity(index, 'activity_type', type)}
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 20,
-                      borderWidth: 1,
-                      borderColor: activity.activity_type === type ? '#3B82F6' : '#D1D5DB',
-                      backgroundColor: activity.activity_type === type ? '#3B82F6' : '#fff',
-                    }}>
-                    <Text style={{
-                      fontSize: 10,
-                      fontFamily: Fonts.medium,
-                      color: activity.activity_type === type ? '#fff' : '#374151',
-                    }}>
-                      {type}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              {/* Free text input */}
-              <TextInput
-                placeholder="Or type custom activity type..."
-                placeholderTextColor="#9CA3AF"
-                value={activity.activity_type}
-                onChangeText={val => updateActivity(index, 'activity_type', val)}
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#D1D5DB',
-                  borderRadius: 8,
-                  padding: 8,
-                  fontSize: 12,
-                  fontFamily: Fonts.regular,
-                  color: '#111',
-                  backgroundColor: '#fff',
-                }}
-              />
-              {(touched as any)?.planned_activities?.[index]?.activity_type && (errors as any)?.planned_activities?.[index]?.activity_type && (
-                <Text style={{ color: '#EF4444', fontSize: 10, marginTop: 2 }}>
-                  {(errors as any).planned_activities[index].activity_type}
-                </Text>
-              )}
-            </View>
+            <View style={{ flexDirection: 'row', gap: 5 }}>
 
-            {/* Activity Location */}
-            <Text style={{ fontSize: 10, fontFamily: Fonts.medium, color: '#6B7280', marginBottom: 4 }}>
-              ACTIVITY LOCATION
-            </Text>
-            <TextInput
-              placeholder="e.g. Delhi HQ, Mumbai Branch..."
-              placeholderTextColor="#9CA3AF"
-              value={activity.activity_location}
-              onChangeText={val => updateActivity(index, 'activity_location', val)}
-              style={{
-                borderWidth: 1,
-                borderColor: '#D1D5DB',
-                borderRadius: 8,
-                padding: 8,
-                fontSize: 12,
-                fontFamily: Fonts.regular,
-                color: '#111',
-                backgroundColor: '#fff',
-              }}
-            />
-            {(touched as any)?.planned_activities?.[index]?.activity_location && (errors as any)?.planned_activities?.[index]?.activity_location && (
-              <Text style={{ color: '#EF4444', fontSize: 10, marginTop: 2 }}>
-                {(errors as any).planned_activities[index].activity_location}
-              </Text>
-            )}
+              <View style={{ width: '49%' }}>
+                {/* Activity Type */}
+                <ReusableDropdown
+                  label="Activity Type"
+                  field={`planned_activities[${index}].activity_type`}
+                  value={activity.activity_type}
+                  data={ACTIVITY_TYPES}
+                  onChange={(val: string) => updateActivity(index, 'activity_type', val)}
+                  searchText={activityTypeSearches[index] || ''}
+                  setSearchText={(val: string) =>
+                    setActivityTypeSearches(prev => ({ ...prev, [index]: val }))
+                  }
+                  marginBottom={0}
+                  textSize={12}
+                  error={
+                    (touched as any)?.planned_activities?.[index]?.activity_type &&
+                      (errors as any)?.planned_activities?.[index]?.activity_type
+                      ? (errors as any).planned_activities[index].activity_type
+                      : undefined
+                  }
+                />
+              </View>
+
+              <View style={{ width: '49%' }}>
+                {/* Activity Location */}
+                <ReusableDropdown
+                  label="Activity Location"
+                  field={`planned_activities[${index}].activity_location`}
+                  placeholder="Choose location"
+                  data={locations}
+                  value={activity.activity_location}
+                  onChange={(val: string) => updateActivity(index, 'activity_location', val)}
+                  searchText={locationSearches[index] || ''}
+                  setSearchText={(val: string) =>
+                    setLocationSearches(prev => ({ ...prev, [index]: val }))
+                  }
+                  showAddButton={true}
+                  addButtonText="Register New Location"
+                  onAddPress={() => navigation.navigate('AddActivityLocationScreen')}
+                  marginBottom={0}
+                  textSize={12}
+                  error={
+                    (touched as any)?.planned_activities?.[index]?.activity_location &&
+                      (errors as any)?.planned_activities?.[index]?.activity_location
+                      ? (errors as any).planned_activities[index].activity_location
+                      : undefined
+                  }
+                />
+              </View>
+            </View>
           </View>
         ))}
       </View>

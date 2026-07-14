@@ -65,7 +65,6 @@ const DropdownComponent = ({
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  console.log("🚀 ~ DropdownComponent ~ previewImageUrl:", previewImageUrl)
 
   const handleSelect = (item: DropDownItem) => {
     if (item.disabled) return;
@@ -188,7 +187,7 @@ const DropdownComponent = ({
                     isSelected && styles.selectedItem,
                     isDisabled && styles.disabledItem,
                   ]}>
-                  {image ? (
+                  {image && (
                     <TouchableOpacity
                       onPress={() => setPreviewImageUrl(image!)}
                       activeOpacity={0.7}
@@ -199,10 +198,6 @@ const DropdownComponent = ({
                         resizeMode="cover"
                       />
                     </TouchableOpacity>
-                  ) : (
-                    <View style={[styles.storeImage, styles.storeImagePlaceholder]}>
-                      <Text style={styles.storeImagePlaceholderText}>🏪</Text>
-                    </View>
                   )}
                   <TouchableOpacity
                     onPress={() => handleSelect(item)}
@@ -215,7 +210,7 @@ const DropdownComponent = ({
                         isSelected && styles.selectedItemText,
                         isDisabled && styles.disabledItemText,
                       ]}
-                      numberOfLines={1}>
+                      numberOfLines={2}>
                       {item.label}
                     </Text>
                     {/* Visited badge */}
