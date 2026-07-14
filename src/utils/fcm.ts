@@ -57,6 +57,7 @@ export async function displayNotification(
   title: string,
   body: string,
   data?: Record<string, any>,
+  smallIcon?: string,
 ) {
   await createNotificationChannel();
   await notifee.displayNotification({
@@ -66,6 +67,8 @@ export async function displayNotification(
     android: {
       channelId: 'default',
       importance: AndroidImportance.HIGH,
+      smallIcon: smallIcon || 'ic_notification',
+      color: '#FF6B35',
       pressAction: { id: 'default' },
     },
   });

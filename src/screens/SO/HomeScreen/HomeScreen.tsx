@@ -186,7 +186,7 @@ const HomeScreen = ({ navigation }: Props) => {
   // ── Queries ──────────────────────────────────────────────────────────────────
   const { data: pjpWorkflowData, refetch: refetchPjpWorkflow } =
     useGetPjpNextActionQuery(undefined, { refetchOnMountOrArgChange: true });
-  console.log("🚀 ~ HomeScreen ~ pjpWorkflowData:", pjpWorkflowData)
+  // console.log("🚀 ~ HomeScreen ~ pjpWorkflowData:", pjpWorkflowData)
 
   const { data: prodData, refetch: refetchProdCount } = useGetProdCountQuery(
     { date: TODAY },

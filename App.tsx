@@ -25,9 +25,11 @@ import { displayNotification, createNotificationChannel, requestFCMPermission } 
 const firebaseMessaging = getMessaging();
 
 // Register background message handler (fires when app is in background/killed)
+// Firebase auto-displays notifications with 'notification' payload (uses custom icon from manifest)
 setBackgroundMessageHandler(firebaseMessaging, async remoteMessage => {
-  const title = (remoteMessage.notification?.title || remoteMessage.data?.title || 'Notification') as string;
-  const body = (remoteMessage.notification?.body || remoteMessage.data?.body || '') as string;
+  if (remoteMessage.notification) return;
+  const title = (remoteMessage.data?.title || 'Notification') as string;
+  const body = (remoteMessage.data?.body || '') as string;
   await displayNotification(title, body, remoteMessage.data);
 });
 
