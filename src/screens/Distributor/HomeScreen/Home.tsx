@@ -28,6 +28,7 @@ import {
 } from 'lucide-react-native';
 import {useAppSelector} from '../../../store/hook';
 import {getInitials} from '../../../utils/utils';
+import {useGetNotificationListQuery} from '../../../features/fcm/fccm-api';
 // import PurchaseOrdersScreen from '../PurchaseOrders/PurchaseOrdersScreen';
 // import DeliveryNotesScreen from '../DeliveryNotes/DeliveryNotesScreen';
 // import DistributorProfileScreen from '../Profile/DistributorProfileScreen';
@@ -122,6 +123,13 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
+  const {data: notificationData} = useGetNotificationListQuery(
+    {page: 1, page_size: 50},
+    {skip: !employee},
+  );
+  const unreadCount =
+    notificationData?.message?.data?.filter(n => n.is_read === 0).length ?? 0;
+
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
@@ -141,7 +149,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           style={styles.notification}
           onPress={() => props.navigation.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
-            <Text style={styles.notificationCount}>0</Text>
+            <Text style={styles.notificationCount}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
           </View>
           <Feather name="bell" size={20} color={Colors.greyDark} />
         </TouchableOpacity>

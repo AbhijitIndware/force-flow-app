@@ -13,10 +13,55 @@ interface FcmTokenResponse {
   };
 }
 
+export interface NotificationItem {
+  name: string;
+  title: string;
+  body: string;
+  payload: {
+    type: string;
+    status?: string;
+    claim_id?: string;
+    request_id?: string;
+    leave_id?: string;
+  };
+  is_read: number;
+  creation: string;
+}
+
+interface GetNotificationListResponse {
+  message: {
+    status: string;
+    data: NotificationItem[];
+    pagination: {
+      total: number;
+      page: number;
+      page_size: number;
+      total_pages: number;
+      has_more: boolean;
+    };
+  };
+}
+
+interface GetNotificationListParams {
+  page?: number;
+  page_size?: number;
+}
+
+interface MarkNotificationReadPayload {
+  notification_id: string;
+}
+
+interface MarkNotificationReadResponse {
+  message: {
+    status: string;
+    message: string;
+  };
+}
+
 export const fcmApi = createApi({
   reducerPath: 'fcmApi',
   baseQuery: baseQueryWithAuthGuard,
-  tagTypes: ['FCM'],
+  tagTypes: ['FCM', 'Notifications'],
   endpoints: builder => ({
     registerFcmToken: builder.mutation<FcmTokenResponse, FcmTokenPayload>({
       query: body => ({
@@ -26,9 +71,27 @@ export const fcmApi = createApi({
       }),
       invalidatesTags: ['FCM'],
     }),
+    getNotificationList: builder.query<GetNotificationListResponse, GetNotificationListParams>({
+      query: params => ({
+        url: '/method/salesforce_management.mobile_app_apis.push_notifications_api.get_notification_list',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Notifications'],
+    }),
+    markNotificationRead: builder.mutation<MarkNotificationReadResponse, MarkNotificationReadPayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.push_notifications_api.mark_notification_read',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Notifications'],
+    }),
   }),
 });
 
 export const {
   useRegisterFcmTokenMutation,
+  useGetNotificationListQuery,
+  useMarkNotificationReadMutation,
 } = fcmApi;

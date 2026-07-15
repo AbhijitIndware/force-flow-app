@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme, View } from 'react-native';
+import { Platform, StatusBar, useColorScheme, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
@@ -20,7 +20,33 @@ import {
   onMessage,
 } from '@react-native-firebase/messaging';
 import notifee, { EventType } from '@notifee/react-native';
-import { displayNotification, createNotificationChannel, requestFCMPermission } from './src/utils/fcm';
+import { displayNotification, createNotificationChannel, requestFCMPermission, onFcmTokenRefresh } from './src/utils/fcm';
+import { navigationRef, navigate } from './src/utils/navigationRef';
+import { fcmApi } from './src/features/fcm/fccm-api';
+
+function handleNotificationPress(data: Record<string, any>) {
+  if (!data?.type) return;
+  switch (data.type) {
+    case 'late_checkin':
+      navigate('LateCheckinApprovalScreen');
+      break;
+    case 'late_checkin_status':
+      navigate('NotificationListScreen');
+      break;
+    case 'expense_claim':
+      navigate('ExpenseApprovalScreen');
+      break;
+    case 'expense_claim_status':
+      navigate('ExpenseScreen');
+      break;
+    case 'leave_application':
+    case 'leave_application_status':
+      navigate('NotificationListScreen');
+      break;
+    default:
+      navigate('NotificationListScreen');
+  }
+}
 
 const firebaseMessaging = getMessaging();
 
@@ -36,7 +62,9 @@ setBackgroundMessageHandler(firebaseMessaging, async remoteMessage => {
 // Register Notifee background event handler
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   const { notification, pressAction } = detail;
-  console.log('Notifee background event:', type, notification?.data);
+  if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+    handleNotificationPress(notification?.data as Record<string, any>);
+  }
 });
 
 function App(): React.JSX.Element {
@@ -48,14 +76,14 @@ function App(): React.JSX.Element {
     getInitialNotification(firebaseMessaging)
       .then(remoteMessage => {
         if (remoteMessage) {
-          console.log('FCM opened from quit state:', remoteMessage.data);
+          handleNotificationPress(remoteMessage.data as Record<string, any>);
         }
       });
 
     // Handle notification tap when app is in background (FCM)
     const unsubscribeOnOpened = onNotificationOpenedApp(firebaseMessaging,
       remoteMessage => {
-        console.log('FCM opened from background:', remoteMessage.data);
+        handleNotificationPress(remoteMessage.data as Record<string, any>);
       },
     );
 
@@ -69,14 +97,21 @@ function App(): React.JSX.Element {
     // Handle Notifee notification press (foreground)
     const unsubscribeNotifee = notifee.onForegroundEvent(({ type, detail }) => {
       if ((type === EventType.PRESS || type === EventType.ACTION_PRESS) && detail.notification) {
-        console.log('Notifee foreground event:', type, detail.notification.data);
+        handleNotificationPress(detail.notification.data as Record<string, any>);
       }
+    });
+
+    // Re-register FCM token when it refreshes
+    const unsubscribeTokenRefresh = onFcmTokenRefresh(async newToken => {
+      const deviceOs = Platform.OS === 'ios' ? 'iOS' : 'Android';
+      store.dispatch(fcmApi.endpoints.registerFcmToken.initiate({ fcm_token: newToken, device_os: deviceOs }));
     });
 
     return () => {
       unsubscribeOnOpened();
       unsubscribeOnMessage();
       unsubscribeNotifee();
+      unsubscribeTokenRefresh();
     };
   }, []);
   const isDarkMode = useColorScheme() === 'dark';
@@ -92,7 +127,7 @@ function App(): React.JSX.Element {
                 isVisible={networkStatus.isSlowNetwork}
                 effectiveType={networkStatus.effectiveType}
               />
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
                 <StatusBar
                   barStyle={isDarkMode ? 'light-content' : 'dark-content'}
                 />

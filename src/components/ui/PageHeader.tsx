@@ -15,6 +15,7 @@ import {useNavigation} from '@react-navigation/native';
 import {useAppSelector} from '../../store/hook';
 import {getInitials} from '../../utils/utils';
 import {useGetProfileDataQuery} from '../../features/auth/auth';
+import {useGetNotificationListQuery} from '../../features/fcm/fccm-api';
 const {width} = Dimensions.get('window');
 type Props = {
   title: string;
@@ -47,6 +48,13 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
     },
   );
 
+  const {data: notificationData} = useGetNotificationListQuery(
+    {page: 1, page_size: 50},
+    {skip: !employeeId},
+  );
+  const unreadCount =
+    notificationData?.message?.data?.filter(n => n.is_read === 0).length ?? 0;
+
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
@@ -75,7 +83,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
           style={styles.notification}
           onPress={() => navigations.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
-            <Text style={styles.notificationCount}>0</Text>
+            <Text style={styles.notificationCount}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
           </View>
           <Feather name="bell" size={20} color={Colors.greyDark} />
         </TouchableOpacity>

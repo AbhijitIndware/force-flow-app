@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useState} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import PageHeader from '../components/ui/PageHeader';
 import {Colors} from '../utils/colors';
@@ -15,105 +16,192 @@ import {Fonts} from '../constants';
 import {Size} from '../utils/fontSize';
 import Feather from 'react-native-vector-icons/Feather';
 import {useNavigation} from '@react-navigation/native';
+import {
+  useGetNotificationListQuery,
+  useMarkNotificationReadMutation,
+  NotificationItem as ApiNotificationItem,
+} from '../features/fcm/fccm-api';
+import {navigate} from '../utils/navigationRef';
 
-type NotificationItem = {
-  id: string;
-  title: string;
-  body: string;
-  time: string;
-  read: boolean;
-  icon: string;
-};
+function getRelativeTime(creation: string): string {
+  const created = new Date(creation.replace(' ', 'T'));
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs} hour${diffHrs > 1 ? 's' : ''} ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return creation.split(' ')[0];
+}
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: '1',
-    title: 'PJP Reminder',
-    body: 'You have a planned journey plan for today. Please check your schedule.',
-    time: '2 min ago',
-    read: false,
-    icon: 'calendar',
-  },
-  {
-    id: '2',
-    title: 'Activity Check-In',
-    body: 'Your check-in at Delhi HQ was successful.',
-    time: '1 hour ago',
-    read: false,
-    icon: 'map-pin',
-  },
-  {
-    id: '3',
-    title: 'Store Visit Completed',
-    body: 'You have completed 5 store visits today.',
-    time: '3 hours ago',
-    read: true,
-    icon: 'check-circle',
-  },
-];
+function getIconForType(type: string): string {
+  switch (type) {
+    case 'late_checkin':
+    case 'late_checkin_status':
+      return 'clock';
+    case 'expense_claim':
+    case 'expense_claim_status':
+      return 'dollar-sign';
+    case 'leave_application':
+    case 'leave_application_status':
+      return 'calendar';
+    default:
+      return 'bell';
+  }
+}
+
+function handleNotificationTap(item: ApiNotificationItem) {
+  const {type, claim_id, request_id} = item.payload;
+  switch (type) {
+    case 'late_checkin':
+      navigate('LateCheckinApprovalScreen');
+      break;
+    case 'late_checkin_status':
+      navigate('NotificationListScreen');
+      break;
+    case 'expense_claim':
+      navigate('ExpenseApprovalScreen');
+      break;
+    case 'expense_claim_status':
+      navigate(claim_id ? 'ExpenseApprovalDetailScreen' : 'ExpenseScreen', claim_id ? {claimId: claim_id} : undefined);
+      break;
+    case 'leave_application':
+    case 'leave_application_status':
+      navigate('NotificationListScreen');
+      break;
+    default:
+      navigate('NotificationListScreen');
+  }
+}
+
+const PAGE_SIZE = 20;
 
 const NotificationListScreen = () => {
   const navigation = useNavigation<any>();
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const [page, setPage] = useState(1);
+  const [allNotifications, setAllNotifications] = useState<ApiNotificationItem[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = async () => {
+  const {data, isFetching, refetch} = useGetNotificationListQuery({
+    page,
+    page_size: PAGE_SIZE,
+  });
+
+  const [markNotificationRead] = useMarkNotificationReadMutation();
+
+  useEffect(() => {
+    if (data?.message?.data) {
+      if (page === 1) {
+        setAllNotifications(data.message.data);
+      } else {
+        setAllNotifications(prev => [...prev, ...data.message.data]);
+      }
+      setHasMore(data.message.pagination?.has_more ?? false);
+    }
+  }, [data, page]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // Future: fetch from API
-    setTimeout(() => setRefreshing(false), 1000);
+    setPage(1);
+    const result = await refetch();
+    if (result.data?.message?.data) {
+      setAllNotifications(result.data.message.data);
+      setHasMore(result.data.message.pagination?.has_more ?? false);
+    }
+    setRefreshing(false);
+  }, [refetch]);
+
+  const onEndReached = useCallback(() => {
+    if (!isFetching && hasMore) {
+      setPage(prev => prev + 1);
+    }
+  }, [isFetching, hasMore]);
+
+  const onMarkAsRead = async (item: ApiNotificationItem) => {
+    if (item.is_read === 1) {
+      handleNotificationTap(item);
+      return;
+    }
+    try {
+      await markNotificationRead({notification_id: item.name}).unwrap();
+      setAllNotifications(prev =>
+        prev.map(n =>
+          n.name === item.name ? {...n, is_read: 1} : n,
+        ),
+      );
+    } catch {
+      // silently fail
+    }
+    handleNotificationTap(item);
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? {...n, read: true} : n)),
+  const renderItem = ({item}: {item: ApiNotificationItem}) => {
+    const isUnread = item.is_read === 0;
+    const icon = getIconForType(item.payload?.type || '');
+    const time = getRelativeTime(item.creation);
+
+    return (
+      <TouchableOpacity
+        style={[styles.notificationItem, isUnread && styles.unread]}
+        onPress={() => onMarkAsRead(item)}
+        activeOpacity={0.7}>
+        <View
+          style={[
+            styles.iconContainer,
+            {backgroundColor: isUnread ? '#EFF6FF' : '#F3F4F6'},
+          ]}>
+          <Feather
+            name={icon}
+            size={20}
+            color={isUnread ? '#3B82F6' : Colors.gray}
+          />
+        </View>
+        <View style={styles.notificationContent}>
+          <View style={styles.notificationHeader}>
+            <Text
+              style={[
+                styles.notificationTitle,
+                isUnread && styles.unreadTitle,
+              ]}
+              numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.notificationTime}>{time}</Text>
+          </View>
+          <Text style={styles.notificationBody} numberOfLines={2}>
+            {item.body}
+          </Text>
+        </View>
+        {isUnread && <View style={styles.unreadDot} />}
+      </TouchableOpacity>
     );
   };
 
-  const renderItem = ({item}: {item: NotificationItem}) => (
-    <TouchableOpacity
-      style={[styles.notificationItem, !item.read && styles.unread]}
-      onPress={() => markAsRead(item.id)}
-      activeOpacity={0.7}>
-      <View
-        style={[
-          styles.iconContainer,
-          {backgroundColor: item.read ? '#F3F4F6' : '#EFF6FF'},
-        ]}>
-        <Feather
-          name={item.icon}
-          size={20}
-          color={item.read ? Colors.gray : '#3B82F6'}
-        />
-      </View>
-      <View style={styles.notificationContent}>
-        <View style={styles.notificationHeader}>
-          <Text
-            style={[
-              styles.notificationTitle,
-              !item.read && styles.unreadTitle,
-            ]}
-            numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.notificationTime}>{item.time}</Text>
-        </View>
-        <Text style={styles.notificationBody} numberOfLines={2}>
-          {item.body}
+  const renderEmpty = () => {
+    if (isFetching) return null;
+    return (
+      <View style={styles.emptyContainer}>
+        <Feather name="bell-off" size={48} color={Colors.gray} />
+        <Text style={styles.emptyTitle}>No notifications yet</Text>
+        <Text style={styles.emptySubtitle}>
+          You're all caught up! New notifications will appear here.
         </Text>
       </View>
-      {!item.read && <View style={styles.unreadDot} />}
-    </TouchableOpacity>
-  );
+    );
+  };
 
-  const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
-      <Feather name="bell-off" size={48} color={Colors.gray} />
-      <Text style={styles.emptyTitle}>No notifications yet</Text>
-      <Text style={styles.emptySubtitle}>
-        You're all caught up! New notifications will appear here.
-      </Text>
-    </View>
-  );
+  const renderFooter = () => {
+    if (!isFetching || allNotifications.length === 0) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" color={Colors.Orangelight} />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -122,13 +210,16 @@ const NotificationListScreen = () => {
         navigation={() => navigation.goBack()}
       />
       <FlatList
-        data={notifications}
-        keyExtractor={item => item.id}
+        data={allNotifications}
+        keyExtractor={item => item.name}
         renderItem={renderItem}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
         contentContainerStyle={
-          notifications.length === 0 ? styles.emptyList : styles.listContent
+          allNotifications.length === 0 ? styles.emptyList : styles.listContent
         }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -231,5 +322,9 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     paddingHorizontal: 40,
+  },
+  footer: {
+    paddingVertical: 16,
+    alignItems: 'center',
   },
 });

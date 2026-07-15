@@ -32,6 +32,7 @@ import {useState} from 'react';
 import MoreOptionsModal from '../../../components/home/MoreOption';
 import {useAppSelector} from '../../../store/hook';
 import {getInitials} from '../../../utils/utils';
+import {useGetNotificationListQuery} from '../../../features/fcm/fccm-api';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
@@ -137,6 +138,13 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
+  const {data: notificationData} = useGetNotificationListQuery(
+    {page: 1, page_size: 50},
+    {skip: !employee},
+  );
+  const unreadCount =
+    notificationData?.message?.data?.filter(n => n.is_read === 0).length ?? 0;
+
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
@@ -155,7 +163,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           style={styles.notification}
           onPress={() => props.navigation.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
-            <Text style={styles.notificationCount}>5</Text>
+            <Text style={styles.notificationCount}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
