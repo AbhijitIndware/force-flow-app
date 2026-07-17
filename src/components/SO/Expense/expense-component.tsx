@@ -52,7 +52,7 @@ const ExpenseComponent = ({ navigation }: any) => {
     status: selectedStatus,
     page: page,
     page_size: 20,
-  }, { refetchOnMountOrArgChange: true });
+  }, { refetchOnMountOrArgChange: true, refetchOnFocus: true });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -65,9 +65,9 @@ const ExpenseComponent = ({ navigation }: any) => {
       year: selectedYear,
     });
 
-  const claims = claimsData?.message?.data?.expense_claims || [];
-  const pagination = claimsData?.message?.data?.pagination;
-  const consumed = (summaryData?.message?.data?.consumed || {}) as ConsumedData;
+  const claims = useMemo(() => claimsData?.message?.data?.expense_claims || [], [claimsData]);
+  const pagination = useMemo(() => claimsData?.message?.data?.pagination, [claimsData]);
+  const consumed = useMemo(() => (summaryData?.message?.data?.consumed || {}) as ConsumedData, [summaryData]);
 
   const handleLoadMore = () => {
     if (pagination?.has_more && !claimsFetching) {
@@ -154,24 +154,25 @@ const ExpenseComponent = ({ navigation }: any) => {
               }
             />
           </View>
-        )}
+        )
+        }
         stickyHeaderIndices={[0]}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={<View style={{ height: 90 }} />}
+        ListFooterComponent={< View style={{ height: 90 }} />}
         showsVerticalScrollIndicator={false}
       />
 
       {/* ── FAB ── */}
-      <TouchableOpacity
+      < TouchableOpacity
         onPress={() => navigation.navigate('AddExpenseScreen')}
-        style={styles.claimButton}>
+        style={styles.claimButton} >
         <Text style={styles.claimButtonText}>Create Expense Claim</Text>
         <View style={styles.iconCircle}>
           <Ionicons name="add" size={15} color={Colors.darkButton} />
         </View>
-      </TouchableOpacity>
-    </SafeAreaView>
+      </TouchableOpacity >
+    </SafeAreaView >
   );
 };
 

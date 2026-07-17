@@ -1,8 +1,8 @@
-import React, {JSX} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, { JSX } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import {Fonts} from '../../../../constants';
+import { Fonts } from '../../../../constants';
 
 interface Claim {
   name: string;
@@ -18,7 +18,7 @@ interface StatusConfig {
 }
 
 const STATUS_MAP: Record<string, StatusConfig> = {
-  Draft: {label: 'Draft', color: '#475569', dotColor: '#94a3b8'},
+  Draft: { label: 'Draft', color: '#475569', dotColor: '#94a3b8' },
   'Pending Approval': {
     label: 'Pending Approval',
     color: '#d97706',
@@ -68,7 +68,7 @@ interface Props {
   onPress: () => void;
 }
 
-const ExpenseClaimCard: React.FC<Props> = ({claim, onPress}) => {
+const ExpenseClaimCard: React.FC<Props> = ({ claim, onPress }) => {
   const s = STATUS_MAP[claim.workflow_state] ?? {
     ...DEFAULT_STATUS,
     label: claim.workflow_state || 'Pending',
@@ -77,7 +77,7 @@ const ExpenseClaimCard: React.FC<Props> = ({claim, onPress}) => {
   return (
     <TouchableOpacity style={styles.row} activeOpacity={0.6} onPress={onPress}>
       {/* Status dot */}
-      <View style={[styles.dot, {backgroundColor: s.dotColor}]} />
+      <View style={[styles.dot, { backgroundColor: s.dotColor }]} />
 
       {/* Info */}
       <View style={styles.body}>
@@ -94,7 +94,7 @@ const ExpenseClaimCard: React.FC<Props> = ({claim, onPress}) => {
         <Text style={styles.amount}>
           ₹{Number(claim.total_claimed_amount).toLocaleString('en-IN')}
         </Text>
-        <Text style={[styles.status, {color: s.color}]}>{s.label}</Text>
+        <Text style={[styles.status, { color: s.color }]}>{s.label}</Text>
       </View>
 
       <Ionicons name="chevron-forward" size={13} color="#CBD5E1" />
@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderWidth: 1,
     borderColor: '#F1F5F9',
+    // height: 120
   },
   dot: {
     width: 8,
