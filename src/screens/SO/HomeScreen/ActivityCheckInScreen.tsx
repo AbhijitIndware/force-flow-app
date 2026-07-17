@@ -320,7 +320,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                   {isSubmitting ? (
                     <ActivityIndicator color={Colors.white} />
                   ) : (
-                    <Text style={modalStyles.confirmText}>Check-In Now</Text>
+                    <Text style={modalStyles.confirmText}>Confirm</Text>
                   )}
                 </TouchableOpacity>
               </View>
