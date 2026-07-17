@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { Image, Modal, StyleSheet, TouchableOpacity, View, Text } from 'react-native';
 import ReusableInput from '../../../ui-lib/reuseable-input';
 import { Fonts } from '../../../../constants';
 import { useGetStoresByLocationQuery } from '../../../../features/base/base-api';
 import { MapPin, Plus, ChevronDown } from 'lucide-react-native';
 import { ActivityIndicator } from 'react-native-paper';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 
 interface StoreNameFieldProps {
     mapLocation: string; // expected format: "latitude,longitude" e.g. "26.1445,91.7362"
@@ -40,6 +41,7 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
     const [mode, setMode] = useState<'suggest' | 'manual'>('suggest');
     const [showDropdown, setShowDropdown] = useState(false);
     const [inputEnabled, setInputEnabled] = useState(false);
+    const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
 
     const hasLocation = mapLocation?.trim().length > 0;
 
@@ -166,17 +168,40 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
                                                 setShowDropdown(false);
                                             }}
                                         >
-                                            <MapPin
-                                                size={12}
-                                                color={value === s.store_name ? '#534AB7' : '#828282'}
-                                                strokeWidth={2}
-                                            />
-                                            <Text style={[
-                                                sfStyles.dropdownItemText,
-                                                value === s.store_name && sfStyles.dropdownItemTextActive,
-                                            ]}>
-                                                {s.store_name}
-                                            </Text>
+                                            {s.store_image ? (
+                                                <TouchableOpacity
+                                                    activeOpacity={0.7}
+                                                    onPress={() => setPreviewImageUrl(imageBaseUrl + s.store_image)}
+                                                >
+                                                    <Image
+                                                        source={{ uri: imageBaseUrl + s.store_image }}
+                                                        style={sfStyles.storeThumb}
+                                                        resizeMode="cover"
+                                                    />
+                                                </TouchableOpacity>
+                                            ) : (
+                                                <MapPin
+                                                    size={14}
+                                                    color={value === s.store_name ? '#534AB7' : '#828282'}
+                                                    strokeWidth={2}
+                                                />
+                                            )}
+                                            <View style={sfStyles.dropdownItemInfo}>
+                                                <Text
+                                                    style={[
+                                                        sfStyles.dropdownItemText,
+                                                        value === s.store_name && sfStyles.dropdownItemTextActive,
+                                                    ]}
+                                                    numberOfLines={1}
+                                                >
+                                                    {s.store_name}
+                                                </Text>
+                                                {s.created_by && (
+                                                    <Text style={sfStyles.createdByText}>
+                                                        Created by: {s.created_by}
+                                                    </Text>
+                                                )}
+                                            </View>
                                         </TouchableOpacity>
                                     ))}
 
@@ -226,6 +251,30 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
             {mode === 'suggest' && touched.store_name && errors.store_name && (
                 <Text style={sfStyles.errorText}>{errors.store_name}</Text>
             )}
+
+            {/* Image Preview Modal */}
+            <Modal
+                visible={!!previewImageUrl}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setPreviewImageUrl(null)}
+            >
+                <View style={sfStyles.previewOverlay}>
+                    <TouchableOpacity
+                        style={sfStyles.previewCloseButton}
+                        onPress={() => setPreviewImageUrl(null)}
+                    >
+                        <Text style={sfStyles.previewCloseText}>✕</Text>
+                    </TouchableOpacity>
+                    {previewImageUrl && (
+                        <Image
+                            source={{ uri: previewImageUrl }}
+                            style={sfStyles.previewImage}
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -299,12 +348,44 @@ const sfStyles = StyleSheet.create({
         alignItems: 'center',
         gap: 10,
         paddingHorizontal: 14,
-        paddingVertical: 13,
+        paddingVertical: 10,
     },
     dropdownItemBorder: { borderBottomWidth: 0.5, borderBottomColor: '#F0F2F6' },
     dropdownItemActive: { backgroundColor: 'rgba(83,74,183,0.06)' },
+    dropdownItemInfo: { flex: 1, gap: 2 },
     dropdownItemText: { fontSize: 13, color: '#1A1A1A', fontFamily: Fonts.medium },
     dropdownItemTextActive: { color: '#534AB7', fontWeight: '700' },
+    storeThumb: { width: 36, height: 36, borderRadius: 6, backgroundColor: '#F0F0F0' },
+    createdByText: { fontSize: 11, color: '#999999', fontFamily: Fonts.regular },
+
+    previewOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+    },
+    previewImage: {
+        width: '100%',
+        height: '80%',
+    },
+    previewCloseButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        zIndex: 10,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    previewCloseText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
 
     addNewRow: { backgroundColor: '#F0FDF9', borderTopWidth: 0.5, borderTopColor: '#E0E0E0' },
     addNewRowText: { fontSize: 13, color: '#0F6E56', fontFamily: Fonts.semiBold, fontWeight: '700' },

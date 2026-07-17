@@ -4,6 +4,7 @@ export interface ILogin {
   data: {
     usr: string;
     pwd: string;
+    app_version: string
   };
 }
 export interface AuthResponse {

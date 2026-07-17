@@ -46,6 +46,7 @@ const LoginScreen = () => {
           const payload = {
             usr: value.usr,
             pwd: value.pwd,
+            app_version: '1.0'
           };
           let res = await login({ data: payload }).unwrap();
           console.log('🚀 ~ LoginScreen ~ res:', res);
@@ -68,6 +69,7 @@ const LoginScreen = () => {
               type: 'error',
               text1: `❌ ${res?.message?.message}` || 'Error',
               position: 'top',
+              visibilityTime: 6000,
             });
           }
         } catch (error: any) {
@@ -77,6 +79,7 @@ const LoginScreen = () => {
               `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
             text2: 'Please try again later.',
             position: 'top',
+            visibilityTime: 6000,
           });
         }
       },
