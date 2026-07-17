@@ -1356,7 +1356,7 @@ export const baseApi = createApi({
             longitude: number;
             distance_meters: number;
             store_image: string;
-            created_by: string;
+            store_owner_name: string;
           }[];
         };
       },

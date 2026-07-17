@@ -187,20 +187,23 @@ const StoreNameField: React.FC<StoreNameFieldProps> = ({
                                                 />
                                             )}
                                             <View style={sfStyles.dropdownItemInfo}>
-                                                <Text
-                                                    style={[
-                                                        sfStyles.dropdownItemText,
-                                                        value === s.store_name && sfStyles.dropdownItemTextActive,
-                                                    ]}
-                                                    numberOfLines={1}
-                                                >
-                                                    {s.store_name}
-                                                </Text>
-                                                {s.created_by && (
-                                                    <Text style={sfStyles.createdByText}>
-                                                        Created by: {s.created_by}
+                                                <View style={sfStyles.nameRow}>
+                                                    <Text
+                                                        style={[
+                                                            sfStyles.dropdownItemText,
+                                                            value === s.store_name && sfStyles.dropdownItemTextActive,
+                                                        ]}
+                                                        numberOfLines={1}
+                                                    >
+                                                        {s.store_name}
                                                     </Text>
-                                                )}
+                                                    <Text style={sfStyles.distanceText}>
+                                                        {s.distance_meters < 1 ? '< 1' : Math.round(s.distance_meters)} m
+                                                    </Text>
+                                                </View>
+                                                <Text style={sfStyles.metaText} numberOfLines={1}>
+                                                    {s.store_type}
+                                                </Text>
                                             </View>
                                         </TouchableOpacity>
                                     ))}
@@ -353,10 +356,12 @@ const sfStyles = StyleSheet.create({
     dropdownItemBorder: { borderBottomWidth: 0.5, borderBottomColor: '#F0F2F6' },
     dropdownItemActive: { backgroundColor: 'rgba(83,74,183,0.06)' },
     dropdownItemInfo: { flex: 1, gap: 2 },
+    nameRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+    distanceText: { fontSize: 11, color: '#828282', fontFamily: Fonts.regular },
     dropdownItemText: { fontSize: 13, color: '#1A1A1A', fontFamily: Fonts.medium },
     dropdownItemTextActive: { color: '#534AB7', fontWeight: '700' },
     storeThumb: { width: 36, height: 36, borderRadius: 6, backgroundColor: '#F0F0F0' },
-    createdByText: { fontSize: 11, color: '#999999', fontFamily: Fonts.regular },
+    metaText: { fontSize: 11, color: '#999999', fontFamily: Fonts.regular },
 
     previewOverlay: {
         flex: 1,

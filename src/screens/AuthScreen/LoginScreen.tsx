@@ -46,7 +46,7 @@ const LoginScreen = () => {
           const payload = {
             usr: value.usr,
             pwd: value.pwd,
-            app_version: '1.0'
+            app_version: APP_VERSION
           };
           let res = await login({ data: payload }).unwrap();
           console.log('🚀 ~ LoginScreen ~ res:', res);
