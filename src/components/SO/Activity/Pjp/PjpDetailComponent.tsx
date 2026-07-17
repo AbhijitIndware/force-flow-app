@@ -299,6 +299,27 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         </View>
       </TouchableOpacity>
 
+      {/* ── Planned Activities ── */}
+      {detail.planned_activities && detail.planned_activities.length > 0 && (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Planned Activities</Text>
+            <View style={styles.sectionCount}>
+              <Text style={styles.sectionCountText}>{detail.planned_activities.length}</Text>
+            </View>
+          </View>
+          <View style={styles.activitiesContainer}>
+            {detail.planned_activities.map((a, idx) => (
+              <View key={idx} style={styles.activityCard}>
+                <View style={styles.activityDot} />
+                <Text style={styles.activityType}>{a.activity_type}</Text>
+                <Text style={styles.activityLocation}>{a.activity_location}</Text>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+
       {/* ── Stores List ── */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Stores</Text>
@@ -520,6 +541,41 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   sectionCountText: {fontSize: 11, color: '#fff', fontWeight: '700'},
+
+  /* ── Activities ── */
+  activitiesContainer: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  activityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  activityDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: ACCENT,
+  },
+  activityType: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: GRAY_800,
+    flex: 1,
+  },
+  activityLocation: {
+    fontSize: 12,
+    color: GRAY_400,
+  },
 
   /* ── Store Card ── */
   storeCard: {

@@ -67,8 +67,6 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   pjpActions,
   lateCheckInInfo
 }) => {
-  console.log("🚀 ~ HeaderSection ~ lateCheckInInfo:", lateCheckInInfo, pjpState,
-    pjpActions,)
   const can = (action: PjpAllowedAction) => pjpActions.includes(action);
 
   return (

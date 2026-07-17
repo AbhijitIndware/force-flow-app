@@ -53,7 +53,7 @@ const PageHeader = ({title, navigation, type = 'so'}: Props) => {
     {skip: !employeeId},
   );
   const unreadCount =
-    notificationData?.message?.data?.filter(n => n.is_read === 0).length ?? 0;
+    notificationData?.message?.data?.filter(n => n.is_read == 0).length ?? 0;
 
   const profileImageSource = employee?.image_base64
     ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}

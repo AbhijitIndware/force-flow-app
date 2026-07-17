@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native';
 import { Colors } from '../../../utils/colors';
 import { flexCol } from '../../../utils/styles';
 import PageHeader from '../../../components/ui/PageHeader';
-import { useGetDailyPjpByIdQuery } from '../../../features/base/base-api';
+import { useGetPjpDailyStoresForEditQuery } from '../../../features/base/base-api';
 import { PjpDailyStore } from '../../../types/baseType';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { TouchableOpacity } from 'react-native';
@@ -26,9 +26,35 @@ type Props = {
 const PjpDetailScreen = ({ navigation, route }: Props) => {
   const { details } = route.params;
 
-  const { data, isFetching, refetch } = useGetDailyPjpByIdQuery(
-    details?.pjp_daily_store_id,
+  const { data, isFetching, refetch } = useGetPjpDailyStoresForEditQuery(
+    { document_name: details?.pjp_daily_store_id },
+    { skip: !details?.pjp_daily_store_id },
   );
+  console.log("🚀 ~ PjpDetailScreen ~ data:", data)
+
+  const response = data?.message?.data;
+  const mappedDetail = {
+    pjp_daily_store_id: response?.document_name ?? '',
+    date: response?.date ?? '',
+    employee: response?.employee ?? '',
+    employee_name: response?.stores?.[0]?.created_by_employee_name ?? '',
+    creation: response?.creation ?? '',
+    modified: response?.modified ?? '',
+    stores: (response?.stores ?? []).map(s => ({
+      store_id: s.store,
+      store_name: s.store_name,
+      store_category: s.store_category,
+      city: s.city ?? '',
+      state: s.state ?? '',
+      outstanding_amount: 0,
+      warehouse: [],
+    })),
+    total_stores: response?.total_stores ?? 0,
+    start_location: '',
+    end_location: '',
+    running_status: null,
+    planned_activities: response?.planned_activities,
+  } as unknown as PjpDailyStore;
 
   const isPastDate = details?.date
     ? moment(details.date, 'YYYY-MM-DD').isBefore(moment(), 'day')
@@ -57,7 +83,7 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
           )}
 
           <PjpDetailComponent
-            detail={data?.message?.data as PjpDailyStore}
+            detail={mappedDetail}
             navigation={navigation}
             refetch={refetch}
           />

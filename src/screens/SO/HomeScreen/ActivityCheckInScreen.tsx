@@ -169,12 +169,13 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
         image: image as { mime: string; data: string },
       }).unwrap();
 
-      if (res.success) {
-        Toast.show({ type: 'success', text1: res.message || 'Activity check-in successful!' });
+      if (res?.message?.success) {
+        Toast.show({ type: 'success', text1: 'Activity check-in successful!' });
         setConfirmModalVisible(false);
         navigation.goBack();
-      } else {
-        Alert.alert('Check-In Failed', res.message);
+      } else if (!res?.message?.success) {
+        Alert.alert('Check-In Failed', res?.message?.message || "Something went wrong");
+        Toast.show({ type: 'error', text1: res?.message?.message || 'Check-In Failed' });
       }
     } catch (error: any) {
       const errMsg =

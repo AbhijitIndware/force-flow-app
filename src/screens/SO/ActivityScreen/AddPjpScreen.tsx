@@ -342,6 +342,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         onLoadMoreEmployees={handleLoadMoreEmployees}
         loadingMoreEmployees={loadingEmpMore}
         isPjpStarted={isRunning}
+        isEditMode={!!id}
         initialStoreCount={initialStoreCount}
         initialActivityCount={initialActivityCount}
       />

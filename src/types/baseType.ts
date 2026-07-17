@@ -716,6 +716,7 @@ export interface PjpDailyStore {
   start_location: string;
   end_location: string;
   running_status: 'None' | 'Running' | 'Completed' | null;
+  planned_activities?: PlannedActivity[];
 }
 
 export interface Store {
@@ -2323,17 +2324,19 @@ export interface IActivityCheckIn {
 }
 
 export interface RActivityCheckIn {
-  success: boolean;
-  message: string;
-  data?: {
-    log_id: string;
-    activity_location: string;
-    activity_type: string;
-    employee: string;
-    image_url: string;
-    check_in_time: string;
-    remarks: string;
-  };
+  message: {
+    success: boolean;
+    message: string;
+    data?: {
+      log_id: string;
+      activity_location: string;
+      activity_type: string;
+      employee: string;
+      image_url: string;
+      check_in_time: string;
+      remarks: string;
+    };
+  }
 }
 
 export interface IActivityCheckOut {

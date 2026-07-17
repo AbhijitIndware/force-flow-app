@@ -57,6 +57,7 @@ interface Props {
   onLoadMoreEmployees: () => void;
   loadingMoreEmployees: boolean;
   isPjpStarted: boolean;
+  isEditMode?: boolean;
   initialStoreCount?: number;
   initialActivityCount?: number;
 }
@@ -76,6 +77,7 @@ const AddPjpForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   isPjpStarted,
+  isEditMode = false,
   initialStoreCount = 0,
   initialActivityCount = 0,
 }) => {
@@ -223,29 +225,43 @@ const AddPjpForm: React.FC<Props> = ({
       {/* ── Use Previous PJP Checkbox ── */}
       <TouchableOpacity
         onPress={handleToggleLastPjp}
-        disabled={isFetchingLastPjp}
+        disabled={isFetchingLastPjp || isEditMode}
         style={{
           flexDirection: 'row',
+          flexWrap: 'wrap',
           alignItems: 'center',
+          justifyContent: 'space-between',
           marginBottom: 12,
           marginTop: 4,
           gap: 8,
         }}>
-        {isFetchingLastPjp ? (
-          <ActivityIndicator size="small" color={Colors.Orangelight} />
-        ) : useLastPjp ? (
-          <CheckSquare size={18} color={Colors.Orangelight} />
-        ) : (
-          <Square size={18} color={Colors.Orangelight} />
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+
+          {isFetchingLastPjp ? (
+            <ActivityIndicator size="small" color={Colors.Orangelight} />
+          ) : useLastPjp ? (
+            <CheckSquare size={18} color={isEditMode ? '#ccc' : Colors.Orangelight} />
+          ) : (
+            <Square size={18} color={isEditMode ? '#ccc' : Colors.Orangelight} />
+          )}
+          <Text
+            style={{
+              fontSize: 13,
+              fontFamily: Fonts.medium,
+              color: isEditMode ? '#bbb' : '#444',
+            }}>
+            Get previous PJP store data
+          </Text>
+        </View>
+        {isEditMode && (
+          <Text style={{ fontSize: 11, fontFamily: Fonts.medium, color: '#b45309' }}>
+            ⚠ Not available in edit mode
+          </Text>
         )}
-        <Text
-          style={{
-            fontSize: 13,
-            fontFamily: Fonts.medium,
-            color: '#444',
-          }}>
-          Get previous PJP store data
-        </Text>
       </TouchableOpacity>
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -309,9 +325,12 @@ const AddPjpForm: React.FC<Props> = ({
                 setFieldValue('stores', updated);
               }}
               style={{ alignSelf: 'flex-end', marginTop: 0 }}>
-              <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
-                Remove
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                <Trash2 size={12} color="#DC2626" />
+                <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
+                  Remove
+                </Text>
+              </View>
             </TouchableOpacity>
           )}
         </View>
@@ -415,8 +434,11 @@ const AddPjpForm: React.FC<Props> = ({
                 Activity {index + 1}
               </Text>
               {index >= initialActivityCount && (
-                <TouchableOpacity onPress={() => removeActivity(index)}>
-                  <Trash2 size={15} color="#DC2626" />
+                <TouchableOpacity onPress={() => removeActivity(index)} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                  <Trash2 size={12} color="#DC2626" />
+                  <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
+                    Remove
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
