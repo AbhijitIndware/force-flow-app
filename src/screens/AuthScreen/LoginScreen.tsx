@@ -24,6 +24,7 @@ import { getFcmToken } from '../../utils/fcm';
 import Toast from 'react-native-toast-message';
 import { useFormik } from 'formik';
 import { loginSchema } from '../../types/schema';
+import { APP_VERSION } from '../../utils/utils';
 const { width } = Dimensions.get('window');
 
 let initial = { usr: '', pwd: '' };
@@ -206,6 +207,16 @@ const LoginScreen = () => {
             resizeMode="contain"
             style={styles.footerLogoImage}
           />
+          <Text
+            style={{
+              fontFamily: Fonts.regular,
+              fontSize: Size.sm,
+              color: Colors.darkGray,
+              textAlign: 'center',
+              marginTop: 20,
+            }}>
+            App Version: {APP_VERSION}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -251,7 +262,7 @@ const styles = StyleSheet.create({
   },
   footerLogoImage: {
     width: width * 0.3,
-    height: 50,
+    height: 40,
   },
   LoginBody: {
     backgroundColor: Colors.orange,
