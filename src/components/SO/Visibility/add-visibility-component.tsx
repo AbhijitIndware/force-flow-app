@@ -298,7 +298,7 @@ const AddVisibilityComponent = ({
         </View>
 
         <View style={styles.halfWrapper}>
-          <Text style={styles.inputLabel}>Collection Amount</Text>
+          <Text style={styles.inputLabel}>Visibility Amount</Text>
           <View style={styles.readOnlyField}>
             {storeDetailsFetching ? (
               <ActivityIndicator size="small" color={Colors.darkButton} />

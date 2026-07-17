@@ -11,32 +11,32 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {VisibilityClaim} from '../../../types/tadaType';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { VisibilityClaim } from '../../../types/tadaType';
 import VisibilityHeader from './VisibilityHeader';
-import {useGetMyVisibilityClaimsQuery} from '../../../features/tada/tadaApiv2';
+import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 
-const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
-  {
-    Approved: {bg: '#16a34a20', color: '#16a34a', dot: '#22c55e'},
-    Rejected: {bg: '#dc262620', color: '#dc2626', dot: '#f87171'},
-    Submitted: {bg: '#d9770620', color: '#d97706', dot: '#fbbf24'},
-    'Pending Accounting Manager': {
-      bg: '#d9770620',
-      color: '#d97706',
-      dot: '#fbbf24',
-    },
-    Draft: {bg: '#6B728020', color: '#6B7280', dot: '#94a3b8'},
-  };
+const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
+{
+  Approved: { bg: '#16a34a20', color: '#16a34a', dot: '#22c55e' },
+  Rejected: { bg: '#dc262620', color: '#dc2626', dot: '#f87171' },
+  Submitted: { bg: '#d9770620', color: '#d97706', dot: '#fbbf24' },
+  'Pending Accounting Manager': {
+    bg: '#d9770620',
+    color: '#d97706',
+    dot: '#fbbf24',
+  },
+  Draft: { bg: '#6B728020', color: '#6B7280', dot: '#94a3b8' },
+};
 
 const getStatus = (s: string) =>
-  STATUS_CONFIG[s] ?? {bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8'};
+  STATUS_CONFIG[s] ?? { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' };
 
 const fmt = (v: number) => (v > 0 ? `₹${v.toLocaleString('en-IN')}` : null);
 
-const VisibilityComponent = ({navigation}: any) => {
+const VisibilityComponent = ({ navigation }: any) => {
   const [selectedMonth, setSelectedMonth] = React.useState(
     new Date().getMonth() + 1,
   );
@@ -46,7 +46,7 @@ const VisibilityComponent = ({navigation}: any) => {
   const [selectedStatus, setSelectedStatus] = React.useState('');
   const [page, setPage] = React.useState(1);
 
-  const {data, isLoading, isFetching} = useGetMyVisibilityClaimsQuery({
+  const { data, isLoading, isFetching } = useGetMyVisibilityClaimsQuery({
     month: selectedMonth,
     year: selectedYear,
     status: selectedStatus,
@@ -68,10 +68,10 @@ const VisibilityComponent = ({navigation}: any) => {
     setPage(1);
   }, [selectedMonth, selectedYear, selectedStatus]);
 
-  const renderItem = ({item}: {item: VisibilityClaim}) => {
+  const renderItem = ({ item }: { item: VisibilityClaim }) => {
     const st = getStatus(item.approval_status);
     const amounts = [
-      {label: 'Collection Amount', value: fmt(item.collection_amount)},
+      { label: 'Visibility Amount', value: fmt(item.collection_amount) },
       // {label: 'P.Diff', value: fmt(item.price_difference_amount)},
       // {label: 'Damage', value: fmt(item.damage_claim), warn: true},
     ].filter(a => a.value);
@@ -107,9 +107,9 @@ const VisibilityComponent = ({navigation}: any) => {
             ))}
           </View>
 
-          <View style={[styles.badge, {backgroundColor: st.bg}]}>
-            <View style={[styles.dot, {backgroundColor: st.dot}]} />
-            <Text style={[styles.badgeText, {color: st.color}]}>
+          <View style={[styles.badge, { backgroundColor: st.bg }]}>
+            <View style={[styles.dot, { backgroundColor: st.dot }]} />
+            <Text style={[styles.badgeText, { color: st.color }]}>
               {item.approval_status}
             </Text>
           </View>
@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6fa',
     // paddingHorizontal: 14,
   },
-  loaderBox: {flex: 1, justifyContent: 'center', alignItems: 'center'},
-  listContent: {padding: 10, gap: 8},
+  loaderBox: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { padding: 10, gap: 8 },
 
   // ── Compact card ──
   card: {
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
@@ -220,8 +220,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 3,
   },
-  dot: {width: 5, height: 5, borderRadius: 3},
-  badgeText: {fontSize: 10, fontFamily: Fonts.medium},
+  dot: { width: 5, height: 5, borderRadius: 3 },
+  badgeText: { fontSize: 10, fontFamily: Fonts.medium },
 
   // Row 2
   row2: {
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  amountItem: {alignItems: 'flex-start'},
+  amountItem: { alignItems: 'flex-start' },
   amountLabel: {
     fontFamily: Fonts.regular,
     fontSize: 9,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 6,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     marginHorizontal: 15,
   },
   claimButtonText: {
