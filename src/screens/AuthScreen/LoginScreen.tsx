@@ -215,7 +215,10 @@ const LoginScreen = () => {
               textAlign: 'center',
               marginTop: 20,
             }}>
-            App Version: {APP_VERSION}
+            App Version:{' '}
+            <Text style={{ fontFamily: Fonts.bold, color: Colors.darkGray }}>
+              {APP_VERSION}
+            </Text>
           </Text>
         </View>
       </ScrollView>

@@ -157,7 +157,12 @@ const DistributorProfileScreen = ({ navigation }: any) => {
                     <ChevronRight size={18} color={THEME.textMuted} />
                 </TouchableOpacity>
                 <View style={styles.footer}>
-                    <Text style={styles.versionText}>Version {APP_VERSION}</Text>
+                    <Text style={styles.versionText}>
+                        Version{' '}
+                        <Text style={{ fontFamily: Fonts.bold, color: THEME.textMuted }}>
+                            {APP_VERSION}
+                        </Text>
+                    </Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
