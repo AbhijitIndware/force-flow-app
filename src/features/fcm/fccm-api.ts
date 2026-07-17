@@ -58,6 +58,13 @@ interface MarkNotificationReadResponse {
   };
 }
 
+interface GetUnreadCountResponse {
+  message: {
+    status: string;
+    unread_count: number;
+  };
+}
+
 export const fcmApi = createApi({
   reducerPath: 'fcmApi',
   baseQuery: baseQueryWithAuthGuard,
@@ -87,6 +94,13 @@ export const fcmApi = createApi({
       }),
       invalidatesTags: ['Notifications'],
     }),
+    getUnreadNotificationCount: builder.query<GetUnreadCountResponse, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.push_notifications_api.get_unread_notification_count',
+        method: 'GET',
+      }),
+      providesTags: ['Notifications'],
+    }),
   }),
 });
 
@@ -94,4 +108,5 @@ export const {
   useRegisterFcmTokenMutation,
   useGetNotificationListQuery,
   useMarkNotificationReadMutation,
+  useGetUnreadNotificationCountQuery,
 } = fcmApi;

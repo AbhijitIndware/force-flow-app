@@ -15,10 +15,10 @@ import {
   BottomTabHeaderProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   House,
   ShoppingCart,
@@ -26,19 +26,19 @@ import {
   ClipboardList,
   UserCircle2,
 } from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
-import {getInitials} from '../../../utils/utils';
-import {useGetNotificationListQuery} from '../../../features/fcm/fccm-api';
+import { useAppSelector } from '../../../store/hook';
+import { getInitials } from '../../../utils/utils';
+import { useGetUnreadNotificationCountQuery } from '../../../features/fcm/fccm-api';
 // import PurchaseOrdersScreen from '../PurchaseOrders/PurchaseOrdersScreen';
 // import DeliveryNotesScreen from '../DeliveryNotes/DeliveryNotesScreen';
 // import DistributorProfileScreen from '../Profile/DistributorProfileScreen';
-import {DistributorAppStackParamList} from '../../../types/Navigation';
+import { DistributorAppStackParamList } from '../../../types/Navigation';
 import DistributorHomeScreen from './HomeScreen';
 import PurchaseOrdersScreen from '../Purchase/Purchaseordersscreen';
 import DeliveryNotesScreen from '../DeliveryNote/Deliverynotesscreen';
 import DistributorProfileScreen from '../Profile/Distributorprofilescreen';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   DistributorAppStackParamList,
   'DistributorHomeScreen'
@@ -51,17 +51,17 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({state, descriptors, navigation}: any) {
+function MyTabBar({ state, descriptors, navigation }: any) {
   return (
-    <View style={{flexDirection: 'row'}}>
+    <View style={{ flexDirection: 'row' }}>
       {state.routes.map((route: any, index: any) => {
-        const {options} = descriptors[route.key];
+        const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-            ? options.title
-            : route.name;
+              ? options.title
+              : route.name;
 
         const isFocused = state.index === index;
 
@@ -77,7 +77,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? {selected: true} : {}}
+            accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -123,15 +123,13 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const {data: notificationData} = useGetNotificationListQuery(
-    {page: 1, page_size: 50},
-    {skip: !employee},
-  );
-  const unreadCount =
-    notificationData?.message?.data?.filter(n => n.is_read == 0).length ?? 0;
+  const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
+    skip: !employee,
+  });
+  const unreadCount = unreadData?.message?.unread_count ?? 0;
 
   const profileImageSource = employee?.image_base64
-    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
     : null;
 
   return (
@@ -180,7 +178,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const DistributorHome = ({navigation, route}: Props) => {
+const DistributorHome = ({ navigation, route }: Props) => {
   return (
     <Tab.Navigator
       initialRouteName="DistributorHomeScreen"
@@ -203,7 +201,7 @@ const DistributorHome = ({navigation, route}: Props) => {
         component={DistributorHomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <House strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -214,7 +212,7 @@ const DistributorHome = ({navigation, route}: Props) => {
         options={{
           tabBarLabel: 'Orders',
           headerShown: false,
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <ShoppingCart strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -225,7 +223,7 @@ const DistributorHome = ({navigation, route}: Props) => {
         options={{
           tabBarLabel: 'Deliveries',
           headerShown: false,
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <Truck strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -236,7 +234,7 @@ const DistributorHome = ({navigation, route}: Props) => {
         options={{
           tabBarLabel: 'Profile',
           headerShown: false,
-          tabBarIcon: ({focused}) => (
+          tabBarIcon: ({ focused }) => (
             <UserCircle2 strokeWidth={2} color={Colors.white} size={25} />
           ),
         }}
@@ -268,7 +266,7 @@ const styles = StyleSheet.create({
     width: width * 0.2,
     height: 50,
   },
-  notification: {position: 'relative', top: 6},
+  notification: { position: 'relative', top: 6 },
   notificationBatch: {
     width: 26,
     height: 26,
@@ -283,8 +281,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: {color: Colors.white},
-  userInfo: {overflow: 'hidden', borderRadius: 50},
+  notificationCount: { color: Colors.white },
+  userInfo: { overflow: 'hidden', borderRadius: 50 },
   avtarImage: {
     width: 30,
     height: 30,

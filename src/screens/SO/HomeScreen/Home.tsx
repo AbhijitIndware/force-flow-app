@@ -17,11 +17,11 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import HomeScreen from './HomeScreen';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
 import Feather from 'react-native-vector-icons/Feather';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   ChartNoAxesCombined,
   Handshake,
@@ -33,11 +33,11 @@ import SalesScreen from '../Sales/Sales';
 import ActivityScreen from '../ActivityScreen/ActivityScreen';
 import OrdersScreen from '../OrdersScreen/OrdersScreen';
 import PartnersScreen from '../PartnersScreen/PartnersScreen';
-import {useAppSelector} from '../../../store/hook';
-import {getInitials} from '../../../utils/utils';
-import {useGetNotificationListQuery} from '../../../features/fcm/fccm-api';
+import { useAppSelector } from '../../../store/hook';
+import { getInitials } from '../../../utils/utils';
+import { useGetUnreadNotificationCountQuery } from '../../../features/fcm/fccm-api';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<SoAppStackParamList, 'Home'>;
 
 type Props = {
@@ -47,20 +47,20 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({state, descriptors, navigation}: any) {
+function MyTabBar({ state, descriptors, navigation }: any) {
   return (
     <View
       style={{
         flexDirection: 'row',
       }}>
       {state.routes.map((route: any, index: any) => {
-        const {options} = descriptors[route.key];
+        const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-            ? options.title
-            : route.name;
+              ? options.title
+              : route.name;
 
         const isFocused = state.index === index;
 
@@ -94,7 +94,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? {selected: true} : {}}
+            accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -138,15 +138,13 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const {data: notificationData} = useGetNotificationListQuery(
-    {page: 1, page_size: 50},
-    {skip: !employee},
-  );
-  const unreadCount =
-    notificationData?.message?.data?.filter(n => n.is_read == 0).length ?? 0;
+  const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
+    skip: !employee,
+  });
+  const unreadCount = unreadData?.message?.unread_count ?? 0;
 
   const profileImageSource = employee?.image_base64
-    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
     : null;
 
   return (
@@ -191,7 +189,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const Home = ({navigation, route}: Props) => {
+const Home = ({ navigation, route }: Props) => {
   // const [routeName, setRouteName] = useState('HomeScreen');
 
   // useEffect(() => {
@@ -227,7 +225,7 @@ const Home = ({navigation, route}: Props) => {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <House
                   strokeWidth={2}
@@ -244,7 +242,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Partners',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <Handshake
                   strokeWidth={2}
@@ -261,7 +259,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Sales',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <ChartNoAxesCombined
                   strokeWidth={2}
@@ -278,7 +276,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Activity',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
+            tabBarIcon: ({ color, size, focused }) => {
               return (
                 <Lightbulb
                   strokeWidth={2}
@@ -295,7 +293,7 @@ const Home = ({navigation, route}: Props) => {
           options={{
             tabBarLabel: 'Orders',
             headerShown: false,
-            tabBarIcon: ({focused}) => (
+            tabBarIcon: ({ focused }) => (
               <ShoppingCart
                 strokeWidth={2}
                 color={focused ? Colors.white : Colors.white}
@@ -335,7 +333,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
 
-  notification: {position: 'relative', top: 6},
+  notification: { position: 'relative', top: 6 },
   notificationBatch: {
     width: 26,
     height: 26,
@@ -351,9 +349,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: {color: Colors.white},
+  notificationCount: { color: Colors.white },
 
-  userInfo: {overflow: 'hidden', borderRadius: '50%'},
+  userInfo: { overflow: 'hidden', borderRadius: '50%' },
   avtarImage: {
     width: 30,
     height: 30,

@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import React, {useCallback, useState, useEffect, useRef} from 'react';
-import {LocationPayload, PjpDailyStore} from '../../../../types/baseType';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { LocationPayload, PjpDailyStore } from '../../../../types/baseType';
 import moment from 'moment';
-import {Colors} from '../../../../utils/colors';
+import { Colors } from '../../../../utils/colors';
 import {
   useEndPjpMutation,
   useStartPjpMutation,
@@ -50,7 +50,7 @@ const STATUS_CONFIG = {
   },
 };
 
-const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
+const PjpDetailComponent = ({ detail, navigation, refetch }: Props) => {
   // console.log("🚀 ~ PjpDetailComponent ~ detail:", detail)
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -67,8 +67,8 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
   const statusKey = isCompleted
     ? 'Completed'
     : isRunning
-    ? 'Running'
-    : 'Pending';
+      ? 'Running'
+      : 'Pending';
   const statusCfg = STATUS_CONFIG[statusKey];
 
   useEffect(() => {
@@ -101,14 +101,14 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
   const getParsedLocation = async () => {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-      Toast.show({type: 'error', text1: '📍 Location permission required'});
+      Toast.show({ type: 'error', text1: '📍 Location permission required' });
       return null;
     }
     const location = await getCurrentLocation();
     if (!location) return null;
     const [latitude, longitude] = location.split(',').map(Number);
     if (isNaN(latitude) || isNaN(longitude)) return null;
-    return {latitude, longitude};
+    return { latitude, longitude };
   };
 
   const handleStartPjp = async () => {
@@ -116,13 +116,13 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
       setLoading(true);
       const loc = await getParsedLocation();
       if (!loc) {
-        Toast.show({type: 'error', text1: '❌ Unable to fetch location'});
+        Toast.show({ type: 'error', text1: '❌ Unable to fetch location' });
         return;
       }
       const payload: LocationPayload = {
         latitude: loc.latitude,
         longitude: loc.longitude,
-        data: {document_name: detail?.pjp_daily_store_id},
+        data: { document_name: detail?.pjp_daily_store_id },
       };
       const res = await startPjp(payload).unwrap();
       if (res?.message?.success === true) {
@@ -149,13 +149,13 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
       setLoading(true);
       const loc = await getParsedLocation();
       if (!loc) {
-        Toast.show({type: 'error', text1: '❌ Unable to fetch location'});
+        Toast.show({ type: 'error', text1: '❌ Unable to fetch location' });
         return;
       }
       const payload: LocationPayload = {
         latitude: loc.latitude,
         longitude: loc.longitude,
-        data: {document_name: detail?.pjp_daily_store_id},
+        data: { document_name: detail?.pjp_daily_store_id },
       };
       const res = await endPjp(payload).unwrap();
       if (res?.message?.success === true) {
@@ -212,15 +212,15 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
             </Text>
             <Text style={styles.employeeName}>{detail.employee_name}</Text>
           </View>
-          <View style={[styles.statusPill, {backgroundColor: statusCfg.bg}]}>
+          <View style={[styles.statusPill, { backgroundColor: statusCfg.bg }]}>
             <Animated.View
               style={[
                 styles.statusDot,
-                {backgroundColor: statusCfg.dot},
-                isRunning && {transform: [{scale: pulseAnim}]},
+                { backgroundColor: statusCfg.dot },
+                isRunning && { transform: [{ scale: pulseAnim }] },
               ]}
             />
-            <Text style={[styles.statusText, {color: statusCfg.color}]}>
+            <Text style={[styles.statusText, { color: statusCfg.color }]}>
               {statusCfg.label}
             </Text>
           </View>
@@ -281,19 +281,19 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
               {loading
                 ? 'Please wait...'
                 : isCompleted
-                ? 'Plan Completed'
-                : isRunning
-                ? 'End PJP'
-                : 'Start PJP'}
+                  ? 'Plan Completed'
+                  : isRunning
+                    ? 'End PJP'
+                    : 'Start PJP'}
             </Text>
             <Text style={styles.actionSub}>
               {loading
                 ? 'Fetching your location...'
                 : isCompleted
-                ? "Today's route is done"
-                : isRunning
-                ? `Tap to finish today's route`
-                : `Tap to begin today's route`}
+                  ? "Today's route is done"
+                  : isRunning
+                    ? `Tap to finish today's route`
+                    : `Tap to begin today's route`}
             </Text>
           </View>
         </View>
@@ -311,9 +311,25 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
           <View style={styles.activitiesContainer}>
             {detail.planned_activities.map((a, idx) => (
               <View key={idx} style={styles.activityCard}>
-                <View style={styles.activityDot} />
-                <Text style={styles.activityType}>{a.activity_type}</Text>
-                <Text style={styles.activityLocation}>{a.activity_location}</Text>
+                <View style={styles.activityIconRow}>
+                  <View style={styles.activityIconBadge}>
+                    <Text style={styles.activityIconText}>
+                      {a.activity_type === 'New Store Inauguration' ? '🏪'
+                        : a.activity_type === 'Distributor Onboarding' ? '🤝'
+                          : a.activity_type === 'Promoter Meet' ? '👥'
+                            : a.activity_type === 'Team Meeting' ? '👥'
+                              : a.activity_type === 'Work From Home' ? '🏠'
+                                : a.activity_type === 'Office Visit' ? '🏢'
+                                  : '📋'}
+                    </Text>
+                  </View>
+                  <View style={styles.activityInfo}>
+                    <Text style={styles.activityType}>{a.activity_type}</Text>
+                    <Text style={styles.activityLocation}>
+                      📍 {a.activity_location}
+                    </Text>
+                  </View>
+                </View>
               </View>
             ))}
           </View>
@@ -331,10 +347,10 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
       <FlatList
         data={detail.stores}
         scrollEnabled={false}
-        contentContainerStyle={{paddingBottom: 16}}
+        contentContainerStyle={{ paddingBottom: 16 }}
         keyExtractor={(item, index) => `${item.store_id}-${index}`}
-        ItemSeparatorComponent={() => <View style={{height: 10}} />}
-        renderItem={({item, index}) => (
+        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        renderItem={({ item, index }) => (
           <View style={styles.storeCard}>
             {/* Store Header */}
             <View style={styles.storeHeader}>
@@ -385,7 +401,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         )}
       />
 
-      <View style={{height: 32}} />
+      <View style={{ height: 32 }} />
 
       <MinStoresWarningModal
         visible={showMinStoreModal}
@@ -429,7 +445,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 14,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
     elevation: 3,
@@ -440,14 +456,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 5,
   },
-  headerLeft: {gap: 4},
+  headerLeft: { gap: 4 },
   dateLabel: {
     fontSize: 12,
     color: GRAY_400,
     fontWeight: '500',
     letterSpacing: 0.4,
   },
-  employeeName: {fontSize: 20, fontWeight: '700', color: GRAY_900},
+  employeeName: { fontSize: 20, fontWeight: '700', color: GRAY_900 },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -456,9 +472,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 5,
   },
-  statusDot: {width: 8, height: 8, borderRadius: 4},
-  statusText: {fontSize: 12, fontWeight: '600'},
-  divider: {height: 1, backgroundColor: GRAY_100, marginBottom: 5},
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  divider: { height: 1, backgroundColor: GRAY_100, marginBottom: 5 },
 
   /* Stats */
   statsRow: {
@@ -466,10 +482,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 14,
   },
-  statItem: {flex: 1, alignItems: 'center'},
-  statValue: {fontSize: 22, fontWeight: '800', color: GRAY_900},
-  statLabel: {fontSize: 11, color: GRAY_400, marginTop: 2, fontWeight: '500'},
-  statDivider: {width: 1, backgroundColor: GRAY_200},
+  statItem: { flex: 1, alignItems: 'center' },
+  statValue: { fontSize: 22, fontWeight: '800', color: GRAY_900 },
+  statLabel: { fontSize: 11, color: GRAY_400, marginTop: 2, fontWeight: '500' },
+  statDivider: { width: 1, backgroundColor: GRAY_200 },
 
   /* Progress */
   progressTrack: {
@@ -490,7 +506,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
-  idLabel: {fontSize: 11, color: GRAY_400, fontWeight: '400'},
+  idLabel: { fontSize: 11, color: GRAY_400, fontWeight: '400' },
 
   /* ── Action Button ── */
   actionButton: {
@@ -498,15 +514,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 6,
   },
-  actionStart: {backgroundColor: ACCENT},
-  actionRunning: {backgroundColor: DANGER},
-  actionCompleted: {backgroundColor: GRAY_400},
-  actionLoading: {opacity: 0.7},
+  actionStart: { backgroundColor: ACCENT },
+  actionRunning: { backgroundColor: DANGER },
+  actionCompleted: { backgroundColor: GRAY_400 },
+  actionLoading: { opacity: 0.7 },
   actionInner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -522,9 +538,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionIcon: {fontSize: 20, color: '#fff'},
-  actionTitle: {fontSize: 17, fontWeight: '700', color: '#fff'},
-  actionSub: {fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2},
+  actionIcon: { fontSize: 20, color: '#fff' },
+  actionTitle: { fontSize: 17, fontWeight: '700', color: '#fff' },
+  actionSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
 
   /* ── Section Header ── */
   sectionHeader: {
@@ -533,44 +549,57 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  sectionTitle: {fontSize: 16, fontWeight: '700', color: GRAY_800},
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: GRAY_800 },
   sectionCount: {
     backgroundColor: ACCENT,
     borderRadius: 99,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  sectionCountText: {fontSize: 11, color: '#fff', fontWeight: '700'},
+  sectionCountText: { fontSize: 11, color: '#fff', fontWeight: '700' },
 
   /* ── Activities ── */
   activitiesContainer: {
-    gap: 8,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 18,
   },
   activityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    gap: 10,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderLeftWidth: 3,
+    borderLeftColor: ACCENT,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  activityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: ACCENT,
+  activityIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 12,
+  },
+  activityIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityIconText: {
+    fontSize: 16,
+  },
+  activityInfo: {
+    flex: 1,
+    gap: 2,
   },
   activityType: {
     fontSize: 13,
     fontWeight: '600',
     color: GRAY_800,
-    flex: 1,
   },
   activityLocation: {
     fontSize: 12,
@@ -583,7 +612,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -602,8 +631,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  storeIndexText: {fontSize: 13, fontWeight: '700', color: GRAY_600},
-  storeInfo: {flex: 1},
+  storeIndexText: { fontSize: 13, fontWeight: '700', color: GRAY_600 },
+  storeInfo: { flex: 1 },
   storeName: {
     fontSize: 15,
     fontWeight: '600',
@@ -616,8 +645,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 2,
   },
-  storeMeta: {fontSize: 12, color: GRAY_400},
-  metaDot: {fontSize: 12, color: GRAY_200, marginHorizontal: 2},
+  storeMeta: { fontSize: 12, color: GRAY_400 },
+  metaDot: { fontSize: 12, color: GRAY_200, marginHorizontal: 2 },
 
   /* Warehouse */
   warehouseSection: {
@@ -628,7 +657,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 8,
   },
-  warehouseRow: {flexDirection: 'row', alignItems: 'flex-start', gap: 10},
+  warehouseRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   warehouseAccent: {
     width: 3,
     borderRadius: 2,
@@ -636,7 +665,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     alignSelf: 'stretch',
   },
-  warehouseDetails: {flex: 1},
-  warehouseName: {fontSize: 13, fontWeight: '600', color: GRAY_800},
-  warehouseSub: {fontSize: 12, color: GRAY_400, marginTop: 2},
+  warehouseDetails: { flex: 1 },
+  warehouseName: { fontSize: 13, fontWeight: '600', color: GRAY_800 },
+  warehouseSub: { fontSize: 12, color: GRAY_400, marginTop: 2 },
 });

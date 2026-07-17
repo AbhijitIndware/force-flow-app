@@ -125,7 +125,7 @@ const CheckInForm = ({ navigation }: Props) => {
     initialValues: INITIAL_VALUES,
     validationSchema: checkInSchema,
     onSubmit: async formValues => {
-      console.log("🚀 ~ CheckInForm ~ formValues:", formValues)
+      // console.log("🚀 ~ CheckInForm ~ formValues:", formValues)
       if (
         storesWithoutImage.has(formValues.store) &&
         !formValues.store_image?.data
