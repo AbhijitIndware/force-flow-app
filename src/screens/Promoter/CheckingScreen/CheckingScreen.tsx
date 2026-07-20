@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   EmpInfoSection: {
     backgroundColor: Colors.white,
     padding: 15,
-    borderRadius: 15,
+    borderRadius: 14,
     marginTop: 20,
     width: '100%',
     display: 'flex',
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   ShiftDetailsBox: {
     backgroundColor: Colors.white,
     padding: 15,
-    borderRadius: 15,
+    borderRadius: 14,
     marginTop: 20,
     width: '100%',
     display: 'flex',

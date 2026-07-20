@@ -211,17 +211,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addMoreBtn: {
-    backgroundColor: Colors.Orangelight,
+    backgroundColor: Colors.white,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
     alignItems: 'center',
     marginVertical: 12,
     alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   addMoreText: {
-    color: Colors.white,
-    fontFamily: Fonts.regular,
+    color: Colors.orange,
+    fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
   },
   removeButton: {

@@ -191,7 +191,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
             <TouchableOpacity
               style={[
                 styles.linkBox,
-                { backgroundColor: Colors.orange, padding: 7, borderRadius: 18 },
+                { backgroundColor: Colors.orange, padding: 7, borderRadius: 15 },
               ]}
               onPress={() => navigation.navigate('StockScreen')}>
               <View
@@ -504,8 +504,8 @@ const styles = StyleSheet.create({
     minHeight: 200,
     width: '100%',
     paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 32,
     // iOS Shadow
     shadowColor: '#979797',
     shadowOffset: { width: 0, height: 6 },
@@ -618,19 +618,24 @@ const styles = StyleSheet.create({
   countBox: {
     backgroundColor: Colors.white,
     width: width * 0.43,
-    borderRadius: 15,
+    borderRadius: 14,
     padding: 15,
     minHeight: 107,
+    shadowColor: '#9F9D9D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   countBoxIcon: {
-    width: 45,
-    height: 45,
+    width: 38,
+    height: 38,
     display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 100,
+    borderRadius: 10,
     marginBottom: 10,
   },
   countBoxTitle: {
@@ -655,7 +660,7 @@ const styles = StyleSheet.create({
   dataBoxSection: { paddingTop: 15 },
   dataBox: {
     backgroundColor: Colors.white,
-    borderRadius: 18,
+    borderRadius: 14,
     marginBottom: 15,
     paddingHorizontal: 15,
     paddingVertical: 20,
@@ -714,10 +719,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconbox: {
-    width: 60,
-    height: 60,
+    width: 38,
+    height: 38,
     backgroundColor: Colors.darkButton,
-    borderRadius: 18,
+    borderRadius: 10,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',

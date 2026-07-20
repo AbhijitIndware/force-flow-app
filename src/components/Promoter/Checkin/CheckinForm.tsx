@@ -159,10 +159,10 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     backgroundColor: '#C8DAFF',
-    borderRadius: 100,
+    borderRadius: 10,
   },
 
   uploadTitle: {
