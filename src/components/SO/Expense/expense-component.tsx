@@ -44,6 +44,7 @@ const ExpenseComponent = ({ navigation }: any) => {
   const {
     data: claimsData,
     isLoading: claimsLoading,
+    error,
     isFetching: claimsFetching,
     refetch
   } = useGetMyExpenseClaimsQuery({

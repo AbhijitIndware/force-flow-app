@@ -1,11 +1,12 @@
-import {StyleSheet, SafeAreaView} from 'react-native';
+import { ActivityIndicator, StyleSheet, SafeAreaView, View } from 'react-native';
 import React from 'react';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import AddExpenseComponent from '../../../components/SO/Expense/add-expense';
+import { useGetClaimDetailQuery } from '../../../features/tada/tadaApiv2';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -17,18 +18,40 @@ type Props = {
   route: any;
 };
 
-const AddExpenseScreen = ({navigation, route}: Props) => {
+const AddExpenseScreen = ({ navigation, route }: Props) => {
   const existingClaimId = route?.params?.claimId;
 
+  // ── Load existing rows when editing a draft ──
+  const { data: existingDetail, isLoading } = useGetClaimDetailQuery(
+    { claim_id: existingClaimId! },
+    { skip: !existingClaimId, refetchOnMountOrArgChange: true },
+  );
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
+        <PageHeader
+          title="Create Expense Claim"
+          navigation={() => navigation.navigate('ExpenseScreen')}
+        />
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={Colors.orange} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Create Expense Claim"
         navigation={() => navigation.navigate('ExpenseScreen')}
       />
+
       <AddExpenseComponent
         navigation={navigation}
         existingClaimId={existingClaimId}
+        existingDetail={existingDetail}
       />
     </SafeAreaView>
   );
@@ -37,6 +60,11 @@ const AddExpenseScreen = ({navigation, route}: Props) => {
 export default AddExpenseScreen;
 
 const styles = StyleSheet.create({
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   submitBtn: {
     backgroundColor: Colors.primary,
     paddingVertical: 12,

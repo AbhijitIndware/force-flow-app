@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
-import {Colors} from '../../../utils/colors';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
-import {CirclePlus} from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Colors } from '../../../utils/colors';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
+import { CirclePlus } from 'lucide-react-native';
 import moment from 'moment';
 import AddExpenseModal from './add-expense-modal';
 import Toast from 'react-native-toast-message';
@@ -19,17 +19,19 @@ import {
   useAddExpenseRowMutation,
   useSubmitExpenseClaimMutation,
   useDeleteExpenseRowMutation,
+  useReviseExpenseClaimMutation,
   useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
-import {fileToBase64} from '../../../utils/fileUtils';
-import {useAppSelector} from '../../../store/hook';
+import { fileToBase64 } from '../../../utils/fileUtils';
+import { useAppSelector } from '../../../store/hook';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import {Switch} from 'react-native-paper';
-import {EmployeeStrip} from './AddExpense/EmployeeStrip';
-import {PjpSelectionDropdown} from './AddExpense/PjpSelectionDropdown';
-import {DraftStatusBadge} from './AddExpense/DraftStatusBadge';
-import {ProgressOverlay} from './AddExpense/ProgressOverlay';
-import {ExpenseRowCard} from './AddExpense/ExpenseRowCard';
+import { Switch } from 'react-native-paper';
+import { EmployeeStrip } from './AddExpense/EmployeeStrip';
+import { PjpSelectionDropdown } from './AddExpense/PjpSelectionDropdown';
+import { DraftStatusBadge } from './AddExpense/DraftStatusBadge';
+import { ProgressOverlay } from './AddExpense/ProgressOverlay';
+import { ExpenseRowCard } from './AddExpense/ExpenseRowCard';
+import { ExpenseClaimResponse } from '../../../types/tadaType';
 
 export type LocalExpenseItem = {
   expense_type: string;
@@ -51,9 +53,11 @@ export type LocalExpenseItem = {
 type Props = {
   navigation: any;
   existingClaimId?: string;
+  existingDetail: ExpenseClaimResponse | undefined
 };
 
-const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
+const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Props) => {
+  console.log("🚀 ~ AddExpenseComponent ~ existingDetail:", existingDetail)
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
@@ -74,16 +78,12 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   const [addExpenseRow] = useAddExpenseRowMutation();
   const [submitExpenseClaim] = useSubmitExpenseClaimMutation();
   const [deleteExpenseRow] = useDeleteExpenseRowMutation();
+  const [reviseExpenseClaim] = useReviseExpenseClaimMutation();
 
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  // ── Load existing rows when editing a draft ──
-  const {data: existingDetail} = useGetClaimDetailQuery(
-    {claim_id: existingClaimId!},
-    {skip: !existingClaimId},
-  );
 
   const workflowStatus: string =
     existingDetail?.message?.data?.workflow_state || '';
@@ -94,12 +94,16 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   const isRejected = workflowStatus === 'Rejected';
   const isReadOnly = isPendingApproval || isApproved || isRejected;
 
+  const revisionsRemaining = existingDetail?.message?.data?.revisions_remaining ?? 1;
+  const maxRevisions = existingDetail?.message?.data?.max_revisions ?? 1;
+  const isMaxRevisionReached = isRejected && revisionsRemaining <= 0;
+
   // ── Derive workflow status from API ──
   useEffect(() => {
     const rows = existingDetail?.message?.data?.expenses;
     setSelectedDate(
       existingDetail?.message?.data?.travel_start_date ||
-        moment().format('YYYY-MM-DD'),
+      moment().format('YYYY-MM-DD'),
     );
     setDistanceKm(existingDetail?.message?.data?.distance_km as number);
     setIsSelfArrangedStay(
@@ -128,7 +132,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   // ── Step 1: Create Draft ──
   const handleCreateDraft = async () => {
     if (!pjpStoreId) {
-      Toast.show({type: 'error', text1: 'Please select a PJP first'});
+      Toast.show({ type: 'error', text1: 'Please select a PJP first' });
       return;
     }
     if (claimId) return;
@@ -165,7 +169,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   // ── Step 2: Add Row ──
   const handleAddLocalExpense = async (item: LocalExpenseItem) => {
     if (!claimId) {
-      Toast.show({type: 'error', text1: 'Please create a draft first.'});
+      Toast.show({ type: 'error', text1: 'Please create a draft first.' });
       return;
     }
     try {
@@ -177,7 +181,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
           item.attachment.uri,
           item.attachment.type,
         );
-        imageData = {mime: item.attachment.type, data: base64};
+        imageData = { mime: item.attachment.type, data: base64 };
       }
       const rowRes = await addExpenseRow({
         claim_id: claimId,
@@ -195,7 +199,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
         is_self_arranged_stay: item.is_self_arranged_stay,
       }).unwrap();
       const row_id = rowRes?.message?.data?.row_id;
-      setExpenses(prev => [...prev, {...item, row_id}]);
+      setExpenses(prev => [...prev, { ...item, row_id }]);
       setTotal(prev => prev + item.amount);
     } catch (error: any) {
       Toast.show({
@@ -246,13 +250,13 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
       return;
     }
     if (!claimId) {
-      Toast.show({type: 'error', text1: 'No active draft found'});
+      Toast.show({ type: 'error', text1: 'No active draft found' });
       return;
     }
     try {
       setLoading(true);
       setUploadStep('Finalizing submission...');
-      let res = await submitExpenseClaim({claim_id: claimId}).unwrap();
+      let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
       // console.log('🚀 ~ handleSubmitClaim ~ res:', res);
       Toast.show({
         type: 'success',
@@ -265,6 +269,42 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
       Toast.show({
         type: 'error',
         text1: error?.data?.message?.message || 'Failed to submit expense',
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+      setUploadStep('');
+    }
+  };
+
+  // ── Revise Claim (Rejected → Draft) ──
+  const handleReviseClaim = async () => {
+    if (!claimId) return;
+    try {
+      setLoading(true);
+      setUploadStep('Revising claim...');
+      const res = await reviseExpenseClaim({ claim_id: claimId }).unwrap();
+
+      if (res?.message?.status === 'error') {
+        Toast.show({
+          type: 'error',
+          text1: res.message.message || 'Failed to revise claim',
+          position: 'top',
+        });
+        return;
+      }
+
+      Toast.show({
+        type: 'success',
+        text1: 'Claim is now open for revision.',
+        position: 'top',
+      });
+      clearFormData();
+      navigation.goBack();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: error?.data?.message?.message || 'Failed to revise claim',
         position: 'top',
       });
     } finally {
@@ -297,9 +337,9 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
   // ── Status banner config ──
   const STATUS_BANNER: Record<
     string,
-    {label: string; bg: string; color: string; dot: string}
+    { label: string; bg: string; color: string; dot: string }
   > = {
-    Draft: {label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
+    Draft: { label: 'Draft', bg: '#f8fafc', color: '#475569', dot: '#94a3b8' },
     'Pending Approval': {
       label: 'Pending Approval',
       bg: '#fffbeb',
@@ -331,26 +371,26 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
           <Text style={[extraStyles.statusBannerText, { color: bannerCfg.color }]}>
             {bannerCfg.label}
           </Text>
-          {isReadOnly && (
-            <Text style={extraStyles.readOnlyHint}>· Read-only</Text>
-          )}
+          <Text style={extraStyles.readOnlyHint}>
+            ·  Revise left: {revisionsRemaining}
+          </Text>
         </View>
       ) : null} */}
       {/* ── Date + PJP ── */}
       <View style={styles.rowInputs}>
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <ReusableDatePicker
             label="Date"
             value={selectedDate}
             onChange={(val: string) => setSelectedDate(val)}
             marginBottom={0}
             labelStyle={styles.inputLabel}
-            inputStyle={{fontSize: 13}}
+            inputStyle={{ fontSize: 13 }}
             height={42}
             disabled={!!claimId || isReadOnly}
           />
         </View>
-        <View style={{flex: 1.3}}>
+        <View style={{ flex: 1.3 }}>
           <PjpSelectionDropdown
             value={pjpStoreId}
             onSelect={handlePjpSelect}
@@ -400,6 +440,8 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
           claimId={claimId}
           itemCount={expenses.length}
           status={existingDetail?.message?.data?.workflow_state}
+          revisionsRemaining={existingDetail?.message?.data?.revisions_remaining}
+          maxRevisions={existingDetail?.message?.data?.max_revisions}
         />
       )}
 
@@ -458,7 +500,7 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
         <TouchableOpacity
           style={[
             styles.actionBtn,
-            {backgroundColor: Colors.darkButton},
+            { backgroundColor: Colors.darkButton },
             (!pjpStoreId || loading) && styles.disabled,
           ]}
           onPress={handleCreateDraft}
@@ -471,18 +513,38 @@ const AddExpenseComponent = ({navigation, existingClaimId}: Props) => {
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                {backgroundColor: Colors.darkButton},
+                { backgroundColor: Colors.darkButton },
                 (loading || expenses.length === 0) && styles.disabled,
               ]}
               onPress={handleSubmitClaim}
               disabled={loading || expenses.length === 0}>
               <Text style={styles.actionBtnText}>Submit Claim</Text>
             </TouchableOpacity>
+          ) : claimId && isRejected ? (
+            <View style={styles.rejectedActions}>
+              <Text style={[styles.revisionInfo, isMaxRevisionReached && styles.revisionInfoBold]}>
+                {isMaxRevisionReached ? 'Revisions count reached max.' : `Revisions remaining: ${revisionsRemaining}`}
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.actionBtn,
+                  isMaxRevisionReached
+                    ? { backgroundColor: '#94A3B8', flex: 1 }
+                    : { backgroundColor: '#dc2626', flex: 1 },
+                  (loading || isMaxRevisionReached) && styles.disabled,
+                ]}
+                onPress={handleReviseClaim}
+                disabled={loading || isMaxRevisionReached}>
+                <Text style={styles.actionBtnText}>
+                  {isMaxRevisionReached ? 'Max Revisions Reached' : 'Revise Claim'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           ) : (
             <TouchableOpacity
               style={[
                 styles.actionBtn,
-                {backgroundColor: Colors.darkButton},
+                { backgroundColor: Colors.darkButton },
                 styles.disabled,
               ]}>
               <Text style={styles.actionBtnText}>Submit Claim</Text>
@@ -607,15 +669,15 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actionBtn: {
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
   },
   actionBtnText: {
-    fontFamily: Fonts.bold,
-    fontSize: Size.sm,
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
     color: Colors.white,
   },
   disabled: {
@@ -661,6 +723,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  rejectedActions: {
+    flexDirection: 'row',
+    gap: 1,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  revisionInfo: {
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    width: '100%',
+    // marginBottom: 2,
+  },
+  revisionInfoBold: {
+    fontFamily: Fonts.bold,
+    color: '#dc2626',
+  },
 });
 
 // ── Additional styles (merge with existing StyleSheet) ──
@@ -682,13 +762,13 @@ const extraStyles = StyleSheet.create({
     borderRadius: 4,
   },
   statusBannerText: {
-    fontFamily: Fonts.semiBold,
+    fontFamily: Fonts.regular,
     fontSize: 12,
   },
   readOnlyHint: {
     fontFamily: Fonts.regular,
     fontSize: 11,
-    color: '#94a3b8',
+    color: Colors.danger,
   },
 
   // Approve / Reject row

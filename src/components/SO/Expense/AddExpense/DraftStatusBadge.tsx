@@ -6,6 +6,8 @@ type Props = {
     claimId: string;
     itemCount: number;
     status: string | undefined;
+    revisionsRemaining?: number;
+    maxRevisions?: number;
 };
 
 const STATUS_STYLE: Record<
@@ -45,7 +47,7 @@ const DEFAULT_STYLE = {
     text: '#475569',
 };
 
-export const DraftStatusBadge = ({ claimId, itemCount, status }: Props) => {
+export const DraftStatusBadge = ({ claimId, itemCount, status, revisionsRemaining, maxRevisions }: Props) => {
     const s = STATUS_STYLE[status ?? ''] ?? DEFAULT_STYLE;
 
     return (
@@ -61,9 +63,16 @@ export const DraftStatusBadge = ({ claimId, itemCount, status }: Props) => {
             <Text style={[styles.claimText, { color: s.text }]} numberOfLines={1}>
                 {status ?? 'Draft'} · {claimId}
             </Text>
-            <Text style={[styles.countText, { color: s.text }]}>
-                {itemCount} item{itemCount !== 1 ? 's' : ''}
-            </Text>
+            <View style={styles.rightGroup}>
+                <Text style={[styles.countText, { color: s.text }]}>
+                    {itemCount} item{itemCount !== 1 ? 's' : ''}
+                </Text>
+                {revisionsRemaining !== undefined && maxRevisions !== undefined && (
+                    <Text style={[styles.revisionText, { color: s.text }]}>
+                        · Revise left: {revisionsRemaining}
+                    </Text>
+                )}
+            </View>
         </View>
     );
 };
@@ -92,5 +101,14 @@ const styles = StyleSheet.create({
     countText: {
         fontSize: 11,
         fontFamily: Fonts.medium,
+    },
+    rightGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+    },
+    revisionText: {
+        fontSize: 11,
+        fontFamily: Fonts.regular,
     },
 });

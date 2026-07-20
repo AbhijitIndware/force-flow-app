@@ -19,6 +19,7 @@ export type TadaErrorCode =
   | 'NOT_DRAFT'
   | 'NOT_SUBMITTED'
   | 'INVALID_STATUS'
+  | 'INVALID_STATE'
   | 'NOT_FOUND'
   | 'SERVER_ERROR';
 
@@ -86,6 +87,9 @@ export interface ExpenseClaimData {
   total_sanctioned_amount: number;
   expenses: Expense[];
   attachments: string[];
+  revision_count?: number;
+  max_revisions?: number;
+  revisions_remaining?: number;
 }
 
 export interface Expense {
@@ -335,6 +339,16 @@ export interface SubmitExpenseClaimResponse {
   status: string;
   docstatus: number;
   workflow_state: string;
+}
+
+export interface ReviseExpenseClaimPayload {
+  claim_id: string;
+}
+
+export interface ReviseExpenseClaimResponse {
+  claim_id: string;
+  workflow_state: string;
+  approval_status: string;
 }
 
 export interface ApproveClaimPayload {

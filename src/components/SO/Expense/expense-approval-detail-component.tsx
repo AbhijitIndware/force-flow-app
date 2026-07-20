@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -15,16 +15,16 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   useGetClaimDetailQuery,
   useApproveClaimMutation,
   useRejectClaimMutation,
   useApproverEditClaimMutation,
 } from '../../../features/tada/tadaApiv2';
-import {Expense} from '../../../types/tadaType';
+import { Expense } from '../../../types/tadaType';
 import Toast from 'react-native-toast-message';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -38,19 +38,19 @@ interface ExpenseApprovalDetailComponentProps {
 
 export const imageBaseUrl = 'https://sfa.softsensbaby.in';
 
-const STATUS_CONFIG: Record<string, {bg: string; color: string; dot: string}> =
-  {
-    Submitted: {bg: '#fffbeb', color: '#d97706', dot: '#fbbf24'},
-    'Pending Approval': {bg: '#fffbeb', color: '#d97706', dot: '#fbbf24'},
-    Approved: {bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e'},
-    Rejected: {bg: '#fff1f2', color: '#dc2626', dot: '#f87171'},
-    Draft: {bg: '#f8fafc', color: '#475569', dot: '#94a3b8'},
-    Cancelled: {bg: '#f8fafc', color: '#64748b', dot: '#94a3b8'},
-    // ✅ New HR statuses
-    'HR Pending': {bg: '#f5f3ff', color: '#7c3aed', dot: '#a78bfa'},
-    'HR Approved': {bg: '#f0f9ff', color: '#0369a1', dot: '#38bdf8'},
-    'HR Rejected': {bg: '#fff1f2', color: '#b91c1c', dot: '#fca5a5'},
-  };
+const STATUS_CONFIG: Record<string, { bg: string; color: string; dot: string }> =
+{
+  Submitted: { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+  'Pending Approval': { bg: '#fffbeb', color: '#d97706', dot: '#fbbf24' },
+  Approved: { bg: '#f0fdf4', color: '#16a34a', dot: '#22c55e' },
+  Rejected: { bg: '#fff1f2', color: '#dc2626', dot: '#f87171' },
+  Draft: { bg: '#f8fafc', color: '#475569', dot: '#94a3b8' },
+  Cancelled: { bg: '#f8fafc', color: '#64748b', dot: '#94a3b8' },
+  // ✅ New HR statuses
+  'HR Pending': { bg: '#f5f3ff', color: '#7c3aed', dot: '#a78bfa' },
+  'HR Approved': { bg: '#f0f9ff', color: '#0369a1', dot: '#38bdf8' },
+  'HR Rejected': { bg: '#fff1f2', color: '#b91c1c', dot: '#fca5a5' },
+};
 
 const EXPENSE_ICONS: Record<string, string> = {
   'Daily Allowance': 'sunny-outline',
@@ -105,13 +105,13 @@ const InfoRow = ({
   bold?: boolean;
   last?: boolean;
 }) => (
-  <View style={[styles.infoRow, last && {borderBottomWidth: 0}]}>
+  <View style={[styles.infoRow, last && { borderBottomWidth: 0 }]}>
     <Text style={styles.infoLabel}>{label}</Text>
     <Text
       style={[
         styles.infoValue,
-        valueColor ? {color: valueColor} : null,
-        bold ? {fontFamily: Fonts.bold} : null,
+        valueColor ? { color: valueColor } : null,
+        bold ? { fontFamily: Fonts.bold } : null,
       ]}>
       {value || 'N/A'}
     </Text>
@@ -136,7 +136,7 @@ const SectionCard = ({
       <View
         style={[
           styles.sectionIconWrap,
-          iconColor ? {backgroundColor: iconColor + '18'} : null,
+          iconColor ? { backgroundColor: iconColor + '18' } : null,
         ]}>
         <Ionicons
           name={icon}
@@ -189,11 +189,11 @@ const ExpenseRowCard = ({
 
   return (
     <CardContainer
-      style={[styles.expenseCard, last && {borderBottomWidth: 0}]}
+      style={[styles.expenseCard, last && { borderBottomWidth: 0 }]}
       onPress={onPress}
       activeOpacity={0.7}>
       <View
-        style={[styles.expenseIconWrap, {backgroundColor: iconColor + '15'}]}>
+        style={[styles.expenseIconWrap, { backgroundColor: iconColor + '15' }]}>
         <Ionicons name={iconName} size={17} color={iconColor} />
       </View>
 
@@ -222,7 +222,7 @@ const ExpenseRowCard = ({
           <Text
             style={[
               styles.expenseDesc,
-              {color: '#dc2626', fontFamily: Fonts.medium},
+              { color: '#dc2626', fontFamily: Fonts.medium },
             ]}
             numberOfLines={1}>
             Note: {item.approver_note}
@@ -251,8 +251,8 @@ const ExpenseRowCard = ({
               backgroundColor: isReduced
                 ? '#fff1f2'
                 : isEqual
-                ? '#f8fafc'
-                : '#f0fdf4',
+                  ? '#f8fafc'
+                  : '#f0fdf4',
             },
           ]}>
           <Text
@@ -262,8 +262,8 @@ const ExpenseRowCard = ({
                 color: isReduced
                   ? '#dc2626'
                   : isEqual
-                  ? Colors.darkButton
-                  : '#16a34a',
+                    ? Colors.darkButton
+                    : '#16a34a',
               },
             ]}>
             ₹{item.sanctioned_amount.toLocaleString('en-IN')}
@@ -300,10 +300,10 @@ const ExpenseApprovalDetailComponent = ({
   const [approverNote, setApproverNote] = useState('');
   const [approverRemarks, setApproverRemarks] = useState('');
 
-  const {data, isLoading} = useGetClaimDetailQuery({claim_id: claimId});
-  const [approveClaim, {isLoading: approveLoading}] = useApproveClaimMutation();
-  const [rejectClaim, {isLoading: rejectLoading}] = useRejectClaimMutation();
-  const [approverEditClaim, {isLoading: editClaimLoading}] =
+  const { data, isLoading } = useGetClaimDetailQuery({ claim_id: claimId });
+  const [approveClaim, { isLoading: approveLoading }] = useApproveClaimMutation();
+  const [rejectClaim, { isLoading: rejectLoading }] = useRejectClaimMutation();
+  const [approverEditClaim, { isLoading: editClaimLoading }] =
     useApproverEditClaimMutation();
 
   const handleEditRowPress = (exp: Expense) => {
@@ -372,7 +372,7 @@ const ExpenseApprovalDetailComponent = ({
       'Confirm Delete',
       'Are you sure you want to remove this expense item from the claim?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -460,9 +460,9 @@ const ExpenseApprovalDetailComponent = ({
         extra: approvalFlags.extra ? 1 : 0,
         promotional: approvalFlags.promotional ? 1 : 0,
       };
-      console.log('🚀 ~ handleConfirmApprove ~ payload:', payload);
+      // console.log('🚀 ~ handleConfirmApprove ~ payload:', payload);
       const res = await approveClaim(payload).unwrap();
-      console.log('🚀 ~ handleConfirmApprove ~ res:', res);
+      // console.log('🚀 ~ handleConfirmApprove ~ res:', res);
 
       if (res?.message?.status === 'success') {
         setApproveModalVisible(false);
@@ -513,7 +513,7 @@ const ExpenseApprovalDetailComponent = ({
       'Confirm Rejection',
       'Are you sure you want to reject this expense claim?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reject',
           style: 'destructive',
@@ -585,7 +585,7 @@ const ExpenseApprovalDetailComponent = ({
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 40}}>
+        contentContainerStyle={{ paddingBottom: 40 }}>
         {/* ── Hero Header ────────────────────────────────────────── */}
         <View style={styles.heroCard}>
           <View style={styles.heroTop}>
@@ -603,10 +603,10 @@ const ExpenseApprovalDetailComponent = ({
             <View
               style={[
                 styles.statusBadge,
-                {backgroundColor: st.bg, borderColor: st.color},
+                { backgroundColor: st.bg, borderColor: st.color },
               ]}>
-              <View style={[styles.statusDot, {backgroundColor: st.dot}]} />
-              <Text style={[styles.statusText, {color: st.color}]}>
+              <View style={[styles.statusDot, { backgroundColor: st.dot }]} />
+              <Text style={[styles.statusText, { color: st.color }]}>
                 {claim.workflow_state}
               </Text>
             </View>
@@ -628,7 +628,7 @@ const ExpenseApprovalDetailComponent = ({
 
             <View style={[styles.amountTile, styles.amountTileCenter]}>
               <Text style={styles.amountTileLabel}>Sanctioned</Text>
-              <Text style={[styles.amountTileValue, {color: '#16a34a'}]}>
+              <Text style={[styles.amountTileValue, { color: '#16a34a' }]}>
                 ₹{sanctionedTotal.toLocaleString('en-IN')}
               </Text>
             </View>
@@ -640,7 +640,7 @@ const ExpenseApprovalDetailComponent = ({
                 </View>
                 <View style={styles.amountTile}>
                   <Text style={styles.amountTileLabel}>Difference</Text>
-                  <Text style={[styles.amountTileValue, {color: '#dc2626'}]}>
+                  <Text style={[styles.amountTileValue, { color: '#dc2626' }]}>
                     ₹{diff.toLocaleString('en-IN')}
                   </Text>
                 </View>
@@ -706,7 +706,7 @@ const ExpenseApprovalDetailComponent = ({
               <View
                 style={[
                   styles.sectionIconWrap,
-                  {backgroundColor: '#F9731618'},
+                  { backgroundColor: '#F9731618' },
                 ]}>
                 <Ionicons name="receipt-outline" size={15} color="#F97316" />
               </View>
@@ -723,10 +723,10 @@ const ExpenseApprovalDetailComponent = ({
 
             <View style={styles.expenseColHeader}>
               <Text
-                style={[styles.expenseColLabel, {flex: 1, textAlign: 'left'}]}>
+                style={[styles.expenseColLabel, { flex: 1, textAlign: 'left' }]}>
                 Description
               </Text>
-              <Text style={[styles.expenseColLabel, {marginRight: 8}]}>
+              <Text style={[styles.expenseColLabel, { marginRight: 8 }]}>
                 Claimed
               </Text>
               <Text style={styles.expenseColLabel}>Sanctioned</Text>
@@ -879,7 +879,7 @@ const ExpenseApprovalDetailComponent = ({
               <View style={styles.modalIconCircle}>
                 <Ionicons name="close-circle" size={24} color="#dc2626" />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.modalTitle}>Reject Expense Claim</Text>
                 <Text style={styles.modalSubtitle}>#{claimId}</Text>
               </View>
@@ -985,7 +985,7 @@ const ExpenseApprovalDetailComponent = ({
                     </View>
                   )}
                   <Image
-                    source={{uri: previewUrl}}
+                    source={{ uri: previewUrl }}
                     style={styles.previewImage}
                     resizeMode="contain"
                     onLoadStart={() => setImageLoading(true)}
@@ -1027,10 +1027,10 @@ const ExpenseApprovalDetailComponent = ({
             {/* Header */}
             <View style={styles.modalHeader}>
               <View
-                style={[styles.modalIconCircle, {backgroundColor: '#dcfce7'}]}>
+                style={[styles.modalIconCircle, { backgroundColor: '#dcfce7' }]}>
                 <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.modalTitle}>Approve Expense Claim</Text>
                 <Text style={styles.modalSubtitle}>#{claimId}</Text>
               </View>
@@ -1085,7 +1085,7 @@ const ExpenseApprovalDetailComponent = ({
                 style={[
                   approveStyles.checkRow,
                   approvalFlags[item.key] && approveStyles.checkRowActive,
-                  idx === arr.length - 1 && {marginBottom: 0},
+                  idx === arr.length - 1 && { marginBottom: 0 },
                 ]}
                 onPress={() =>
                   setApprovalFlags(prev => ({
@@ -1098,7 +1098,7 @@ const ExpenseApprovalDetailComponent = ({
                 <View
                   style={[
                     approveStyles.itemIcon,
-                    {backgroundColor: item.iconBg},
+                    { backgroundColor: item.iconBg },
                   ]}>
                   <Ionicons
                     name={item.icon as any}
@@ -1108,7 +1108,7 @@ const ExpenseApprovalDetailComponent = ({
                 </View>
 
                 {/* Text */}
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <Text style={approveStyles.checkTitle}>{item.title}</Text>
                   <Text style={approveStyles.checkSub}>{item.sub}</Text>
                 </View>
@@ -1127,7 +1127,7 @@ const ExpenseApprovalDetailComponent = ({
             ))}
 
             {/* Footer */}
-            <View style={[styles.modalFooter, {marginTop: 20}]}>
+            <View style={[styles.modalFooter, { marginTop: 20 }]}>
               <TouchableOpacity
                 style={styles.modalCancelBtn}
                 onPress={() => {
@@ -1144,7 +1144,7 @@ const ExpenseApprovalDetailComponent = ({
               <TouchableOpacity
                 style={[
                   styles.modalConfirmBtn,
-                  {backgroundColor: '#16a34a', borderColor: '#16a34a'},
+                  { backgroundColor: '#16a34a', borderColor: '#16a34a' },
                 ]}
                 onPress={handleConfirmApprove}
                 disabled={approveLoading}>
@@ -1181,11 +1181,11 @@ const ExpenseApprovalDetailComponent = ({
               <View
                 style={[
                   styles.modalIconCircle,
-                  {backgroundColor: '#eff6ff', borderColor: '#bfdbfe'},
+                  { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' },
                 ]}>
                 <Ionicons name="create" size={24} color="#2563eb" />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.modalTitle}>Modify Expense Item</Text>
                 <Text style={styles.modalSubtitle}>
                   {selectedExpense?.expense_type} (
@@ -1207,8 +1207,8 @@ const ExpenseApprovalDetailComponent = ({
 
             <ScrollView
               showsVerticalScrollIndicator={false}
-              style={{maxHeight: 350}}>
-              <View style={{marginBottom: 12}}>
+              style={{ maxHeight: 350 }}>
+              <View style={{ marginBottom: 12 }}>
                 <Text style={styles.inputLabel}>
                   Claimed Amount: ₹
                   {selectedExpense?.amount?.toLocaleString('en-IN')}
@@ -1219,7 +1219,7 @@ const ExpenseApprovalDetailComponent = ({
               <TextInput
                 style={[
                   styles.reasonInput,
-                  {minHeight: 48, maxHeight: 48, marginBottom: 16},
+                  { minHeight: 48, maxHeight: 48, marginBottom: 16 },
                 ]}
                 keyboardType="numeric"
                 value={sanctionedAmount}
@@ -1234,7 +1234,7 @@ const ExpenseApprovalDetailComponent = ({
               <TextInput
                 style={[
                   styles.reasonInput,
-                  {minHeight: 60, maxHeight: 80, marginBottom: 16},
+                  { minHeight: 60, maxHeight: 80, marginBottom: 16 },
                 ]}
                 multiline
                 numberOfLines={2}
@@ -1251,7 +1251,7 @@ const ExpenseApprovalDetailComponent = ({
               <TextInput
                 style={[
                   styles.reasonInput,
-                  {minHeight: 60, maxHeight: 80, marginBottom: 16},
+                  { minHeight: 60, maxHeight: 80, marginBottom: 16 },
                 ]}
                 multiline
                 numberOfLines={2}
@@ -1290,7 +1290,7 @@ const ExpenseApprovalDetailComponent = ({
               </TouchableOpacity>
             </ScrollView>
 
-            <View style={[styles.modalFooter, {marginTop: 12}]}>
+            <View style={[styles.modalFooter, { marginTop: 12 }]}>
               <TouchableOpacity
                 style={styles.modalCancelBtn}
                 onPress={() => {
@@ -1303,7 +1303,7 @@ const ExpenseApprovalDetailComponent = ({
               <TouchableOpacity
                 style={[
                   styles.modalConfirmBtn,
-                  {backgroundColor: '#16a34a', borderColor: '#16a34a'},
+                  { backgroundColor: '#16a34a', borderColor: '#16a34a' },
                 ]}
                 onPress={handleSaveRow}
                 disabled={editClaimLoading}>
@@ -1438,17 +1438,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
   },
   heroTop: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
+    alignItems: 'flex-end',
+    // justifyContent: 'flex-end',
+    flexWrap: 'wrap',
+    marginBottom: 10,
   },
-  heroLeft: {flex: 1},
+  heroLeft: { flex: 1 },
   claimIdRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1485,13 +1487,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
   },
-  statusDot: {width: 6, height: 6, borderRadius: 3},
-  statusText: {fontFamily: Fonts.semiBold, fontSize: 11},
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontFamily: Fonts.semiBold, fontSize: 10 },
   heroDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
@@ -1534,7 +1536,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 2,
@@ -1639,7 +1641,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexShrink: 0,
   },
-  expenseInfo: {flex: 1, gap: 3},
+  expenseInfo: { flex: 1, gap: 3 },
   expenseType: {
     fontFamily: Fonts.semiBold,
     fontSize: 12,
@@ -1806,7 +1808,7 @@ const styles = StyleSheet.create({
     gap: 8,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1837,7 +1839,7 @@ const styles = StyleSheet.create({
     borderColor: '#FECACA',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -1985,12 +1987,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 7,
     shadowColor: '#dc2626',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
   },
-  disabledBtn: {opacity: 0.4},
+  disabledBtn: { opacity: 0.4 },
   modalConfirmText: {
     fontFamily: Fonts.bold,
     fontSize: Size.sm,
@@ -2087,7 +2089,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
     shadowColor: '#8B5CF6',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 3,
