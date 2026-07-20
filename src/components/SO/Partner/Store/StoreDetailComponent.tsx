@@ -1,10 +1,11 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {Modal, View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import {Fonts} from '../../../../constants';
 import {StoreDataById} from '../../../../types/baseType';
 import {Colors} from '../../../../utils/colors';
+import {imageBaseUrl} from '../../../../features/apiBaseUrl';
 
 type Props = {
   store: StoreDataById;
@@ -37,8 +38,37 @@ const Section = ({title, icon, children}: any) => (
 /* ---------- Component ---------- */
 
 const StoreDetailComponent = ({store, navigation}: Props) => {
+  const [showPreview, setShowPreview] = useState(false);
+
   return (
     <View style={styles.container}>
+      {/* ---------- Store Image ---------- */}
+      {store.store_image && (
+        <TouchableOpacity onPress={() => setShowPreview(true)} activeOpacity={0.85}>
+          <Image
+            source={{ uri: imageBaseUrl + store.store_image }}
+            style={styles.storeHero}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+      )}
+
+      {/* ---------- Image Preview Modal ---------- */}
+      <Modal visible={showPreview} transparent animationType="fade" onRequestClose={() => setShowPreview(false)}>
+        <View style={styles.previewOverlay}>
+          <TouchableOpacity style={styles.previewCloseBtn} onPress={() => setShowPreview(false)}>
+            <Icon name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          {store.store_image && (
+            <Image
+              source={{ uri: imageBaseUrl + store.store_image }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
+
       {/* ---------- Header Card ---------- */}
       <View style={styles.headerCard}>
         <View style={{flex: 1}}>
@@ -121,6 +151,13 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
+  storeHero: {
+    width: '100%',
+    height: 180,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+
   headerCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -156,6 +193,24 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     padding: 10,
     borderRadius: 8,
+  },
+
+  previewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCloseBtn: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  previewImage: {
+    width: '100%',
+    height: '75%',
   },
 
   section: {

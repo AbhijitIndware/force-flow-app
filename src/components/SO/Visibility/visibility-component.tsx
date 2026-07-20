@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { VisibilityClaim } from '../../../types/tadaType';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import VisibilityHeader from './VisibilityHeader';
 import { useGetMyVisibilityClaimsQuery } from '../../../features/tada/tadaApiv2';
 
@@ -86,6 +88,15 @@ const VisibilityComponent = ({ navigation }: any) => {
             isApprover: false,
           })
         }>
+        {/* Row 0: image */}
+        <View style={styles.cardRow}>
+          {item.visibility_image && (
+            <Image
+              source={{ uri: imageBaseUrl + item.visibility_image }}
+              style={styles.claimThumb}
+            />
+          )}
+          <View style={styles.cardBodyContent}>
         {/* Row 1: store + date */}
         <View style={styles.row1}>
           <Text style={styles.storeName} numberOfLines={1}>
@@ -112,6 +123,8 @@ const VisibilityComponent = ({ navigation }: any) => {
             <Text style={[styles.badgeText, { color: st.color }]}>
               {item.approval_status}
             </Text>
+          </View>
+        </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -193,6 +206,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     gap: 5,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardBodyContent: {
+    flex: 1,
+  },
+  claimThumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    marginRight: 8,
   },
 
   // Row 1

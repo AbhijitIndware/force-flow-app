@@ -2,6 +2,7 @@
 import {
   ActivityIndicator,
   Dimensions,
+  Image,
   RefreshControl,
   StyleSheet,
   Text,
@@ -14,6 +15,7 @@ import { Colors } from '../../../../utils/colors';
 import { useGetSalesOrderListQuery } from '../../../../features/base/base-api';
 import { useCallback, useEffect, useState } from 'react';
 import { SalesOrderType } from '../../../../types/baseType';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 import { FlatList } from 'react-native';
 import { soStatusColors, windowHeight } from '../../../../utils/utils';
 import { TouchableOpacity } from 'react-native';
@@ -153,6 +155,12 @@ const SalesOrder = ({ navigation }: any) => {
           });
         }}
         style={styles.cardbody}>
+        {item.store_image && (
+          <Image
+            source={{ uri: imageBaseUrl + item.store_image }}
+            style={styles.storeThumb}
+          />
+        )}
         <View style={styles.dateBox}>
           <Text style={styles.dateText}>
             {new Date(item.transaction_date).getDate()}
@@ -458,6 +466,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 10,
     paddingTop: 0,
+  },
+  storeThumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
   },
   dateBox: {
     width: 50,

@@ -26,6 +26,7 @@ import RNFS from 'react-native-fs';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-api';
 import { useAppSelector } from '../../../store/hook';
 import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
@@ -106,6 +107,7 @@ const AddVisibilityComponent = ({
   const storeDailyList = (storeData?.message?.stores ?? []).map(i => ({
     label: i.store_name,
     value: i.store,
+    imageUrl: i.store_image ? `${imageBaseUrl}${i.store_image}` : undefined,
   }));
 
   const isLoading = pjpFetching || storesFetching;

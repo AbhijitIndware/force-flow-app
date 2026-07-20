@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
+  Image,
   RefreshControl,
   View,
   Text,
@@ -16,6 +17,7 @@ import { Size } from '../../../../utils/fontSize';
 import moment from 'moment';
 import { useGetStoreListQuery } from '../../../../features/base/base-api';
 import { Store } from '../../../../types/baseType';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 import { Clock2, Funnel, MapPin, Search, X } from 'lucide-react-native';
 import { windowHeight } from '../../../../utils/utils';
 
@@ -141,6 +143,14 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
         }
         activeOpacity={0.7}
         style={styles.card}>
+        <View style={styles.cardRow}>
+          {item.store_image && (
+            <Image
+              source={{ uri: imageBaseUrl + item.store_image }}
+              style={styles.storeImage}
+            />
+          )}
+          <View style={styles.cardBodyContent}>
         {/* Header: Name & Status */}
         <View style={styles.cardHeader}>
           <Text style={styles.storeName} numberOfLines={1}>
@@ -190,6 +200,8 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
             <Text style={styles.timeText}>
               {item.creation ? moment(item.creation).format('hh:mm A') : '--:--'}
             </Text>
+          </View>
+        </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -387,6 +399,19 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: '#475569',
     flex: 1,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardBodyContent: {
+    flex: 1,
+  },
+  storeImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    marginRight: 10,
   },
   cardFooter: {
     flexDirection: 'row',

@@ -148,6 +148,7 @@ export interface StoreDataById {
   store_street_address: string | null;
   store_full_address: string | null;
   map: string | null;
+  store_image?: string;
 
   doctype: string;
 }
@@ -947,6 +948,7 @@ export interface Store {
   store_street_address: string | null;
   store_full_address: string | null;
   map: any;
+  store_image?: string;
 }
 
 export interface RStoreList {

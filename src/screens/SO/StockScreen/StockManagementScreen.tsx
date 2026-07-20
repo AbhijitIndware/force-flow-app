@@ -25,6 +25,7 @@ import {
 } from '../../../features/base/base-api';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {
   Boxes,
@@ -170,6 +171,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
       const newStores = storeListData.message.data.stores.map(s => ({
         label: getStoreLabel(s),
         value: s.store_name,
+        imageUrl: s.store_image ? `${imageBaseUrl}${s.store_image}` : undefined,
       }));
       if (page === 1) {
         setStoresList(newStores);
@@ -205,6 +207,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
       const entry = {
         label: getStoreLabel(preStore),
         value: preStore.store_name,
+        imageUrl: preStore.store_image ? `${imageBaseUrl}${preStore.store_image}` : undefined,
       };
       setStoresList(prev => {
         if (prev.find(s => s.value === entry.value)) return prev;
