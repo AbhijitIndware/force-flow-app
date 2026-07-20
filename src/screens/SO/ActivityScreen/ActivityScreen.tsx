@@ -9,29 +9,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useRef, useState} from 'react';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
+import React, { useCallback, useRef, useState } from 'react';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
 import {
   CalendarOff,
   ClipboardPenLine,
   FileCheck,
   MapPinCheck,
 } from 'lucide-react-native';
-import {Tab} from '@rneui/themed';
-import {Button} from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import MarketVisitScreen from '../../../components/SO/Activity/MarketVisit/MarketVisitScreen';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
 import PageHeader from '../../../components/ui/PageHeader';
-import {useGetProdCountQuery} from '../../../features/base/base-api';
+import { useGetProdCountQuery } from '../../../features/base/base-api';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -45,13 +42,12 @@ type Props = {
 
 const today = new Date().toISOString().split('T')[0];
 
-const ActivityScreen = ({navigation, route}: Props) => {
+const ActivityScreen = ({ navigation, route }: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [index, setIndex] = React.useState(0);
-  const {data: prodData, refetch} = useGetProdCountQuery(
-    {date: today},
-    {refetchOnMountOrArgChange: true},
+  const { data: prodData, refetch } = useGetProdCountQuery(
+    { date: today },
+    { refetchOnMountOrArgChange: true },
   );
 
   const onRefresh = useCallback(() => {
@@ -77,12 +73,12 @@ const ActivityScreen = ({navigation, route}: Props) => {
       ) : (
         <Animated.ScrollView
           onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
           )}
-          stickyHeaderIndices={[1]} // Index of the Tab header
+          stickyHeaderIndices={[0]} // Index of the Tab header
           scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
+          contentContainerStyle={{ position: 'relative' }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
@@ -93,7 +89,7 @@ const ActivityScreen = ({navigation, route}: Props) => {
                 <View
                   style={[
                     styles.statIcon,
-                    {backgroundColor: Colors.holdLight},
+                    { backgroundColor: Colors.holdLight },
                   ]}>
                   <ClipboardPenLine
                     strokeWidth={1.4}
@@ -113,7 +109,7 @@ const ActivityScreen = ({navigation, route}: Props) => {
                 <View
                   style={[
                     styles.statIcon,
-                    {backgroundColor: Colors.lightSuccess},
+                    { backgroundColor: Colors.lightSuccess },
                   ]}>
                   <MapPinCheck
                     strokeWidth={1.4}
@@ -165,69 +161,7 @@ const ActivityScreen = ({navigation, route}: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-          <View
-            style={{
-              backgroundColor: Colors.orange,
-              paddingVertical: 5,
-              paddingHorizontal: 20,
-              position: 'relative',
-              marginTop: 0,
-            }}>
-            <Tab
-              value={index}
-              onChange={e => setIndex(e)}
-              indicatorStyle={{
-                height: 0,
-              }}
-              variant="primary"
-              style={{
-                backgroundColor: Colors.transparent,
-                padding: 0,
-                margin: 0,
-                gap: 0,
-              }}>
-              <Tab.Item
-                title="PJP"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-                buttonStyle={{paddingHorizontal: 0}}
-              />
-              <Tab.Item
-                title="Market Visit"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-                buttonStyle={{paddingHorizontal: 0}}
-              />
-            </Tab>
-          </View>
-          {/* Conditionally rendered tab content */}
-          {index === 0 ? (
-            <PJPScreen navigation={navigation} />
-          ) : (
-            <MarketVisitScreen navigation={navigation} />
-          )}
+          <PJPScreen navigation={navigation} />
         </Animated.ScrollView>
       )}
 
@@ -243,15 +177,9 @@ const ActivityScreen = ({navigation, route}: Props) => {
         }}>
         <TouchableOpacity
           style={styles.checkinButton}
-          onPress={() =>
-            index === 0
-              ? navigation.navigate('AddPjpScreen')
-              : navigation.navigate('MarkActivityScreen')
-          }>
+          onPress={() => navigation.navigate('AddPjpScreen')}>
           <FileCheck strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>
-            {`Add ${index === 0 ? 'PJP' : 'Market Visit'}`}
-          </Text>
+          <Text style={styles.checkinButtonText}>Add PJP</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -277,7 +205,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 32,
     borderBottomLeftRadius: 32,
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 3,
@@ -297,7 +225,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
@@ -372,7 +300,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
+  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -408,10 +336,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
 
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -590,7 +518,7 @@ const styles = StyleSheet.create({
     padding: 15,
     minHeight: 107,
     shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 15,
