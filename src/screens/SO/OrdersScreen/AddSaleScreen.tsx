@@ -34,6 +34,7 @@ import {useAppSelector} from '../../../store/hook';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {getStoreLabel} from '../../../utils/utils';
+import {imageBaseUrl} from '../../../features/apiBaseUrl';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const {width} = Dimensions.get('window');
@@ -287,6 +288,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     value: store.warehouse_id,
     label: getStoreLabel(store),
     outstanding_amount: store.outstanding_amount,
+    imageUrl: store.store_image ? `${imageBaseUrl}${store.store_image}` : undefined,
   }));
 
   if (orderId && isFetching) {
