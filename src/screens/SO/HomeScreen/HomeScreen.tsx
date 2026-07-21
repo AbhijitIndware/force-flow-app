@@ -184,7 +184,7 @@ const HomeScreen = ({ navigation }: Props) => {
   ]);
 
   // ── Queries ──────────────────────────────────────────────────────────────────
-  const { data: pjpWorkflowData, refetch: refetchPjpWorkflow } =
+  const { data: pjpWorkflowData, isFetching: isPjpWorkflowLoading, refetch: refetchPjpWorkflow } =
     useGetPjpNextActionQuery(undefined, { refetchOnMountOrArgChange: true });
   // console.log("🚀 ~ HomeScreen ~ pjpWorkflowData:", pjpWorkflowData)
 
@@ -475,6 +475,7 @@ const HomeScreen = ({ navigation }: Props) => {
             pjpState={pjpState}
             pjpActions={pjpActions}
             lateCheckInInfo={lateCheckInInfo}
+            isFetchingNextAction={isPjpWorkflowLoading}
           />
 
           <StatsOverview prodData={prodData} />

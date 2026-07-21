@@ -35,6 +35,7 @@ interface HeaderSectionProps {
   pjpState: PjpWorkflowState | undefined;
   pjpActions: PjpAllowedAction[];
   lateCheckInInfo: LateCheckInInfo | undefined;
+  isFetchingNextAction?: boolean;
 }
 
 const DateBox = () => {
@@ -65,7 +66,8 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   navigation,
   pjpState,
   pjpActions,
-  lateCheckInInfo
+  lateCheckInInfo,
+  isFetchingNextAction
 }) => {
   const can = (action: PjpAllowedAction) => pjpActions.includes(action);
 
@@ -105,6 +107,18 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             </View>
           )}
 
+          {/* ── Loading state for next action ── */}
+          {isFetchingNextAction && (
+            <View style={{ alignItems: 'center', marginTop: 16, gap: 8 }}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={{ fontSize: 13, color: '#ffeaea', fontFamily: Fonts.medium }}>
+                Please wait...
+              </Text>
+            </View>
+          )}
+
+          {!isFetchingNextAction && (
+          <>
           {/* ═══════════════════════════════════════════════════════════════
               WORKFLOW-DRIVEN BUTTONS — same design, driven by pjpState
           ═══════════════════════════════════════════════════════════════ */}
@@ -496,6 +510,8 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
               }}>
               Your PJP for today is completed. Great work! ✅
             </Text>
+          )}
+          </>
           )}
         </View>
 
