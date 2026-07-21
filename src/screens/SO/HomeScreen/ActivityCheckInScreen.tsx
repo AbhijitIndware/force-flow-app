@@ -25,13 +25,11 @@ import {
 } from '../../../features/base/base-api';
 import {
   getCurrentLocation,
-  requestLocationPermission,
 } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
 import {
   Camera,
   FileCheck,
-  Layers,
 } from 'lucide-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
@@ -42,13 +40,13 @@ type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'ActivityCheckInScreen'
 >;
-type CheckInMode = 'activity';
 
 const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) => {
   // ── State ────────────────────────────────────────────────────────────────────
   const [selectedLocation, setSelectedLocation] = useState('');
   const [image, setImage] = useState<{ mime: string; data: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGetLocation, setIsGetLocation] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('');
 
@@ -92,22 +90,6 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
     )
     : [];
 
-  // ── Helpers ───────────────────────────────────────────────────────────────────
-  const fetchLatestLocation = async () => {
-    try {
-      const hasPermission = await requestLocationPermission();
-      if (!hasPermission) return;
-      const loc = await getCurrentLocation();
-      setCurrentLocation(loc);
-    } catch (error) {
-      console.log('Location fetch error:', error);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchLatestLocation();
-  }, []);
-
   const handleTakeSelfie = async () => {
     launchCamera(
       {
@@ -145,18 +127,25 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
       Toast.show({ type: 'error', text1: 'Please take a selfie' });
       return;
     }
-    setConfirmModalVisible(true);
+
+    setIsGetLocation(true);
+    try {
+      const locationStr = await getCurrentLocation();
+      setCurrentLocation(locationStr);
+      setConfirmModalVisible(true);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Unable to fetch location' });
+    } finally {
+      setIsGetLocation(false);
+    }
   };
 
   const handleFinalSubmit = async () => {
     try {
       setIsSubmitting(true);
 
-      // 🔥 Force fresh location
-      const locationStr = await getCurrentLocation();
-      setCurrentLocation(locationStr);
 
-      if (!locationStr) {
+      if (!currentLocation) {
         Toast.show({ type: 'error', text1: 'Unable to fetch location' });
         return;
       }
@@ -164,7 +153,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
       const res = await checkIn({
         activity_location: selectedLocation,
         activity_type: locationName,
-        current_location: locationStr,
+        current_location: currentLocation,
         remarks: locationDetail,
         image: image as { mime: string; data: string },
       }).unwrap();
@@ -333,11 +322,11 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
           <TouchableOpacity
             style={[
               styles.submitBtn,
-              isSubmitting && { opacity: 0.7 },
+              isGetLocation && { opacity: 0.7 },
             ]}
             onPress={handleConfirmCheckIn}
-            disabled={isSubmitting}>
-            {isSubmitting ? (
+            disabled={isGetLocation}>
+            {isGetLocation ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
               <>

@@ -49,9 +49,10 @@ const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
   );
 
   const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
-    skip: !employeeId,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
   });
-  console.log("🚀 ~ PageHeader ~ unreadData:", unreadData)
+
   const unreadCount = unreadData?.message?.unread_count ?? 0;
 
   const profileImageSource = employee?.image_base64

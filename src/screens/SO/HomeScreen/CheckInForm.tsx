@@ -65,6 +65,7 @@ const INITIAL_VALUES = {
 
 const CheckInForm = ({ navigation }: Props) => {
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [locationVerified, setLocationVerified] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<any>(null);
@@ -108,7 +109,7 @@ const CheckInForm = ({ navigation }: Props) => {
     : 'Today';
 
   // ── Mutations ───────────────────────────────────────────────────────────────
-  const [verifyLocation, { isLoading: verifying }] =
+  const [verifyLocation] =
     useLocationVerificationMutation();
   const [addCheckIn] = useAddCheckInMutation();
 
@@ -137,15 +138,13 @@ const CheckInForm = ({ navigation }: Props) => {
         return;
       }
 
-      const location = await getLocation();
-      if (!location) return;
       try {
         setLoading(true);
 
         setPendingPayload({
           store: formValues.store,
           image: formValues.image,
-          current_location: location,
+          current_location: formValues.current_location,
           bypass_store_category: formValues.bypass_store_category,
           ...(storesWithoutImage.has(formValues.store) && formValues.store_image?.data
             ? { store_image: formValues.store_image }
@@ -163,39 +162,6 @@ const CheckInForm = ({ navigation }: Props) => {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  /** Requests permission, gets coords, sets formik field. Returns coord string or null. */
-  const getLocation = async (): Promise<string | null> => {
-    try {
-      const granted = await requestLocationPermission();
-      if (!granted) throw new Error('Permission denied');
-
-      const location = await getCurrentLocation();
-      setFieldValue('current_location', location);
-      return location;
-    } catch {
-      Toast.show({
-        type: 'error',
-        text1: '❌ Unable to fetch location',
-        text2: 'Please enable location and try again',
-      });
-      return null;
-    }
-  };
-
-  const initLocationPermission = async () => {
-    const granted = await requestLocationPermission();
-    if (!granted) {
-      Toast.show({
-        type: 'info',
-        text1: '📍 Location permission is required',
-        text2: 'Please allow location access to continue',
-      });
-      await requestLocationPermission();
-    }
-    const location = await getCurrentLocation();
-    setFieldValue('current_location', location);
-  };
-
   const handleVerifyLocation = async () => {
     if (!selectedStore) {
       Toast.show({
@@ -204,9 +170,10 @@ const CheckInForm = ({ navigation }: Props) => {
       });
       return;
     }
-
+    setLocationLoading(true)
     try {
-      const location = await getLocation();
+      const location = await getCurrentLocation();
+      setFieldValue('current_location', location);
       if (!location) return;
 
       const res = await verifyLocation({
@@ -234,6 +201,8 @@ const CheckInForm = ({ navigation }: Props) => {
         text1: '❌ Verification error',
         text2: err?.data?.message?.message ?? 'Please try again later.',
       });
+    } finally {
+      setLocationLoading(false)
     }
   };
 
@@ -276,11 +245,6 @@ const CheckInForm = ({ navigation }: Props) => {
     setPendingPayload(null);
     setLocationVerified(false);
   };
-
-  // ── Effects ─────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    initLocationPermission();
-  }, []);
 
   useEffect(() => {
     if (selectedStore) setFieldValue('store', selectedStore);
@@ -331,10 +295,10 @@ const CheckInForm = ({ navigation }: Props) => {
               {/* Verify location OR check-in form + submit */}
               {!locationVerified ? (
                 <TouchableOpacity
-                  style={[styles.submitBtn, verifying && styles.disabledBtn]}
+                  style={[styles.submitBtn, locationLoading && styles.disabledBtn]}
                   onPress={handleVerifyLocation}
-                  disabled={verifying}>
-                  {verifying ? (
+                  disabled={locationLoading}>
+                  {locationLoading ? (
                     <ActivityIndicator size="small" color={Colors.white} />
                   ) : (
                     <Text style={styles.submitText}>Verify Location</Text>

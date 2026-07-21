@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,19 +12,19 @@ import {
   Platform,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {useCreateActivityLocationMutation} from '../../../features/base/base-api';
-import {useGetLocationByLatLongQuery} from '../../../features/dropdown/dropdown-api';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { useCreateActivityLocationMutation } from '../../../features/base/base-api';
+import { useGetLocationByLatLongQuery } from '../../../features/dropdown/dropdown-api';
 import {
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
-import {MapPin, Navigation, Save} from 'lucide-react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { MapPin, Navigation, Save } from 'lucide-react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -44,39 +44,33 @@ const AddActivityLocationScreen = ({
   } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
-  const [createLocation, {isLoading}] = useCreateActivityLocationMutation();
-
-  const {data: locationData} = useGetLocationByLatLongQuery(
+  const [createLocation, { isLoading }] = useCreateActivityLocationMutation();
+  const { data: locationData } = useGetLocationByLatLongQuery(
     {
       latitude: coordinates?.latitude.toString() || '',
       longitude: coordinates?.longitude.toString() || '',
     },
-    {skip: !coordinates},
+    { skip: !coordinates },
   );
 
-  useEffect(() => {
-    if (locationData?.message?.raw?.display_name) {
-      setAddress(locationData.message.raw.display_name);
-    }
-  }, [locationData]);
 
   const handleGetLocation = async () => {
     try {
       setIsLocating(true);
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
-        Toast.show({type: 'error', text1: 'Location permission denied'});
+        Toast.show({ type: 'error', text1: 'Location permission denied' });
         return;
       }
 
       const location = await getCurrentLocation();
       if (location) {
         const [lat, lng] = location.split(',').map(Number);
-        setCoordinates({latitude: lat, longitude: lng});
-        Toast.show({type: 'success', text1: 'Location captured'});
+        setCoordinates({ latitude: lat, longitude: lng });
+        Toast.show({ type: 'success', text1: 'Location captured' });
       }
     } catch (error) {
-      Toast.show({type: 'error', text1: 'Failed to get location'});
+      Toast.show({ type: 'error', text1: 'Failed to get location' });
     } finally {
       setIsLocating(false);
     }
@@ -84,11 +78,11 @@ const AddActivityLocationScreen = ({
 
   const handleSubmit = async () => {
     if (!locationName.trim()) {
-      Toast.show({type: 'error', text1: 'Please enter location name'});
+      Toast.show({ type: 'error', text1: 'Please enter location name' });
       return;
     }
     if (!coordinates) {
-      Toast.show({type: 'error', text1: 'Please capture coordinates'});
+      Toast.show({ type: 'error', text1: 'Please capture coordinates' });
       return;
     }
 
@@ -101,7 +95,7 @@ const AddActivityLocationScreen = ({
       }).unwrap();
 
       if (res.message.success) {
-        Toast.show({type: 'success', text1: 'Location created successfully'});
+        Toast.show({ type: 'success', text1: 'Location created successfully' });
         navigation.goBack();
       } else {
         Toast.show({
@@ -117,6 +111,13 @@ const AddActivityLocationScreen = ({
     }
   };
 
+
+  useEffect(() => {
+    if (locationData?.message?.raw?.display_name) {
+      setAddress(locationData.message.raw.display_name);
+    }
+  }, [locationData]);
+
   return (
     <SafeAreaView style={styles.container}>
       <PageHeader
@@ -125,7 +126,7 @@ const AddActivityLocationScreen = ({
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.form}>
             <View style={styles.inputGroup}>
@@ -175,7 +176,7 @@ const AddActivityLocationScreen = ({
                     <Navigation
                       size={18}
                       color={Colors.darkButton}
-                      style={{marginRight: 8}}
+                      style={{ marginRight: 8 }}
                     />
                     <Text style={styles.locationBtnText}>
                       Capture Current Location
@@ -202,14 +203,14 @@ const AddActivityLocationScreen = ({
 
         <View style={styles.footer}>
           <TouchableOpacity
-            style={[styles.submitBtn, isLoading && {opacity: 0.7}]}
+            style={[styles.submitBtn, isLoading && { opacity: 0.7 }]}
             onPress={handleSubmit}
             disabled={isLoading}>
             {isLoading ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
               <>
-                <Save size={20} color={Colors.white} style={{marginRight: 8}} />
+                <Save size={20} color={Colors.white} style={{ marginRight: 8 }} />
                 <Text style={styles.submitText}>Create Location</Text>
               </>
             )}

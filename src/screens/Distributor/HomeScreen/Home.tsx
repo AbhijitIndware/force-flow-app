@@ -124,7 +124,8 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 
   const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
-    skip: !employee,
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
   });
   const unreadCount = unreadData?.message?.unread_count ?? 0;
 
