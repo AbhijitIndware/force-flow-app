@@ -6,17 +6,19 @@ import {
   View,
   FlatList,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import {flexCol, flexRow, itemsCenter} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {useGetActivityLocationsQuery} from '../../../features/base/base-api';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {MapPin, Plus, Navigation2, Map} from 'lucide-react-native';
+import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { useGetActivityLocationsQuery } from '../../../features/base/base-api';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { MapPin, Plus, Navigation2, Map } from 'lucide-react-native';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -27,7 +29,7 @@ type Props = {
   navigation: NavigationProp;
 };
 
-const ActivityLocationScreen = ({navigation}: Props) => {
+const ActivityLocationScreen = ({ navigation }: Props) => {
   const {
     data: locationsData,
     isLoading,
@@ -35,19 +37,28 @@ const ActivityLocationScreen = ({navigation}: Props) => {
     refetch,
   } = useGetActivityLocationsQuery();
 
-  const renderLocationCard = ({item}: {item: any}) => (
+  const renderLocationCard = ({ item }: { item: any }) => (
     <View style={styles.card}>
       <View style={[flexRow, itemsCenter]}>
-        <View style={styles.iconContainer}>
-          <MapPin size={20} color={Colors.white} />
-        </View>
-        <View style={{flex: 1, marginLeft: 12}}>
+        {/* Thumbnail or icon */}
+        {item.location_image ? (
+          <Image
+            source={{ uri: `${imageBaseUrl}${item.location_image}` }}
+            style={styles.thumbnail}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.iconContainer}>
+            <MapPin size={20} color={Colors.white} />
+          </View>
+        )}
+        <View style={{ flex: 1, marginLeft: 10 }}>
           <Text style={styles.locationName}>{item.location_name}</Text>
-          <View style={[flexRow, {marginTop: 4, alignItems: 'flex-start'}]}>
+          <View style={[flexRow, { marginTop: 2, alignItems: 'flex-start', paddingRight: 5 }]}>
             <Navigation2
               size={12}
               color={Colors.gray}
-              style={{marginTop: 2, marginRight: 4}}
+              style={{ marginTop: 2, marginRight: 4 }}
             />
             <Text style={styles.address} numberOfLines={2}>
               {item.address || 'No address available'}
@@ -70,7 +81,7 @@ const ActivityLocationScreen = ({navigation}: Props) => {
   );
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.white}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.white }]}>
       <PageHeader
         title="Activity Locations"
         navigation={() => navigation.goBack()}
@@ -79,12 +90,12 @@ const ActivityLocationScreen = ({navigation}: Props) => {
       {isLoading ? (
         <LoadingScreen />
       ) : (
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <FlatList
             data={locationsData?.message?.data || []}
             keyExtractor={(item, index) => index.toString()}
             renderItem={renderLocationCard}
-            contentContainerStyle={{padding: 16, paddingBottom: 100}}
+            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
             onRefresh={refetch}
             refreshing={isFetching}
             ListEmptyComponent={
@@ -125,13 +136,19 @@ const styles = StyleSheet.create({
     borderColor: '#EEF0F4',
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  thumbnail: {
+    width: 56,
+    height: 56,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
+  },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 56,
+    height: 56,
     borderRadius: 10,
     backgroundColor: Colors.darkButton,
     justifyContent: 'center',
@@ -152,6 +169,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 12,
     paddingTop: 12,
+    paddingHorizontal: 15,
+    paddingBottom: 0,
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
     gap: 15,
@@ -201,7 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },

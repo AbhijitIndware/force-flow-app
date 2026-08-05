@@ -23,6 +23,7 @@ import {
   useActivityCheckInMutation,
   useGetPjpNextActionQuery,
 } from '../../../features/base/base-api';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import {
   getCurrentLocation,
 } from '../../../utils/utils';
@@ -70,6 +71,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
       plannedActivities.map(pa => ({
         label: `${pa.activity_type} — ${pa.activity_location}`,
         value: JSON.stringify({ type: pa.activity_type, location: pa.activity_location, needs_location_image: pa.needs_location_image }),
+        imageUrl: pa.location_image ? `${imageBaseUrl}${pa.location_image}` : undefined,
       })),
     [plannedActivities],
   );

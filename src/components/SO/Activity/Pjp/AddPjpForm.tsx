@@ -24,6 +24,7 @@ import { Square, CheckSquare, Plus, Trash2 } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { PlannedActivity } from '../../../../types/baseType';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
+import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 
 interface FormValues {
   employee: string;
@@ -105,6 +106,7 @@ const AddPjpForm: React.FC<Props> = ({
       locationsData?.message?.data?.map(loc => ({
         label: `${loc.location_name} — Created by ${loc.employee_name}`,
         value: loc.location_name,
+        imageUrl: loc.location_image ? `${imageBaseUrl}${loc.location_image}` : undefined,
       })) || [],
     [locationsData],
   );
