@@ -8,10 +8,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Colors } from '../../../utils/colors';
-import React, { useCallback, useState } from 'react';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
+import {Colors} from '../../../utils/colors';
+import React, {useCallback, useState} from 'react';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
 import {
   AlarmClockMinus,
   CalendarX2,
@@ -19,21 +19,21 @@ import {
   UserRoundCheck,
   UserRoundX,
 } from 'lucide-react-native';
-import { useGetAttendanceV2Query } from '../../../features/base/base-api';
-import { IAttendanceSummaryResponse } from '../../../types/baseType';
+import {useGetAttendanceV2Query} from '../../../features/base/base-api';
+import {IAttendanceSummaryResponse} from '../../../types/baseType';
 import AttendanceCalendarView from './AttendanceCalendarView'; // ← adjust path as needed
 import moment from 'moment';
-import { useAppSelector } from '../../../store/hook';
+import {useAppSelector} from '../../../store/hook';
 
 const PAGE_SIZE = 10;
 
 // ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<string, { bg: string; color: string }> = {
-  Present: { bg: '#E6F7EE', color: '#16a34a' },
-  Absent: { bg: '#FEF2F2', color: '#dc2626' },
-  'Half Day': { bg: '#FFF7ED', color: '#d97706' },
-  'Weekly Off': { bg: '#EFF6FF', color: '#2563eb' },
+const STATUS_CONFIG: Record<string, {bg: string; color: string}> = {
+  Present: {bg: '#E6F7EE', color: '#16a34a'},
+  Absent: {bg: '#FEF2F2', color: '#dc2626'},
+  'Half Day': {bg: '#FFF7ED', color: '#d97706'},
+  'Weekly Off': {bg: '#EFF6FF', color: '#2563eb'},
 };
 
 // ─── Summary Card ─────────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ const SummaryCard = ({
   label: string;
 }) => (
   <View style={styles.countCard}>
-    <View style={[styles.boxIcon, { backgroundColor: iconBg }]}>{icon}</View>
+    <View style={[styles.boxIcon, {backgroundColor: iconBg}]}>{icon}</View>
     <Text style={styles.countNumber}>{count ?? 0}</Text>
     <Text style={styles.counttext}>{label}</Text>
   </View>
@@ -58,19 +58,19 @@ const SummaryCard = ({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
-const RecentAttendanceScreen = ({ navigation }: any) => {
+const RecentAttendanceScreen = ({navigation}: any) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [viewMonth, setViewMonth] = useState(moment());
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
-  const { data, isUninitialized, refetch, isFetching } = useGetAttendanceV2Query(
+  const {data, isUninitialized, refetch, isFetching} = useGetAttendanceV2Query(
     {
       employee: employee?.id as string, // pass the logged-in employee id here
       from_date: viewMonth.clone().startOf('month').format('YYYY-MM-DD'),
       to_date: viewMonth.clone().endOf('month').format('YYYY-MM-DD'),
     },
-    { refetchOnMountOrArgChange: true },
+    {refetchOnMountOrArgChange: true},
   );
   // console.log('🚀 ~ RecentAttendanceScreen ~ data:', data  ;
 
@@ -91,7 +91,7 @@ const RecentAttendanceScreen = ({ navigation }: any) => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-        contentContainerStyle={{ paddingBottom: 32 }}>
+        contentContainerStyle={{paddingBottom: 32}}>
         {/* ── Summary Cards ── */}
         <View style={styles.counterSection}>
           <SummaryCard
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.lightOrange + '20',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
