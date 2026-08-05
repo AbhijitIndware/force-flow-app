@@ -718,6 +718,7 @@ export interface PjpDailyStore {
   end_location: string;
   running_status: 'None' | 'Running' | 'Completed' | null;
   planned_activities?: PlannedActivity[];
+  is_overnight_outstation_journey?: number;
 }
 
 export interface Store {

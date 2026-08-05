@@ -9,15 +9,15 @@ import {
   Dimensions,
   View,
 } from 'react-native';
-import { useEffect, useRef, useState } from 'react';
-import { useFormik } from 'formik';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SoAppStackParamList } from '../../../types/Navigation';
+import {useEffect, useRef, useState} from 'react';
+import {useFormik} from 'formik';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {SoAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { dailyPjpSchema } from '../../../types/schema';
-import { useGetEmployeeQuery } from '../../../features/dropdown/dropdown-api';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {dailyPjpSchema} from '../../../types/schema';
+import {useGetEmployeeQuery} from '../../../features/dropdown/dropdown-api';
 import {
   useAddDailyPjpMutation,
   useGetPjpDailyStoresForEditQuery,
@@ -26,12 +26,12 @@ import {
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
-import { useAppSelector } from '../../../store/hook';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { uniqueByValue } from '../../../utils/utils';
+import {useAppSelector} from '../../../store/hook';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {uniqueByValue} from '../../../utils/utils';
 import MinStoresWarningModal from '../../../components/SO/Activity/Pjp/MinStoresWarningModal';
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'AddPjpScreen'
@@ -53,8 +53,11 @@ const getLocalDateString = () => {
 const getInitial = () => ({
   date: getLocalDateString(),
   employee: '',
-  stores: [{ store: '' }],
-  planned_activities: [] as { activity_type: string; activity_location: string }[],
+  stores: [{store: ''}],
+  planned_activities: [] as {
+    activity_type: string;
+    activity_location: string;
+  }[],
 });
 
 // helper: transform API data (PjpDailyStore) -> Formik's IAddPjpPayload["data"]
@@ -73,7 +76,7 @@ const mapPjpDetailToForm = (detail: any): any => {
 };
 
 // 👨‍💼 Unique by Employee ID (or name)
-export const uniqueByEmployeeName = <T extends { name: string }>(arr: T[]) => {
+export const uniqueByEmployeeName = <T extends {name: string}>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(emp => {
     if (seen.has(emp.name)) return false;
@@ -83,7 +86,7 @@ export const uniqueByEmployeeName = <T extends { name: string }>(arr: T[]) => {
 };
 
 // 🏬 Unique by Store Name (or code)
-export const uniqueByStoreName = <T extends { name: string }>(arr: T[]) => {
+export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
   const seen = new Set<string>();
   return arr.filter(store => {
     if (seen.has(store.name)) return false;
@@ -92,8 +95,8 @@ export const uniqueByStoreName = <T extends { name: string }>(arr: T[]) => {
   });
 };
 
-const AddPjpScreen = ({ navigation, route }: Props) => {
-  const { id } = route?.params ?? {};
+const AddPjpScreen = ({navigation, route}: Props) => {
+  const {id} = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(getInitial());
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -110,36 +113,38 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   /** ─── Employee State ─────────────────────────────── */
   const [empPage, setEmpPage] = useState(1);
   const [employeeListData, setEmployeeListData] = useState<
-    { label: string; value: string }[]
+    {label: string; value: string}[]
   >([]);
   const [employeeOgData, setEmployeeOgData] = useState<any[]>([]);
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [loadingEmpMore, setLoadingEmpMore] = useState(false);
 
   /** ─── Queries ─────────────────────────────────────── */
-  const { data: employeeData, isFetching: fetchingEmp } = useGetEmployeeQuery({
+  const {data: employeeData, isFetching: fetchingEmp} = useGetEmployeeQuery({
     page: String(empPage),
     page_size: '20',
     name: employeeSearch,
   });
 
   // Use the edit endpoint to fetch PJP data including planned_activities
-  const { data: pjpDetails } = useGetPjpDailyStoresForEditQuery(
-    { document_name: id! },
-    { skip: id === null || id === undefined },
+  const {data: pjpDetails} = useGetPjpDailyStoresForEditQuery(
+    {document_name: id!},
+    {skip: id === null || id === undefined},
   );
   const pjpStatus = (pjpDetails as any)?.message?.data?.running_status;
   const isRunning = pjpStatus === 'Running';
 
-  const initialStoreCount = (pjpDetails as any)?.message?.data?.stores?.length ?? 0;
-  const initialActivityCount = (pjpDetails as any)?.message?.data?.planned_activities?.length ?? 0;
+  const initialStoreCount =
+    (pjpDetails as any)?.message?.data?.stores?.length ?? 0;
+  const initialActivityCount =
+    (pjpDetails as any)?.message?.data?.planned_activities?.length ?? 0;
 
   const [addDailyPjp] = useAddDailyPjpMutation();
   const [updateDailyPjp] = useUpdateDailyPjpMutation();
 
   /** ─── Transform helpers ───────────────────────────── */
   const transformToDropdownList = (arr: any[] = []) =>
-    arr.map(item => ({ label: item.store_name, value: item.name }));
+    arr.map(item => ({label: item.store_name, value: item.name}));
 
   const transformEmployeeList = (arr: any[] = []) =>
     arr.map(item => ({
@@ -165,7 +170,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         setLoading(true);
 
         // if record exists → update, else → add
-        const payload = { data: formValues };
+        const payload = {data: formValues};
         let res;
 
         if (id) {
@@ -180,13 +185,21 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
         }
         console.log('res', res);
         if (res?.message?.status === 'success') {
-          Toast.show({
-            type: 'success',
-            text1: `✅ ${res.message.message}`,
-            position: 'top',
-          });
-          resetForm({ values: getInitial() });
-          navigation.navigate('Home');
+          if ((res?.message as any)?.already_existed) {
+            Toast.show({
+              type: 'error',
+              text1: `❌ ${res.message.message || 'Something went wrong'}`,
+              position: 'top',
+            });
+          } else {
+            Toast.show({
+              type: 'success',
+              text1: `✅ ${res.message.message}`,
+              position: 'top',
+            });
+            resetForm({values: getInitial()});
+            navigation.navigate('Home');
+          }
         } else {
           Toast.show({
             type: 'error',
@@ -290,7 +303,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
   };
 
   return (
-    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
+    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
         title={id ? 'Modify PJP' : 'Add PJP'}
         navigation={() => navigation.goBack()}
@@ -306,7 +319,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
             borderWidth: 1,
             borderColor: '#FFE69C',
           }}>
-          <Text style={{ color: '#856404', marginBottom: 10 }}>
+          <Text style={{color: '#856404', marginBottom: 10}}>
             A PJP already exists for the selected employee and date.
           </Text>
 
@@ -324,7 +337,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
                 id: duplicatePjpId as string, // 👈 open in edit mode
               });
             }}>
-            <Text style={{ color: Colors.white, fontWeight: '600' }}>
+            <Text style={{color: Colors.white, fontWeight: '600'}}>
               Modify Existing PJP
             </Text>
           </TouchableOpacity>
@@ -332,7 +345,7 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
       )}
 
       <AddPjpForm
-        {...{ values, errors, touched, handleChange, handleBlur, setFieldValue }}
+        {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
         scrollY={scrollY}
         /** 👇 Employee-related props */
         employeeList={employeeListData}
@@ -368,18 +381,21 @@ const AddPjpScreen = ({ navigation, route }: Props) => {
           height: 80,
         }}>
         <TouchableOpacity
-          style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+          style={[styles.submitBtn, loading && {opacity: 0.7}]}
           onPress={() => {
             // Only show min-stores warning when there are no planned activities
             const hasActivities = (values.planned_activities ?? []).length > 0;
-            if (!hasActivities && values.stores.length < 15) setShowMinStoreModal(true);
+            if (!hasActivities && values.stores.length < 15)
+              setShowMinStoreModal(true);
             else handleSubmit();
           }}
           disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>{id ? 'Modify PJP' : 'Add PJP'}</Text>
+            <Text style={styles.submitText}>
+              {id ? 'Modify PJP' : 'Add PJP'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
