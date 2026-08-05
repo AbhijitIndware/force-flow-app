@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ArrowRight, Clock } from 'lucide-react-native';
+import { ArrowRight, Clock, X, CalendarDays, LogIn, LogOut, Store, CheckCircle, FileText } from 'lucide-react-native';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../../utils/colors';
@@ -559,8 +559,8 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             onPress={() => navigation.navigate('AttendanceScreen')}>
             <Text
               style={{
-                fontFamily: Fonts.regular,
-                fontSize: Size.sm,
+                fontFamily: Fonts.semiBold,
+                fontSize: Size.xs,
                 color: Colors.darkButton,
               }}>
               View Attendance Records
@@ -570,54 +570,97 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
         </View>
 
         {/* ── Working Hours Button (Moved) ── */}
-        {liveWorkingHours && (
-          <TouchableOpacity
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              // backgroundColor: '#F9FAFB',
-              padding: 10,
-              paddingHorizontal: 20,
-              borderBottomLeftRadius: 15,
-              borderBottomRightRadius: 15,
-              justifyContent: 'space-between',
-              borderTopWidth: 1,
-              borderTopColor: '#F3F4F6'
-            }}
-            onPress={() => setShowWorkingHoursModal(true)}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Clock size={18} color={Colors.darkButton} />
-              <Text style={{ color: Colors.darkButton, fontSize: 14, fontFamily: Fonts.medium }}>
-                Working: {liveWorkingHours.working_hours_formatted} hrs
-              </Text>
-            </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ color: Colors.darkButton, fontSize: 14, fontFamily: Fonts.medium }}>
-                {liveWorkingHours.pjp_status}
-              </Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.darkButton} />
-            </View>
-          </TouchableOpacity>
-        )}
+        {liveWorkingHours && (() => {
+          const status = liveWorkingHours.pjp_status;
+          const isRunning = status === 'Running';
+          const isCompleted = status === 'Completed';
+          const statusColor = isRunning ? '#16A34A' : isCompleted ? '#6B7280' : '#D97706';
+          const statusBg = isRunning ? '#DCFCE7' : isCompleted ? '#F3F4F6' : '#FEF3C7';
+
+          return (
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#FFF7ED',
+                paddingVertical: 8,
+                paddingHorizontal: 20,
+                borderBottomLeftRadius: 40,
+                borderBottomRightRadius: 40,
+                justifyContent: 'space-between',
+                borderTopWidth: 1,
+                borderTopColor: '#FFE4BE',
+                // marginHorizontal: 20,
+              }}
+              onPress={() => setShowWorkingHoursModal(true)}>
+              {/* Left: clock + hours */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Clock size={14} color="#C2410C" />
+                <Text style={{ color: '#92400E', fontSize: 11, fontFamily: Fonts.semiBold }}>
+                  Working : {liveWorkingHours.working_hours_formatted} hrs
+                </Text>
+                {isRunning && (
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#16A34A' }} />
+                )}
+              </View>
+              {/* Right: status badge + chevron */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={{ backgroundColor: statusBg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 20 }}>
+                  <Text style={{ color: statusColor, fontSize: 10, fontFamily: Fonts.semiBold }}>
+                    {status}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={13} color="#C2410C" />
+              </View>
+            </TouchableOpacity>
+          );
+        })()}
+
       </View>
 
       {/* ── Working Hours Modal ── */}
       <Modal visible={showWorkingHoursModal} transparent animationType="slide">
         <View style={modalStyles.overlay}>
           <View style={modalStyles.container}>
-            <Text style={modalStyles.title}>Live Working Hours</Text>
+            {/* ── Drag Handle ── */}
+            <View style={modalStyles.handle} />
+
+            {/* ── Header Row ── */}
+            <View style={modalStyles.header}>
+              <Text style={modalStyles.title}>Live Working Hours</Text>
+              <TouchableOpacity
+                style={modalStyles.closeIcon}
+                onPress={() => setShowWorkingHoursModal(false)}>
+                <X size={16} color={Colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* ── Working Hours Highlight Card ── */}
+            <View style={modalStyles.highlightCard}>
+              <View style={modalStyles.highlightIconWrap}>
+                <Clock size={20} color={Colors.orange} />
+              </View>
+              <View style={modalStyles.highlightTextWrap}>
+                <Text style={modalStyles.highlightLabel}>Working Time</Text>
+                <Text style={modalStyles.highlightValue}>{liveWorkingHours?.working_hours_formatted} hrs</Text>
+              </View>
+            </View>
 
             <View style={modalStyles.divider} />
 
+            {/* ── Detail Rows with Icons ── */}
             <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightBlue }]}>
+                <CalendarDays size={14} color={Colors.blue} />
+              </View>
               <Text style={modalStyles.label}>Date</Text>
               <Text style={modalStyles.value}>{liveWorkingHours?.date}</Text>
             </View>
+
             <View style={modalStyles.row}>
-              <Text style={modalStyles.label}>Working Time</Text>
-              <Text style={modalStyles.value}>{liveWorkingHours?.working_hours_formatted} hrs</Text>
-            </View>
-            <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightGreen }]}>
+                <LogIn size={14} color={Colors.success} />
+              </View>
               <Text style={modalStyles.label}>First Check-in</Text>
               <Text style={modalStyles.value}>
                 {liveWorkingHours?.first_check_in
@@ -625,7 +668,11 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   : 'N/A'}
               </Text>
             </View>
+
             <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightRed }]}>
+                <LogOut size={14} color={Colors.primary} />
+              </View>
               <Text style={modalStyles.label}>Last Check-out</Text>
               <Text style={modalStyles.value}>
                 {liveWorkingHours?.last_check_out
@@ -633,28 +680,41 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   : 'N/A'}
               </Text>
             </View>
-            {/* <View style={modalStyles.row}>
-              <Text style={modalStyles.label}>Time at Current Store</Text>
-              <Text style={modalStyles.value}>{liveWorkingHours?.current_store_elapsed_minutes} mins</Text>
-            </View> */}
+
             <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightBlue }]}>
+                <Store size={14} color={Colors.info} />
+              </View>
               <Text style={modalStyles.label}>Stores Visited</Text>
               <Text style={modalStyles.value}>{liveWorkingHours?.stores_visited}</Text>
             </View>
+
             <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightSuccess }]}>
+                <CheckCircle size={14} color={Colors.sucess} />
+              </View>
               <Text style={modalStyles.label}>Activities Done</Text>
               <Text style={modalStyles.value}>{liveWorkingHours?.activities_done}</Text>
             </View>
-            <View style={modalStyles.row}>
-              <Text style={modalStyles.label}>PJP Status</Text>
-              <Text style={modalStyles.value}>{liveWorkingHours?.pjp_status}</Text>
-            </View>
 
-            <TouchableOpacity
-              style={modalStyles.closeBtn}
-              onPress={() => setShowWorkingHoursModal(false)}>
-              <Text style={modalStyles.closeBtnText}>Close</Text>
-            </TouchableOpacity>
+            <View style={modalStyles.row}>
+              <View style={[modalStyles.iconWrap, { backgroundColor: Colors.lightYellow }]}>
+                <FileText size={14} color={Colors.warning} />
+              </View>
+              <Text style={modalStyles.label}>PJP Status</Text>
+              {(() => {
+                const status = liveWorkingHours?.pjp_status;
+                const isCompleted = status === 'Completed';
+                const isRunning = status === 'Running';
+                const badgeBg = isCompleted ? Colors.lightSuccess : isRunning ? Colors.lightBlue : Colors.lightOrange;
+                const badgeColor = isCompleted ? Colors.sucess : isRunning ? Colors.blue : Colors.orange;
+                return (
+                  <View style={[modalStyles.statusBadge, { backgroundColor: badgeBg }]}>
+                    <Text style={[modalStyles.statusText, { color: badgeColor }]}>{status}</Text>
+                  </View>
+                );
+              })()}
+            </View>
           </View>
         </View>
       </Modal>
@@ -667,7 +727,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     minHeight: 200,
     width: '100%',
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
     borderBottomRightRadius: 40,
     borderBottomLeftRadius: 40,
     shadowColor: '#979797',
@@ -693,6 +753,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     borderBottomLeftRadius: 0,
     position: 'relative',
+    marginHorizontal: 20
   },
   linkContent: {
     display: 'flex',
@@ -710,18 +771,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 15,
+    borderRadius: 12,
     paddingHorizontal: 15,
-    paddingVertical: 18,
+    paddingVertical: 15,
     position: 'relative',
     gap: 5,
-    marginTop: 15,
+    marginTop: 10,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.white,
-    lineHeight: 22,
+    lineHeight: 18,
   },
   checkinButtonDisabled: {
     backgroundColor: Colors.black,
@@ -731,6 +792,7 @@ const styles = StyleSheet.create({
     color: Colors.gray,
   },
   planLink: {
+    marginHorizontal: 20,
     backgroundColor: Colors.white,
     padding: 10,
     borderBottomLeftRadius: 15,
@@ -774,56 +836,115 @@ const styles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15,23,42,0.5)',
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: 24,
-    paddingBottom: 40,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 10,
     elevation: 10,
   },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontSize: Size.xsmd,
+    fontFamily: Fonts.bold,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  closeIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.lightestGray,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  highlightCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.lightOrange,
+    borderRadius: 14,
+    padding: 10,
+    gap: 12,
+    marginBottom: 4,
+  },
+  highlightIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  highlightTextWrap: {
+    flex: 1,
+  },
+  highlightLabel: {
+    fontSize: Size.xxs,
+    color: Colors.orange,
+    fontFamily: Fonts.medium,
+    marginBottom: 2,
+  },
+  highlightValue: {
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+    fontFamily: Fonts.bold,
   },
   divider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 16,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 10,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: '#F8FAFC',
+    gap: 10,
+  },
+  iconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontFamily: Fonts.medium,
+    flex: 1,
+    fontSize: Size.xs,
+    color: '#64748b',
+    fontFamily: Fonts.regular,
   },
   value: {
-    fontSize: 14,
-    color: '#111827',
+    fontSize: Size.xs,
+    color: Colors.darkButton,
     fontFamily: Fonts.semiBold,
   },
-  closeBtn: {
-    backgroundColor: Colors.darkButton,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  closeBtnText: {
-    color: '#fff',
+  statusText: {
     fontFamily: Fonts.semiBold,
-    fontSize: 16,
+    fontSize: Size.xxs,
   },
 });
