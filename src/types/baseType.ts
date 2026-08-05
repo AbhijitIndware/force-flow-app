@@ -1863,6 +1863,7 @@ export type LocationPayload = {
   longitude: number;
   data: {
     document_name: string;
+    is_overnight_outstation_journey?: number;
   };
 };
 
@@ -2271,8 +2272,10 @@ export interface ActivityLocation {
   latitude: number;
   longitude: number;
   address: string;
-  activity_type: '';
-  remarks: '';
+  activity_type: string;
+  remarks: string;
+  location_image?: string;
+  needs_location_image?: boolean;
   employee: string;
   employee_name: string;
 }
@@ -2288,7 +2291,13 @@ export interface ICreateActivityLocation {
   location_name: string;
   latitude: number;
   longitude: number;
-  address: string;
+  address?: string;
+  activity_type?: string;
+  remarks?: string;
+  location_image?: {
+    mime: string;
+    data: string;
+  };
 }
 
 export interface RCreateActivityLocation {
@@ -2307,6 +2316,8 @@ export interface RCreateActivityLocation {
       latitude: number;
       longitude: number;
       address: string;
+      activity_type?: string;
+      location_image?: string;
       doctype: string;
     };
   };
@@ -2321,8 +2332,12 @@ export interface IActivityCheckIn {
     /** Base64-encoded image data */
     data: string;
   };
-  activity_type: string;
-  remarks: string;
+  activity_type?: string;
+  remarks?: string;
+  location_image?: {
+    mime: string;
+    data: string;
+  };
 }
 
 export interface RActivityCheckIn {
@@ -2335,6 +2350,8 @@ export interface RActivityCheckIn {
       activity_type: string;
       employee: string;
       image_url: string;
+      location_image?: string;
+      needs_location_image?: boolean;
       check_in_time: string;
       remarks: string;
     };
@@ -2362,6 +2379,8 @@ export interface RGetActivityCheckInStatus {
     activity_location: string | null;
     check_in_time: string | null;
     image_url: string | null;
+    location_image?: string | null;
+    needs_location_image?: boolean;
     activity_type: string | null;
     remarks: string | null;
   };
@@ -2440,6 +2459,7 @@ export interface pjpWorkflowDataType {
   active_activity_id: string | null;
   pjp_data: PjpDataResponse;
   late_checkin_info: LateCheckInInfo;
+  live_working_hours?: LiveWorkingHours;
 }
 export type PjpDataResponse = {
   pjp_details: {
@@ -2448,6 +2468,7 @@ export type PjpDataResponse = {
     start_location: string | null;
     end_location: string | null;
     travel_distance: number;
+    is_overnight_outstation_journey?: number;
   };
   stores: {
     store: string;
@@ -2465,8 +2486,19 @@ export type PjpDataResponse = {
   planned_activities: {
     activity_type: string;
     activity_location: string;
+    location_image?: string;
+    needs_location_image?: boolean;
   }[];
-  non_store_activities: any[];
+  non_store_activities: {
+    name: string;
+    activity_location: string;
+    activity_type: string;
+    check_in_time: string;
+    check_out_time: string | null;
+    image: string;
+    location_image?: string;
+    needs_location_image?: boolean;
+  }[];
 };
 
 // ─── TARGET MANAGEMENT TYPES (NEW APIs) ──────────────────────────────────────
@@ -2593,3 +2625,33 @@ export interface RApproveRejectLateCheckin {
     // error  → "Status must be Approved or Rejected"
   };
 }
+export interface LiveWorkingHours {
+  date: string;
+  working_hours_decimal: number;
+  working_hours_formatted: string;
+  first_check_in: string | null;
+  last_check_out: string | null;
+  is_active: boolean;
+  current_store_elapsed_minutes: number;
+  stores_visited: number;
+  activities_done: number;
+  pjp_status: string;
+}
+
+export interface IAddActivityLocationImage {
+  activity_location: string;
+  location_image: {
+    mime: string;
+    data: string;
+  };
+}
+
+export interface RAddActivityLocationImage {
+  success: boolean;
+  message: string;
+  data: {
+    activity_location: string;
+    location_image: string;
+  };
+}
+export interface RGetLiveWorkingHours { success: boolean; data: LiveWorkingHours; }

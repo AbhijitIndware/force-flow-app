@@ -10,6 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
 import { Colors } from '../../../utils/colors';
@@ -22,7 +23,8 @@ import {
   requestLocationPermission,
 } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
-import { MapPin, Navigation, Save } from 'lucide-react-native';
+import { Camera, MapPin, Navigation, Save } from 'lucide-react-native';
+import { launchCamera } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 
@@ -41,6 +43,10 @@ const AddActivityLocationScreen = ({
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
+  } | null>(null);
+  const [locationImage, setLocationImage] = useState<{
+    mime: string;
+    data: string;
   } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
@@ -76,6 +82,34 @@ const AddActivityLocationScreen = ({
     }
   };
 
+  const handleTakeLocationImage = async () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 0.8,
+        includeBase64: true,
+        saveToPhotos: false,
+      },
+      response => {
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Toast.show({ type: 'error', text1: 'Camera Error' });
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          const photo = response.assets[0];
+          if (photo.base64 && photo.type) {
+            setLocationImage({
+              mime: photo.type,
+              data: photo.base64,
+            });
+          }
+        }
+      },
+    );
+  };
+
   const handleSubmit = async () => {
     if (!locationName.trim()) {
       Toast.show({ type: 'error', text1: 'Please enter location name' });
@@ -92,6 +126,7 @@ const AddActivityLocationScreen = ({
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         address: address,
+        location_image: locationImage ? locationImage : undefined,
       }).unwrap();
 
       if (res.message.success) {
@@ -198,6 +233,29 @@ const AddActivityLocationScreen = ({
                 numberOfLines={3}
               />
             </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Location Photo (Optional)</Text>
+              <Text style={styles.sectionSubtitle}>
+                Take a photo of this location for records
+              </Text>
+
+              <TouchableOpacity
+                style={styles.cameraBtn}
+                onPress={handleTakeLocationImage}>
+                {locationImage ? (
+                  <Image
+                    source={{ uri: `data:${locationImage.mime};base64,${locationImage.data}` }}
+                    style={styles.previewImage}
+                  />
+                ) : (
+                  <View style={styles.cameraPlaceholder}>
+                    <Camera size={40} color={Colors.gray} />
+                    <Text style={styles.cameraText}>Tap to open camera</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
 
@@ -236,6 +294,48 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     gap: 8,
+  },
+  section: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  sectionTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+  },
+  sectionSubtitle: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.gray,
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  cameraBtn: {
+    width: 250,
+    height: 250,
+    borderRadius: 20,
+    backgroundColor: '#F8F9FB',
+    borderWidth: 2,
+    borderColor: '#E2E4E9',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraPlaceholder: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  cameraText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: Colors.gray,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   label: {
     fontFamily: Fonts.medium,

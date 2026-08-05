@@ -185,7 +185,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
   // ── Queries ──────────────────────────────────────────────────────────────────
   const { data: pjpWorkflowData, isFetching: isPjpWorkflowLoading, refetch: refetchPjpWorkflow } =
-    useGetPjpNextActionQuery(undefined, { refetchOnMountOrArgChange: true });
+    useGetPjpNextActionQuery(undefined, { refetchOnFocus: true });
   // console.log("🚀 ~ HomeScreen ~ pjpWorkflowData:", pjpWorkflowData)
 
   const { data: prodData, refetch: refetchProdCount } = useGetProdCountQuery(
@@ -242,6 +242,8 @@ const HomeScreen = ({ navigation }: Props) => {
   const activeStoreId = pjpWorkflowData?.message.data?.active_store_id;
   const lateCheckInInfo =
     pjpWorkflowData?.message?.data?.late_checkin_info;
+  const liveWorkingHours = pjpWorkflowData?.message?.data?.live_working_hours;
+  const isOvernightOutstationJourney = pjpWorkflowData?.message?.data?.pjp_data?.pjp_details?.is_overnight_outstation_journey === 1;
 
   const isActivityCheckedIn =
     activityStatusData?.message?.is_checked_in === true;
@@ -345,7 +347,7 @@ const HomeScreen = ({ navigation }: Props) => {
   };
 
   // ── Start PJP ────────────────────────────────────────────────────────────────
-  const handleStartPjp = async () => {
+  const handleStartPjp = async (isOvernight: boolean = false) => {
     try {
       setIsStartingPjp(true);
       const loc = await getParsedLocation();
@@ -361,7 +363,10 @@ const HomeScreen = ({ navigation }: Props) => {
       const payload: LocationPayload = {
         latitude: loc.latitude,
         longitude: loc.longitude,
-        data: { document_name: existingPjp },
+        data: {
+          document_name: existingPjp,
+          is_overnight_outstation_journey: isOvernight ? 1 : 0
+        },
       };
       const res = await startPjp(payload).unwrap();
       if (res?.message?.success) {
@@ -476,6 +481,8 @@ const HomeScreen = ({ navigation }: Props) => {
             pjpActions={pjpActions}
             lateCheckInInfo={lateCheckInInfo}
             isFetchingNextAction={isPjpWorkflowLoading}
+            liveWorkingHours={liveWorkingHours}
+            isOvernightOutstationJourney={isOvernightOutstationJourney}
           />
 
           <StatsOverview prodData={prodData} />

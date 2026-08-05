@@ -44,7 +44,9 @@ type NavigationProp = NativeStackNavigationProp<
 const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) => {
   // ── State ────────────────────────────────────────────────────────────────────
   const [selectedLocation, setSelectedLocation] = useState('');
+  const [needsLocationImage, setNeedsLocationImage] = useState(false);
   const [image, setImage] = useState<{ mime: string; data: string } | null>(null);
+  const [locationImage, setLocationImage] = useState<{ mime: string; data: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGetLocation, setIsGetLocation] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -67,7 +69,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
     () =>
       plannedActivities.map(pa => ({
         label: `${pa.activity_type} — ${pa.activity_location}`,
-        value: JSON.stringify({ type: pa.activity_type, location: pa.activity_location }),
+        value: JSON.stringify({ type: pa.activity_type, location: pa.activity_location, needs_location_image: pa.needs_location_image }),
       })),
     [plannedActivities],
   );
@@ -118,6 +120,34 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
     );
   };
 
+  const handleTakeLocationImage = async () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 0.8,
+        includeBase64: true,
+        saveToPhotos: false,
+      },
+      response => {
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.alert('Camera Error', response.errorMessage);
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          const photo = response.assets[0];
+          if (photo.base64 && photo.type) {
+            setLocationImage({
+              mime: photo.type,
+              data: photo.base64,
+            });
+          }
+        }
+      },
+    );
+  };
+
   const handleConfirmCheckIn = async () => {
     if (!locationName || !selectedLocation) {
       Toast.show({ type: 'error', text1: 'Please select a planned activity' });
@@ -125,6 +155,10 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
     }
     if (!image) {
       Toast.show({ type: 'error', text1: 'Please take a selfie' });
+      return;
+    }
+    if (needsLocationImage && !locationImage) {
+      Toast.show({ type: 'error', text1: 'Please take a photo of the location' });
       return;
     }
 
@@ -156,6 +190,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
         current_location: currentLocation,
         remarks: locationDetail,
         image: image as { mime: string; data: string },
+        location_image: locationImage ? locationImage : undefined,
       }).unwrap();
 
       if (res?.message?.success) {
@@ -212,8 +247,10 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                   const parsed = JSON.parse(item);
                   setLocationName(parsed.type);
                   setSelectedLocation(parsed.location);
+                  setNeedsLocationImage(!!parsed.needs_location_image);
                 } catch {
                   setLocationName(item);
+                  setNeedsLocationImage(false);
                 }
               }}
               searchText={activityTypeSearch}
@@ -255,6 +292,32 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* ── Location Photo ── */}
+            {needsLocationImage && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Location Photo</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Please take a photo of this location
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.cameraBtn}
+                  onPress={handleTakeLocationImage}>
+                  {locationImage ? (
+                    <Image
+                      source={{ uri: `data:${locationImage.mime};base64,${locationImage.data}` }}
+                      style={styles.previewImage}
+                    />
+                  ) : (
+                    <View style={styles.cameraPlaceholder}>
+                      <Camera size={40} color={Colors.gray} />
+                      <Text style={styles.cameraText}>Tap to open camera</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
 

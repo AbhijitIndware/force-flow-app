@@ -98,6 +98,9 @@ import {
   RPjpCreateResponse,
   RPjpUpdateResponse,
   RPjpDailyStoresForEdit,
+  RGetLiveWorkingHours,
+  IAddActivityLocationImage,
+  RAddActivityLocationImage,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -1555,6 +1558,16 @@ export const baseApi = createApi({
       providesTags: ['Activity'],
     }),
 
+    // Activity F — Add Activity Location Image
+    addActivityLocationImage: builder.mutation<RAddActivityLocationImage, IAddActivityLocationImage>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.activity_attendance_api.add_activity_location_image',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Activity'],
+    }),
+
     // Weekly Off
     markDayOff: builder.mutation<RMarkDayOff, IMarkDayOff>({
       query: body => ({
@@ -1585,6 +1598,13 @@ export const baseApi = createApi({
         },
       }),
       providesTags: ['PJP'],
+    }),
+
+    getLiveWorkingHours: builder.query<RGetLiveWorkingHours, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp_workflow.get_live_working_hours',
+        method: 'GET',
+      }),
     }),
 
     // Fetch all active team employees (for manager's subordinate dropdown)
@@ -1795,12 +1815,15 @@ export const {
   useActivityCheckInMutation,
   useActivityCheckOutMutation,
   useGetActivityCheckInStatusQuery,
+  useAddActivityLocationImageMutation,
 
   // Weekly Off
   useMarkDayOffMutation,
   useCancelDayOffMutation,
   useGetDayOffsQuery,
   useLazyGetDayOffsQuery,
+  useGetLiveWorkingHoursQuery,
+  useLazyGetLiveWorkingHoursQuery,
 
   // Target Management
   useGetTeamEmployeesQuery,
