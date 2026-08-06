@@ -145,10 +145,10 @@ const PJPScreen = ({navigation}: any) => {
         ]}>
         <View style={styles.bodyHeader}>
           <Text style={styles.bodyHeaderTitle}>Recent PJP</Text>
-          <View style={styles.bodyHeaderIcon}>
+          {/* <View style={styles.bodyHeaderIcon}>
             <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
             <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-          </View>
+          </View> */}
         </View>
 
         <View
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 5,
     marginBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E4E9',

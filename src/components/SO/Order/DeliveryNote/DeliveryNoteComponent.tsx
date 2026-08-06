@@ -7,27 +7,29 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Funnel, Search } from 'lucide-react-native';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import { Colors } from '../../../../utils/colors';
-import { useGetDeliveryNotesListQuery } from '../../../../features/base/base-api';
-import { useCallback, useEffect, useState } from 'react';
-import { IDistributorDeliveryNote } from '../../../../types/baseType';
-import { FlatList } from 'react-native';
-import { soStatusColors, windowHeight } from '../../../../utils/utils';
-import { TouchableOpacity } from 'react-native';
-import { flexRow } from '../../../../utils/styles';
+import {Funnel, Search} from 'lucide-react-native';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Colors} from '../../../../utils/colors';
+import {useGetDeliveryNotesListQuery} from '../../../../features/base/base-api';
+import {useCallback, useEffect, useState} from 'react';
+import {IDistributorDeliveryNote} from '../../../../types/baseType';
+import {FlatList} from 'react-native';
+import {soStatusColors, windowHeight} from '../../../../utils/utils';
+import {TouchableOpacity} from 'react-native';
+import {flexRow} from '../../../../utils/styles';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const DeliveryNoteComponent = ({ navigation }: any) => {
+const DeliveryNoteComponent = ({navigation}: any) => {
   const [page, setPage] = useState<number>(1);
-  const [deliveryNotes, setDeliveryNotes] = useState<IDistributorDeliveryNote[]>([]);
+  const [deliveryNotes, setDeliveryNotes] = useState<
+    IDistributorDeliveryNote[]
+  >([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data, isLoading, isFetching, refetch, isUninitialized } =
+  const {data, isLoading, isFetching, refetch, isUninitialized} =
     useGetDeliveryNotesListQuery({
       page,
       page_size: PAGE_SIZE,
@@ -59,17 +61,17 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
       !isFetching &&
       data?.message?.data &&
       data?.message?.data?.pagination?.page <
-      data?.message?.data?.pagination?.total_pages
+        data?.message?.data?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
   };
 
-  const renderItem = ({ item }: { item: IDistributorDeliveryNote }) => (
+  const renderItem = ({item}: {item: IDistributorDeliveryNote}) => (
     <View style={styles.atteddanceCard}>
       <View style={styles.cardHeader}>
         <View style={styles.timeSection}>
-          <Text style={styles.time} numberOfLines={1}>DDN ID: {item.delivery_note_id}</Text>
+          <Text style={styles.time}>DDN ID: {item.delivery_note_id}</Text>
         </View>
         <View
           style={[
@@ -84,11 +86,12 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
           ]}>
           {(() => {
             const statusColor =
-              item.workflow_state === 'Approved' || item.workflow_state === 'Submitted'
+              item.workflow_state === 'Approved' ||
+              item.workflow_state === 'Submitted'
                 ? '#049a3bff'
                 : item.workflow_state === 'Cancelled'
-                  ? '#EF4444'
-                  : '#FACC15';
+                ? '#EF4444'
+                : '#FACC15';
             return (
               <Text
                 style={[
@@ -121,15 +124,19 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
             })}
           </Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.contentText} numberOfLines={1}>Store: {item.store_name}</Text>
-          <Text style={styles.contentText} numberOfLines={1}>Distributor: {item.distributor_name}</Text>
+        <View style={{flex: 1}}>
+          <Text style={styles.contentText} numberOfLines={1}>
+            Store: {item.store_name}
+          </Text>
+          <Text style={styles.contentText} numberOfLines={1}>
+            Distributor: {item.distributor_name}
+          </Text>
           <Text
             style={{
               fontFamily: Fonts.semiBold,
               fontSize: Size.xs,
               color: Colors.darkButton,
-              marginTop: 4
+              marginTop: 4,
             }}>
             Amount: ₹{item.grand_total} | Qty: {item.delivered_qty}
           </Text>
@@ -150,7 +157,7 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
+          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
         ]}>
         {/* <View style={styles.bodyHeader}>
           <Text style={styles.bodyHeaderTitle}>Recent Delivery Notes</Text>
@@ -170,7 +177,7 @@ const DeliveryNoteComponent = ({ navigation }: any) => {
             </View>
           ) : deliveryNotes.length === 0 ? (
             <View style={styles.centered}>
-              <Text style={{ fontSize: 16, color: 'gray' }}>
+              <Text style={{fontSize: 16, color: 'gray'}}>
                 No Delivery Note Found
               </Text>
             </View>
@@ -206,7 +213,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingHorizontal: 20,
   },
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
