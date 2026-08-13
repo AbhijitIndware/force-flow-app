@@ -183,7 +183,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         } else {
           res = await addDailyPjp(payload).unwrap();
         }
-        console.log('res', res);
         if (res?.message?.status === 'success') {
           if ((res?.message as any)?.already_existed) {
             Toast.show({
@@ -260,7 +259,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   useEffect(() => {
     if (pjpDetails?.message && id) {
       const _initial_value = mapPjpDetailToForm(pjpDetails?.message?.data);
-      // console.log('_initial_value', _initial_value);
       setInitialValues({
         ..._initial_value,
         date: _initial_value.date,

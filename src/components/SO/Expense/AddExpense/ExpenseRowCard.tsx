@@ -47,7 +47,6 @@ type Props = {
 };
 
 export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
-  console.log("🚀 ~ ExpenseRowCard ~ expense:", expense)
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState('');
@@ -61,7 +60,6 @@ export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
     typeof expense.attachment === 'string'
       ? `${imageBaseUrl}${expense.attachment}`
       : expense.attachment?.uri || expense.attachment?.url;
-  console.log("🚀 ~ ExpenseRowCard ~ attachmentUri:", attachmentUri)
 
   const isPDF = (attachment: any) => {
     const name =

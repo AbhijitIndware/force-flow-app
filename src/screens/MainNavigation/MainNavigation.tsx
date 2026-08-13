@@ -1,22 +1,29 @@
 import React from 'react';
 import PromoterNavigation from '../Promoter/PromoterNavigation/PromoterNavigation';
 import SoNavigation from '../SO/SoNavigation/SoNavigation';
-import { MainNavigationStackParamList } from '../../types/Navigation';
-import { createStackNavigator } from '@react-navigation/stack';
+import {MainNavigationStackParamList} from '../../types/Navigation';
+import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
-import { useAppDispatch, useAppSelector } from '../../store/hook';
-import { Text, View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {useAppDispatch, useAppSelector} from '../../store/hook';
+import {
+  Text,
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  Animated,
+  Image,
+} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   useCheckSessionQuery,
-  setGlobalError,
   setSessionExpired,
   logout,
 } from '../../features/auth/auth';
 import DistributorNavigation from '../Distributor/DistributorNavigation/DistributorNavigation';
 import NetInfo from '@react-native-community/netinfo';
-import ApiErrorBanner from '../../components/ui-lib/api-error-banner';
+import {Colors} from '../../utils/colors';
+import {windowWidth} from '../../utils/utils';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
@@ -29,13 +36,10 @@ const MainNavigation = () => {
   const sessionExpired = useAppSelector(
     state => state?.persistedReducer?.authSlice?.sessionExpired,
   );
-  const globalError = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.globalError,
-  );
-
   const sId = useAppSelector(state => {
     return state?.persistedReducer?.authSlice?.sId;
   });
+
   const isAuthenticated = !!sId;
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
@@ -56,18 +60,18 @@ const MainNavigation = () => {
     userType = 'DISTRIBUTOR';
   } else {
     userType = 'SALES_OFFICER';
-
   }
 
   const insets = useSafeAreaInsets();
-
-
 
   const {
     data,
     isLoading,
     error: sessionError,
-  } = useCheckSessionQuery({ sId: sId as string }, { refetchOnFocus: true, refetchOnMountOrArgChange: true });
+  } = useCheckSessionQuery(
+    {sId: sId as string},
+    {refetchOnFocus: true, refetchOnMountOrArgChange: true},
+  );
 
   React.useEffect(() => {
     if (
@@ -98,7 +102,7 @@ const MainNavigation = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       {!isConnected && <NoInternetBanner />}
       {sessionExpired && <SessionExpiredBanner />}
       {/* <ApiErrorBanner
@@ -117,7 +121,7 @@ const MainNavigation = () => {
 // ── No Internet Banner ────────────────────────────────────────────────────────
 const NoInternetBanner = () => (
   <View style={styles.noInternetBanner}>
-    <Text style={styles.bannerText}>📡  No internet connection</Text>
+    <Text style={styles.bannerText}>📡 No internet connection</Text>
   </View>
 );
 
@@ -125,13 +129,13 @@ const NoInternetBanner = () => (
 const SessionExpiredBanner = () => (
   <View style={styles.sessionBanner}>
     <Text style={styles.bannerText}>
-      ⚠️  Session expired — please log in again
+      ⚠️ Session expired — please log in again
     </Text>
   </View>
 );
 
 // ── Auth Stack ────────────────────────────────────────────────────────────────
-const AuthStackNavigator = ({ insets }: any) => (
+const AuthStackNavigator = ({insets}: any) => (
   <View
     style={{
       flex: 1,
@@ -139,7 +143,7 @@ const AuthStackNavigator = ({ insets }: any) => (
       paddingBottom: insets.bottom,
     }}>
     <AuthStack.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{headerShown: false}}
       initialRouteName="LoginScreen">
       <AuthStack.Screen name="LoginScreen" component={LoginScreen} />
       <AuthStack.Screen name="SignupScreen" component={SignupScreen} />
@@ -161,7 +165,7 @@ const AppStackNavigator = ({
       paddingTop: insets.top,
       paddingBottom: insets.bottom,
     }}>
-    <AppStack.Navigator screenOptions={{ headerShown: false }}>
+    <AppStack.Navigator screenOptions={{headerShown: false}}>
       {userType === 'PROMOTER' && (
         <AppStack.Screen
           name="PromoterNavigation"
@@ -182,11 +186,70 @@ const AppStackNavigator = ({
 );
 
 // ── Full Screen Loader ────────────────────────────────────────────────────────
-const FullScreenLoader = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <ActivityIndicator size="large" color="#000" />
-  </View>
-);
+const FullScreenLoader = () => {
+  const fadeAnim = React.useRef(new Animated.Value(0.4)).current;
+  const scaleAnim = React.useRef(new Animated.Value(0.95)).current;
+
+  React.useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim, {
+            toValue: 0.4,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.05,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 0.95,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [fadeAnim, scaleAnim]);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+      }}>
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{scale: scaleAnim}],
+        }}>
+        <Image
+          source={require('../../assets/images/softsence-logo-login.png')}
+          resizeMode="contain"
+          style={styles.logoImage}
+        />
+      </Animated.View>
+      <ActivityIndicator
+        size="small"
+        color={Colors.primary}
+        style={{marginTop: 24}}
+      />
+    </View>
+  );
+};
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
@@ -211,6 +274,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.2,
   },
+  logoImage: {
+    width: windowWidth * 0.8,
+    height: 100,
+    // marginBottom: 10,
+  },
 });
 
+export {FullScreenLoader};
 export default MainNavigation;

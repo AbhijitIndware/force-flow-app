@@ -57,7 +57,6 @@ type Props = {
 };
 
 const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Props) => {
-  console.log("🚀 ~ AddExpenseComponent ~ existingDetail:", existingDetail)
   const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [expenses, setExpenses] = useState<LocalExpenseItem[]>([]);
@@ -257,7 +256,6 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
       setLoading(true);
       setUploadStep('Finalizing submission...');
       let res = await submitExpenseClaim({ claim_id: claimId }).unwrap();
-      // console.log('🚀 ~ handleSubmitClaim ~ res:', res);
       Toast.show({
         type: 'success',
         text1: 'Expense claim submitted successfully',

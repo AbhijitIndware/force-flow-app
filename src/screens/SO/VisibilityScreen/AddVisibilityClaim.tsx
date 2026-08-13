@@ -75,8 +75,6 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
           image_source_2: img2?.source ?? undefined,
           image_source_3: img3?.source ?? undefined,
         };
-        // console.log("🚀 ~ AddVisibilityScreen ~ payload:", payload)
-
         const res = await createVisibilityClaim(payload).unwrap();
         if (res?.message.success) {
           Toast.show({
@@ -95,7 +93,6 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
           });
         }
       } catch (error: any) {
-        console.error('Visibility Submission Error:', error);
         Toast.show({
           type: 'error',
           text1:
@@ -107,7 +104,6 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
       }
     },
   });
-  // console.log("🚀 ~ AddVisibilityScreen ~ errors:", errors)
 
   const isLoading = isCreating;
 

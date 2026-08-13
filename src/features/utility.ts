@@ -42,7 +42,6 @@ export const baseQueryWithAuthGuard: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await baseQuery(args, api, extraOptions);
-  console.log("🚀 ~ baseQueryWithAuthGuard ~ result:", result)
 
   if (result?.error) {
     if (result.error.status === 401) {
@@ -83,7 +82,6 @@ export const baseQueryForTadaWithAuthGuard: BaseQueryFn<
   FetchBaseQueryError
 > = async (args, api, extraOptions) => {
   const result = await baseQueryForTada(args, api, extraOptions);
-  console.log("🚀 ~ baseQueryForTadaWithAuthGuard ~ result:", result)
 
   if (result?.error) {
     if (result.error.status === 401) {

@@ -53,7 +53,6 @@ const STATUS_CONFIG = {
 };
 
 const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
-  console.log('🚀 ~ PjpDetailComponent ~ detail:', detail);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [updatePjpRoute] = useStartPjpMutation(); // unused but kept for type compat

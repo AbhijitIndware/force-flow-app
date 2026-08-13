@@ -128,8 +128,7 @@ export const getAddressFromCoordinates = async (
     }
 
     return '';
-  } catch (error) {
-    console.log('Reverse geocoding error:', error);
+  } catch {
     return '';
   }
 };

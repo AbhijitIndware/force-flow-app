@@ -72,7 +72,6 @@ const RecentAttendanceScreen = ({navigation}: any) => {
     },
     {refetchOnMountOrArgChange: true},
   );
-  // console.log('🚀 ~ RecentAttendanceScreen ~ data:', data  ;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);

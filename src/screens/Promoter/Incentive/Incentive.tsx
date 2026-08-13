@@ -35,8 +35,7 @@ type Props = {
   route: any;
 };
 
-const IncentiveScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const IncentiveScreen = (_props: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
   const [value, setValue] = useState(50);

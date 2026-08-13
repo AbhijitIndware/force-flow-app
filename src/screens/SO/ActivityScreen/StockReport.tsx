@@ -120,7 +120,6 @@ const StockReport = ({navigation, route}: Props) => {
     });
 
   const reportData = data?.message ?? {};
-  // console.log('🚀 ~ StockReport ~ reportData:', reportData);
   const {
     result = [],
     columns = [],

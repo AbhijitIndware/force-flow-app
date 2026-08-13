@@ -30,7 +30,6 @@ const TeamAttendanceListScreen = ({ navigation, route }: Props) => {
 
     const { data, isFetching, isError, refetch } =
         useGetAsmAttendanceTabQuery(apiParams);
-    console.log("🚀 ~ TeamAttendanceListScreen ~ data:", data)
 
     const records = data?.message?.records ?? [];
     const summary = data?.message?.summary;

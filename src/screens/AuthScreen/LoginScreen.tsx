@@ -49,7 +49,6 @@ const LoginScreen = () => {
             app_version: APP_VERSION
           };
           let res = await login({ data: payload }).unwrap();
-          console.log('🚀 ~ LoginScreen ~ res:', res);
           if (res?.message?.success) {
             Toast.show({
               type: 'success',
@@ -59,7 +58,6 @@ const LoginScreen = () => {
             action.resetForm();
 
             const fcmToken = await getFcmToken();
-            console.log("🚀 ~ LoginScreen ~ fcmToken:", fcmToken)
             if (fcmToken) {
               const deviceOs = Platform.OS === 'ios' ? 'iOS' : 'Android';
               registerFcmToken({ fcm_token: fcmToken, device_os: deviceOs });

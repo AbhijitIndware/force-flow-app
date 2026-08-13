@@ -109,9 +109,7 @@ const AddMarketVisitScreen = ({
         };
 
         const payload = { data: value } as unknown as IAddStorePayload;
-        console.log('🚀 ~ onSubmit: ~ payload:', payload);
         const res = await addStore(payload).unwrap();
-        console.log('Store API Response:', res);
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -130,7 +128,6 @@ const AddMarketVisitScreen = ({
         }
         setLoading(false);
       } catch (error: any) {
-        console.error('Store API Error:', error);
         Toast.show({
           type: 'error',
           text1:

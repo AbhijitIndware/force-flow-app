@@ -149,8 +149,6 @@ const AddStoreForm: React.FC<Props> = memo(({
     useCheckStoreNameQuery(debouncedStoreName, {
       skip: debouncedStoreName.trim().length < 3,
     });
-  // console.log('🚀 ~ AddStoreForm ~ isCheckingName:', isCheckingName);
-
   const storeNameTaken = nameCheckData?.message?.exists === true;
   // ────────────────────────────────────────────────────────────
 

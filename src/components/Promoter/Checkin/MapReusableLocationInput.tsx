@@ -56,8 +56,7 @@ const MapReusableLocationInput: React.FC<Props> = ({
       setFieldValue('latitude', loc.latitude);
       setFieldValue('longitude', loc.longitude);
       // Address will be set automatically from API
-    } catch (err) {
-      console.log('Location fetch error:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

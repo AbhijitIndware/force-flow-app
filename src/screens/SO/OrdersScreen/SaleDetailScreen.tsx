@@ -29,8 +29,6 @@ const SaleDetailScreen = ({ navigation, route }: Props) => {
   const { data, isFetching, isError, refetch } = useGetSalesOrderByIdQuery(id, {
     refetchOnMountOrArgChange: true,
   });
-  console.log("🚀 ~ SaleDetailScreen ~ data:", data)
-
   const isDraft = data?.message?.data?.order_details?.status === 'Draft';
   const orderId = data?.message?.data?.order_details?.order_id;
 

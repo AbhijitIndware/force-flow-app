@@ -25,8 +25,6 @@ export const AllOrdersScreen: React.FC<Props> = ({ route, navigation }) => {
             ? { from_date, to_date }
             : { date }),
     });
-    console.log("🚀 ~ AllOrdersScreen ~ data:", data)
-
     const orders = data?.message?.data ?? [];
     const filtered =
         filter === 'All' ? orders : orders.filter(o => o.workflow_state === filter);

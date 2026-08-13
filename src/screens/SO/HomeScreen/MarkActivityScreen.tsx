@@ -79,7 +79,6 @@ const MarkActivityScreen = ({navigation}: Props) => {
 
         setLoading(false);
       } catch (error: any) {
-        console.error('Distributor API Error:', error);
         Toast.show({
           type: 'error',
           text1:

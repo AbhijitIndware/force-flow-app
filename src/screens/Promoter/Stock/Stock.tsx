@@ -41,8 +41,7 @@ type Props = {
   route: any;
 };
 
-const StockScreen = ({navigation, route}: Props) => {
-  console.log(navigation, route);
+const StockScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
 

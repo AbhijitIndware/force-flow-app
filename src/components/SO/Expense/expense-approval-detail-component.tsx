@@ -460,9 +460,7 @@ const ExpenseApprovalDetailComponent = ({
         extra: approvalFlags.extra ? 1 : 0,
         promotional: approvalFlags.promotional ? 1 : 0,
       };
-      // console.log('🚀 ~ handleConfirmApprove ~ payload:', payload);
       const res = await approveClaim(payload).unwrap();
-      // console.log('🚀 ~ handleConfirmApprove ~ res:', res);
 
       if (res?.message?.status === 'success') {
         setApproveModalVisible(false);

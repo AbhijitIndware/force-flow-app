@@ -210,7 +210,7 @@ const Home = ({ navigation, route }: Props) => {
       title: 'Downloads',
       onPress: () => navigation.navigate('DownloadScreen'),
     },
-    { id: '3', title: 'Schemes', onPress: () => console.log('Logout') },
+    { id: '3', title: 'Schemes', onPress: () => {} },
     {
       id: '4',
       title: 'Profile',

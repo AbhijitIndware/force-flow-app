@@ -83,7 +83,6 @@ const CheckInForm = ({ navigation }: Props) => {
   const pjpWorkflowData = useAppSelector(
     s => s.persistedReducer.pjpSlice.pjpWorkflowData,
   );
-  // console.log("🚀 ~ CheckInForm ~ pjpWorkflowData:", pjpWorkflowData)
 
   // ── Derived data ────────────────────────────────────────────────────────────
   const storeDailyList = (pjpWorkflowData?.pjp_data?.stores ?? [])
@@ -126,7 +125,6 @@ const CheckInForm = ({ navigation }: Props) => {
     initialValues: INITIAL_VALUES,
     validationSchema: checkInSchema,
     onSubmit: async formValues => {
-      // console.log("🚀 ~ CheckInForm ~ formValues:", formValues)
       if (
         storesWithoutImage.has(formValues.store) &&
         !formValues.store_image?.data

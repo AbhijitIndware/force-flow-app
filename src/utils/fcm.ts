@@ -20,8 +20,7 @@ export async function requestFCMPermission(): Promise<boolean> {
       );
     }
     return true;
-  } catch (error) {
-    console.log('FCM permission request error:', error);
+  } catch {
     return false;
   }
 }
@@ -30,13 +29,11 @@ export async function getFcmToken(): Promise<string | null> {
   try {
     const hasPermission = await requestFCMPermission();
     if (!hasPermission) {
-      console.log('FCM permission not granted');
       return null;
     }
     const token = await getToken(firebaseMessaging);
     return token;
-  } catch (error) {
-    console.log('FCM token retrieval error:', error);
+  } catch {
     return null;
   }
 }

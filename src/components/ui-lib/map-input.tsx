@@ -45,8 +45,7 @@ const MapReusableInput: React.FC<DistributorInputProps> = ({
       if (loc) {
         onChangeText(loc);
       }
-    } catch (err) {
-      console.log('Error fetching location:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

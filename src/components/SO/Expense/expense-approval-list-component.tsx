@@ -235,7 +235,7 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
 
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, refetch, isFetching, error } = useGetApprovalListQuery(
+  const { data, isLoading, refetch, isFetching } = useGetApprovalListQuery(
     {
       month: selectedMonth,
       year: selectedYear,
@@ -245,9 +245,6 @@ const ExpenseApprovalListComponent = ({ navigation }: any) => {
     },
     { refetchOnMountOrArgChange: true },
   );
-  console.log("🚀 ~ ExpenseApprovalListComponent ~ error:", error)
-  console.log("🚀 ~ ExpenseApprovalListComponent ~ data:", data)
-
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();

@@ -48,7 +48,6 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
         });
       }
     } catch (error: any) {
-      console.error('Sales Order API Error:', error);
       Toast.show({
         type: 'error',
         text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',

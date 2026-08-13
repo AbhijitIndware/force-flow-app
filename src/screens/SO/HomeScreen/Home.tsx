@@ -194,10 +194,6 @@ const Home = ({ navigation, route }: Props) => {
   // const [routeName, setRouteName] = useState('HomeScreen');
 
   // useEffect(() => {
-  //   console.log(
-  //     '🚀 ~ Home ~ route?.params?.routeName:',
-  //     route?.params?.routeName,
-  //   );
   //   if (route?.params?.routeName) {
   //     setRouteName(route?.params?.routeName);
   //   }
