@@ -12,6 +12,7 @@ import { PaperProvider } from 'react-native-paper';
 import DisclaimerModal from './DisclaimerModal';
 import { useNetworkStatus } from './src/hooks/useNetworkStatus';
 import { SlowNetworkBanner } from './src/components/ui-lib/slow-network-banner';
+import BootSplash from 'react-native-bootsplash';
 import {
   getMessaging,
   setBackgroundMessageHandler,
@@ -127,7 +128,10 @@ function App(): React.JSX.Element {
                 isVisible={networkStatus.isSlowNetwork}
                 effectiveType={networkStatus.effectiveType}
               />
-              <NavigationContainer ref={navigationRef}>
+              <NavigationContainer
+                ref={navigationRef}
+                onReady={() => BootSplash.hide({ fade: true })}
+              >
                 <StatusBar
                   barStyle={isDarkMode ? 'light-content' : 'dark-content'}
                 />
