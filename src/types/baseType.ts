@@ -2656,3 +2656,659 @@ export interface RAddActivityLocationImage {
   };
 }
 export interface RGetLiveWorkingHours { success: boolean; data: LiveWorkingHours; }
+
+// ─── PROMOTER NEW API TYPES ─────────────────────────────────────────────────
+
+// Screen 1 — Home
+export interface IPromoterHomeData {
+  employee: {
+    name: string;
+    employee_name: string;
+    initials: string;
+    image: string | null;
+    designation: string;
+  };
+  attendance: {
+    available: boolean;
+    checked_in: boolean;
+    checked_out: boolean;
+    checkin_time: string | null;
+    checkout_time: string | null;
+    store: string;
+    store_name: string;
+    shift_start: string;
+    shift_end: string;
+    can_check_in: boolean;
+    can_check_out: boolean;
+  };
+  target: {
+    available: boolean;
+    sales_target: number;
+    achieved_value: number;
+    percentage: number;
+    ddn_target: number;
+    ddn_value: number;
+    order_count: number;
+  };
+  alerts: {
+    below_norm_sku_count: number;
+  };
+  unread_notifications: number;
+  date: string;
+}
+
+export interface RPromoterHome {
+  message: {
+    success: boolean;
+    data: IPromoterHomeData;
+  };
+}
+
+// Screen 2 — Attendance Status (split day additions)
+export interface StoreTodayEntry {
+  store: string;
+  store_name: string;
+  start_time: string;
+  end_time: string;
+  is_secondary: boolean;
+  is_floater: boolean;
+  log_id: string | null;
+  checked_in: boolean;
+  checked_out: boolean;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  working_hours: number;
+  can_check_in: boolean;
+  can_check_out: boolean;
+}
+
+export interface AttendanceNextStore {
+  store: string;
+  store_name: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface IAttendanceStatusData {
+  checked_in: boolean;
+  checked_out: boolean;
+  actions: {
+    can_check_in: boolean;
+    can_check_out: boolean;
+    next_store: AttendanceNextStore | null;
+    open_store: AttendanceNextStore | null;
+  };
+  blocked_reason: string | null;
+  attendance_record: {
+    name: string;
+    status: string;
+    docstatus: number;
+  } | null;
+  attendance_date: string;
+  employee: string;
+  employee_name: string;
+  shift_info: {
+    store: string;
+    store_name: string;
+    start_time: string;
+    end_time: string;
+    is_floater: number;
+  };
+  available_stores: {
+    store_id: string;
+    store_name: string;
+    map_location: string;
+    is_primary: boolean;
+  }[];
+  log_id: string | null;
+  status: string;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  working_hours: number;
+  checkin_location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  } | null;
+  checkin_selfie: string | null;
+  checkin_records: {
+    check_in: { name: string; time: string } | null;
+    check_out: { name: string; time: string } | null;
+  };
+  is_split_today: boolean;
+  total_working_hours: number;
+  stores_today: StoreTodayEntry[];
+}
+
+// Screen 2 — Validate Attendance
+export interface IValidateAttendanceResponse {
+  message: {
+    success: boolean;
+    data: {
+      can_check_in: boolean;
+      blocked_reason: string | null;
+    };
+  };
+}
+
+// Screen 2 — Upload Attendance Image
+export interface IUploadAttendanceImage {
+  image: {
+    mime: string;
+    data: string;
+  };
+}
+
+export interface RUploadAttendanceImage {
+  message: {
+    success: boolean;
+    data: {
+      image_url: string;
+    };
+  };
+}
+
+// Screen 3 — Monthly Roster
+export interface RosterSlot {
+  store: string;
+  store_name: string;
+  start_time: string;
+  end_time: string;
+  shift_type: string;
+  status: string;
+  is_secondary: boolean;
+  is_floater: boolean;
+}
+
+export interface RosterDay {
+  date: string;
+  shift_label: string;
+  is_split: boolean;
+  slots: RosterSlot[];
+}
+
+export interface RMonthlyRoster {
+  message: {
+    success: boolean;
+    data: {
+      employee: string;
+      employee_name: string;
+      aon_days: number;
+      month: number;
+      year: number;
+      period_start: string;
+      period_end: string;
+      total_days_assigned: number;
+      days: RosterDay[];
+    };
+  };
+}
+
+// Screen 6 — Sales Order Master Data
+export interface ISalesOrderMasterData {
+  stores: {
+    store_id: string;
+    store_name: string;
+    warehouse: string;
+  }[];
+  items: {
+    item_code: string;
+    item_name: string;
+    rate: number;
+  }[];
+  distributors: {
+    distributor_id: string;
+    distributor_name: string;
+  }[];
+  terms: {
+    name: string;
+  }[];
+}
+
+export interface RSalesOrderMasterData {
+  message: {
+    success: boolean;
+    data: ISalesOrderMasterData;
+  };
+}
+
+// Screen 8 — Activity Categories
+export interface IActivityCategories {
+  activity_types: string[];
+  categories: {
+    name: string;
+    category_name: string;
+  }[];
+}
+
+export interface RActivityCategories {
+  message: {
+    success: boolean;
+    data: IActivityCategories;
+  };
+}
+
+// Screen 8 — Upload Store Activity
+export interface IUploadStoreActivity {
+  activity_type: string; // "Own" | "Competitors"
+  activities_category: string;
+  remark?: string;
+  store?: string;
+  images: {
+    mime: string;
+    data: string;
+  }[];
+}
+
+export interface RUploadStoreActivity {
+  message: {
+    success: boolean;
+    data: {
+      activity_id: string;
+      store: string;
+      store_name: string;
+      activity_type: string;
+      date_and_time: string;
+      image_count: number;
+    };
+  };
+}
+
+// Screen 8 — Get Store Activities
+export interface StoreActivity {
+  name: string;
+  activity_type: string;
+  store: string;
+  store_name: string;
+  activities_category: string;
+  date_and_time: string;
+  remark: string;
+  images: string[];
+}
+
+export interface IGetStoreActivitiesParams {
+  activity_type?: string;
+  store?: string;
+  from_date?: string;
+  to_date?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export interface RStoreActivities {
+  message: {
+    success: boolean;
+    data: {
+      activities: StoreActivity[];
+      pagination: {
+        page: number;
+        page_size: number;
+        total_records: number;
+        total_pages: number;
+      };
+    };
+  };
+}
+
+// Screen 9 — Product Feedback
+export interface ICreateProductFeedback {
+  type: string; // "Own" | "Competitor"
+  remarks?: string;
+  image?: {
+    mime: string;
+    data: string;
+  };
+}
+
+export interface RCreateProductFeedback {
+  message: {
+    success: boolean;
+    data: {
+      feedback_id: string;
+      type: string;
+      remarks: string;
+      image: string | null;
+      time: string;
+    };
+  };
+}
+
+export interface ProductFeedbackItem {
+  name: string;
+  type: string;
+  remarks: string;
+  image: string | null;
+  time: string;
+}
+
+export interface RProductFeedbackList {
+  message: {
+    success: boolean;
+    data: {
+      feedbacks: ProductFeedbackItem[];
+      pagination: {
+        page: number;
+        page_size: number;
+        total_records: number;
+        total_pages: number;
+      };
+    };
+  };
+}
+
+// Master Data — Assigned Stores
+export interface AssignedStore {
+  store_id: string;
+  store_name: string;
+  city: string | null;
+  state: string | null;
+  store_category?: string;
+  store_type?: string;
+}
+
+export interface RAssignedStores {
+  message: {
+    success: boolean;
+    data: {
+      employee: string;
+      total_stores: number;
+      stores: AssignedStore[];
+    };
+  };
+}
+
+// Master Data — Shift Assignment Details
+export interface IShiftAssignmentDetails {
+  employee: string;
+  employee_name: string;
+  today: {
+    store: string;
+    store_name: string;
+    start_time: string;
+    end_time: string;
+    shift_type: string;
+    is_floater: number;
+  } | null;
+  floater_stores: {
+    store_id: string;
+    store_name: string;
+  }[];
+}
+
+export interface RShiftAssignmentDetails {
+  message: {
+    success: boolean;
+    data: IShiftAssignmentDetails;
+  };
+}
+
+// Master Data — Items for Promoter
+export interface PromoterItem {
+  item_code: string;
+  item_name: string;
+  rate: number;
+  item_group: string;
+}
+
+export interface RItemsForPromoter {
+  message: {
+    success: boolean;
+    data: {
+      items: PromoterItem[];
+      pagination: {
+        page: number;
+        page_size: number;
+        total_records: number;
+        total_pages: number;
+      };
+    };
+  };
+}
+
+// Master Data — Item Stock in Warehouses
+export interface ItemWarehouseStock {
+  warehouse_id: string;
+  warehouse_name: string;
+  actual_qty: number;
+  store_id: string;
+  store_name: string;
+}
+
+export interface RItemStockInWarehouses {
+  message: {
+    success: boolean;
+    data: {
+      item_code: string;
+      warehouses: ItemWarehouseStock[];
+    };
+  };
+}
+
+// Profile
+export interface IProfileData {
+  employee_id: string;
+  employee_name: string;
+  designation: string;
+  department: string;
+  mobile: string;
+  email: string;
+  image: string | null;
+  reports_to: string;
+  reports_to_name: string;
+}
+
+export interface RProfileData {
+  message: {
+    success: boolean;
+    data: IProfileData;
+  };
+}
+
+// ─── SUPERVISOR API TYPES ───────────────────────────────────────────────────
+
+export interface SupervisorPromoterShift {
+  shift_assignment: string;
+  store: string;
+  store_name: string;
+  shift_type: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface SupervisorPromoterAttendance {
+  checked_in: boolean;
+  checked_out: boolean;
+  store: string;
+  checkin_time: string | null;
+  checkout_time: string | null;
+  stores_done: number;
+  stores_assigned: number;
+}
+
+export interface SupervisorAttendanceByStore {
+  log_id: string;
+  store_name: string;
+  status: string;
+  checkin_time: string | null;
+  checkout_time: string | null;
+}
+
+export interface SupervisorPromoter {
+  employee: string;
+  employee_name: string;
+  user_id: string;
+  mobile: string;
+  is_posted_today: boolean;
+  is_split_today: boolean;
+  today_shifts: SupervisorPromoterShift[];
+  attendance: SupervisorPromoterAttendance;
+  attendance_by_store: SupervisorAttendanceByStore[];
+}
+
+export interface RSupervisorMyPromoters {
+  message: {
+    success: boolean;
+    data: {
+      date: string;
+      total: number;
+      posted_today: number;
+      checked_in: number;
+      not_checked_in: number;
+      promoters: SupervisorPromoter[];
+    };
+  };
+}
+
+// Supervisor — Promoter Day Detail
+export interface SupervisorStockTakeRow {
+  item: string;
+  warehouse_balance: string;
+  manual_balance_entry: string;
+  mismatched_qty: number;
+}
+
+export interface SupervisorOrderRow {
+  name: string;
+  total_qty: number;
+  grand_total: number;
+  workflow_state: string;
+}
+
+export interface SupervisorActivityRow {
+  activity_type: string;
+  activities_category: string;
+  store_name: string;
+  images: string[];
+}
+
+export interface IPromoterDayData {
+  employee_name: string;
+  date: string;
+  attendance_by_store: SupervisorAttendanceByStore[];
+  total_working_hours: number;
+  attendance: {
+    name: string;
+    status: string;
+    store_name: string;
+    checkin_time: string;
+    checkout_time: string;
+    working_hours: number;
+    checkin_selfie: string;
+  };
+  stock_take: {
+    items_counted: number;
+    rows: SupervisorStockTakeRow[];
+  };
+  orders: {
+    count: number;
+    total_value: number;
+    rows: SupervisorOrderRow[];
+  };
+  activities: {
+    count: number;
+    rows: SupervisorActivityRow[];
+  };
+}
+
+export interface RSupervisorPromoterDay {
+  message: {
+    success: boolean;
+    data: IPromoterDayData;
+  };
+}
+
+// Supervisor — Promoter Roster
+export interface SupervisorRosterAssignment {
+  name: string;
+  store: string;
+  store_name: string;
+  shift_type: string;
+  start_date: string;
+  end_date: string;
+  start_time: string;
+  end_time: string;
+  docstatus: number;
+  floater: number;
+  custom_secondary_shift: number;
+  floater_stores: {
+    store: string;
+    store_name: string;
+  }[];
+}
+
+export interface RSupervisorPromoterRoster {
+  message: {
+    success: boolean;
+    data: {
+      employee_name: string;
+      aon_days: number;
+      month: number;
+      year: number;
+      assignments: SupervisorRosterAssignment[];
+    };
+  };
+}
+
+// Supervisor — Assignment Options
+export interface AssignmentStoreOption {
+  store_id: string;
+  store_name: string;
+  city: string | null;
+  state: string | null;
+  start_time: string;
+  end_time: string;
+}
+
+export interface RAssignmentOptions {
+  message: {
+    success: boolean;
+    data: {
+      stores: AssignmentStoreOption[];
+      shift_types: {
+        name: string;
+      }[];
+      pagination: {
+        page: number;
+        page_size: number;
+        total_records: number;
+        total_pages: number;
+      };
+    };
+  };
+}
+
+// Supervisor — Create Shift Assignment
+export interface ICreateShiftAssignment {
+  employee: string;
+  store: string;
+  shift_type?: string;
+  start_date: string;
+  end_date: string;
+  is_secondary?: number;
+  floater?: number;
+  floater_stores?: string[];
+}
+
+export interface RCreateShiftAssignment {
+  message: {
+    success: boolean;
+    data: {
+      shift_assignment: string;
+      store_name: string;
+      start_time: string;
+      end_time: string;
+    };
+  };
+}
+
+// Supervisor — Cancel Shift Assignment
+export interface ICancelShiftAssignment {
+  shift_assignment: string;
+}
+
+export interface RCancelShiftAssignment {
+  message: {
+    success: boolean;
+    message: string;
+  };
+}
