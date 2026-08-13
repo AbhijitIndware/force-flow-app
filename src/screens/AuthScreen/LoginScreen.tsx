@@ -11,31 +11,31 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, { useState } from 'react';
-import { flexCol, flexRow } from '../../utils/styles';
-import { Colors } from '../../utils/colors';
-import { Fonts } from '../../constants';
-import { Size } from '../../utils/fontSize';
+import React, {useState} from 'react';
+import {flexCol, flexRow} from '../../utils/styles';
+import {Colors} from '../../utils/colors';
+import {Fonts} from '../../constants';
+import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
-import { Eye, EyeOff, Lock, LogIn, UserRound } from 'lucide-react-native';
-import { useLoginMutation } from '../../features/auth/auth';
-import { useRegisterFcmTokenMutation } from '../../features/fcm/fccm-api';
-import { getFcmToken } from '../../utils/fcm';
+import {Eye, EyeOff, Lock, LogIn, UserRound} from 'lucide-react-native';
+import {useLoginMutation} from '../../features/auth/auth';
+import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
+import {getFcmToken} from '../../utils/fcm';
 import Toast from 'react-native-toast-message';
-import { useFormik } from 'formik';
-import { loginSchema } from '../../types/schema';
-import { APP_VERSION } from '../../utils/utils';
-const { width } = Dimensions.get('window');
+import {useFormik} from 'formik';
+import {loginSchema} from '../../types/schema';
+import {APP_VERSION} from '../../utils/utils';
+const {width} = Dimensions.get('window');
 
-let initial = { usr: '', pwd: '' };
+let initial = {usr: '', pwd: ''};
 
 const LoginScreen = () => {
-  const [login, { isLoading }] = useLoginMutation();
+  const [login, {isLoading}] = useLoginMutation();
   const [registerFcmToken] = useRegisterFcmTokenMutation();
   const [secureText, setSecureText] = useState(true);
 
   // Form handling & validation using formik & yup schemas
-  const { values, errors, touched, handleChange, handleBlur, handleSubmit } =
+  const {values, errors, touched, handleChange, handleBlur, handleSubmit} =
     useFormik({
       initialValues: initial,
       validationSchema: loginSchema,
@@ -46,9 +46,9 @@ const LoginScreen = () => {
           const payload = {
             usr: value.usr,
             pwd: value.pwd,
-            app_version: APP_VERSION
+            app_version: APP_VERSION,
           };
-          let res = await login({ data: payload }).unwrap();
+          let res = await login({data: payload}).unwrap();
           if (res?.message?.success) {
             Toast.show({
               type: 'success',
@@ -60,7 +60,7 @@ const LoginScreen = () => {
             const fcmToken = await getFcmToken();
             if (fcmToken) {
               const deviceOs = Platform.OS === 'ios' ? 'iOS' : 'Android';
-              registerFcmToken({ fcm_token: fcmToken, device_os: deviceOs });
+              registerFcmToken({fcm_token: fcmToken, device_os: deviceOs});
             }
           } else {
             Toast.show({
@@ -94,7 +94,7 @@ const LoginScreen = () => {
       ]}>
       <ScrollView
         nestedScrollEnabled={true}
-        contentContainerStyle={{ flexGrow: 1 }}>
+        contentContainerStyle={{flexGrow: 1}}>
         <View style={styles.header}>
           <Image
             source={require('../../assets/images/softsence-logo-login.png')}
@@ -126,11 +126,11 @@ const LoginScreen = () => {
             }}>
             Enter credentials to Login
           </Text>
-          <View style={{ paddingTop: 20 }}>
+          <View style={{paddingTop: 20}}>
             <Input
               style={styles.inputBox}
-              inputStyle={{ paddingTop: 18 }}
-              labelStyle={{ color: Colors.white }}
+              inputStyle={{paddingTop: 15}}
+              labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
               keyboardType="email-address"
               inputContainerStyle={{
@@ -151,13 +151,13 @@ const LoginScreen = () => {
               }}
               errorMessage={touched.usr && errors.usr ? errors.usr : ''}
               placeholder="Enter User ID"
-              leftIcon={<UserRound color={Colors.white} />}
+              leftIcon={<UserRound color={Colors.white} size={18} />}
             />
             <Input
               secureTextEntry={secureText}
               style={styles.inputBox}
-              inputStyle={{ paddingTop: 18 }}
-              labelStyle={{ color: Colors.white }}
+              inputStyle={{paddingTop: 15}}
+              labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
               inputContainerStyle={{
                 borderBottomWidth: 0,
@@ -176,25 +176,25 @@ const LoginScreen = () => {
                 marginBottom: 10,
               }}
               placeholder="Enter Password"
-              leftIcon={<Lock color={Colors.white} />}
+              leftIcon={<Lock color={Colors.white} size={18} />}
               rightIcon={
                 <TouchableOpacity onPress={() => setSecureText(prev => !prev)}>
                   {secureText ? (
-                    <EyeOff color={Colors.white} />
+                    <EyeOff color={Colors.white} size={18} />
                   ) : (
-                    <Eye color={Colors.white} />
+                    <Eye color={Colors.white} size={18} />
                   )}
                 </TouchableOpacity>
               }
             />
             <TouchableOpacity
-              style={[styles.checkinButton, isLoading && { opacity: 0.7 }]}
+              style={[styles.checkinButton, isLoading && {opacity: 0.7}]}
               onPress={() => handleSubmit()}
               disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <View style={[flexRow, { gap: 10 }]}>
+                <View style={[flexRow, {gap: 10}]}>
                   <LogIn strokeWidth={1.4} color={Colors.white} />
                   <Text style={styles.checkinButtonText}>Login</Text>
                 </View>
@@ -217,7 +217,7 @@ const LoginScreen = () => {
               marginTop: 20,
             }}>
             App Version:{' '}
-            <Text style={{ fontFamily: Fonts.bold, color: Colors.darkGray }}>
+            <Text style={{fontFamily: Fonts.bold, color: Colors.darkGray}}>
               {APP_VERSION}
             </Text>
           </Text>
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   inputBox: {
     color: Colors.white,
     fontFamily: Fonts.light,
-    fontSize: Size.xsmd,
+    fontSize: Size.sm,
     borderBottomWidth: 0,
     margin: 0,
   },
