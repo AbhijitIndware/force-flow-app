@@ -20,6 +20,8 @@ import {Size} from '../../../utils/fontSize';
 import {Tab, TabView} from '@rneui/themed';
 import RangeSlider from '../../../components/ui/rangeSlider';
 import IncentiveGraph from '../../../components/incentive/incentive-graph';
+import {useGetTargetAchievementSummaryQuery} from '../../../features/base/promoter-base-api';
+import moment from 'moment';
 
 const {width} = Dimensions.get('window');
 
@@ -39,10 +41,23 @@ const IncentiveScreen = ({navigation, route}: Props) => {
   const [index, setIndex] = React.useState(0);
   const [value, setValue] = useState(50);
 
+  const {data: targetData, refetch} = useGetTargetAchievementSummaryQuery({
+    from_date: moment().startOf('month').format('YYYY-MM-DD'),
+    to_date: moment().endOf('month').format('YYYY-MM-DD'),
+  });
+
+  const target = targetData?.message;
+  const salesTarget = target?.sales_target || 0;
+  const soValue = target?.so_value || 0;
+  const ddnTarget = target?.ddn_target || 0;
+  const ddnValue = target?.ddn_value || 0;
+  const salesAchievementPct = salesTarget > 0 ? Math.round((soValue / salesTarget) * 100) : 0;
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
 
@@ -79,7 +94,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                   color: Colors.white,
                   lineHeight: 16,
                 }}>
-                ₹22545
+                ₹{soValue.toLocaleString('en-IN')}
               </Text>
             </View>
           </View>
@@ -180,7 +195,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         color: Colors.darkButton,
                         lineHeight: 28,
                       }}>
-                      ₹1255
+                      ₹{salesTarget.toLocaleString('en-IN')}
                     </Text>
                   </View>
                   <View style={styles.insantiveCounterBox}>
@@ -205,7 +220,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         color: Colors.darkButton,
                         lineHeight: 28,
                       }}>
-                      ₹654
+                      ₹{soValue.toLocaleString('en-IN')}
                     </Text>
                     <Text
                       style={{
@@ -359,7 +374,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         color: Colors.darkButton,
                         lineHeight: 28,
                       }}>
-                      ₹1255
+                      ₹{salesTarget.toLocaleString('en-IN')}
                     </Text>
                   </View>
                   <View style={styles.insantiveCounterBox}>
@@ -384,7 +399,7 @@ const IncentiveScreen = ({navigation, route}: Props) => {
                         color: Colors.darkButton,
                         lineHeight: 28,
                       }}>
-                      ₹654
+                      ₹{soValue.toLocaleString('en-IN')}
                     </Text>
                     <Text
                       style={{

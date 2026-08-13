@@ -25,7 +25,7 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
 import {
-  useCreateSalesInvoiceMutation,
+  useCreateSalesOrderWithStockMutation,
   useLazyGetWarehousesWithStockQuery,
 } from '../../../features/base/promoter-base-api';
 import AddPromoterSaleForm from '../../../components/Promoter/Sales/AddSalesForm';
@@ -71,7 +71,7 @@ const AddSaleScreen = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [loading, setLoading] = useState(false);
 
-  const [createSalesInvoice] = useCreateSalesInvoiceMutation();
+  const [createSalesOrderWithStock] = useCreateSalesOrderWithStockMutation();
 
   const {values, errors, touched, handleBlur, handleSubmit, setFieldValue} =
     useFormik<ISalesInvoiceParams>({
@@ -81,19 +81,33 @@ const AddSaleScreen = ({navigation}: Props) => {
         try {
           setLoading(true);
 
-          const res = await createSalesInvoice(formValues).unwrap();
+          const payload = {
+            custom_warehouse: formValues.items[0]?.warehouse || '',
+            transaction_date: new Date().toISOString().split('T')[0],
+            delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .split('T')[0],
+            submit_order: true,
+            items: formValues.items.map(item => ({
+              item_code: item.item_code,
+              qty: item.qty,
+              rate: item.rate,
+            })),
+          };
+
+          const res = await createSalesOrderWithStock(payload).unwrap();
 
           if (res?.message?.success) {
             Toast.show({
               type: 'success',
-              text1: `✅ ${res.message.message}`,
+              text1: `✅ ${res.message.message || 'Sales Order created successfully'}`,
             });
 
-            navigation.navigate('OrdersScreen', {index: 1});
+            navigation.navigate('SalesScreen');
           } else {
             Toast.show({
               type: 'error',
-              text1: '❌ Something went wrong',
+              text1: res?.message?.message || '❌ Something went wrong',
             });
           }
         } catch (error: any) {
@@ -110,7 +124,7 @@ const AddSaleScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, styles.container]}>
       <PageHeader
-        title="Add Sales Invoice"
+        title="Create Sales Order"
         navigation={() => navigation.navigate('SalesScreen')}
       />
 

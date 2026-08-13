@@ -27,6 +27,7 @@ import {
 import {Tab, TabView} from '@rneui/themed';
 import {Button} from '@rneui/themed';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useGetStoreStockStatusQuery, useGetSalesOrdersListQuery} from '../../../features/base/promoter-base-api';
 
 const {width} = Dimensions.get('window');
 
@@ -45,10 +46,31 @@ const StockScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [index, setIndex] = React.useState(0);
 
+  // Fetch stock data for the assigned store
+  const {data: stockData, refetch: refetchStock} = useGetStoreStockStatusQuery(
+    {store: ''}, // Will use default store from roster
+    {skip: false},
+  );
+
+  // Fetch requisitions (sales orders)
+  const {data: ordersData, refetch: refetchOrders} = useGetSalesOrdersListQuery(
+    {page: 1, page_size: 10},
+  );
+
+  const stockItems = stockData?.message?.all_items || [];
+  const requisitions = ordersData?.message?.data?.sales_orders || [];
+
+  const totalStockValue = stockItems.reduce(
+    (sum: number, item: any) => sum + (item.current_stock * item.item_rate || 0),
+    0,
+  );
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetchStock();
+      refetchOrders();
     }, 2000);
   }, []);
 
@@ -82,7 +104,7 @@ const StockScreen = ({navigation, route}: Props) => {
                   color: Colors.darkButton,
                   lineHeight: 16,
                 }}>
-                ₹22545
+                ₹{totalStockValue.toLocaleString('en-IN')}
               </Text>
               <Button
                 type="clear"

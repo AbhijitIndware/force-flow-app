@@ -19,10 +19,10 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {Banknote, CalendarDays, Funnel, Search} from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
-import {useGetSalesInvoicesListQuery} from '../../../features/base/promoter-base-api';
+import {useGetSalesOrdersListQuery, useGetDailySecondaryReportQuery} from '../../../features/base/promoter-base-api';
 import PageHeader from '../../../components/ui/PageHeader';
 import SalesItemCard from '../../../components/Promoter/Sales/SalesItemCard';
-import {SalesInvoice} from '../../../types/baseType';
+import {SalesOrderType} from '../../../types/baseType';
 import SearchModal from '../../../components/ui/SearchModal';
 //import { fonts } from '@rneui/base';
 
@@ -60,12 +60,20 @@ const SalesScreen = ({navigation}: Props) => {
     'All' | 'Draft' | 'Pending' | 'Delivered' | 'Cancelled'
   >('All');
 
-  const {data, isFetching, refetch} = useGetSalesInvoicesListQuery({
+  const {data, isFetching, refetch} = useGetSalesOrdersListQuery({
     status: selectedStatus === 'All' ? undefined : selectedStatus,
     search: searchText || undefined,
     page: 1,
     page_size: 100,
   });
+
+  const {data: reportData} = useGetDailySecondaryReportQuery({
+    view_type: 'self',
+  });
+
+  const salesOrders: SalesOrderType[] = data?.message?.data?.sales_orders || [];
+  const totalSalesValue = reportData?.message?.mtd_summary?.total_value || 0;
+  const totalSalesQty = reportData?.message?.mtd_summary?.total_qty || 0;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -109,7 +117,7 @@ const SalesScreen = ({navigation}: Props) => {
                   fontSize: Size.sm,
                   color: Colors.darkButton,
                 }}>
-                Total Sales
+                Total Sales (MTD)
               </Text>
               <Text
                 style={{
@@ -117,7 +125,7 @@ const SalesScreen = ({navigation}: Props) => {
                   fontSize: Size.md,
                   color: Colors.darkButton,
                 }}>
-                ₹0
+                ₹{totalSalesValue.toLocaleString('en-IN')}
               </Text>
               <Text
                 style={{
@@ -127,15 +135,7 @@ const SalesScreen = ({navigation}: Props) => {
                   lineHeight: 16,
                   marginTop: 5,
                 }}>
-                0% MTD{' '}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.medium,
-                  fontSize: Size.xs,
-                  color: Colors.darkButton,
-                }}>
-                0% achieved{' '}
+                {totalSalesQty} pieces sold
               </Text>
             </View>
             <View style={styles.welcomBox}>
@@ -158,7 +158,7 @@ const SalesScreen = ({navigation}: Props) => {
               {paddingHorizontal: 20, marginTop: 70},
             ]}>
             <View style={styles.bodyHeader}>
-              <Text style={styles.bodyHeaderTitle}>Recent Sales Invoices</Text>
+              <Text style={styles.bodyHeaderTitle}>Recent Sales Orders</Text>
               <View style={styles.bodyHeaderIcon}>
                 <SearchModal
                   visible={isSearchVisible}
@@ -210,22 +210,20 @@ const SalesScreen = ({navigation}: Props) => {
               styles.bodyContent,
               {paddingHorizontal: 20, paddingBottom: 100},
             ]}>
-            {data?.message?.data?.sales_invoices?.length ? (
-              data.message.data.sales_invoices.map(
-                (item: SalesInvoice, index: number) => {
-                  const {date, month} = getDateParts(item.posting_date);
+            {salesOrders.length ? (
+              salesOrders.map(
+                (item: SalesOrderType, index: number) => {
+                  const {date, month} = getDateParts(item.transaction_date);
 
                   return (
                     <SalesItemCard
-                      key={item.invoice_id || index}
-                      time={item.posting_date}
+                      key={item.order_id || index}
+                      time={item.transaction_date}
                       date={date}
                       month={month}
-                      orderNo={item.invoice_id}
-                      // storeName={item.store_name}
-                      // customerName={item.customer_name}
+                      orderNo={item.order_id}
                       amount={item.grand_total}
-                      status={item.status}
+                      status={item.workflow_state}
                       navigation={navigation}
                     />
                   );
@@ -233,7 +231,7 @@ const SalesScreen = ({navigation}: Props) => {
               )
             ) : (
               <View style={styles.emptyBox}>
-                <Text style={styles.emptyText}>No sales invoice found</Text>
+                <Text style={styles.emptyText}>No sales orders found</Text>
               </View>
             )}
           </View>
@@ -250,7 +248,7 @@ const SalesScreen = ({navigation}: Props) => {
           style={styles.checkinButton}
           onPress={() => navigation.navigate('AddSalesScreen')}>
           <CalendarDays strokeWidth={1.4} color={Colors.white} />
-          <Text style={styles.checkinButtonText}>Register Sales Invoice</Text>
+          <Text style={styles.checkinButtonText}>Create Sales Order</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

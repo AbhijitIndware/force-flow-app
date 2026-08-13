@@ -19,6 +19,8 @@ import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {Clock2, EllipsisVertical, Funnel, Search} from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
+import {useGetProductFeedbackListQuery} from '../../../features/base/promoter-base-api';
+import moment from 'moment';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -35,12 +37,20 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
 
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  console.log('🚀 ~ SalesScreen ~ selectedCategory:', selectedCategory);
+
+  const {data: feedbackData, isFetching, refetch} = useGetProductFeedbackListQuery({
+    type: selectedCategory === 'All' ? undefined : selectedCategory,
+    page: 1,
+    page_size: 20,
+  });
+
+  const feedbacks = feedbackData?.message?.data?.feedbacks || [];
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
 
@@ -96,166 +106,49 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
             </View>
           </View>
           <View>
-            <View style={styles.atteddanceCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>11:03:45 AM</Text>
-                </View>
-                <EllipsisVertical size={20} color={Colors.darkButton} />
+            {feedbacks.length > 0 ? (
+              feedbacks.map((item: any, index: number) => {
+                const feedbackTime = moment(item.time).format('hh:mm A');
+                const feedbackDate = moment(item.time);
+                return (
+                  <View key={item.name || index} style={styles.atteddanceCard}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.timeSection}>
+                        <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
+                        <Text style={styles.time}>{feedbackTime}</Text>
+                      </View>
+                      <EllipsisVertical size={20} color={Colors.darkButton} />
+                    </View>
+                    <View style={styles.cardbody}>
+                      <View style={styles.dateBox}>
+                        <Text style={styles.dateText}>{feedbackDate.date()}</Text>
+                        <Text style={styles.monthText}>
+                          {feedbackDate.format('MMM').toUpperCase()}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text
+                          style={{
+                            fontFamily: Fonts.semiBold,
+                            fontSize: Size.xsmd,
+                            color: Colors.darkButton,
+                            lineHeight: 18,
+                            marginBottom: 5,
+                          }}>
+                          Feedback: {item.name}
+                        </Text>
+                        <Text style={styles.contentText}>Type: {item.type}</Text>
+                        <Text style={styles.contentText}>{item.remarks}</Text>
+                      </View>
+                    </View>
+                  </View>
+                );
+              })
+            ) : (
+              <View style={{padding: 20, alignItems: 'center'}}>
+                <Text style={styles.contentText}>No feedback found</Text>
               </View>
-              <View style={styles.cardbody}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>19</Text>
-                  <Text style={styles.monthText}>APR</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.semiBold,
-                      fontSize: Size.xsmd,
-                      color: Colors.darkButton,
-                      lineHeight: 18,
-                      marginBottom: 5,
-                    }}>
-                    Feedback no: FF/223467
-                  </Text>
-                  <Text style={styles.contentText}>Store name</Text>
-                  <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>
-                    Feedback: Packaging problem
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.atteddanceCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>11:03:45 AM</Text>
-                </View>
-                <EllipsisVertical size={20} color={Colors.darkButton} />
-              </View>
-              <View style={styles.cardbody}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>19</Text>
-                  <Text style={styles.monthText}>APR</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.semiBold,
-                      fontSize: Size.xsmd,
-                      color: Colors.darkButton,
-                      lineHeight: 18,
-                      marginBottom: 5,
-                    }}>
-                    Feedback no: FF/223467
-                  </Text>
-                  <Text style={styles.contentText}>Store name</Text>
-                  <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>
-                    Feedback: Packaging problem
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.atteddanceCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>11:03:45 AM</Text>
-                </View>
-                <EllipsisVertical size={20} color={Colors.darkButton} />
-              </View>
-              <View style={styles.cardbody}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>19</Text>
-                  <Text style={styles.monthText}>APR</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.semiBold,
-                      fontSize: Size.xsmd,
-                      color: Colors.darkButton,
-                      lineHeight: 18,
-                      marginBottom: 5,
-                    }}>
-                    Feedback no: FF/223467
-                  </Text>
-                  <Text style={styles.contentText}>Store name</Text>
-                  <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>
-                    Feedback: Packaging problem
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.atteddanceCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>11:03:45 AM</Text>
-                </View>
-                <EllipsisVertical size={20} color={Colors.darkButton} />
-              </View>
-              <View style={styles.cardbody}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>19</Text>
-                  <Text style={styles.monthText}>APR</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.semiBold,
-                      fontSize: Size.xsmd,
-                      color: Colors.darkButton,
-                      lineHeight: 18,
-                      marginBottom: 5,
-                    }}>
-                    Feedback no: FF/223467
-                  </Text>
-                  <Text style={styles.contentText}>Store name</Text>
-                  <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>
-                    Feedback: Packaging problem
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.atteddanceCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.timeSection}>
-                  <Clock2 size={16} color="#4A4A4A" strokeWidth={2} />
-                  <Text style={styles.time}>11:03:45 AM</Text>
-                </View>
-                <EllipsisVertical size={20} color={Colors.darkButton} />
-              </View>
-              <View style={styles.cardbody}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>19</Text>
-                  <Text style={styles.monthText}>APR</Text>
-                </View>
-                <View>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.semiBold,
-                      fontSize: Size.xsmd,
-                      color: Colors.darkButton,
-                      lineHeight: 18,
-                      marginBottom: 5,
-                    }}>
-                    Feedback no: FF/223467
-                  </Text>
-                  <Text style={styles.contentText}>Store name</Text>
-                  <Text style={styles.contentText}>Accestisa new mart</Text>
-                  <Text style={styles.contentText}>
-                    Feedback: Packaging problem
-                  </Text>
-                </View>
-              </View>
-            </View>
+            )}
           </View>
         </ScrollView>
       )}

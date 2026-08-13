@@ -1,9 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
-import {Dimensions, SafeAreaView, StyleSheet, Text, View} from 'react-native';
+import {Dimensions, FlatList, SafeAreaView, StyleSheet, Text, View, RefreshControl} from 'react-native';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import React from 'react';
+import React, {useCallback, useState} from 'react';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import {Tab, TabView} from '@rneui/themed';
@@ -11,6 +11,9 @@ import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {Funnel, Search} from 'lucide-react-native';
 import RecentPromoterAttendanceScreen from '../../../components/Promoter/Attendance/RecentPromoterAttendanceScreen';
+import {useGetMonthlyRosterQuery} from '../../../features/base/promoter-base-api';
+import {RosterDay} from '../../../types/baseType';
+import moment from 'moment';
 const {width} = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
@@ -25,6 +28,62 @@ type Props = {
 
 const AttendanceScreen = ({navigation}: Props) => {
   const [index, setIndex] = React.useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const {data: rosterData, refetch: refetchRoster} = useGetMonthlyRosterQuery({
+    month: moment().month() + 1,
+    year: moment().year(),
+  });
+
+  const rosterDays = rosterData?.message?.data?.days || [];
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      refetchRoster();
+    }, 2000);
+  }, []);
+
+  const renderRosterDay = ({item}: {item: RosterDay}) => (
+    <View style={styles.atteddanceCard}>
+      <View style={styles.cardHeader}>
+        <View>
+          <Text style={styles.time}>
+            {moment(item.date).format('DD MMM YYYY')}
+          </Text>
+          <Text style={styles.counttext}>{item.shift_label}</Text>
+        </View>
+        <View
+          style={[
+            styles.present,
+            item.is_split
+              ? {backgroundColor: Colors.holdLight}
+              : {},
+          ]}>
+          <Text
+            style={{
+              color: item.is_split ? Colors.orange : Colors.sucess,
+              fontFamily: Fonts.regular,
+              fontSize: Size.sm,
+            }}>
+            {item.shift_label}
+          </Text>
+        </View>
+      </View>
+      {item.slots.map((slot, idx) => (
+        <View key={idx} style={[styles.cardbody, {marginTop: 8}]}>
+          <View>
+            <Text style={styles.contentText}>{slot.store_name}</Text>
+            <Text style={styles.counttext}>
+              {slot.start_time} - {slot.end_time}
+            </Text>
+            <Text style={styles.counttext}>{slot.shift_type}</Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <SafeAreaView
@@ -90,16 +149,20 @@ const AttendanceScreen = ({navigation}: Props) => {
 
         <TabView.Item style={{width: '100%', backgroundColor: Colors.lightBg}}>
           <View style={styles.container}>
-            <View
-              style={[styles.bodyContent, {paddingTop: 15, paddingBottom: 30}]}>
-              <View style={styles.bodyHeader}>
-                <Text style={styles.bodyHeaderTitle}>Recent Attendance</Text>
-                <View style={styles.bodyHeaderIcon}>
-                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                  <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+            <FlatList
+              data={rosterDays}
+              keyExtractor={item => item.date}
+              renderItem={renderRosterDay}
+              contentContainerStyle={{paddingBottom: 30, paddingTop: 10}}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              ListEmptyComponent={
+                <View style={{padding: 20, alignItems: 'center'}}>
+                  <Text style={styles.counttext}>No shifts scheduled</Text>
                 </View>
-              </View>
-            </View>
+              }
+            />
           </View>
         </TabView.Item>
       </TabView>

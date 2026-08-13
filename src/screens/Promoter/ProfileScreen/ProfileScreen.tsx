@@ -24,6 +24,7 @@ import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import Toast from 'react-native-toast-message';
 import { logout } from '../../../features/auth/auth';
 import { APP_VERSION } from '../../../utils/utils';
+import { useGetProfileDataQuery } from '../../../features/base/promoter-base-api';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -37,19 +38,28 @@ type Props = {
 
 const ProfileScreen = ({ navigation }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
+  const {data: profileData, refetch} = useGetProfileDataQuery(
+    {emp_id: employee?.id || ''},
+    {skip: !employee?.id},
+  );
+
+  const profile = profileData?.message?.data;
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
+      refetch();
     }, 2000);
   }, []);
-
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
-  );
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
   const dispatch = useAppDispatch();
 
   const handleLogout = () => {
@@ -126,7 +136,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {user?.full_name}
+                  {profile?.employee_name || user?.full_name}
                 </Text>
               </View>
               <Divider
@@ -142,7 +152,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
-                  Age on Network
+                  Designation
                 </Text>
                 <Text
                   style={{
@@ -152,7 +162,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  1223 Days
+                  {profile?.designation || '—'}
                 </Text>
               </View>
               <Divider
@@ -168,7 +178,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
-                  Date of joining
+                  Department
                 </Text>
                 <Text
                   style={{
@@ -178,33 +188,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  09/11/2025
-                </Text>
-              </View>
-              <Divider
-                width={1}
-                color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
-              />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
-                <Text
-                  style={{
-                    fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
-                    color: '#514E4E',
-                    lineHeight: 16,
-                  }}>
-                  Zone
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
-                    color: '#514E4E',
-                    lineHeight: 20,
-                    marginTop: 3,
-                  }}>
-                  East
+                  {profile?.department || '—'}
                 </Text>
               </View>
               <Divider
@@ -230,7 +214,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  9748133185
+                  {profile?.mobile || '—'}
                 </Text>
               </View>
               <Divider
@@ -246,7 +230,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
-                  Date of joining
+                  Reports To
                 </Text>
                 <Text
                   style={{
@@ -256,7 +240,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  09/11/2025
+                  {profile?.reports_to_name || '—'}
                 </Text>
               </View>
               <Divider

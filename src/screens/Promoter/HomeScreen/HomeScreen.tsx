@@ -32,9 +32,9 @@ import {
   Package,
   UserRoundCog,
 } from 'lucide-react-native';
-import { usePromoterStatusQuery } from '../../../features/base/promoter-base-api';
+import { useGetPromoterHomeQuery } from '../../../features/base/promoter-base-api';
 import { useAppSelector } from '../../../store/hook';
-import { AttendanceData } from '../../../types/baseType';
+import { IPromoterHomeData } from '../../../types/baseType';
 import moment from 'moment';
 
 const { width } = Dimensions.get('window');
@@ -49,8 +49,8 @@ type Props = {
   route: any;
 };
 
-const getLastCheckMessage = (data: AttendanceData) => {
-  const { actions, checked_in, checked_out, checkin_time, checkout_time } = data;
+const getLastCheckMessage = (attendance: IPromoterHomeData['attendance']) => {
+  const { checked_in, checked_out, checkin_time, checkout_time } = attendance;
 
   const checkInTime = checkin_time
     ? moment(checkin_time, 'HH:mm:ss.SSSSSS').format('hh:mm A')
@@ -63,7 +63,7 @@ const getLastCheckMessage = (data: AttendanceData) => {
   if (checked_in && checked_out && checkOutTime) {
     return `Last check-out at ${checkOutTime}.`;
   }
-  if (actions.can_check_in) {
+  if (attendance.can_check_in) {
     return "You haven't checked in yet.";
   }
 
@@ -80,13 +80,14 @@ const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
 const HomeScreen = ({ navigation, route }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data, refetch } = usePromoterStatusQuery(undefined, {
+  const { data, refetch } = useGetPromoterHomeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
+  const homeData = data?.message?.data;
+  const attendance = homeData?.attendance;
+  const target = homeData?.target;
+  const employee = homeData?.employee;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -116,27 +117,24 @@ const HomeScreen = ({ navigation, route }: Props) => {
           <View style={styles.headerSec}>
             <View style={styles.welcomBox}>
               <Text style={styles.welcomeText}>
-                Hello <Text style={styles.name}>{employee?.full_name}</Text>
+                Hello <Text style={styles.name}>{employee?.employee_name}</Text>
               </Text>
               <TouchableOpacity
                 style={styles.linkBox}
                 onPress={() => navigation.navigate('AttendanceScreen')}>
                 <View style={styles.dateBox}>
                   <Text style={styles.dateText}>
-                    {formatDay(data?.message?.data?.attendance_date as string)}
+                    {formatDay(homeData?.date as string)}
                   </Text>
 
                   <Text style={styles.monthText}>
-                    {formatMonth(
-                      data?.message?.data?.attendance_date as string,
-                    )}
+                    {formatMonth(homeData?.date as string)}
                   </Text>
                 </View>
 
                 <View style={styles.linkContent}>
                   <Text style={styles.paraText}>
-                    {data?.message?.data &&
-                      getLastCheckMessage(data?.message?.data!)}
+                    {attendance && getLastCheckMessage(attendance)}
                   </Text>
 
                   <Ionicons
@@ -148,7 +146,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
               </TouchableOpacity>
             </View>
 
-            {data?.message?.data?.actions?.can_check_in && (
+            {attendance?.can_check_in && (
               <TouchableOpacity
                 style={styles.checkinButton}
                 onPress={() => navigation.navigate('CheckingScreen')}>
@@ -156,7 +154,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
                 <Text style={styles.checkinButtonText}>Check-in</Text>
               </TouchableOpacity>
             )}
-            {data?.message?.data?.actions?.can_check_out && (
+            {attendance?.can_check_out && (
               <TouchableOpacity
                 style={styles.checkinButton}
                 onPress={() => navigation.navigate('CheckOutScreen')}>
@@ -172,7 +170,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
                 <CalendarCheck2 strokeWidth={1.4} color={Colors.white} />
               </View>
               <Text style={styles.countBoxTitle}>Attendance</Text>
-              <Text style={styles.countBoxDay}>0Days</Text>
+              <Text style={styles.countBoxDay}>0 Days</Text>
             </View>
             <View style={styles.countBox}>
               <View style={styles.countBoxIcon}>
@@ -238,37 +236,43 @@ const HomeScreen = ({ navigation, route }: Props) => {
           <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
-              <Text style={{ fontFamily: Fonts.regular }}>(Qty)</Text>
+              <Text style={{ fontFamily: Fonts.regular }}>(Value)</Text>
             </Text>
             <View style={styles.dataBoxSection}>
               <View style={styles.dataBox}>
                 <View>
-                  <Text style={styles.quantityCount}>25 / 11</Text>
-                  <Text style={styles.quantitytime}>Daily quantity</Text>
+                  <Text style={styles.quantityCount}>
+                    ₹{target?.achieved_value?.toLocaleString('en-IN') || 0} / ₹{target?.sales_target?.toLocaleString('en-IN') || 0}
+                  </Text>
+                  <Text style={styles.quantitytime}>Sales Target</Text>
                 </View>
                 <View style={styles.positionValue}>
-                  <MoveUp strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.incressValu}>+3%</Text>
+                  {target?.percentage && target.percentage >= 50 ? (
+                    <MoveUp strokeWidth={2} color={Colors.darkButton} />
+                  ) : (
+                    <MoveDown strokeWidth={2} color={Colors.darkButton} />
+                  )}
+                  <Text
+                    style={
+                      target?.percentage && target.percentage >= 50
+                        ? styles.incressValu
+                        : styles.decriseValu
+                    }>
+                    {target?.percentage || 0}%
+                  </Text>
                 </View>
               </View>
               <View style={styles.dataBox}>
                 <View>
-                  <Text style={styles.quantityCount}>375 / 221</Text>
-                  <Text style={styles.quantitytime}>Monthly quantity</Text>
+                  <Text style={styles.quantityCount}>
+                    ₹{target?.ddn_value?.toLocaleString('en-IN') || 0} / ₹{target?.ddn_target?.toLocaleString('en-IN') || 0}
+                  </Text>
+                  <Text style={styles.quantitytime}>DDN Target</Text>
                 </View>
                 <View style={styles.positionValue}>
-                  <MoveDown strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.decriseValu}>-2%</Text>
-                </View>
-              </View>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>2230 / 1224</Text>
-                  <Text style={styles.quantitytime}>Quartely quantity</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  <MoveDown strokeWidth={2} color={Colors.darkButton} />
-                  <Text style={styles.decriseValu}>-2%</Text>
+                  <Text style={styles.quantitytime}>
+                    {target?.order_count || 0} orders
+                  </Text>
                 </View>
               </View>
             </View>
