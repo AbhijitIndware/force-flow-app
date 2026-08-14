@@ -1,5 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  ActivityIndicator,
   Dimensions,
   RefreshControl,
   SafeAreaView,
@@ -85,6 +86,14 @@ const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
 const formatTime = (time: string | null | undefined) =>
   time ? moment(time, 'HH:mm:ss.SSSSSS').format('hh:mm A') : null;
 
+const formatWorkingHours = (hours: number) => {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  if (h === 0) return `${m}m`;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+};
+
 const getStoreStatusLabel = (store: {
   checked_in: boolean;
   checked_out: boolean;
@@ -97,20 +106,27 @@ const getStoreStatusLabel = (store: {
 const HomeScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data, refetch} = useGetPromoterHomeQuery(undefined, {
+  const {
+    data,
+    refetch,
+    isLoading: homeLoading,
+  } = useGetPromoterHomeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
 
-  const {data: statusData} = usePromoterStatusQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-  });
+  const {data: statusData, isLoading: statusLoading} = usePromoterStatusQuery(
+    undefined,
+    {
+      refetchOnMountOrArgChange: true,
+    },
+  );
+  console.log('🚀 ~ HomeScreen ~ statusData:', statusData);
 
   const homeData = data?.message?.data;
   const attendance = homeData?.attendance;
   const target = homeData?.target;
   const employee = homeData?.employee;
   const attendanceStatus = statusData?.message?.data;
-  const shiftInfo = attendanceStatus?.shift_info;
   const storesToday = attendanceStatus?.stores_today ?? [];
 
   const salesPct =
@@ -169,7 +185,12 @@ const HomeScreen = ({navigation, route}: Props) => {
                 </View>
 
                 {/* ── Store info ── */}
-                {attendanceStatus?.shift_info?.store_name && (
+                {homeLoading || statusLoading ? (
+                  <View style={styles.attendanceLoader}>
+                    <ActivityIndicator size="small" color={Colors.white} />
+                  </View>
+                ) : attendanceStatus?.shift_info?.store_name &&
+                  !attendance?.can_check_in ? (
                   <View style={styles.storeInfoCard}>
                     <Text style={styles.storeInfoName}>
                       Store — {attendanceStatus.shift_info.store_name}
@@ -189,7 +210,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                       {attendance && getLastCheckMessage(attendance)}
                     </Text>
                   </View>
-                )}
+                ) : null}
 
                 {/* ── Check-in / Check-out ── */}
                 {attendance?.can_check_in && (
@@ -251,12 +272,21 @@ const HomeScreen = ({navigation, route}: Props) => {
               {storesToday.map((store, idx) => {
                 const statusLabel = getStoreStatusLabel(store);
                 const isOut = store.checked_out;
-                const statusColor = isOut ? '#dc2626' : '#16a34a';
-                const statusBg = isOut ? '#FEF2F2' : '#E6F7EE';
+                const isIn = store.checked_in;
+                const statusColor = isOut
+                  ? '#dc2626'
+                  : isIn
+                  ? '#16a34a'
+                  : Colors.gray;
+                const statusBg = isOut
+                  ? '#FEF2F2'
+                  : isIn
+                  ? '#E6F7EE'
+                  : '#F2F3F5';
                 return (
                   <View key={store.store ?? idx} style={styles.storeCard}>
                     <View style={styles.storeIconBox}>
-                      <Store strokeWidth={1.8} color={Colors.white} size={18} />
+                      <Store strokeWidth={1.8} color={Colors.white} size={16} />
                     </View>
 
                     <View style={styles.storeInfo}>
@@ -264,19 +294,23 @@ const HomeScreen = ({navigation, route}: Props) => {
                         {store.store_name}
                       </Text>
                       <View style={styles.storeMetaRow}>
-                        <Clock3 size={12} color={Colors.gray} strokeWidth={2} />
+                        <Clock3 size={11} color={Colors.gray} strokeWidth={2} />
                         <Text style={styles.storeTime}>
                           {formatTime(store.start_time)} –{' '}
                           {formatTime(store.end_time)}
                         </Text>
-                        {store.checked_out && (
-                          <View style={styles.hoursChip}>
-                            <Text style={styles.hoursChipText}>
-                              {store.working_hours ?? 0} hrs
-                            </Text>
-                          </View>
-                        )}
                       </View>
+
+                      {store.checked_out && (
+                        <View style={styles.hoursChip}>
+                          <Text style={styles.hoursChipLabel}>
+                            Working Hours:{' '}
+                          </Text>
+                          <Text style={styles.hoursChipText}>
+                            {formatWorkingHours(store.working_hours)}
+                          </Text>
+                        </View>
+                      )}
                     </View>
 
                     <View
@@ -728,6 +762,14 @@ const styles = StyleSheet.create({
     gap: 3,
     marginTop: 4,
   },
+  attendanceLoader: {
+    backgroundColor: Colors.orange,
+    borderRadius: 12,
+    marginTop: 4,
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   storeInfoName: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
@@ -823,34 +865,34 @@ const styles = StyleSheet.create({
   //target&achivement section css start
   SectionHeading: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.md,
+    fontSize: Size.sm,
     color: Colors.darkButton,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   storeCountBadge: {
     backgroundColor: Colors.lightGray,
     borderRadius: 50,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
   storeCountText: {
     fontFamily: Fonts.medium,
-    fontSize: Size.xs,
+    fontSize: Size.xxs,
     color: Colors.gray,
   },
   storeCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    marginBottom: 10,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    marginBottom: 8,
     shadowColor: '#9F9D9D',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.08,
@@ -858,64 +900,74 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   storeIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     backgroundColor: Colors.Orangelight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   storeInfo: {
     flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
+    marginLeft: 10,
+    marginRight: 6,
   },
   storeName: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
+    fontSize: Size.xxs,
     color: Colors.darkButton,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   storeMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 3,
   },
   storeTime: {
     fontFamily: Fonts.regular,
-    fontSize: Size.xs,
+    fontSize: Size.xxs,
     color: Colors.gray,
-    lineHeight: 16,
+    lineHeight: 14,
     marginLeft: 4,
+    flexShrink: 1,
   },
   hoursChip: {
-    marginLeft: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 5,
+  },
+  hoursChipLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: Colors.black,
+    lineHeight: 14,
+  },
+  hoursChipText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xxs,
+    color: Colors.orange,
     backgroundColor: Colors.lightOrange,
     borderRadius: 50,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  hoursChipText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    color: Colors.orange,
-  },
   storeStatus: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 50,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: 5,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    marginRight: 4,
   },
   storeStatusText: {
     fontFamily: Fonts.medium,
-    fontSize: Size.xs,
+    fontSize: Size.xxs,
   },
   dataBoxSection: {paddingTop: 15},
   metricRow: {flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12},
