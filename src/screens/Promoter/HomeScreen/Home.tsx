@@ -17,24 +17,25 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import HomeScreen from './HomeScreen';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
-import { PromoterAppStackParamList } from '../../../types/Navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { House } from 'lucide-react-native';
+import {PromoterAppStackParamList} from '../../../types/Navigation';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {House, UserCircle2} from 'lucide-react-native';
 import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
-import { useState } from 'react';
+import {useState} from 'react';
 import MoreOptionsModal from '../../../components/home/MoreOption';
-import { useAppSelector } from '../../../store/hook';
-import { getInitials } from '../../../utils/utils';
-import { useGetUnreadNotificationCountQuery } from '../../../features/fcm/fccm-api';
+import {useAppSelector} from '../../../store/hook';
+import {getInitials} from '../../../utils/utils';
+import {useGetUnreadNotificationCountQuery} from '../../../features/fcm/fccm-api';
+import ProfileScreen from '../ProfileScreen/ProfileScreen';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
   'Home'
@@ -47,20 +48,20 @@ type Props = {
 
 const Tab = createBottomTabNavigator();
 
-function MyTabBar({ state, descriptors, navigation }: any) {
+function MyTabBar({state, descriptors, navigation}: any) {
   return (
     <View
       style={{
         flexDirection: 'row',
       }}>
       {state.routes.map((route: any, index: any) => {
-        const { options } = descriptors[route.key];
+        const {options} = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined
             ? options.tabBarLabel
             : options.title !== undefined
-              ? options.title
-              : route.name;
+            ? options.title
+            : route.name;
 
         const isFocused = state.index === index;
 
@@ -94,7 +95,7 @@ function MyTabBar({ state, descriptors, navigation }: any) {
           <Pressable
             key={index}
             accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityState={isFocused ? {selected: true} : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarTestID}
             onPress={onPress}
@@ -138,14 +139,14 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
 
-  const { data: unreadData } = useGetUnreadNotificationCountQuery(undefined, {
+  const {data: unreadData} = useGetUnreadNotificationCountQuery(undefined, {
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true,
   });
   const unreadCount = unreadData?.message?.unread_count ?? 0;
 
   const profileImageSource = employee?.image_base64
-    ? { uri: `data:image/jpeg;base64,${employee.image_base64}` }
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
     : null;
 
   return (
@@ -162,7 +163,9 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
           style={styles.notification}
           onPress={() => props.navigation.navigate('NotificationListScreen')}>
           <View style={styles.notificationBatch}>
-            <Text style={styles.notificationCount}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+            <Text style={styles.notificationCount}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Text>
           </View>
           <Feather name="bell" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
@@ -188,7 +191,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
   );
 };
 
-const Home = ({ navigation, route }: Props) => {
+const Home = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
 
   const handleMorePress = () => {
@@ -210,7 +213,7 @@ const Home = ({ navigation, route }: Props) => {
       title: 'Downloads',
       onPress: () => navigation.navigate('DownloadScreen'),
     },
-    { id: '3', title: 'Schemes', onPress: () => {} },
+    {id: '3', title: 'Schemes', onPress: () => {}},
     {
       id: '4',
       title: 'Profile',
@@ -242,7 +245,7 @@ const Home = ({ navigation, route }: Props) => {
           component={HomeScreen}
           options={{
             tabBarLabel: 'Home',
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <House
                   strokeWidth={2}
@@ -253,13 +256,48 @@ const Home = ({ navigation, route }: Props) => {
             },
           }}
         />
+
+        <Tab.Screen
+          name="Stock"
+          component={StockScreen}
+          options={{
+            tabBarLabel: 'Stock',
+            headerShown: false,
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Feather
+                  name="box"
+                  color={focused ? Colors.white : Colors.white}
+                  size={28}
+                />
+              );
+            },
+          }}
+        />
+        {/* <Tab.Screen
+          name="Incentives"
+          component={IncentiveScreen}
+          options={{
+            tabBarLabel: 'Incentives',
+            headerShown: false,
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Ionicons
+                  name="server-outline"
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}
+                />
+              );
+            },
+          }}
+        /> */}
         <Tab.Screen
           name="Sales"
           component={SalesScreen}
           options={{
             tabBarLabel: 'Sales',
             headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
+            tabBarIcon: ({color, size, focused}) => {
               return (
                 <Ionicons
                   name="stats-chart-outline"
@@ -271,57 +309,19 @@ const Home = ({ navigation, route }: Props) => {
           }}
         />
         <Tab.Screen
-          name="Incentives"
-          component={IncentiveScreen}
-          options={{
-            tabBarLabel: 'Incentives',
-            headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
-              return (
-                <Ionicons
-                  name="server-outline"
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}
-                />
-              );
-            },
-          }}
-        />
-        <Tab.Screen
-          name="Stock"
-          component={StockScreen}
-          options={{
-            tabBarLabel: 'Stock',
-            headerShown: false,
-            tabBarIcon: ({ color, size, focused }) => {
-              return (
-                <Feather
-                  name="box"
-                  color={focused ? Colors.white : Colors.white}
-                  size={28}
-                />
-              );
-            },
-          }}
-        />
-        <Tab.Screen
           name="More"
-          component={HomeScreen}
-          listeners={{
-            tabPress: e => {
-              // e.preventDefault(); // Prevent default navigation
-              handleMorePress(); // Open modal
-            },
-          }}
+          component={ProfileScreen}
+          // listeners={{
+          //   tabPress: e => {
+          //     // e.preventDefault(); // Prevent default navigation
+          //     handleMorePress(); // Open modal
+          //   },
+          // }}
           options={{
-            tabBarLabel: 'More',
+            tabBarLabel: 'Profile',
             headerShown: false,
-            tabBarIcon: ({ focused }) => (
-              <MaterialCommunityIcons
-                name="text"
-                color={focused ? Colors.white : Colors.white}
-                size={28}
-              />
+            tabBarIcon: ({focused}) => (
+              <UserCircle2 strokeWidth={2} color={Colors.white} size={25} />
             ),
           }}
         />
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     height: 50,
   },
 
-  notification: { position: 'relative', top: 6 },
+  notification: {position: 'relative', top: 6},
   notificationBatch: {
     width: 26,
     height: 26,
@@ -378,9 +378,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     borderWidth: 3,
   },
-  notificationCount: { color: Colors.white },
+  notificationCount: {color: Colors.white},
 
-  userInfo: { overflow: 'hidden', borderRadius: '50%' },
+  userInfo: {overflow: 'hidden', borderRadius: '50%'},
   avtarImage: {
     width: 30,
     height: 30,

@@ -9,22 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { flexCol } from '../../../utils/styles';
-import { Colors } from '../../../utils/colors';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {flexCol} from '../../../utils/styles';
+import {Colors} from '../../../utils/colors';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useState } from 'react';
-import { PromoterAppStackParamList } from '../../../types/Navigation';
+import React, {useCallback, useState} from 'react';
+import {PromoterAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
-import { CirclePower } from 'lucide-react-native';
-import { Divider } from '@rneui/themed';
-import { useAppDispatch, useAppSelector } from '../../../store/hook';
+import {Size} from '../../../utils/fontSize';
+import {Fonts} from '../../../constants';
+import {CirclePower} from 'lucide-react-native';
+import {Divider} from '@rneui/themed';
+import {useAppDispatch, useAppSelector} from '../../../store/hook';
+import {logout} from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
-import { logout } from '../../../features/auth/auth';
-import { APP_VERSION } from '../../../utils/utils';
-import { useGetProfileDataQuery } from '../../../features/base/promoter-base-api';
+import {persistor} from '../../../store/store';
+import {promoterBaseApi} from '../../../features/base/promoter-base-api';
+import {getInitials, APP_VERSION} from '../../../utils/utils';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -36,30 +37,22 @@ type Props = {
   route: any;
 };
 
-const ProfileScreen = ({ navigation }: Props) => {
+const ProfileScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
-
-  const {data: profileData, refetch} = useGetProfileDataQuery(
-    {emp_id: employee?.id || ''},
-    {skip: !employee?.id},
-  );
-
-  const profile = profileData?.message?.data;
-  const user = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.user,
-  );
-
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      refetch();
     }, 2000);
   }, []);
+
+  const user = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user,
+  );
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+
   const dispatch = useAppDispatch();
 
   const handleLogout = () => {
@@ -69,7 +62,13 @@ const ProfileScreen = ({ navigation }: Props) => {
       position: 'top',
     });
     dispatch(logout());
+    dispatch(promoterBaseApi.util.resetApiState()); // clear RTK Query cache
+    persistor.purge();
   };
+
+  const profileImageSource = employee?.image_base64
+    ? {uri: `data:image/jpeg;base64,${employee.image_base64}`}
+    : null;
 
   return (
     <SafeAreaView
@@ -92,11 +91,19 @@ const ProfileScreen = ({ navigation }: Props) => {
           <View style={styles.headerSec}>
             <View style={styles.salesHeaderData}>
               <View style={styles.userInfo}>
-                <Image
-                  source={require('../../../assets/images/user.jpg')}
-                  resizeMode="cover"
-                  style={styles.avtarImage}
-                />
+                {profileImageSource ? (
+                  <Image
+                    source={profileImageSource}
+                    resizeMode="cover"
+                    style={styles.avtarImage}
+                  />
+                ) : (
+                  <View style={styles.initialsCircle}>
+                    <Text style={styles.initialsText}>
+                      {getInitials(employee?.full_name)}
+                    </Text>
+                  </View>
+                )}
               </View>
               <Text
                 style={{
@@ -106,7 +113,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                   lineHeight: 16,
                   marginTop: 15,
                 }}>
-                {user?.email}
+                {employee?.company_email}
               </Text>
             </View>
           </View>
@@ -118,11 +125,11 @@ const ProfileScreen = ({ navigation }: Props) => {
                 borderRadius: 15,
                 paddingVertical: 20,
               }}>
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -131,76 +138,129 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
-                    lineHeight: 20,
+                    lineHeight: 22,
                     marginTop: 3,
                   }}>
-                  {profile?.employee_name || user?.full_name}
+                  {employee?.full_name}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
+                  }}>
+                  Employee No.
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: Fonts.semiBold,
+                    fontSize: Size.sm,
+                    color: '#514E4E',
+                    lineHeight: 20,
+                    marginTop: 3,
+                  }}>
+                  {employee?.company_emp_id || 'N/A'}
+                </Text>
+              </View>
+              <Divider
+                width={1}
+                color="#B9BFCB"
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
+              />
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.regular,
+                    fontSize: Size.xs,
+                    color: '#514E4E',
+                    lineHeight: 16,
+                  }}>
+                  Reporting To
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: Fonts.semiBold,
+                    fontSize: Size.sm,
+                    color: '#514E4E',
+                    lineHeight: 20,
+                    marginTop: 3,
+                  }}>
+                  {employee?.reporting_to || 'N/A'}
+                </Text>
+              </View>
+              <Divider
+                width={1}
+                color="#B9BFCB"
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
+              />
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.regular,
+                    fontSize: Size.xs,
+                    color: '#514E4E',
+                    lineHeight: 20,
                   }}>
                   Designation
                 </Text>
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {profile?.designation || '—'}
+                  {employee?.designation || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
-                  Department
+                  Zone
                 </Text>
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {profile?.department || '—'}
+                  {employee?.zone || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -209,50 +269,50 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {profile?.mobile || '—'}
+                  {employee?.mobile_no || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
-                    lineHeight: 16,
+                    lineHeight: 20,
                   }}>
-                  Reports To
+                  Date of joining
                 </Text>
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  {profile?.reports_to_name || '—'}
+                  {employee?.date_of_joining || 'N/A'}
                 </Text>
               </View>
               <Divider
                 width={1}
                 color="#B9BFCB"
-                style={{ marginBottom: 10, borderStyle: 'dashed' }}
+                style={{marginBottom: 10, borderStyle: 'dashed'}}
               />
-              <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+              <View style={{paddingHorizontal: 20, paddingBottom: 10}}>
                 <Text
                   style={{
                     fontFamily: Fonts.regular,
-                    fontSize: Size.sm,
+                    fontSize: Size.xs,
                     color: '#514E4E',
                     lineHeight: 16,
                   }}>
@@ -261,12 +321,12 @@ const ProfileScreen = ({ navigation }: Props) => {
                 <Text
                   style={{
                     fontFamily: Fonts.semiBold,
-                    fontSize: Size.xsmd,
+                    fontSize: Size.sm,
                     color: '#514E4E',
                     lineHeight: 20,
                     marginTop: 3,
                   }}>
-                  10/12/1985
+                  {employee?.birth_date || 'N/A'}
                 </Text>
               </View>
             </View>
@@ -285,7 +345,7 @@ const ProfileScreen = ({ navigation }: Props) => {
                 marginTop: 20,
               }}>
               App Version:{' '}
-              <Text style={{ fontFamily: Fonts.bold, color: Colors.darkGray }}>
+              <Text style={{fontFamily: Fonts.bold, color: Colors.darkGray}}>
                 {APP_VERSION}
               </Text>
             </Text>
@@ -339,7 +399,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -363,12 +423,27 @@ const styles = StyleSheet.create({
 
   userInfo: {
     overflow: 'hidden',
-    borderRadius: 15,
+    borderRadius: '50%',
     borderWidth: 4,
     borderColor: Colors.white,
   },
   avtarImage: {
-    height: 82,
-    width: 82,
+    height: 100,
+    width: 100,
+    objectFit: 'cover',
+  },
+  initialsCircle: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.orange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initialsText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 36,
+    color: Colors.white,
+    lineHeight: 42,
   },
 });

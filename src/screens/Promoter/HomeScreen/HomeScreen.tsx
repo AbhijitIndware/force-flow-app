@@ -20,8 +20,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Size} from '../../../utils/fontSize';
 import {Divider} from '@rneui/themed';
 import {
-  CalendarCheck,
-  CalendarCheck2,
+  ArrowRight,
   ChartCandlestick,
   Clock3,
   FilePenLine,
@@ -31,9 +30,15 @@ import {
   Store,
   UserRoundCog,
 } from 'lucide-react-native';
-import {useGetPromoterHomeQuery, usePromoterStatusQuery} from '../../../features/base/promoter-base-api';
+import {
+  useGetPromoterHomeQuery,
+  usePromoterStatusQuery,
+} from '../../../features/base/promoter-base-api';
 import {useAppSelector} from '../../../store/hook';
-import {IPromoterHomeData, IAttendanceStatusData} from '../../../types/baseType';
+import {
+  IPromoterHomeData,
+  IAttendanceStatusData,
+} from '../../../types/baseType';
 import {TargetMetricBox} from '../../../components/SO/HomeScreen/Common';
 import moment from 'moment';
 
@@ -145,73 +150,90 @@ const HomeScreen = ({navigation, route}: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={styles.welcomBox}>
-              <Text style={styles.welcomeText}>
-                Hello <Text style={styles.name}>{employee?.employee_name}</Text>
-              </Text>
-              <View style={styles.linkBox}>
-                <View style={styles.dateBox}>
-                  <Text style={styles.dateText}>
-                    {formatDay(homeData?.date as string)}
+            <View style={{position: 'relative', marginBottom: 0}}>
+              <View style={styles.welcomBox}>
+                {/* ── Greeting + Date Row ── */}
+                <View style={styles.greetingRow}>
+                  <Text style={styles.welcomeText}>
+                    Hello{' '}
+                    <Text style={styles.name}>{employee?.employee_name}</Text>
                   </Text>
-
-                  <Text style={styles.monthText}>
-                    {formatMonth(homeData?.date as string)}
-                  </Text>
-                </View>
-
-                <View style={styles.linkContent}>
-                  <View>
-                    {attendanceStatus?.shift_info?.store_name && (
-                      <Text style={styles.storeNameText}>
-                        {attendanceStatus.shift_info.store_name}
-                      </Text>
-                    )}
-                    {attendanceStatus?.shift_info?.start_time &&
-                      attendanceStatus.shift_info.end_time && (
-                        <Text style={styles.shiftTimeText}>
-                          Shift:{' '}
-                          {formatTime(attendanceStatus.shift_info.start_time)} –{' '}
-                          {formatTime(attendanceStatus.shift_info.end_time)}
-                          {attendanceStatus.shift_info.is_floater ? ' · Floater' : ''}
-                        </Text>
-                      )}
-                    <Text style={styles.paraText}>
-                      {attendance && getLastCheckMessage(attendance)}
+                  <View style={styles.dateBox}>
+                    <Text style={styles.dateText}>
+                      {formatDay(homeData?.date as string)}
+                    </Text>
+                    <Text style={styles.monthText}>
+                      {formatMonth(homeData?.date as string)}
                     </Text>
                   </View>
                 </View>
+
+                {/* ── Store info ── */}
+                {attendanceStatus?.shift_info?.store_name && (
+                  <View style={styles.storeInfoCard}>
+                    <Text style={styles.storeInfoName}>
+                      Store — {attendanceStatus.shift_info.store_name}
+                    </Text>
+                    {attendanceStatus.shift_info.start_time &&
+                      attendanceStatus.shift_info.end_time && (
+                        <Text style={styles.storeInfoText}>
+                          Shift:{' '}
+                          {formatTime(attendanceStatus.shift_info.start_time)} –{' '}
+                          {formatTime(attendanceStatus.shift_info.end_time)}
+                          {attendanceStatus.shift_info.is_floater
+                            ? ' · Floater'
+                            : ''}
+                        </Text>
+                      )}
+                    <Text style={styles.storeInfoText}>
+                      {attendance && getLastCheckMessage(attendance)}
+                    </Text>
+                  </View>
+                )}
+
+                {/* ── Check-in / Check-out ── */}
+                {attendance?.can_check_in && (
+                  <TouchableOpacity
+                    style={styles.checkinButton}
+                    onPress={() => navigation.navigate('CheckingScreen')}>
+                    <Text style={styles.checkinButtonText}>Check-in</Text>
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={24}
+                      color={Colors.white}
+                    />
+                  </TouchableOpacity>
+                )}
+                {attendance?.can_check_out && (
+                  <TouchableOpacity
+                    style={styles.checkinButton}
+                    onPress={() => navigation.navigate('CheckOutScreen')}>
+                    <Text style={styles.checkinButtonText}>Check-out</Text>
+                    <Ionicons
+                      name="chevron-forward-circle-sharp"
+                      size={24}
+                      color={Colors.white}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* ── View attendance link ── */}
+              <View style={styles.planLink}>
+                <TouchableOpacity
+                  style={{flexDirection: 'row', alignItems: 'center'}}
+                  onPress={() => navigation.navigate('AttendanceScreen')}>
+                  <Text style={styles.planLinkText}>
+                    View Attendance & Shift Records
+                  </Text>
+                  <ArrowRight
+                    strokeWidth={2}
+                    color={Colors.darkButton}
+                    size={20}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
-
-            {attendance?.can_check_in && (
-              <TouchableOpacity
-                style={styles.checkinButton}
-                onPress={() => navigation.navigate('CheckingScreen')}>
-                <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-                <Text style={styles.checkinButtonText}>Check-in</Text>
-              </TouchableOpacity>
-            )}
-            {attendance?.can_check_out && (
-              <TouchableOpacity
-                style={styles.checkinButton}
-                onPress={() => navigation.navigate('CheckOutScreen')}>
-                <CalendarCheck strokeWidth={1.4} color={Colors.white} />
-                <Text style={styles.checkinButtonText}>Check-out</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={styles.attendanceButton}
-              onPress={() => navigation.navigate('AttendanceScreen')}>
-              <Text style={styles.attendanceButtonText}>
-                View attendance and shift
-              </Text>
-              <Ionicons
-                name="chevron-forward-circle-sharp"
-                size={24}
-                color={Colors.white}
-              />
-            </TouchableOpacity>
           </View>
 
           {storesToday.length > 0 && (
@@ -220,7 +242,8 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <Text style={styles.SectionHeading}>Today's Stores</Text>
                 <View style={styles.storeCountBadge}>
                   <Text style={styles.storeCountText}>
-                    {storesToday.length} store{storesToday.length > 1 ? 's' : ''}
+                    {storesToday.length} store
+                    {storesToday.length > 1 ? 's' : ''}
                   </Text>
                 </View>
               </View>
@@ -256,9 +279,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                       </View>
                     </View>
 
-                    <View style={[styles.storeStatus, {backgroundColor: statusBg}]}>
+                    <View
+                      style={[styles.storeStatus, {backgroundColor: statusBg}]}>
                       <View
-                        style={[styles.statusDot, {backgroundColor: statusColor}]}
+                        style={[
+                          styles.statusDot,
+                          {backgroundColor: statusColor},
+                        ]}
                       />
                       <Text
                         style={[styles.storeStatusText, {color: statusColor}]}>
@@ -353,7 +380,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                     ? (target?.achieved_value ?? 0).toFixed(2)
                     : target?.achieved_value ?? 0
                 }`}
-                target={`₹${target?.sales_target?.toLocaleString('en-IN') || 0}`}
+                target={`₹${
+                  target?.sales_target?.toLocaleString('en-IN') || 0
+                }`}
                 rate={target?.percentage ?? salesPct}
                 accentColor="#0F6E56"
               />
@@ -439,7 +468,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               }}>
               <TouchableOpacity
                 style={styles.listLink}
-                onPress={() => navigation.navigate('StockEntryScreen')}>
+                onPress={() => navigation.navigate('StockScreen')}>
                 <Text style={styles.listLinkText}>
                   Set up the opening stock of your store
                 </Text>
@@ -476,7 +505,9 @@ const HomeScreen = ({navigation, route}: Props) => {
               ]}>
               Quick links
             </Text>
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('AddSalesScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -484,7 +515,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ]}>
                 <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={[styles.linkTitle]}>Register Sales</Text>
+              <Text style={[styles.linkTitle]}>Create Sales Order</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -492,7 +523,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
@@ -500,7 +531,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockEntryScreen')}>
+              onPress={() => navigation.navigate('StockScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -517,7 +548,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
             </TouchableOpacity>
-            <Divider
+            {/* <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
@@ -590,7 +621,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       )}
@@ -613,9 +644,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     minHeight: 200,
     width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 32,
-    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 40,
+    borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
     shadowOffset: {width: 0, height: 6},
@@ -624,8 +654,10 @@ const styles = StyleSheet.create({
 
     // Android Shadow
     elevation: 2,
+    marginBottom: 10,
   },
   welcomeText: {
+    width: '70%',
     fontFamily: Fonts.light,
     color: Colors.white,
     fontSize: Size.sm,
@@ -637,22 +669,16 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingVertical: 20,
     marginTop: 10,
+    borderBottomRightRadius: 0,
+    borderBottomLeftRadius: 0,
+    position: 'relative',
+    marginHorizontal: 20,
   },
-
-  linkBox: {
-    display: 'flex',
+  greetingRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: Colors.Orangelight,
-    borderRadius: 15,
-    padding: 12,
-    marginTop: 8,
-    gap: 10,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#FFBF83',
+    marginBottom: 12,
   },
 
   dateBox: {
@@ -685,44 +711,35 @@ const styles = StyleSheet.create({
 
   linkContent: {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'center',
     color: Colors.white,
-    gap: 5,
-    alignItems: 'center',
+    gap: 2,
+    alignItems: 'flex-start',
     width: '80%',
   },
 
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
-  shiftTimeText: {
-    fontFamily: Fonts.regular,
-    color: Colors.white,
-    fontSize: Size.xs,
-    lineHeight: 18,
-    opacity: 0.9,
+  storeInfoCard: {
+    backgroundColor: Colors.orange,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 3,
+    marginTop: 4,
   },
-  storeNameText: {
+  storeInfoName: {
     fontFamily: Fonts.semiBold,
-    color: Colors.white,
     fontSize: Size.sm,
+    color: Colors.white,
     lineHeight: 20,
   },
-  attendanceButton: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 30,
-  },
-  attendanceButtonText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+  storeInfoText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
     color: Colors.white,
-    lineHeight: 22,
+    lineHeight: 18,
+    opacity: 0.9,
   },
   checkinButton: {
     display: 'flex',
@@ -730,18 +747,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 15,
+    borderRadius: 12,
     paddingHorizontal: 15,
-    paddingVertical: 18,
+    paddingVertical: 15,
     position: 'relative',
-    bottom: -15,
     gap: 5,
+    marginTop: 10,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.white,
-    lineHeight: 22,
+    lineHeight: 18,
+  },
+  planLink: {
+    marginHorizontal: 20,
+    backgroundColor: Colors.white,
+    padding: 10,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+  },
+  planLinkText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
   },
 
   //header-box-section css end
