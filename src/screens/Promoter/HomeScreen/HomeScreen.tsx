@@ -22,6 +22,7 @@ import {Size} from '../../../utils/fontSize';
 import {Divider} from '@rneui/themed';
 import {
   ArrowRight,
+  BookOpen,
   ChartCandlestick,
   Clock3,
   FilePenLine,
@@ -493,26 +494,21 @@ const HomeScreen = ({navigation, route}: Props) => {
 
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
-            <View
-              style={{
-                backgroundColor: Colors.white,
-                borderRadius: 20,
-                paddingVertical: 20,
-                marginBottom: 30,
-              }}>
+            <View style={styles.newStoreCard}>
               <TouchableOpacity
                 style={styles.listLink}
                 onPress={() => navigation.navigate('StockScreen')}>
+                <View style={styles.linkIconBox}>
+                  <Package strokeWidth={1.8} color={Colors.white} size={18} />
+                </View>
                 <Text style={styles.listLinkText}>
                   Set up the opening stock of your store
                 </Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={12}
-                    color={Colors.darkButton}
-                  />
-                </View>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={16}
+                  color={Colors.gray}
+                />
               </TouchableOpacity>
               <Divider
                 width={1}
@@ -520,14 +516,15 @@ const HomeScreen = ({navigation, route}: Props) => {
                 style={{borderStyle: 'dashed'}}
               />
               <TouchableOpacity style={styles.listLink}>
-                <Text style={styles.listLinkText}>Check the user manual </Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={12}
-                    color={Colors.darkButton}
-                  />
+                <View style={styles.linkIconBox}>
+                  <BookOpen strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
+                <Text style={styles.listLinkText}>Check the user manual</Text>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={16}
+                  color={Colors.gray}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -1042,25 +1039,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  newStoreCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    marginBottom: 30,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   listLink: {
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    width: width * 0.9,
+    gap: 12,
+    paddingVertical: 14,
+    paddingRight: 10,
+  },
+  linkIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.Orangelight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   listLinkText: {
+    // flex: 1,
     color: Colors.darkButton,
-    fontSize: Size.sm,
-    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    fontFamily: Fonts.medium,
+    lineHeight: 18,
   },
   arrobox: {
     width: 20,
     height: 20,
     backgroundColor: '#F0F2F6',
-    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
