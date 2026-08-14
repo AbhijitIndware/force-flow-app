@@ -1,7 +1,9 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
+  FlatList,
   RefreshControl,
   SafeAreaView,
   StyleSheet,
@@ -12,21 +14,31 @@ import {
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {Banknote, CalendarDays, Funnel, Search} from 'lucide-react-native';
+import {
+  AlarmClockMinus,
+  CirclePlus,
+  Funnel,
+  PackageOpen,
+  Search,
+  ShoppingCart,
+} from 'lucide-react-native';
 import FilterModal from '../../../components/ui/filterModal';
-import {useGetSalesOrdersListQuery, useGetDailySecondaryReportQuery} from '../../../features/base/promoter-base-api';
+import {
+  useGetSalesOrdersListQuery,
+  useGetOrdersCountQuery,
+} from '../../../features/base/promoter-base-api';
 import PageHeader from '../../../components/ui/PageHeader';
 import SalesItemCard from '../../../components/Promoter/Sales/SalesItemCard';
 import {SalesOrderType} from '../../../types/baseType';
 import SearchModal from '../../../components/ui/SearchModal';
-//import { fonts } from '@rneui/base';
+import {windowHeight} from '../../../utils/utils';
 
 const {width} = Dimensions.get('window');
+const PAGE_SIZE = 10;
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -51,6 +63,8 @@ const SalesScreen = ({navigation}: Props) => {
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1);
+  const [orders, setOrders] = useState<SalesOrderType[]>([]);
 
   const [isFilterVisible, setFilterVisible] = useState(false);
   const [isSearchVisible, setSearchVisible] = useState(false);
@@ -60,28 +74,59 @@ const SalesScreen = ({navigation}: Props) => {
     'All' | 'Draft' | 'Pending' | 'Delivered' | 'Cancelled'
   >('All');
 
-  const {data, isFetching, refetch} = useGetSalesOrdersListQuery({
-    status: selectedStatus === 'All' ? undefined : selectedStatus,
-    search: searchText || undefined,
-    page: 1,
-    page_size: 100,
-  });
+  const {data, isFetching, isLoading, refetch, isUninitialized} =
+    useGetSalesOrdersListQuery({
+      status: selectedStatus === 'All' ? undefined : selectedStatus,
+      search: searchText || undefined,
+      page,
+      page_size: PAGE_SIZE,
+    });
 
-  const {data: reportData} = useGetDailySecondaryReportQuery({
-    view_type: 'self',
-  });
+  const {data: countData} = useGetOrdersCountQuery({});
 
-  const salesOrders: SalesOrderType[] = data?.message?.data?.sales_orders || [];
-  const totalSalesValue = reportData?.message?.mtd_summary?.total_value || 0;
-  const totalSalesQty = reportData?.message?.mtd_summary?.total_qty || 0;
+  const salesCounts = countData?.message?.data?.sales_orders;
+
+  useEffect(() => {
+    if (data?.message?.data?.sales_orders) {
+      const newList: SalesOrderType[] = data.message.data.sales_orders;
+
+      setOrders(prev => {
+        if (page === 1) {
+          const map = new Map();
+          newList.forEach(item => map.set(item.order_id, item));
+          return Array.from(map.values());
+        }
+
+        const map = new Map();
+        [...prev, ...newList].forEach(item => map.set(item.order_id, item));
+        return Array.from(map.values());
+      });
+    }
+  }, [page, data]);
+
+  useEffect(() => {
+    setOrders([]);
+    setPage(1);
+  }, [selectedStatus, searchText]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
       setRefreshing(false);
-      refetch();
+      if (!isUninitialized) refetch();
     }, 2000);
-  }, []);
+  }, [isUninitialized, refetch]);
+
+  const loadMore = () => {
+    if (
+      !isFetching &&
+      data?.message?.data?.pagination &&
+      data?.message?.data?.pagination?.page <
+        data?.message?.data?.pagination?.total_pages
+    ) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -93,152 +138,176 @@ const SalesScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader title="Sales" navigation={() => navigation.goBack()} />
-      {refreshing || isFetching ? (
-        <LoadingScreen />
-      ) : (
-        <Animated.ScrollView
-          onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
-          )}
-          stickyHeaderIndices={[1]} // Index of the Tab header
-          scrollEventThrottle={16}
-          nestedScrollEnabled={true}
-          removeClippedSubviews={false}
-          contentContainerStyle={{position: 'relative'}}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
-          <View style={styles.headerSec}>
-            <View style={styles.salesHeaderData}>
-              <Text
-                style={{
-                  fontFamily: Fonts.regular,
-                  fontSize: Size.sm,
-                  color: Colors.darkButton,
-                }}>
-                Total Sales (MTD)
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.semiBold,
-                  fontSize: Size.md,
-                  color: Colors.darkButton,
-                }}>
-                ₹{totalSalesValue.toLocaleString('en-IN')}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.regular,
-                  fontSize: Size.xs,
-                  color: Colors.sucess,
-                  lineHeight: 16,
-                  marginTop: 5,
-                }}>
-                {totalSalesQty} pieces sold
-              </Text>
+
+      <View style={styles.headerSec}>
+        <View style={styles.statRow}>
+          <View style={styles.statCard}>
+            <View
+              style={[styles.statIcon, {backgroundColor: Colors.lightBlue}]}>
+              <ShoppingCart
+                strokeWidth={1.4}
+                color={Colors.blue}
+                size={18}
+              />
             </View>
-            <View style={styles.welcomBox}>
-              <Text style={styles.welcomeText}>
-                Target <Text style={styles.name}>₹0</Text>
+            <View style={styles.statText}>
+              <Text style={styles.statNum}>{salesCounts?.total || 0}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+          </View>
+          <View style={styles.statCard}>
+            <View
+              style={[styles.statIcon, {backgroundColor: Colors.lightSuccess}]}>
+              <PackageOpen
+                strokeWidth={1.4}
+                color={Colors.sucess}
+                size={18}
+              />
+            </View>
+            <View style={styles.statText}>
+              <Text style={styles.statNum}>
+                {salesCounts?.submitted || 0}
               </Text>
-              <View style={styles.linkBox}>
-                <View style={styles.linkContent}>
-                  <Banknote size={30} color={Colors.white} />
-                  <Text style={styles.welcomeText}>
-                    Incentive earned <Text style={styles.name}>₹0</Text>
+              <Text style={styles.statLabel}>Delivered</Text>
+            </View>
+          </View>
+          <View style={styles.statCard}>
+            <View style={[styles.statIcon, {backgroundColor: Colors.holdLight}]}>
+              <AlarmClockMinus
+                strokeWidth={1.4}
+                color={Colors.orange}
+                size={18}
+              />
+            </View>
+            <View style={styles.statText}>
+              <Text style={styles.statNum}>{salesCounts?.draft || 0}</Text>
+              <Text style={styles.statLabel}>Pending</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View
+        style={[
+          styles.bodyContent,
+          {paddingHorizontal: 20, paddingBottom: 5},
+        ]}>
+        <View style={styles.bodyHeader}>
+          <Text style={styles.bodyHeaderTitle}>Recent Sales Orders</Text>
+          <View style={styles.bodyHeaderIcon}>
+            <SearchModal
+              visible={isSearchVisible}
+              onClose={() => setSearchVisible(false)}
+              onSearch={text => {
+                setSearchText(text);
+              }}
+            />
+
+            <FilterModal
+              visible={isFilterVisible}
+              onClose={() => setFilterVisible(false)}
+              onApply={() => setFilterVisible(false)}>
+              {['All', 'Draft', 'Pending', 'Delivered', 'Cancelled'].map(
+                status => (
+                  <Text
+                    key={status}
+                    onPress={() => {
+                      setSelectedStatus(status as any);
+                      setFilterVisible(false);
+                    }}
+                    style={{
+                      paddingVertical: 12,
+                      fontFamily: Fonts.medium,
+                      color:
+                        selectedStatus === status
+                          ? Colors.darkButton
+                          : Colors.gray,
+                    }}>
+                    {status}
                   </Text>
-                </View>
-              </View>
-            </View>
+                ),
+              )}
+            </FilterModal>
+            <TouchableOpacity onPress={() => setSearchVisible(true)}>
+              <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setFilterVisible(true)}>
+              <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
+            </TouchableOpacity>
           </View>
+        </View>
+      </View>
+
+      <View style={{flex: 1, paddingHorizontal: 20}}>
+        {isLoading && page === 1 ? (
           <View
-            style={[
-              styles.bodyContent,
-              {paddingHorizontal: 20, marginTop: 70},
-            ]}>
-            <View style={styles.bodyHeader}>
-              <Text style={styles.bodyHeaderTitle}>Recent Sales Orders</Text>
-              <View style={styles.bodyHeaderIcon}>
-                <SearchModal
-                  visible={isSearchVisible}
-                  onClose={() => setSearchVisible(false)}
-                  onSearch={text => {
-                    setSearchText(text);
-                  }}
+            style={{
+              height: windowHeight * 0.4,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <ActivityIndicator size="large" />
+          </View>
+        ) : orders.length === 0 ? (
+          <View
+            style={{
+              height: windowHeight * 0.4,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 16, color: Colors.gray}}>
+              No Sales Order Found
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={orders}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            renderItem={({item, index}) => {
+              const {date, month} = getDateParts(item.transaction_date);
+
+              return (
+                <SalesItemCard
+                  key={item.order_id || index}
+                  time={item.transaction_date}
+                  date={date}
+                  month={month}
+                  orderNo={item.order_id}
+                  amount={item.grand_total}
+                  status={item.status || item.workflow_state}
+                  storeName={item.store_name}
+                  distributor={item.distributor}
+                  storeImage={item.store_image}
+                  navigation={navigation}
                 />
+              );
+            }}
+            keyExtractor={(item, index) => item.order_id + index}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetching ? (
+                <View style={{paddingVertical: 15}}>
+                  <ActivityIndicator size="small" />
+                </View>
+              ) : null
+            }
+            contentContainerStyle={{paddingBottom: 110}}
+          />
+        )}
+      </View>
 
-                <FilterModal
-                  visible={isFilterVisible}
-                  onClose={() => setFilterVisible(false)}
-                  onApply={() => setFilterVisible(false)}>
-                  {['All', 'Draft', 'Pending', 'Delivered', 'Cancelled'].map(
-                    status => (
-                      <Text
-                        key={status}
-                        onPress={() => {
-                          setSelectedStatus(status as any);
-                          setFilterVisible(false);
-                        }}
-                        style={{
-                          paddingVertical: 12,
-                          fontFamily: Fonts.medium,
-                          color:
-                            selectedStatus === status
-                              ? Colors.darkButton
-                              : Colors.gray,
-                        }}>
-                        {status}
-                      </Text>
-                    ),
-                  )}
-                </FilterModal>
-                {/* 🔍 Search */}
-                <TouchableOpacity onPress={() => setSearchVisible(true)}>
-                  <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-                </TouchableOpacity>
-
-                {/* 🧰 Filter */}
-                <TouchableOpacity onPress={() => setFilterVisible(true)}>
-                  <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-          <View
-            style={[
-              styles.bodyContent,
-              {paddingHorizontal: 20, paddingBottom: 100},
-            ]}>
-            {salesOrders.length ? (
-              salesOrders.map(
-                (item: SalesOrderType, index: number) => {
-                  const {date, month} = getDateParts(item.transaction_date);
-
-                  return (
-                    <SalesItemCard
-                      key={item.order_id || index}
-                      time={item.transaction_date}
-                      date={date}
-                      month={month}
-                      orderNo={item.order_id}
-                      amount={item.grand_total}
-                      status={item.workflow_state}
-                      navigation={navigation}
-                    />
-                  );
-                },
-              )
-            ) : (
-              <View style={styles.emptyBox}>
-                <Text style={styles.emptyText}>No sales orders found</Text>
-              </View>
-            )}
-          </View>
-        </Animated.ScrollView>
-      )}
       <View
         style={{
+          position: 'absolute',
+          bottom: 15,
+          width: '100%',
           paddingHorizontal: 20,
           display: 'flex',
           justifyContent: 'center',
@@ -247,7 +316,7 @@ const SalesScreen = ({navigation}: Props) => {
         <TouchableOpacity
           style={styles.checkinButton}
           onPress={() => navigation.navigate('AddSalesScreen')}>
-          <CalendarDays strokeWidth={1.4} color={Colors.white} />
+          <CirclePlus strokeWidth={1.4} color={Colors.white} />
           <Text style={styles.checkinButtonText}>Create Sales Order</Text>
         </TouchableOpacity>
       </View>
@@ -265,82 +334,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  //header-box-section css start
   headerSec: {
     backgroundColor: Colors.white,
-    minHeight: 150,
     width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    position: 'relative',
-    zIndex: 1,
-    // iOS Shadow
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 18,
+    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 32,
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    paddingBottom: 10,
-
-    // Android Shadow
-    elevation: 2,
-    marginBottom: 15,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    zIndex: 1,
+    marginBottom: 8,
   },
-
-  salesHeaderData: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 20,
-  },
-
-  welcomeText: {
-    fontFamily: Fonts.light,
-    color: Colors.white,
-    fontSize: Size.xsmd,
-    textAlign: 'center',
-  },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
-  welcomBox: {
-    padding: 15,
-    backgroundColor: Colors.orange,
-    borderRadius: 15,
-    paddingVertical: 20,
-    marginTop: 10,
-    position: 'relative',
-    bottom: -10,
-    marginBottom: -50,
-  },
-
-  linkBox: {
-    display: 'flex',
+  statRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    backgroundColor: Colors.Orangelight,
-    borderRadius: 15,
-    padding: 12,
-    marginTop: 8,
     gap: 10,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#FFBF83',
   },
-  linkContent: {
-    display: 'flex',
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    padding: 10,
     flexDirection: 'row',
-    justifyContent: 'center',
-    color: Colors.white,
-    gap: 5,
+    alignItems: 'flex-start',
+    gap: 6,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
-    width: width * 0.76,
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  statNum: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.darkButton,
+  },
+  statLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  statText: {
+    flexDirection: 'column',
+    gap: 0,
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
-
-  //bodyContent section css
   bodyContent: {
     width: '100%',
     backgroundColor: Colors.lightBg,
@@ -369,123 +419,6 @@ const styles = StyleSheet.create({
     gap: 20,
   },
 
-  //atteddanceCard section css
-  atteddanceCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 10,
-  },
-  cardHeader: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timeSection: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  time: {
-    color: Colors.darkButton,
-    fontFamily: Fonts.medium,
-    fontSize: Size.xs,
-    lineHeight: 18,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-
-  present: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  lateEntry: {
-    backgroundColor: Colors.holdLight,
-    color: Colors.orange,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  leave: {
-    backgroundColor: Colors.lightBlue,
-    color: Colors.blue,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-  absent: {
-    backgroundColor: Colors.lightDenger,
-    color: Colors.denger,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  cardbody: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    gap: 10,
-    paddingTop: 10,
-  },
-  dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.darkButton,
-    borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
-  },
-  monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
-  },
-  contentText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-    lineHeight: 20,
-  },
-
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -495,28 +428,13 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 15,
     paddingVertical: 18,
-    position: 'absolute',
-    bottom: 15,
     gap: 5,
-    zIndex: 1,
     width: width * 0.9,
-    marginBottom: 0,
   },
   checkinButtonText: {
     fontFamily: Fonts.medium,
     fontSize: Size.sm,
     color: Colors.white,
     lineHeight: 22,
-  },
-  emptyBox: {
-    marginTop: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  emptyText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    color: Colors.inputBorder,
   },
 });

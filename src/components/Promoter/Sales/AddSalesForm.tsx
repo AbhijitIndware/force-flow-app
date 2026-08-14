@@ -1,50 +1,99 @@
-// AddSaleForm.tsx
-import React, {Dispatch} from 'react';
+import React, {useState} from 'react';
 import {
   Animated,
   StyleSheet,
   TouchableOpacity,
   View,
   Text,
-  Alert,
+  ScrollView,
 } from 'react-native';
-import {Size} from '../../../utils/fontSize';
+import ReusableDropdown from '../../ui-lib/resusable-dropdown';
+import moment from 'moment';
 import {Colors} from '../../../utils/colors';
+import {IAddSalesOrderV2, StockDashboardItem} from '../../../types/baseType';
+import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
-import {ISalesInvoiceParams} from '../../../types/baseType';
-import PromoterSaleItemRow from './PromoterSaleItemRow';
+import {SaleItemField} from '../../SO/Order/Sale/SaleItemField';
+
+const COLUMN_WIDTHS = {
+  item: 170,
+  qty: 70,
+  rate: 70,
+  amount: 70,
+  action: 40,
+};
 
 interface Props {
-  values: ISalesInvoiceParams;
+  values: IAddSalesOrderV2;
   errors: any;
   touched: any;
   handleBlur: any;
-  setFieldValue: any;
+  handleChange: any;
+  setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
+  warehouseList: {
+    label: string;
+    value: string;
+    outstanding_amount?: number;
+  }[];
+  onDateSelect: (field: 'transaction_date' | 'delivery_date') => void;
+  onAnyItemLocked: (locked: boolean) => void;
+  seededCount?: number;
+  allItems: StockDashboardItem[];
+  isStockFetching: boolean;
+  stockWarning?: string;
+  onShowRules?: () => void;
 }
 
 const AddPromoterSaleForm: React.FC<Props> = ({
   values,
   errors,
   touched,
+  handleBlur,
   setFieldValue,
   scrollY,
-  handleBlur,
+  warehouseList,
+  onDateSelect,
+  onAnyItemLocked,
+  seededCount = 0,
+  allItems,
+  isStockFetching,
+  onShowRules,
 }) => {
-  /* ---------------- Helpers ---------------- */
+  const [itemLockMap, setItemLockMap] = useState<Record<number, boolean>>({});
+
+  const selectedStoreEntry = warehouseList.find(
+    store => store.value === values.custom_warehouse,
+  );
+  const selectedStoreOutstanding = selectedStoreEntry?.outstanding_amount ?? 0;
+
+  const handleLockChange = (index: number, isLocked: boolean) => {
+    setItemLockMap(prev => {
+      const next = {...prev, [index]: isLocked};
+      onAnyItemLocked(Object.values(next).some(Boolean));
+      return next;
+    });
+  };
 
   const addNewItem = () => {
     setFieldValue('items', [
       ...values.items,
-      {item_code: '', qty: 0, rate: 0, warehouse: ''},
+      {
+        item_code: '',
+        qty: '',
+        rate: 0,
+        physical_qty: '',
+        delivery_date: values.delivery_date,
+      },
     ]);
   };
 
   const removeItem = (index: number) => {
-    const updated = values.items.filter((_, i) => i !== index);
-    setFieldValue('items', updated);
+    setFieldValue(
+      'items',
+      values.items.filter((_, i) => i !== index),
+    );
   };
-  /* ---------------- UI ---------------- */
 
   return (
     <Animated.ScrollView
@@ -52,189 +101,259 @@ const AddPromoterSaleForm: React.FC<Props> = ({
         useNativeDriver: false,
       })}
       scrollEventThrottle={16}
-      contentContainerStyle={{padding: 16, paddingHorizontal: 21}}>
-      {/* ---------------- Items ---------------- */}
-      {/* {values.items.map((item, index) => {
-        // Get selected warehouse object
-        const selectedWh = ogWareHouseList.find(
-          wh => wh.warehouse_id === item.warehouse,
-        );
-
-        return (
-          <View key={index} style={styles.itemBlock}>
-            {index > 0 && (
-              <TouchableOpacity
-                onPress={() => removeItem(index)}
-                style={styles.removeButton}>
-                <Ionicons name="trash-bin-outline" size={20} color="#FF0000" />
-              </TouchableOpacity>
-            )}
-
-            <ReusableDropdown
-              label="Item"
-              field={`items[${index}].item_code`}
-              value={item.item_code}
-              data={itemList}
-              error={
-                touched.items?.[index]?.item_code &&
-                errors.items?.[index]?.item_code
-              }
-              onChange={(val: string) => handleSelectedItem(val, index)}
-              searchText={searchItem}
-              setSearchText={setSearchItem}
-              onLoadMore={onLoadMoreItems}
-              loadingMore={loadingMoreItems}
-            />
-            <ReusableDropdown
-              label="Warehouse"
-              field={`items[${index}].warehouse`}
-              value={item.warehouse}
-              data={warehouseList}
-              //   loading={warehouseLoading}
-              error={
-                touched.items?.[index]?.warehouse &&
-                errors.items?.[index]?.warehouse
-              }
-              onChange={(val: string) => handleSelectedWarehouse(val, index)}
-              // onChange={(val: string) =>
-              //   setFieldValue(`items[${index}].warehouse`, val)
-              // }
-              disabled={item.item_code === ''}
-            />
-            <ReusableInput
-              label={`Quantity ${
-                selectedWh ? `(Available: ${selectedWh.actual_qty})` : ''
-              }`}
-              value={item.qty ? String(item.qty) : ''}
-              keyboardType="numeric"
-              onChangeText={text => {
-                let qty = Number(text.replace(/[^0-9]/g, ''));
-
-                if (selectedWh && qty > selectedWh.actual_qty) {
-                  Alert.alert(
-                    'Stock Limit',
-                    `Quantity cannot be more than available stock (${selectedWh.actual_qty})`,
-                  );
-                  qty = selectedWh.actual_qty;
-                }
-
-                setFieldValue(`items[${index}].qty`, qty);
-              }}
-              onBlur={() => handleBlur('qty')}
-              error={touched.items?.[index]?.qty && errors.items?.[index]?.qty}
-              disabled={item?.warehouse === ''}
-            />
-            <ReusableInput
-              label="Rate"
-              value={item.rate ? String(item.rate) : ''}
-              keyboardType="numeric"
-              onChangeText={text =>
-                setFieldValue(
-                  `items[${index}].rate`,
-                  Number(text.replace(/[^0-9]/g, '')),
-                )
-              }
-              onBlur={() => handleBlur('rate')}
-              error={
-                touched.items?.[index]?.rate && errors.items?.[index]?.rate
-              }
-              disabled={item?.item_code === ''}
-            />
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Amount</Text>
-              <View style={styles.amountBox}>
-                <Text style={styles.amountText}>
-                  {item.qty && item.rate ? item.qty * item.rate : '—'}
-                </Text>
-              </View>
+      contentContainerStyle={styles.mainContainer}>
+      {/* ── Top Inputs ─────────────────────────────────────────────────── */}
+      <View style={styles.topSection}>
+        <View style={styles.row}>
+          <View style={styles.flex1}>
+            <Text style={styles.label}>Transaction Date</Text>
+            <View style={[styles.timeInput, styles.disabledInput]}>
+              <Text style={styles.disabledText}>
+                {values.transaction_date
+                  ? moment(values.transaction_date).format('YYYY-MM-DD')
+                  : 'Select Date'}
+              </Text>
             </View>
           </View>
-        );
-      })} */}
-      {values.items.map((item, index) => (
-        <PromoterSaleItemRow
-          key={index}
-          index={index}
-          item={item}
-          errors={errors}
-          touched={touched}
-          setFieldValue={setFieldValue}
-          handleBlur={handleBlur}
-          removeItem={removeItem}
-        />
-      ))}
+          <View style={styles.flex1}>
+            <Text style={styles.label}>Delivery Date</Text>
+            <TouchableOpacity
+              style={styles.timeInput}
+              onPress={() => onDateSelect('delivery_date')}>
+              <Text style={styles.timeText}>
+                {values.delivery_date
+                  ? moment(values.delivery_date).format('YYYY-MM-DD')
+                  : 'Select Date'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      {/* Add More */}
-      <TouchableOpacity style={styles.addMoreBtn} onPress={addNewItem}>
-        <Text style={styles.addMoreText}>+ Add More Item</Text>
-      </TouchableOpacity>
+        <ReusableDropdown
+          label="Store"
+          field="custom_warehouse"
+          value={values.custom_warehouse}
+          data={warehouseList}
+          onChange={(val: string) => setFieldValue('custom_warehouse', val)}
+          marginBottom={selectedStoreOutstanding > 0 ? 5 : 0}
+        />
+        {selectedStoreOutstanding > 0 ? (
+          <View style={styles.outstandingCard}>
+            <Text style={styles.outstandingLabel}>Outstanding due</Text>
+            <Text style={styles.outstandingText}>
+              ₹{selectedStoreOutstanding.toLocaleString()}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.tableSection}>
+        <TouchableOpacity style={styles.rulesTextLink} onPress={onShowRules}>
+          <Text style={styles.rulesTextLinkText}>
+            📌 View Stock Update Rules
+          </Text>
+        </TouchableOpacity>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={true}
+          style={styles.tableScroll}>
+          <View>
+            {/* Table Header */}
+            <View style={styles.headerRow}>
+              <Text style={[styles.headerText, {width: COLUMN_WIDTHS.item}]}>
+                Item
+              </Text>
+              <Text
+                style={[
+                  styles.headerText,
+                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
+                ]}>
+                Stock
+              </Text>
+              <Text
+                style={[
+                  styles.headerText,
+                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
+                ]}>
+                Order Qty
+              </Text>
+              <Text
+                style={[
+                  styles.headerText,
+                  {width: COLUMN_WIDTHS.qty, textAlign: 'center'},
+                ]}>
+                Rate
+              </Text>
+              <Text
+                style={[
+                  styles.headerText,
+                  {width: COLUMN_WIDTHS.amount, textAlign: 'left'},
+                ]}>
+                Amount
+              </Text>
+              <View style={{width: COLUMN_WIDTHS.action}} />
+            </View>
+
+            {/* List of Rows */}
+            {values.items.map((item, index) => (
+              <View key={index}>
+                <SaleItemField
+                  index={index}
+                  item={item}
+                  setFieldValue={setFieldValue}
+                  removeItem={removeItem}
+                  allItems={allItems}
+                  isStockFetching={isStockFetching}
+                />{' '}
+                {touched.items?.[index] &&
+                  errors.items?.[index] &&
+                  typeof errors.items[index] === 'object' && (
+                    <View style={styles.rowErrorBox}>
+                      {Object.entries(
+                        errors.items[index] as Record<string, string>,
+                      ).map(([field, msg]) => (
+                        <Text key={field} style={styles.rowErrorText}>
+                          • {msg}
+                        </Text>
+                      ))}
+                    </View>
+                  )}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+        <TouchableOpacity style={styles.tableAddBtn} onPress={addNewItem}>
+          <Text style={styles.addMoreText}>+ Select item to add...</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* ── Footer Totals ────────────────────────────────────────────────── */}
+      <View style={styles.footerSummary}>
+        <Text style={styles.summaryText}>
+          Total ({values.items.length} items ordered)
+        </Text>
+        <Text style={styles.totalAmount}>
+          ₹
+          {values.items
+            .reduce(
+              (acc, curr) => acc + (Number(curr.qty) || 0) * (curr.rate || 0),
+              0,
+            )
+            .toLocaleString()}
+        </Text>
+      </View>
     </Animated.ScrollView>
   );
 };
 
 export default AddPromoterSaleForm;
 
-/* ---------------- Styles ---------------- */
-
 const styles = StyleSheet.create({
-  inputWrapper: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: Size.xs,
-    marginBottom: 4,
-    color: Colors.black,
-    fontFamily: Fonts.regular,
-  },
-  amountBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#ecececff',
-    height: 50,
-    justifyContent: 'center',
-  },
-  amountText: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.sm,
-    color: Colors.black,
-  },
-  itemBlock: {
-    padding: 12,
-    borderWidth: 1,
+  mainContainer: {paddingTop: 10, backgroundColor: '#ffffff'},
+  topSection: {paddingHorizontal: 21, marginBottom: 0},
+  tableSection: {padding: 10, paddingVertical: 0},
+  row: {flexDirection: 'row', gap: 10, marginBottom: 10},
+  flex1: {flex: 1},
+  label: {fontSize: Size.xs, color: '#374151', fontFamily: Fonts.regular},
+  timeInput: {
+    backgroundColor: '#ffffff',
     borderRadius: 8,
-    borderColor: '#ecececff',
-    backgroundColor: '#fff',
-    width: '100%',
-    marginBottom: 16,
-  },
-  addMoreBtn: {
-    backgroundColor: Colors.white,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginVertical: 12,
-    alignSelf: 'flex-start',
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    height: 45,
+    marginTop: 4,
   },
-  addMoreText: {
-    color: Colors.orange,
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
+  timeText: {color: '#111827', fontFamily: Fonts.regular, fontSize: Size.xs},
+  disabledInput: {backgroundColor: '#f9fafb', borderColor: '#e5e7eb'},
+  disabledText: {
+    color: '#6b7280',
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
   },
-  removeButton: {
-    padding: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: Colors.lightRed2,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignSelf: 'flex-end',
+  tableScroll: {
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f9fafb',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  headerText: {
+    color: '#6b7280',
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    paddingHorizontal: 8,
+  },
+  tableAddBtn: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#ffffff',
+  },
+  addMoreText: {color: Colors.orange, fontFamily: Fonts.semiBold, fontSize: 13},
+  rulesTextLink: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     marginBottom: 8,
+  },
+  rulesTextLinkText: {
+    color: '#DC2626',
+    fontFamily: Fonts.semiBold,
+    fontSize: 13,
+  },
+  outstandingCard: {
+    marginBottom: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    justifyContent: 'space-between',
+  },
+  outstandingLabel: {
+    fontSize: 12,
+    color: '#b91c1c',
+    fontFamily: Fonts.medium,
+  },
+  outstandingText: {
+    fontSize: 14,
+    color: '#b91c1c',
+    fontFamily: Fonts.semiBold,
+  },
+  footerSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  summaryText: {color: '#6b7280', fontSize: 13},
+  totalAmount: {color: '#111827', fontSize: 16, fontFamily: Fonts.semiBold},
+  rowErrorBox: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#fff5f5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#ef4444',
+    marginBottom: 4,
+  },
+  rowErrorText: {
+    fontSize: 11,
+    color: '#ef4444',
+    fontWeight: '500',
+    lineHeight: 18,
   },
 });

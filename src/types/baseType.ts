@@ -672,6 +672,49 @@ export interface RPOSOCount {
   };
 }
 
+export interface RPromoterOrderCount {
+  message: {
+    success: boolean;
+    data: {
+      overall: {
+        total_orders: number;
+        total_sales_orders: number;
+        total_purchase_orders: number;
+        total_draft: number;
+        total_submitted: number;
+        total_cancelled: number;
+      };
+      sales_orders: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: Record<string, number>;
+      };
+      purchase_orders: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: Record<string, number>;
+      };
+      delivery_notes: {
+        total: number;
+        draft: number;
+        submitted: number;
+        cancelled: number;
+        status_wise: Record<string, number>;
+      };
+      filters_applied: {
+        from_date: string | null;
+        to_date: string | null;
+        date_filtered: boolean;
+      };
+      timestamp: string;
+    };
+  };
+}
+
 //PJP
 export interface RPjpDailyStores {
   message: {
@@ -1460,7 +1503,7 @@ export type PromoterAttendanceData = {
 export interface RPromoterAttendance {
   message: {
     success: boolean;
-    data: AttendanceData;
+    data: IAttendanceStatusData;
   };
 }
 

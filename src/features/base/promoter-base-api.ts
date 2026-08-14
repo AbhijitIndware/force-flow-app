@@ -3,6 +3,7 @@ import {baseQueryWithAuthGuard} from '../utility';
 import {
   AttendanceData,
   GetInvoiceDetailsResponse,
+  IAttendanceStatusData,
   ICheckInRequest,
   ICheckOutRequest,
   ISalesInvoiceParams,
@@ -51,6 +52,7 @@ import {
   IGetTargetAchievementSummaryParams,
   RRequestLateCheckin,
   IRequestLateCheckin,
+  RPromoterOrderCount,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
 
@@ -330,7 +332,7 @@ export const promoterBaseApi = createApi({
       providesTags: ['Promoter'],
     }),
     getOrdersCount: builder.query<
-      any,
+      RPromoterOrderCount,
       {from_date?: string; to_date?: string}
     >({
       query: ({from_date, to_date}) => ({
@@ -735,7 +737,7 @@ interface PromoterState {
   loading: boolean;
   error: boolean;
   status: 'idle' | 'pending' | 'fulfilled' | 'rejected';
-  promoterStatus?: AttendanceData | null;
+  promoterStatus?: IAttendanceStatusData | null;
 }
 
 const initialState: PromoterState = {

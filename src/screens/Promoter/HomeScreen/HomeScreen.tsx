@@ -20,21 +20,21 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Size} from '../../../utils/fontSize';
 import {Divider} from '@rneui/themed';
 import {
-  Banknote,
   CalendarCheck,
   CalendarCheck2,
   ChartCandlestick,
+  Clock3,
   FilePenLine,
   MessageSquareQuote,
-  MoveDown,
-  MoveUp,
   Network,
   Package,
+  Store,
   UserRoundCog,
 } from 'lucide-react-native';
-import {useGetPromoterHomeQuery} from '../../../features/base/promoter-base-api';
+import {useGetPromoterHomeQuery, usePromoterStatusQuery} from '../../../features/base/promoter-base-api';
 import {useAppSelector} from '../../../store/hook';
-import {IPromoterHomeData} from '../../../types/baseType';
+import {IPromoterHomeData, IAttendanceStatusData} from '../../../types/baseType';
+import {TargetMetricBox} from '../../../components/SO/HomeScreen/Common';
 import moment from 'moment';
 
 const {width} = Dimensions.get('window');
@@ -77,18 +77,47 @@ const getLastCheckMessage = (attendance: IPromoterHomeData['attendance']) => {
 const formatDay = (date: string) => moment(date).format('DD');
 const formatMonth = (date: string) => moment(date).format('MMM').toUpperCase();
 
+const formatTime = (time: string | null | undefined) =>
+  time ? moment(time, 'HH:mm:ss.SSSSSS').format('hh:mm A') : null;
+
+const getStoreStatusLabel = (store: {
+  checked_in: boolean;
+  checked_out: boolean;
+}) => {
+  if (store.checked_out) return 'Checked Out';
+  if (store.checked_in) return 'Checked In';
+  return 'Not Checked In';
+};
+
 const HomeScreen = ({navigation, route}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {data, refetch} = useGetPromoterHomeQuery(undefined, {
     refetchOnMountOrArgChange: true,
   });
-  console.log('🚀 ~ HomeScreen ~ data:', data);
+
+  const {data: statusData} = usePromoterStatusQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const homeData = data?.message?.data;
   const attendance = homeData?.attendance;
   const target = homeData?.target;
   const employee = homeData?.employee;
+  const attendanceStatus = statusData?.message?.data;
+  const shiftInfo = attendanceStatus?.shift_info;
+  const storesToday = attendanceStatus?.stores_today ?? [];
+
+  const salesPct =
+    target && target.sales_target > 0
+      ? parseFloat(
+          ((target.achieved_value / target.sales_target) * 100).toFixed(2),
+        )
+      : 0;
+  const ddnPct =
+    target && target.ddn_target > 0
+      ? parseFloat(((target.ddn_value / target.ddn_target) * 100).toFixed(2))
+      : 0;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -120,9 +149,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               <Text style={styles.welcomeText}>
                 Hello <Text style={styles.name}>{employee?.employee_name}</Text>
               </Text>
-              <TouchableOpacity
-                style={styles.linkBox}
-                onPress={() => navigation.navigate('AttendanceScreen')}>
+              <View style={styles.linkBox}>
                 <View style={styles.dateBox}>
                   <Text style={styles.dateText}>
                     {formatDay(homeData?.date as string)}
@@ -134,17 +161,27 @@ const HomeScreen = ({navigation, route}: Props) => {
                 </View>
 
                 <View style={styles.linkContent}>
-                  <Text style={styles.paraText}>
-                    {attendance && getLastCheckMessage(attendance)}
-                  </Text>
-
-                  <Ionicons
-                    name="chevron-forward-circle-sharp"
-                    size={24}
-                    color={Colors.white}
-                  />
+                  <View>
+                    {attendanceStatus?.shift_info?.store_name && (
+                      <Text style={styles.storeNameText}>
+                        {attendanceStatus.shift_info.store_name}
+                      </Text>
+                    )}
+                    {attendanceStatus?.shift_info?.start_time &&
+                      attendanceStatus.shift_info.end_time && (
+                        <Text style={styles.shiftTimeText}>
+                          Shift:{' '}
+                          {formatTime(attendanceStatus.shift_info.start_time)} –{' '}
+                          {formatTime(attendanceStatus.shift_info.end_time)}
+                          {attendanceStatus.shift_info.is_floater ? ' · Floater' : ''}
+                        </Text>
+                      )}
+                    <Text style={styles.paraText}>
+                      {attendance && getLastCheckMessage(attendance)}
+                    </Text>
+                  </View>
                 </View>
-              </TouchableOpacity>
+              </View>
             </View>
 
             {attendance?.can_check_in && (
@@ -163,9 +200,78 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <Text style={styles.checkinButtonText}>Check-out</Text>
               </TouchableOpacity>
             )}
+            <TouchableOpacity
+              style={styles.attendanceButton}
+              onPress={() => navigation.navigate('AttendanceScreen')}>
+              <Text style={styles.attendanceButtonText}>
+                View attendance and shift
+              </Text>
+              <Ionicons
+                name="chevron-forward-circle-sharp"
+                size={24}
+                color={Colors.white}
+              />
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.countBoxSection}>
+          {storesToday.length > 0 && (
+            <View style={[styles.container, {paddingTop: 25}]}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.SectionHeading}>Today's Stores</Text>
+                <View style={styles.storeCountBadge}>
+                  <Text style={styles.storeCountText}>
+                    {storesToday.length} store{storesToday.length > 1 ? 's' : ''}
+                  </Text>
+                </View>
+              </View>
+
+              {storesToday.map((store, idx) => {
+                const statusLabel = getStoreStatusLabel(store);
+                const isOut = store.checked_out;
+                const statusColor = isOut ? '#dc2626' : '#16a34a';
+                const statusBg = isOut ? '#FEF2F2' : '#E6F7EE';
+                return (
+                  <View key={store.store ?? idx} style={styles.storeCard}>
+                    <View style={styles.storeIconBox}>
+                      <Store strokeWidth={1.8} color={Colors.white} size={18} />
+                    </View>
+
+                    <View style={styles.storeInfo}>
+                      <Text style={styles.storeName} numberOfLines={1}>
+                        {store.store_name}
+                      </Text>
+                      <View style={styles.storeMetaRow}>
+                        <Clock3 size={12} color={Colors.gray} strokeWidth={2} />
+                        <Text style={styles.storeTime}>
+                          {formatTime(store.start_time)} –{' '}
+                          {formatTime(store.end_time)}
+                        </Text>
+                        {store.checked_out && (
+                          <View style={styles.hoursChip}>
+                            <Text style={styles.hoursChipText}>
+                              {store.working_hours ?? 0} hrs
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+
+                    <View style={[styles.storeStatus, {backgroundColor: statusBg}]}>
+                      <View
+                        style={[styles.statusDot, {backgroundColor: statusColor}]}
+                      />
+                      <Text
+                        style={[styles.storeStatusText, {color: statusColor}]}>
+                        {statusLabel}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {/* <View style={styles.countBoxSection}>
             <View style={styles.countBox}>
               <View style={styles.countBoxIcon}>
                 <CalendarCheck2 strokeWidth={1.4} color={Colors.white} />
@@ -232,56 +338,48 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
               <Text style={{fontFamily: Fonts.regular}}>(Value)</Text>
             </Text>
-            <View style={styles.dataBoxSection}>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>
-                    ₹{target?.achieved_value?.toLocaleString('en-IN') || 0} / ₹
-                    {target?.sales_target?.toLocaleString('en-IN') || 0}
-                  </Text>
-                  <Text style={styles.quantitytime}>Sales Target</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  {target?.percentage && target.percentage >= 50 ? (
-                    <MoveUp strokeWidth={2} color={Colors.darkButton} />
-                  ) : (
-                    <MoveDown strokeWidth={2} color={Colors.darkButton} />
-                  )}
-                  <Text
-                    style={
-                      target?.percentage && target.percentage >= 50
-                        ? styles.incressValu
-                        : styles.decriseValu
-                    }>
-                    {target?.percentage || 0}%
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.dataBox}>
-                <View>
-                  <Text style={styles.quantityCount}>
-                    ₹{target?.ddn_value?.toLocaleString('en-IN') || 0} / ₹
-                    {target?.ddn_target?.toLocaleString('en-IN') || 0}
-                  </Text>
-                  <Text style={styles.quantitytime}>DDN Target</Text>
-                </View>
-                <View style={styles.positionValue}>
-                  <Text style={styles.quantitytime}>
-                    {target?.order_count || 0} orders
-                  </Text>
-                </View>
-              </View>
+            <View style={styles.metricRow}>
+              <TargetMetricBox
+                label="Sales Target"
+                achieved={`₹${
+                  (target?.achieved_value ?? 0) % 1 !== 0
+                    ? (target?.achieved_value ?? 0).toFixed(2)
+                    : target?.achieved_value ?? 0
+                }`}
+                target={`₹${target?.sales_target?.toLocaleString('en-IN') || 0}`}
+                rate={target?.percentage ?? salesPct}
+                accentColor="#0F6E56"
+              />
+              <TargetMetricBox
+                label="DDN Target"
+                achieved={`₹${
+                  (target?.ddn_value ?? 0) % 1 !== 0
+                    ? (target?.ddn_value ?? 0).toFixed(2)
+                    : target?.ddn_value ?? 0
+                }`}
+                target={`₹${target?.ddn_target?.toLocaleString('en-IN') || 0}`}
+                rate={ddnPct}
+                accentColor="#185FA5"
+              />
+            </View>
+            <View style={[styles.metricRow, {marginTop: 10}]}>
+              <TargetMetricBox
+                label="Orders"
+                achieved={`${target?.order_count || 0}`}
+                target=""
+                accentColor="#534AB7"
+              />
             </View>
           </View>
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+          {/* <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>Incentive Status</Text>
             <View
               style={[
@@ -328,7 +426,8 @@ const HomeScreen = ({navigation, route}: Props) => {
                 </Text>
               </View>
             </View>
-          </View>
+          </View> */}
+
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
             <View
@@ -338,7 +437,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                 paddingVertical: 20,
                 marginBottom: 30,
               }}>
-              <TouchableOpacity style={styles.listLink}>
+              <TouchableOpacity
+                style={styles.listLink}
+                onPress={() => navigation.navigate('StockEntryScreen')}>
                 <Text style={styles.listLinkText}>
                   Set up the opening stock of your store
                 </Text>
@@ -397,7 +498,9 @@ const HomeScreen = ({navigation, route}: Props) => {
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('StockEntryScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -413,7 +516,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View>
+            </TouchableOpacity>
             <Divider
               width={1}
               color={Colors.lightGray}
@@ -591,6 +694,36 @@ const styles = StyleSheet.create({
   },
 
   paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  shiftTimeText: {
+    fontFamily: Fonts.regular,
+    color: Colors.white,
+    fontSize: Size.xs,
+    lineHeight: 18,
+    opacity: 0.9,
+  },
+  storeNameText: {
+    fontFamily: Fonts.semiBold,
+    color: Colors.white,
+    fontSize: Size.sm,
+    lineHeight: 20,
+  },
+  attendanceButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.darkButton,
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    marginTop: 30,
+  },
+  attendanceButtonText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.sm,
+    color: Colors.white,
+    lineHeight: 22,
+  },
   checkinButton: {
     display: 'flex',
     alignItems: 'center',
@@ -664,7 +797,99 @@ const styles = StyleSheet.create({
     fontSize: Size.md,
     color: Colors.darkButton,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  storeCountBadge: {
+    backgroundColor: Colors.lightGray,
+    borderRadius: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  storeCountText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: Colors.gray,
+  },
+  storeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 10,
+    shadowColor: '#9F9D9D',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  storeIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.Orangelight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storeInfo: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 8,
+  },
+  storeName: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.darkButton,
+    lineHeight: 20,
+  },
+  storeMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  storeTime: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.gray,
+    lineHeight: 16,
+    marginLeft: 4,
+  },
+  hoursChip: {
+    marginLeft: 8,
+    backgroundColor: Colors.lightOrange,
+    borderRadius: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  hoursChipText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.orange,
+  },
+  storeStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 50,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+  },
+  storeStatusText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+  },
   dataBoxSection: {paddingTop: 15},
+  metricRow: {flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12},
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 14,

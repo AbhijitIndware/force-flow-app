@@ -1,13 +1,18 @@
 import React, {useState} from 'react';
-import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Clock2, EllipsisVertical} from 'lucide-react-native';
+import {Image, Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {EllipsisVertical} from 'lucide-react-native';
 import {Menu} from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {useSubmitSalesInvoiceMutation} from '../../../features/base/promoter-base-api';
+import {soStatusColors} from '../../../utils/utils';
+import {imageBaseUrl} from '../../../features/apiBaseUrl';
+import {
+  useSubmitSalesOrderMutation,
+  useCancelSalesOrderMutation,
+} from '../../../features/base/promoter-base-api';
 
 interface Props {
   time: string;
@@ -16,6 +21,9 @@ interface Props {
   orderNo: string;
   amount: number;
   status: string;
+  storeName: string;
+  distributor: string;
+  storeImage?: string;
   navigation: any;
 }
 
@@ -26,43 +34,59 @@ const SalesItemCard: React.FC<Props> = ({
   orderNo,
   amount,
   status,
+  storeName,
+  distributor,
+  storeImage,
   navigation,
 }) => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [action, setAction] = useState<'submit' | 'cancel'>('submit');
 
-  const [submitSalesInvoice, {isLoading}] = useSubmitSalesInvoiceMutation();
+  const [submitSalesOrder, {isLoading: isSubmitting}] =
+    useSubmitSalesOrderMutation();
+  const [cancelSalesOrder, {isLoading: isCancelling}] =
+    useCancelSalesOrderMutation();
 
-  const statusStyle: Record<string, any> = {
-    Draft: styles.draft,
-    Pending: styles.pending,
-    Paid: styles.delivered,
-    Cancelled: styles.cancelled,
+  const isLoading = isSubmitting || isCancelling;
+
+  const statusColor = soStatusColors[status] || Colors.blue;
+  const isDraft = status === 'Draft';
+  const isPending = status === 'Pending';
+
+  const openConfirm = (nextAction: 'submit' | 'cancel') => {
+    setAction(nextAction);
+    setMenuVisible(false);
+    setConfirmVisible(true);
   };
 
-  const handleSubmitInvoice = async () => {
+  const handleConfirm = async () => {
     try {
-      const res = await submitSalesInvoice({
-        invoice_id: orderNo,
-      }).unwrap();
+      const res =
+        action === 'submit'
+          ? await submitSalesOrder({order_id: orderNo}).unwrap()
+          : await cancelSalesOrder({order_id: orderNo}).unwrap();
 
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
-          text1: 'Invoice submitted successfully',
+          text1:
+            action === 'submit'
+              ? 'Sales order submitted successfully'
+              : 'Sales order cancelled',
           position: 'top',
         });
       } else {
         Toast.show({
           type: 'error',
-          text1: res?._error_message || 'Failed to submit invoice',
+          text1: res?.message?.message || 'Something went wrong',
           position: 'top',
         });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to submit invoice',
+        text1: error?.data?.message?.message || 'Something went wrong',
         position: 'top',
       });
     } finally {
@@ -72,77 +96,126 @@ const SalesItemCard: React.FC<Props> = ({
 
   return (
     <>
-      {/* ================= CARD ================= */}
       <View style={styles.card}>
-        <View style={styles.header}>
-          <View style={styles.timeRow}>
-            <Clock2 size={16} color="#4A4A4A" />
-            <Text style={styles.time}>{time}</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.timeSection}>
+            <Text style={styles.time}>SO ID: {orderNo}</Text>
           </View>
 
-          <Text style={[styles.status, statusStyle[status]]}>{status}</Text>
+          <View style={styles.headerRight}>
+            <Text
+              style={[
+                styles.statusBadge,
+                {backgroundColor: `${statusColor}30`, color: statusColor},
+              ]}>
+              {status}
+            </Text>
 
-          {/* PAPER MENU */}
-          {status === 'Draft' && (
-            <Menu
-              visible={menuVisible}
-              onDismiss={() => setMenuVisible(false)}
-              contentStyle={{
-                backgroundColor: Colors.white, // ✅ white background
-                borderRadius: 12,
-                elevation: 4,
-              }}
-              anchor={
-                <TouchableOpacity onPress={() => setMenuVisible(true)}>
-                  <EllipsisVertical size={20} color={Colors.darkButton} />
-                </TouchableOpacity>
-              }>
-              <Menu.Item
-                title="Submit"
-                // leadingIcon="send"
-                disabled={isLoading}
-                onPress={() => {
-                  setMenuVisible(false);
-                  setConfirmVisible(true);
+            {(isDraft || isPending) && (
+              <Menu
+                visible={menuVisible}
+                onDismiss={() => setMenuVisible(false)}
+                contentStyle={{
+                  backgroundColor: Colors.white,
+                  borderRadius: 12,
+                  elevation: 4,
                 }}
-                titleStyle={{
-                  color: Colors.darkButton,
-                  fontFamily: Fonts.medium,
-                }}
-              />
-            </Menu>
-          )}
+                anchor={
+                  <TouchableOpacity
+                    onPress={() => setMenuVisible(true)}
+                    hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+                    <EllipsisVertical size={20} color={Colors.darkButton} />
+                  </TouchableOpacity>
+                }>
+                {isDraft && (
+                  <Menu.Item
+                    title="Submit"
+                    disabled={isLoading}
+                    onPress={() => openConfirm('submit')}
+                    titleStyle={{
+                      color: Colors.darkButton,
+                      fontFamily: Fonts.medium,
+                    }}
+                  />
+                )}
+                {isDraft && (
+                  <Menu.Item
+                    title="Cancel"
+                    disabled={isLoading}
+                    onPress={() => openConfirm('cancel')}
+                    titleStyle={{
+                      color: Colors.denger,
+                      fontFamily: Fonts.medium,
+                    }}
+                  />
+                )}
+                {isPending && (
+                  <Menu.Item
+                    title="Cancel"
+                    disabled={isLoading}
+                    onPress={() => openConfirm('cancel')}
+                    titleStyle={{
+                      color: Colors.denger,
+                      fontFamily: Fonts.medium,
+                    }}
+                  />
+                )}
+                <Menu.Item
+                  title="View"
+                  onPress={() => {
+                    setMenuVisible(false);
+                    navigation.navigate('PromoterSaleDetailScreen', {
+                      id: orderNo,
+                    });
+                  }}
+                  titleStyle={{
+                    color: Colors.darkButton,
+                    fontFamily: Fonts.medium,
+                  }}
+                />
+              </Menu>
+            )}
+          </View>
         </View>
 
-        {/* ================= BODY ================= */}
         <TouchableOpacity
-          style={styles.body}
+          style={styles.cardbody}
           activeOpacity={0.8}
           onPress={() =>
             navigation.navigate('PromoterSaleDetailScreen', {
               id: orderNo,
             })
           }>
+          {storeImage && (
+            <Image
+              source={{uri: imageBaseUrl + storeImage}}
+              style={styles.storeThumb}
+            />
+          )}
+
           <View style={styles.dateBox}>
-            <Text style={styles.date}>{date}</Text>
-            <Text style={styles.month}>{month}</Text>
+            <Text style={styles.dateText}>{date}</Text>
+            <Text style={styles.monthText}>{month}</Text>
           </View>
 
           <View style={{flex: 1}}>
-            <Text style={styles.orderNo}>Sales Order: {orderNo}</Text>
-            <Text style={styles.amount}>Amount: ₹ {amount}</Text>
+            <Text style={styles.contentText}>Store: {storeName}</Text>
+            <Text style={styles.contentText}>Distributor: {distributor}</Text>
+            <Text style={styles.amountText}>PO Amount: ₹{amount}</Text>
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* ================= CONFIRMATION MODAL ================= */}
       <Modal transparent visible={confirmVisible} animationType="fade">
         <View style={styles.overlay}>
           <View style={styles.confirmBox}>
-            <Text style={styles.confirmTitle}>Submit Invoice?</Text>
+            <Text style={styles.confirmTitle}>
+              {action === 'submit' ? 'Submit Sales Order?' : 'Cancel Sales Order?'}
+            </Text>
             <Text style={styles.confirmText}>
-              Once submitted, you won’t be able to edit this invoice. Do you
-              want to continue?
+              {action === 'submit'
+                ? 'Once submitted, you won’t be able to edit this order. Do you want to continue?'
+                : 'This order will be cancelled. Do you want to continue?'}
             </Text>
 
             <View style={styles.confirmRow}>
@@ -152,9 +225,13 @@ const SalesItemCard: React.FC<Props> = ({
 
               <TouchableOpacity
                 disabled={isLoading}
-                onPress={handleSubmitInvoice}>
+                onPress={handleConfirm}>
                 <Text style={styles.submit}>
-                  {isLoading ? 'Submitting...' : 'Continue'}
+                  {isLoading
+                    ? 'Please wait...'
+                    : action === 'submit'
+                    ? 'Continue'
+                    : 'Yes, Cancel'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -167,97 +244,105 @@ const SalesItemCard: React.FC<Props> = ({
 
 export default SalesItemCard;
 
-/* ================= STYLES ================= */
-
 const styles = StyleSheet.create({
   card: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
     backgroundColor: Colors.white,
     borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    marginTop: 10,
   },
-
-  header: {
+  cardHeader: {
+    display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
   },
-
-  timeRow: {
+  timeSection: {
+    display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 6,
+    width: '50%',
+    maxWidth: 175,
   },
-
   time: {
-    fontFamily: Fonts.medium,
-    fontSize: Size.xs,
     color: Colors.darkButton,
-  },
-
-  status: {
-    marginLeft: 'auto',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
+    fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
-    fontFamily: Fonts.regular,
+    lineHeight: 18,
   },
-
-  delivered: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-  },
-
-  pending: {
-    backgroundColor: Colors.holdLight,
-    color: Colors.orange,
-  },
-
-  draft: {
-    backgroundColor: Colors.lightBlue,
-    color: Colors.blue,
-  },
-
-  cancelled: {
-    backgroundColor: Colors.lightDenger,
-    color: Colors.denger,
-  },
-
-  body: {
+  headerRight: {
+    display: 'flex',
     flexDirection: 'row',
-    marginTop: 12,
-    gap: 12,
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
   },
-
+  statusBadge: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    lineHeight: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 50,
+    maxWidth: 130,
+    textAlign: 'center',
+  },
+  cardbody: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingTop: 0,
+  },
+  storeThumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+  },
   dateBox: {
     width: 50,
     height: 50,
+    borderColor: Colors.darkButton,
     borderWidth: 1,
     borderRadius: 10,
-    alignItems: 'center',
+    backgroundColor: Colors.transparent,
+    display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 5,
   },
-
-  date: {
+  dateText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
+    color: Colors.darkButton,
+    padding: 0,
+    margin: 0,
+    lineHeight: 18,
   },
-
-  month: {
+  monthText: {
     fontFamily: Fonts.regular,
+    color: Colors.darkButton,
     fontSize: Size.xs,
   },
-
-  orderNo: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
+  contentText: {
+    fontFamily: Fonts.regular,
     color: Colors.darkButton,
+    fontSize: Size.xs,
+    lineHeight: 20,
   },
-
-  amount: {
+  amountText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
-    marginTop: 4,
+    color: Colors.darkButton,
+    lineHeight: 20,
   },
 
   overlay: {
@@ -266,38 +351,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   confirmBox: {
     backgroundColor: Colors.white,
     width: '85%',
     borderRadius: 16,
     padding: 16,
   },
-
   confirmTitle: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.md,
     marginBottom: 8,
+    color: Colors.darkButton,
   },
-
   confirmText: {
     fontFamily: Fonts.regular,
     fontSize: Size.sm,
     color: Colors.gray,
     marginBottom: 20,
   },
-
   confirmRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 20,
   },
-
   cancel: {
     fontFamily: Fonts.medium,
     color: Colors.gray,
   },
-
   submit: {
     fontFamily: Fonts.medium,
     color: Colors.darkButton,

@@ -386,7 +386,7 @@ const StockScreen = ({navigation}: Props) => {
                   }}>
                   <TouchableOpacity
                     style={styles.checkinButton}
-                    onPress={() => navigation.navigate('AttendanceScreen')}>
+                    onPress={() => navigation.navigate('StockEntryScreen')}>
                     <CalendarCheck strokeWidth={1.4} color={Colors.white} />
                     <Text style={styles.checkinButtonText}>
                       Set opening stock
