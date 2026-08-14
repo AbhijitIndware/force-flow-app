@@ -19,6 +19,7 @@ import {useNavigation} from '@react-navigation/native';
 import {
   useGetNotificationListQuery,
   useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
   NotificationItem as ApiNotificationItem,
 } from '../features/fcm/fccm-api';
 import {navigate} from '../utils/navigationRef';
@@ -92,6 +93,8 @@ const NotificationListScreen = () => {
   });
 
   const [markNotificationRead] = useMarkNotificationReadMutation();
+  const [markAllNotificationsRead, {isLoading: isMarkingAll}] =
+    useMarkAllNotificationsReadMutation();
 
   useEffect(() => {
     if (data?.message?.data) {
@@ -137,6 +140,18 @@ const NotificationListScreen = () => {
       // silently fail
     }
     handleNotificationTap(item);
+  };
+
+  const onMarkAllAsRead = async () => {
+    if (isMarkingAll) return;
+    try {
+      await markAllNotificationsRead().unwrap();
+      setAllNotifications(prev =>
+        prev.map(n => (n.is_read === 0 ? {...n, is_read: 1} : n)),
+      );
+    } catch {
+      // silently fail
+    }
   };
 
   const renderItem = ({item}: {item: ApiNotificationItem}) => {
@@ -209,6 +224,24 @@ const NotificationListScreen = () => {
         title="Notifications"
         navigation={() => navigation.goBack()}
       />
+      {allNotifications.some(n => n.is_read === 0) ? (
+        <View style={styles.markAllBar}>
+          <Text style={styles.markAllInfo}>
+            {allNotifications.filter(n => n.is_read === 0).length} unread
+          </Text>
+          <TouchableOpacity
+            style={styles.markAllBtn}
+            onPress={onMarkAllAsRead}
+            activeOpacity={0.7}>
+            {isMarkingAll ? (
+              <ActivityIndicator size="small" color={Colors.white} />
+            ) : (
+              <Feather name="check-circle" size={16} color={Colors.white} />
+            )}
+            <Text style={styles.markAllText}>Mark all as read</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <FlatList
         data={allNotifications}
         keyExtractor={item => item.name}
@@ -238,6 +271,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  markAllBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  markAllInfo: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: '#6B7280',
+  },
+  markAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.Orangelight,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  markAllText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.white,
   },
   listContent: {
     padding: 16,

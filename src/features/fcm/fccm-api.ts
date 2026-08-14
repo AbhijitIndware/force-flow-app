@@ -94,6 +94,13 @@ export const fcmApi = createApi({
       }),
       invalidatesTags: ['Notifications'],
     }),
+    markAllNotificationsRead: builder.mutation<MarkNotificationReadResponse, void>({
+      query: () => ({
+        url: '/method/salesforce_management.mobile_app_apis.push_notifications_api.mark_all_notifications_read',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Notifications'],
+    }),
     getUnreadNotificationCount: builder.query<GetUnreadCountResponse, void>({
       query: () => ({
         url: '/method/salesforce_management.mobile_app_apis.push_notifications_api.get_unread_notification_count',
@@ -108,5 +115,6 @@ export const {
   useRegisterFcmTokenMutation,
   useGetNotificationListQuery,
   useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
   useGetUnreadNotificationCountQuery,
 } = fcmApi;

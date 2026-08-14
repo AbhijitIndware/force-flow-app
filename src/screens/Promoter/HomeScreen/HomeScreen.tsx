@@ -23,6 +23,7 @@ import {Divider} from '@rneui/themed';
 import {
   ArrowRight,
   BookOpen,
+  Camera,
   ChartCandlestick,
   Clock3,
   FilePenLine,
@@ -627,12 +628,15 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
             </View>
+            */}
             <Divider
               width={1}
               color={Colors.lightGray}
               style={{marginBottom: 10, borderStyle: 'dashed'}}
             />
-            <View style={styles.IconlinkBox}>
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('ProductFeedbackScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -652,7 +656,31 @@ const HomeScreen = ({navigation, route}: Props) => {
                   color={Colors.darkButton}
                 />
               </View>
-            </View> */}
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
+            />
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('StoreActivityScreen')}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {width: 35, height: 35, borderRadius: 10},
+                ]}>
+                <Camera strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Store Activity</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}

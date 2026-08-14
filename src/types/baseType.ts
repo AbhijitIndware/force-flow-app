@@ -3060,6 +3060,7 @@ export interface RStoreActivities {
 // Screen 9 — Product Feedback
 export interface ICreateProductFeedback {
   type: string; // "Own" | "Competitor"
+  store?: string;
   remarks?: string;
   image?: {
     mime: string;
@@ -3082,17 +3083,29 @@ export interface RCreateProductFeedback {
 
 export interface ProductFeedbackItem {
   name: string;
+  feedback_id: string;
   type: string;
   remarks: string;
   image: string | null;
+  has_image: boolean;
   time: string;
+  employee: string;
+  employee_name: string;
+  custom_is_promoter: number;
+}
+
+export interface ProductFeedbackSummary {
+  total: number;
+  own: number;
+  competitor: number;
 }
 
 export interface RProductFeedbackList {
   message: {
     success: boolean;
     data: {
-      feedbacks: ProductFeedbackItem[];
+      feedback: ProductFeedbackItem[];
+      summary: ProductFeedbackSummary;
       pagination: {
         page: number;
         page_size: number;

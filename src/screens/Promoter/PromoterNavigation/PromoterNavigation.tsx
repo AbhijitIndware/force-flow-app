@@ -10,6 +10,9 @@ import StockEntryFormScreen from '../Stock/StockEntryFormScreen';
 import IncentiveScreen from '../Incentive/Incentive';
 import DownloadScreen from '../DownloadScreen/DownloadScreen';
 import ProductFeedbackScreen from '../ProductFeedbackScreen/ProductfeedbackScreen';
+import AddProductFeedbackScreen from '../ProductFeedbackScreen/AddProductFeedbackScreen';
+import StoreActivityScreen from '../StoreActivity/StoreActivityScreen';
+import AddStoreActivityScreen from '../StoreActivity/AddStoreActivityScreen';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
 import CheckingScreen from '../CheckingScreen/CheckingScreen';
 import CheckOutScreen from '../CheckingScreen/CheckOutScreen';
@@ -80,6 +83,21 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="ProductFeedbackScreen"
         component={ProductFeedbackScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddProductFeedbackScreen"
+        component={AddProductFeedbackScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StoreActivityScreen"
+        component={StoreActivityScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="AddStoreActivityScreen"
+        component={AddStoreActivityScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

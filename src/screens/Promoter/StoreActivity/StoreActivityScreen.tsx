@@ -19,17 +19,25 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {
-  useGetProductFeedbackListQuery,
+  useGetStoreActivitiesQuery,
+  useGetEmployeeAssignedStoresQuery,
 } from '../../../features/base/promoter-base-api';
 import {imageBaseUrl} from '../../../features/apiBaseUrl';
-import {ProductFeedbackItem} from '../../../types/baseType';
+import {StoreActivity} from '../../../types/baseType';
 import FilterModal from '../../../components/ui/filterModal';
-import {ChevronLeft, ChevronRight, Funnel, MessageSquareQuote, Plus} from 'lucide-react-native';
+import {
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Funnel,
+  MapPin,
+  Plus,
+} from 'lucide-react-native';
 import moment from 'moment';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
-  'ProductFeedbackScreen'
+  'StoreActivityScreen'
 >;
 
 type Props = {
@@ -37,9 +45,9 @@ type Props = {
   route: any;
 };
 
-const FEEDBACK_FILTERS = ['All', 'Own', 'Competitor'];
+const ACTIVITY_FILTERS = ['All', 'Own', 'Competitors'];
 
-const ProductFeedbackScreen = ({navigation}: Props) => {
+const StoreActivityScreen = ({navigation}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState('All');
@@ -68,16 +76,28 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
     setReviewImage(reviewList[next]);
   };
 
-  const {data: feedbackData, isFetching, refetch} =
-    useGetProductFeedbackListQuery({
-      type: selectedType === 'All' ? undefined : selectedType,
-      page: 1,
-      page_size: 20,
-    });
+  const {data: assignedStoresData} = useGetEmployeeAssignedStoresQuery();
 
-  const feedbacks = feedbackData?.message?.data?.feedback ?? [];
-  const totalCount = feedbackData?.message?.data?.pagination?.total_records ?? 0;
-  const summary = feedbackData?.message?.data?.summary;
+  const stores =
+    assignedStoresData?.message?.data?.stores?.map(s => ({
+      label: s.store_name,
+      value: s.store_id,
+    })) ?? [];
+
+  const {
+    data: activityData,
+    isFetching,
+    refetch,
+  } = useGetStoreActivitiesQuery({
+    activity_type: selectedType === 'All' ? undefined : selectedType,
+    ...(selectedStore ? {store: selectedStore} : {}),
+    page: 1,
+    page_size: 20,
+  });
+
+  const activities = activityData?.message?.data?.activities ?? [];
+  const totalCount =
+    activityData?.message?.data?.pagination?.total_records ?? 0;
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -87,25 +107,22 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
     }, 2000);
   }, [refetch]);
 
-  const renderFeedback = ({item}: {item: ProductFeedbackItem}) => {
-    const dateTime = moment(item.time);
+  const renderActivity = ({item}: {item: StoreActivity}) => {
+    const dateTime = moment(item.date_and_time);
+    const imageList = item.images.map(img => `${imageBaseUrl}${img}`);
     return (
       <View style={styles.card}>
         <View style={styles.cardTopRow}>
           <View style={styles.cardHeader}>
             <View style={styles.typeAvatar}>
-              <MessageSquareQuote
-                size={15}
-                color={Colors.orange}
-                strokeWidth={2}
-              />
+              <Camera size={15} color={Colors.orange} strokeWidth={2} />
             </View>
             <View style={styles.typeInfo}>
               <Text style={styles.typeText} numberOfLines={1}>
-                {item.name}
+                {item.activity_type}
               </Text>
               <Text style={styles.categoryText} numberOfLines={1}>
-                {item.type}
+                {item.activities_category || item.name}
               </Text>
             </View>
           </View>
@@ -116,25 +133,36 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
 
         <View style={styles.contentRow}>
           <View style={styles.textCol}>
-            <Text style={styles.remark} numberOfLines={3}>
-              {item.remarks || 'No remarks'}
-            </Text>
+            <View style={styles.storeRow}>
+              <MapPin size={13} color={Colors.orange} strokeWidth={2} />
+              <Text style={styles.storeName} numberOfLines={1}>
+                {item.store_name}
+              </Text>
+            </View>
+            {item.remark ? (
+              <Text style={styles.remark} numberOfLines={2}>
+                {item.remark}
+              </Text>
+            ) : null}
           </View>
 
-          {item.has_image && item.image ? (
+          {imageList.length > 0 ? (
             <TouchableOpacity
               style={styles.imageWrap}
               activeOpacity={0.8}
-              onPress={() =>
-                openReview(`${imageBaseUrl}${item.image}`, [
-                  `${imageBaseUrl}${item.image}`,
-                ], 0)
-              }>
+              onPress={() => openReview(imageList[0], imageList, 0)}>
               <Image
-                source={{uri: `${imageBaseUrl}${item.image}`}}
-                style={styles.feedbackImage}
+                source={{uri: imageList[0]}}
+                style={styles.activityImage}
                 resizeMode="cover"
               />
+              {imageList.length > 1 ? (
+                <View style={styles.imageCountBadge}>
+                  <Text style={styles.imageCountText}>
+                    +{imageList.length - 1}
+                  </Text>
+                </View>
+              ) : null}
             </TouchableOpacity>
           ) : null}
         </View>
@@ -152,16 +180,16 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
         },
       ]}>
       <PageHeader
-        title="Product Feedback"
+        title="Store Activity"
         navigation={() => navigation.goBack()}
       />
 
       <View style={styles.bodyHeader}>
         <View style={styles.bodyHeaderLeft}>
-          <Text style={styles.bodyHeaderTitle}>Feedback</Text>
+          <Text style={styles.bodyHeaderTitle}>Activities</Text>
           <View style={styles.countBadge}>
             <Text style={styles.countBadgeText}>
-              {isFetching ? '…' : totalCount || feedbacks.length}
+              {isFetching ? '…' : totalCount || activities.length}
             </Text>
           </View>
         </View>
@@ -183,9 +211,9 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
               ) : null}
             </View>
 
-            <Text style={styles.filterSectionTitle}>Type</Text>
+            <Text style={styles.filterSectionTitle}>Activity Type</Text>
             <View style={styles.filterChips}>
-              {FEEDBACK_FILTERS.map(type => (
+              {ACTIVITY_FILTERS.map(type => (
                 <TouchableOpacity
                   key={type}
                   onPress={() => setSelectedType(type)}
@@ -203,6 +231,50 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {stores.length > 1 ? (
+              <>
+                <Text style={[styles.filterSectionTitle, {marginTop: 16}]}>
+                  Store
+                </Text>
+                <View style={styles.filterChips}>
+                  <TouchableOpacity
+                    onPress={() => setSelectedStore('')}
+                    style={[
+                      styles.filterChip,
+                      selectedStore === '' && styles.filterChipActive,
+                    ]}>
+                    <Text
+                      style={[
+                        styles.filterChipText,
+                        selectedStore === '' && styles.filterChipTextActive,
+                      ]}>
+                      All Stores
+                    </Text>
+                  </TouchableOpacity>
+                  {stores.map(store => (
+                    <TouchableOpacity
+                      key={store.value}
+                      onPress={() => setSelectedStore(store.value)}
+                      style={[
+                        styles.filterChip,
+                        selectedStore === store.value &&
+                          styles.filterChipActive,
+                      ]}>
+                      <Text
+                        numberOfLines={1}
+                        style={[
+                          styles.filterChipText,
+                          selectedStore === store.value &&
+                            styles.filterChipTextActive,
+                        ]}>
+                        {store.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            ) : null}
           </FilterModal>
           <TouchableOpacity
             onPress={() => setModalVisible(true)}
@@ -224,34 +296,38 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
         </View>
       </View>
 
-      <FlatList
-        data={feedbacks}
-        keyExtractor={(item, index) => item.name ?? String(index)}
-        renderItem={renderFeedback}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <MessageSquareQuote
-              size={60}
-              color={Colors.lightGray}
-              strokeWidth={1}
-            />
-            <Text style={styles.emptyText}>
-              {isFetching ? 'Loading feedback…' : 'No feedback found'}
-            </Text>
-          </View>
-        }
-      />
+      {refreshing ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Refreshing…</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={activities}
+          keyExtractor={(item, index) => item.name ?? String(index)}
+          renderItem={renderActivity}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Camera size={60} color={Colors.lightGray} strokeWidth={1} />
+              <Text style={styles.emptyText}>
+                {isFetching
+                  ? 'Loading activities…'
+                  : 'No store activities found'}
+              </Text>
+            </View>
+          }
+        />
+      )}
 
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.8}
-        onPress={() => navigation.navigate('AddProductFeedbackScreen')}>
+        onPress={() => navigation.navigate('AddStoreActivityScreen')}>
         <Plus size={24} color={Colors.white} />
-        <Text style={styles.fabText}>Add Feedback</Text>
+        <Text style={styles.fabText}>Add Activity</Text>
       </TouchableOpacity>
 
       {/* Image review modal */}
@@ -308,7 +384,7 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
   );
 };
 
-export default ProductFeedbackScreen;
+export default StoreActivityScreen;
 
 const styles = StyleSheet.create({
   bodyHeader: {
@@ -462,6 +538,23 @@ const styles = StyleSheet.create({
     fontSize: Size.xxs,
     color: Colors.gray,
   },
+  storeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  storeName: {
+    flex: 1,
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
+  categoryChip: {
+    backgroundColor: '#F1F5F9',
+    borderRadius: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
   categoryText: {
     fontFamily: Fonts.regular,
     fontSize: Size.xxs,
@@ -472,6 +565,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xxs,
     color: Colors.darkButton,
     lineHeight: 16,
+    marginTop: 6,
     opacity: 0.85,
   },
   contentRow: {
@@ -486,13 +580,33 @@ const styles = StyleSheet.create({
   imageWrap: {
     position: 'relative',
   },
-  feedbackImage: {
+  activityImage: {
     width: 60,
     height: 60,
     borderRadius: 10,
     backgroundColor: '#F1F5F9',
   },
+  imageCountBadge: {
+    position: 'absolute',
+    right: -4,
+    bottom: -4,
+    minWidth: 22,
+    height: 20,
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    backgroundColor: Colors.darkButton,
+    borderWidth: 2,
+    borderColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageCountText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xxs,
+    color: Colors.white,
+  },
   emptyContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 100,
@@ -504,6 +618,16 @@ const styles = StyleSheet.create({
     color: Colors.gray,
     textAlign: 'center',
     marginTop: 15,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.gray,
   },
   fab: {
     position: 'absolute',

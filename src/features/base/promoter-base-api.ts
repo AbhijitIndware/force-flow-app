@@ -112,7 +112,7 @@ export const promoterBaseApi = createApi({
       }
     >({
       query: ({page, page_size, from_date, to_date}) => ({
-        url: `/method/salesforce_management.mobile_app_apis.attendence.get_attendence.get_attendance_records`,
+        url: `/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_get_attendance_history`,
         method: 'GET',
         params: {
           page,
@@ -425,13 +425,21 @@ export const promoterBaseApi = createApi({
     }),
     getProductFeedbackList: builder.query<
       RProductFeedbackList,
-      {type?: string; page?: number; page_size?: number}
+      {
+        type?: string;
+        from_date?: string;
+        to_date?: string;
+        page?: number;
+        page_size?: number;
+      }
     >({
-      query: ({type, page, page_size}) => ({
+      query: ({type, from_date, to_date, page, page_size}) => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.feedback_api.get_product_feedback_list',
         method: 'GET',
         params: {
           ...(type ? {type} : {}),
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
           ...(page ? {page} : {}),
           ...(page_size ? {page_size} : {}),
         },
