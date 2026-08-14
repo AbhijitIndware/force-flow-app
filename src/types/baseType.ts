@@ -2844,6 +2844,70 @@ export interface RMonthlyRoster {
   };
 }
 
+// Screen 3 — Monthly Attendance (filled calendar)
+export interface MonthlyAttendanceStore {
+  log_id: string | null;
+  store: string;
+  store_name: string;
+  status: string;
+  checkin_time: string;
+  checkout_time: string;
+  working_hours: number;
+}
+
+export interface MonthlyAttendanceDay {
+  date: string;
+  weekday: string;
+  status: string;
+  is_today: boolean;
+  is_future: boolean;
+  was_scheduled: boolean;
+  missed: boolean;
+  is_split: boolean;
+  late_checkin: boolean;
+  working_hours: number;
+  attendance_id: string;
+  scheduled_stores: {
+    store: string;
+    store_name: string;
+    start_time: string;
+    end_time: string;
+  }[];
+  stores: MonthlyAttendanceStore[];
+}
+
+export interface RMonthlyAttendance {
+  message: {
+    success: boolean;
+    data: {
+      employee: string;
+      employee_name: string;
+      aon_days: number;
+      month: number;
+      year: number;
+      period_start: string;
+      period_end: string;
+      summary: {
+        present: number;
+        absent: number;
+        half_day: number;
+        weekly_off: number;
+        on_leave: number;
+        not_marked: number;
+        scheduled: number;
+        worked: number;
+        missed: number;
+        late: number;
+        split: number;
+        total_working_hours: number;
+        average_working_hours: number;
+        attendance_percentage: number;
+      };
+      days: MonthlyAttendanceDay[];
+    };
+  };
+}
+
 // Screen 6 — Sales Order Master Data
 export interface ISalesOrderMasterData {
   stores: {

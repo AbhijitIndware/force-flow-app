@@ -20,6 +20,7 @@ import {
   IUploadAttendanceImage,
   RUploadAttendanceImage,
   RMonthlyRoster,
+  RMonthlyAttendance,
   RSalesOrderMasterData,
   RActivityCategories,
   IUploadStoreActivity,
@@ -173,6 +174,22 @@ export const promoterBaseApi = createApi({
     >({
       query: ({month, year}) => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.roster_api.get_monthly_roster',
+        method: 'GET',
+        params: {
+          ...(month ? {month} : {}),
+          ...(year ? {year} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+
+    // ─── SCREEN 3: MONTHLY ATTENDANCE ─────────────────────────────────────────
+    getMonthlyAttendance: builder.query<
+      RMonthlyAttendance,
+      {month?: number; year?: number}
+    >({
+      query: ({month, year}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_get_monthly_attendance',
         method: 'GET',
         params: {
           ...(month ? {month} : {}),
@@ -632,6 +649,10 @@ export const {
   // Screen 3 — Roster
   useGetMonthlyRosterQuery,
   useLazyGetMonthlyRosterQuery,
+
+  // Screen 3 — Monthly Attendance
+  useGetMonthlyAttendanceQuery,
+  useLazyGetMonthlyAttendanceQuery,
 
   // Screen 4 — Stock Take
   useGetStoreStockStatusQuery,
