@@ -6,11 +6,11 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import {MapPin} from 'lucide-react-native';
+import {MapPin, X} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
-import {getCurrentLatLongWithAddress} from '../../../utils/utils';
+import {getCurrentLocation} from '../../../utils/utils';
 import {skipToken} from '@reduxjs/toolkit/query/react';
 import {useGetLocationByLatLongQuery} from '../../../features/dropdown/dropdown-api';
 import ReusableInput from '../../ui-lib/reuseable-input';
@@ -22,6 +22,7 @@ interface Props {
   address: string;
   setFieldValue: (field: string, value: any) => void;
   error?: string | false;
+  hideLabel?: boolean;
 }
 
 const MapReusableLocationInput: React.FC<Props> = ({
@@ -31,6 +32,7 @@ const MapReusableLocationInput: React.FC<Props> = ({
   address,
   setFieldValue,
   error,
+  hideLabel = false,
 }) => {
   const [loading, setLoading] = useState(false);
 
@@ -52,10 +54,13 @@ const MapReusableLocationInput: React.FC<Props> = ({
   const fetchLocation = async () => {
     try {
       setLoading(true);
-      const loc = await getCurrentLatLongWithAddress();
-      setFieldValue('latitude', loc.latitude);
-      setFieldValue('longitude', loc.longitude);
-      // Address will be set automatically from API
+      const location = await getCurrentLocation();
+      if (location) {
+        const [lat, lng] = location.split(',').map(Number);
+        setFieldValue('latitude', lat);
+        setFieldValue('longitude', lng);
+        // Address will be set automatically from API
+      }
     } catch {
     } finally {
       setLoading(false);
@@ -65,10 +70,10 @@ const MapReusableLocationInput: React.FC<Props> = ({
   return (
     <View style={styles.wrapper}>
       {/* Label */}
-      <Text style={styles.label}>{label}</Text>
+      {!hideLabel ? <Text style={styles.label}>{label}</Text> : null}
 
       {/* Fetch Location Card */}
-      <View style={styles.locationCard}>
+      <View style={[styles.locationCard, hideLabel && styles.locationCardNoLabel]}>
         {/* Left: Map Icon */}
         <MapPin size={18} color={Colors.white} style={{marginRight: 10}} />
 
@@ -97,26 +102,33 @@ const MapReusableLocationInput: React.FC<Props> = ({
               setFieldValue('address', '');
             }}
             style={styles.removeButton}>
+            <X size={12} color={Colors.white} />
             <Text style={styles.removeButtonText}>Remove</Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
-      {/* Latitude & Longitude */}
-      <ReusableInput
-        label="Latitude"
-        value={latitude ? String(latitude) : ''}
-        onChangeText={() => {}}
-        onBlur={() => {}}
-        disabled={true}
-      />
-      <ReusableInput
-        label="Longitude"
-        value={longitude ? String(longitude) : ''}
-        onChangeText={() => {}}
-        onBlur={() => {}}
-        disabled={true}
-      />
+      {/* Latitude & Longitude side by side */}
+      <View style={styles.row}>
+        <View style={styles.col}>
+          <ReusableInput
+            label="Latitude"
+            value={latitude ? String(latitude) : ''}
+            onChangeText={() => {}}
+            onBlur={() => {}}
+            disabled={true}
+          />
+        </View>
+        <View style={styles.col}>
+          <ReusableInput
+            label="Longitude"
+            value={longitude ? String(longitude) : ''}
+            onChangeText={() => {}}
+            onBlur={() => {}}
+            disabled={true}
+          />
+        </View>
+      </View>
 
       {/* Address */}
       <ReusableInput
@@ -139,6 +151,13 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     color: Colors.black,
   },
+  row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  col: {
+    flex: 1,
+  },
   locationButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,7 +172,7 @@ const styles = StyleSheet.create({
   locationButtonText: {
     color: '#fff',
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
   },
   locationCard: {
     flexDirection: 'row',
@@ -165,10 +184,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 8,
   },
+  locationCardNoLabel: {
+    marginTop: 10,
+  },
   removeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: Colors.denger,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
     borderRadius: 6,
   },
   removeButtonText: {

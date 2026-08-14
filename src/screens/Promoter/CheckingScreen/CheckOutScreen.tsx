@@ -27,7 +27,6 @@ import Toast from 'react-native-toast-message';
 import {ICheckOutRequest} from '../../../types/baseType';
 import {PromoterCheckOutSchema} from '../../../types/schema';
 import AddCheckOutForm from '../../../components/Promoter/Checkin/CheckoutForm';
-import {useAppSelector} from '../../../store/hook';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import {ActivityIndicator} from 'react-native';
 
@@ -56,9 +55,6 @@ const initial: ICheckOutRequest = {
 };
 
 const CheckOutScreen = ({navigation}: Props) => {
-  const promoterStatus = useAppSelector(
-    state => state?.persistedReducer?.promoterSlice?.promoterStatus,
-  );
   const {data, isFetching: isDataLoading} = useGetAvailableStoreQuery();
   const [promoterCheckOut, {isLoading}] = usePromoterCheckOutMutation();
 
@@ -120,33 +116,6 @@ const CheckOutScreen = ({navigation}: Props) => {
         <ScrollView
           contentContainerStyle={styles.container}
           nestedScrollEnabled={true}>
-          <View style={styles.EmpInfoSection}>
-            <View style={styles.EmpInfoView}>
-              <Text style={styles.lableText}>Employee Id</Text>
-              <View style={styles.ViewInputBox}>
-                <Text style={styles.InputText}>
-                  {data?.message?.data?.employee}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.EmpInfoView}>
-              <Text style={styles.lableText}>Employee name</Text>
-              <View style={styles.ViewInputBox}>
-                <Text style={styles.InputText}>
-                  {data?.message?.data?.employee_name}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.EmpInfoView}>
-              <Text style={styles.lableText}>Store</Text>
-              <View style={styles.ViewInputBox}>
-                <Text style={styles.InputText}>
-                  {promoterStatus?.shift_info?.store_name || 'N/A'}
-                </Text>
-              </View>
-            </View>
-          </View>
-
           <AddCheckOutForm
             values={values}
             errors={errors}
@@ -219,33 +188,6 @@ const styles = StyleSheet.create({
     color: Colors.white,
     lineHeight: 22,
   },
-
-  EmpInfoSection: {
-    backgroundColor: Colors.white,
-    padding: 15,
-    borderRadius: 15,
-    marginTop: 20,
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 15,
-  },
-  EmpInfoView: {display: 'flex', flexDirection: 'column', gap: 6},
-  lableText: {
-    fontFamily: Fonts.medium,
-    color: Colors.darkButton,
-    fontSize: Size.sm,
-  },
-  ViewInputBox: {
-    backgroundColor: Colors.lightBg,
-    borderRadius: 10,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    minHeight: 45,
-    paddingHorizontal: 15,
-  },
-  InputText: {fontFamily: Fonts.medium, color: '#B4BBC9', fontSize: Size.sm},
 
   ShiftSection: {marginTop: 20},
   HeadingText: {

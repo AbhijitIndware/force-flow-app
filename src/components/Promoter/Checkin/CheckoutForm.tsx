@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Animated,
   Text,
@@ -6,6 +6,7 @@ import {
   View,
   Image,
   StyleSheet,
+  Modal,
 } from 'react-native';
 import {launchCamera} from 'react-native-image-picker';
 import {Upload} from 'lucide-react-native';
@@ -28,6 +29,8 @@ const AddCheckOutForm: React.FC<Props> = ({
   touched,
   setFieldValue,
 }) => {
+  const [reviewVisible, setReviewVisible] = useState(false);
+
   // 📌 CAMERA HANDLER
   const handleOpenCamera = async () => {
     launchCamera(
@@ -64,6 +67,7 @@ const AddCheckOutForm: React.FC<Props> = ({
         address={values.address}
         setFieldValue={setFieldValue}
         error={touched.address && errors.address}
+        hideLabel
       />
 
       {/* 📌 CAMERA BUTTON */}
@@ -76,29 +80,61 @@ const AddCheckOutForm: React.FC<Props> = ({
             <Upload strokeWidth={1.4} color={Colors.blue} />
           </View>
 
-          <View>
+          <View style={styles.uploadTextWrap}>
             <Text style={styles.uploadTitle}>Upload image</Text>
             <Text style={styles.uploadSubtitle}>
-              Upload image for face recognition
+              For face recognition
             </Text>
           </View>
+
+          {/* 📌 SHOW PHOTO PREVIEW */}
+          {values.image?.data ? (
+            <TouchableOpacity
+              onPress={() => setReviewVisible(true)}
+              activeOpacity={0.7}>
+              <Image
+                source={{
+                  uri: `data:${values.image.mime};base64,${values.image.data}`,
+                }}
+                style={styles.preview}
+              />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </TouchableOpacity>
 
-      {/* 📌 SHOW PHOTO PREVIEW */}
-      {values.image?.data ? (
-        <Image
-          source={{
-            uri: `data:${values.image.mime};base64,${values.image.data}`,
-          }}
-          style={{
-            width: 150,
-            height: 150,
-            marginTop: 12,
-            borderRadius: 8,
-          }}
-        />
-      ) : null}
+      {/* 📌 IMAGE REVIEW MODAL */}
+      <Modal
+        visible={reviewVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReviewVisible(false)}>
+        <View style={styles.reviewOverlay}>
+          <View style={styles.reviewHeader}>
+            <Text style={styles.reviewTitle}>Image Review</Text>
+            <TouchableOpacity onPress={() => setReviewVisible(false)} hitSlop={10}>
+              <Text style={styles.reviewClose}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          {values.image?.data ? (
+            <Image
+              source={{
+                uri: `data:${values.image.mime};base64,${values.image.data}`,
+              }}
+              style={styles.reviewImage}
+              resizeMode="contain"
+            />
+          ) : null}
+          <TouchableOpacity
+            style={styles.reviewRetakeBtn}
+            onPress={() => {
+              setReviewVisible(false);
+              handleOpenCamera();
+            }}>
+            <Text style={styles.reviewRetakeText}>Retake Photo</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -123,7 +159,7 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: Colors.lightBlue,
     borderRadius: 10,
-    padding: 15,
+    padding: 12,
   },
   UploadIcon: {
     display: 'flex',
@@ -135,19 +171,67 @@ const styles = StyleSheet.create({
     backgroundColor: '#C8DAFF',
     borderRadius: 100,
   },
-
+  uploadTextWrap: {flex: 1},
   uploadTitle: {
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.blue,
-    lineHeight: 20,
+    lineHeight: 16,
   },
 
   uploadSubtitle: {
     fontFamily: Fonts.medium,
-    fontSize: Size.xs,
+    fontSize: 10,
     color: Colors.darkButton,
-    paddingTop: 5,
-    lineHeight: 16,
+    paddingTop: 3,
+    lineHeight: 14,
+  },
+  preview: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  reviewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+  },
+  reviewTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
+  },
+  reviewClose: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.white,
+  },
+  reviewImage: {
+    width: '100%',
+    height: '75%',
+    borderRadius: 12,
+  },
+  reviewRetakeBtn: {
+    marginTop: 20,
+    backgroundColor: Colors.orange,
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  reviewRetakeText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
   },
 });

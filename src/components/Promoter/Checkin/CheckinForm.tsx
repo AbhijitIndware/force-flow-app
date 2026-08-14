@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Animated,
   Text,
@@ -6,6 +6,7 @@ import {
   View,
   Image,
   StyleSheet,
+  Modal,
 } from 'react-native';
 import {launchCamera} from 'react-native-image-picker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
@@ -35,6 +36,13 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
   storeList: {label: string; value: string}[];
+  shift?: {
+    startTime: string;
+    endTime: string;
+    startDate: string;
+    endDate: string;
+    shiftType?: string;
+  };
 }
 
 const AddCheckInForm: React.FC<Props> = ({
@@ -46,7 +54,10 @@ const AddCheckInForm: React.FC<Props> = ({
   setFieldValue,
   scrollY,
   storeList,
+  shift,
 }) => {
+  const [reviewVisible, setReviewVisible] = useState(false);
+
   // 📌 CAMERA HANDLER
   const handleOpenCamera = async () => {
     launchCamera(
@@ -87,6 +98,33 @@ const AddCheckInForm: React.FC<Props> = ({
         onChange={(val: string) => setFieldValue('store', val)}
       />
 
+      {/* 📌 SHIFT INFO (small card) */}
+      {shift ? (
+        <View style={styles.shiftCard}>
+          <View style={styles.shiftHeaderRow}>
+            <Text style={styles.shiftTitle}>Shift Details</Text>
+            <View style={styles.shiftTypeBadge}>
+              <Text style={styles.shiftTypeText}>
+                {shift.shiftType || 'N/A'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.shiftBodyRow}>
+            <View style={styles.shiftCol}>
+              <Text style={styles.shiftLabel}>Start</Text>
+              <Text style={styles.shiftValue}>{shift.startTime}</Text>
+              <Text style={styles.shiftDate}>{shift.startDate}</Text>
+            </View>
+            <View style={styles.shiftDivider} />
+            <View style={styles.shiftCol}>
+              <Text style={styles.shiftLabel}>End</Text>
+              <Text style={styles.shiftValue}>{shift.endTime}</Text>
+              <Text style={styles.shiftDate}>{shift.endDate}</Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       <MapReusableLocationInput
         latitude={values.latitude}
         longitude={values.longitude}
@@ -105,29 +143,59 @@ const AddCheckInForm: React.FC<Props> = ({
             <Upload strokeWidth={1.4} color={Colors.blue} />
           </View>
 
-          <View>
+          <View style={styles.uploadTextWrap}>
             <Text style={styles.uploadTitle}>Upload image</Text>
-            <Text style={styles.uploadSubtitle}>
-              Upload image for face recognition
-            </Text>
+            <Text style={styles.uploadSubtitle}>For face recognition</Text>
           </View>
+
+          {/* 📌 SHOW PHOTO PREVIEW + REVIEW */}
+          {values.image?.data ? (
+            <TouchableOpacity
+              onPress={() => setReviewVisible(true)}
+              activeOpacity={0.7}>
+              <Image
+                source={{
+                  uri: `data:${values.image.mime};base64,${values.image.data}`,
+                }}
+                style={styles.preview}
+              />
+            </TouchableOpacity>
+          ) : null}
         </View>
       </TouchableOpacity>
 
-      {/* 📌 SHOW PHOTO PREVIEW */}
-      {values.image?.data ? (
-        <Image
-          source={{
-            uri: `data:${values.image.mime};base64,${values.image.data}`,
-          }}
-          style={{
-            width: 150,
-            height: 150,
-            marginTop: 12,
-            borderRadius: 8,
-          }}
-        />
-      ) : null}
+      {/* 📌 IMAGE REVIEW MODAL */}
+      <Modal
+        visible={reviewVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReviewVisible(false)}>
+        <View style={styles.reviewOverlay}>
+          <View style={styles.reviewHeader}>
+            <Text style={styles.reviewTitle}>Image Review</Text>
+            <TouchableOpacity onPress={() => setReviewVisible(false)} hitSlop={10}>
+              <Text style={styles.reviewClose}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          {values.image?.data ? (
+            <Image
+              source={{
+                uri: `data:${values.image.mime};base64,${values.image.data}`,
+              }}
+              style={styles.reviewImage}
+              resizeMode="contain"
+            />
+          ) : null}
+          <TouchableOpacity
+            style={styles.reviewRetakeBtn}
+            onPress={() => {
+              setReviewVisible(false);
+              handleOpenCamera();
+            }}>
+            <Text style={styles.reviewRetakeText}>Retake Photo</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -135,6 +203,68 @@ const AddCheckInForm: React.FC<Props> = ({
 export default AddCheckInForm;
 
 const styles = StyleSheet.create({
+  shiftCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ECEFF3',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  shiftHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  shiftTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
+  shiftTypeBadge: {
+    backgroundColor: Colors.lightBlue,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  shiftTypeText: {
+    fontFamily: Fonts.medium,
+    fontSize: 9,
+    color: Colors.blue,
+  },
+  shiftBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  shiftCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  shiftDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#ECEFF3',
+  },
+  shiftLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: Colors.gray,
+  },
+  shiftValue: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 11,
+    color: Colors.darkButton,
+    marginTop: 1,
+  },
+  shiftDate: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: Colors.gray,
+    marginTop: 1,
+  },
   UploadSection: {
     backgroundColor: Colors.lightBg,
     borderRadius: 10,
@@ -152,7 +282,7 @@ const styles = StyleSheet.create({
     gap: 15,
     backgroundColor: Colors.lightBlue,
     borderRadius: 10,
-    padding: 15,
+    padding: 12,
   },
   UploadIcon: {
     display: 'flex',
@@ -164,19 +294,68 @@ const styles = StyleSheet.create({
     backgroundColor: '#C8DAFF',
     borderRadius: 10,
   },
+  uploadTextWrap: {flex: 1},
 
   uploadTitle: {
     fontFamily: Fonts.medium,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     color: Colors.blue,
-    lineHeight: 20,
+    lineHeight: 16,
   },
 
   uploadSubtitle: {
     fontFamily: Fonts.medium,
-    fontSize: Size.xs,
+    fontSize: 10,
     color: Colors.darkButton,
-    paddingTop: 5,
-    lineHeight: 16,
+    paddingTop: 3,
+    lineHeight: 14,
+  },
+  preview: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  reviewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+  },
+  reviewTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
+  },
+  reviewClose: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.md,
+    color: Colors.white,
+  },
+  reviewImage: {
+    width: '100%',
+    height: '75%',
+    borderRadius: 12,
+  },
+  reviewRetakeBtn: {
+    marginTop: 20,
+    backgroundColor: Colors.orange,
+    borderRadius: 12,
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+  },
+  reviewRetakeText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: Colors.white,
   },
 });
