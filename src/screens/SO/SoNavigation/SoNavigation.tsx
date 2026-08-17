@@ -51,6 +51,7 @@ import LateCheckinRequestScreen from '../HomeScreen/LateCheckinRequestScreen';
 import NotificationListScreen from '../../NotificationListScreen';
 import CreatePromoterShiftScreen from '../HomeScreen/CreatePromoterShiftScreen';
 import PromoterShiftsScreen from '../HomeScreen/PromoterShiftsScreen';
+import PromoterDayDetailScreen from '../HomeScreen/PromoterDayDetailScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -317,6 +318,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="PromoterShiftsScreen"
         component={PromoterShiftsScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="PromoterDayDetailScreen"
+        component={PromoterDayDetailScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

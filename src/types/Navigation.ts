@@ -110,6 +110,7 @@ export type SoAppStackParamList = {
   LateCheckinRequestScreen: undefined;
   CreatePromoterShiftScreen: undefined;
   PromoterShiftsScreen: undefined;
+  PromoterDayDetailScreen: {employee?: string; date?: string} | undefined;
 };
 
 export type menuType = {

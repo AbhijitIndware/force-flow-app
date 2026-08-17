@@ -1,6 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Modal,
   RefreshControl,
@@ -15,6 +16,7 @@ import {
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
+import Toast from 'react-native-toast-message';
 
 import PageHeader from '../../../components/ui/PageHeader';
 import {MonthPickerModal} from '../../../components/SO/HomeScreen/MonthPickerModal';
@@ -29,6 +31,7 @@ import {getInitials} from '../../../utils/utils';
 import {
   useGetMyPromotersQuery,
   useGetPromoterRosterQuery,
+  useCancelShiftAssignmentMutation,
 } from '../../../features/base/promoter-base-api';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -41,23 +44,26 @@ type Props = {
   route: any;
 };
 
-type StatusFilter = 'all' | 'active' | 'cancelled';
-
 const ORANGE_SOFT = '#FFF1E0';
 const BLUE_SOFT = '#E3ECFF';
 const RED_SOFT = '#FBE8E8';
+
+const assignmentDays = (a: SupervisorRosterAssignment) =>
+  Math.max(1, moment(a.end_date).diff(moment(a.start_date), 'days') + 1);
 
 const PromoterShiftsScreen = ({navigation}: Props) => {
   const now = moment();
   const [employee, setEmployee] = useState('');
   const [month, setMonth] = useState(now.month() + 1);
   const [year, setYear] = useState(now.year());
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [monthModalVisible, setMonthModalVisible] = useState(false);
   const [yearModalVisible, setYearModalVisible] = useState(false);
   const [promoterModalVisible, setPromoterModalVisible] = useState(false);
   const [promoterSearch, setPromoterSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [cancellingName, setCancellingName] = useState('');
+
+  const [cancelShiftAssignment] = useCancelShiftAssignmentMutation();
 
   const {data: promotersData, isLoading: promotersLoading} =
     useGetMyPromotersQuery();
@@ -77,29 +83,62 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
     data: rosterData,
     isFetching: rosterFetching,
     refetch,
-  } = useGetPromoterRosterQuery(
-    {employee, month, year},
-    {skip: !employee},
-  );
+  } = useGetPromoterRosterQuery({employee, month, year}, {skip: !employee});
 
   const employeeName = rosterData?.message?.data?.employee_name ?? '';
   const aonDays = rosterData?.message?.data?.aon_days ?? 0;
-  const monthLabel = moment().month(month - 1).format('MMMM');
+  const periodStart = rosterData?.message?.data?.period_start ?? '';
+  const periodEnd = rosterData?.message?.data?.period_end ?? '';
+  const monthLabel = moment()
+    .month(month - 1)
+    .format('MMMM');
 
   const assignments = useMemo(
     () => rosterData?.message?.data?.assignments ?? [],
     [rosterData],
   );
-  const activeCount = assignments.filter(a => a.docstatus !== 2).length;
-  const cancelledCount = assignments.length - activeCount;
 
-  const filteredAssignments = useMemo(() => {
-    if (statusFilter === 'all') {return assignments;}
-    if (statusFilter === 'active') {
-      return assignments.filter(a => a.docstatus !== 2);
+  const groupedByDay = useMemo(() => {
+    const groups = new Map<
+      string,
+      {
+        dateKey: string;
+        label: string;
+        weekday: string;
+        items: SupervisorRosterAssignment[];
+      }
+    >();
+    assignments.forEach(a => {
+      const key = a.start_date;
+      let group = groups.get(key);
+      if (!group) {
+        const m = moment(key);
+        group = {
+          dateKey: key,
+          label: m.format('DD MMM'),
+          weekday: m.format('dddd'),
+          items: [],
+        };
+        groups.set(key, group);
+      }
+      group.items.push(a);
+    });
+    return Array.from(groups.values()).sort((x, y) =>
+      x.dateKey.localeCompare(y.dateKey),
+    );
+  }, [assignments]);
+
+  const totalWorkDays = useMemo(() => {
+    if (!periodStart || !periodEnd) {
+      return 0;
     }
-    return assignments.filter(a => a.docstatus === 2);
-  }, [assignments, statusFilter]);
+    return (
+      moment(periodEnd, 'YYYY-MM-DD').diff(
+        moment(periodStart, 'YYYY-MM-DD'),
+        'days',
+      ) + 1
+    );
+  }, [periodStart, periodEnd]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -111,6 +150,68 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
       }
     }
     setRefreshing(false);
+  };
+
+  const doCancel = async (assignment: SupervisorRosterAssignment) => {
+    setCancellingName(assignment.name);
+    try {
+      const res = await cancelShiftAssignment({
+        shift_assignment: assignment.name,
+      }).unwrap();
+      if (res?.message?.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Shift cancelled',
+          text2: res?.message?.message || `${assignment.shift_type} at ${assignment.store_name}`,
+          position: 'top',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Could not cancel shift',
+          text2: res?.message?.message || 'Please try again',
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      const serverMessage =
+        error?.data?.message?.message ||
+        error?.data?._server_messages ||
+        error?.data?.message ||
+        'Failed to cancel shift';
+      let messageText = serverMessage;
+      if (typeof serverMessage === 'string' && serverMessage.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(serverMessage);
+          messageText = parsed?.[0]?.message ?? serverMessage;
+        } catch {
+          messageText = serverMessage;
+        }
+      }
+      Toast.show({
+        type: 'error',
+        text1: 'Could not cancel shift',
+        text2: String(messageText),
+        position: 'top',
+      });
+    } finally {
+      setCancellingName('');
+    }
+  };
+
+  const confirmCancel = (assignment: SupervisorRosterAssignment) => {
+    Alert.alert(
+      'Cancel shift?',
+      `Cancel ${assignment.shift_type || 'this shift'} at ${assignment.store_name}?`,
+      [
+        {text: 'Keep', style: 'cancel'},
+        {
+          text: 'Cancel Shift',
+          style: 'destructive',
+          onPress: () => doCancel(assignment),
+        },
+      ],
+    );
   };
 
   const renderStatusPill = (assignment: SupervisorRosterAssignment) => {
@@ -162,13 +263,16 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
     const cancelled = assignment.docstatus === 2;
 
     return (
-      <View
+      <TouchableOpacity
         key={assignment.name}
-        style={[
-          styles.card,
-          boxShadow,
-          cancelled && styles.cardCancelled,
-        ]}>
+        style={[styles.card, boxShadow, cancelled && styles.cardCancelled]}
+        activeOpacity={0.9}
+        onPress={() =>
+          navigation.navigate('PromoterDayDetailScreen', {
+            employee,
+            date: assignment.start_date,
+          })
+        }>
         <View style={styles.cardAccent} />
 
         <View style={styles.cardTopRow}>
@@ -210,9 +314,18 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
             />
           </View>
           <Text style={styles.cardText}>
-            {moment(assignment.start_date).format('DD MMM YYYY')} -{' '}
-            {moment(assignment.end_date).format('DD MMM YYYY')}
+            {moment(assignment.start_date).format('ddd, DD MMM YYYY')}
+            {assignment.end_date !== assignment.start_date
+              ? ` - ${moment(assignment.end_date).format('DD MMM')}`
+              : ''}
           </Text>
+          <View style={styles.daysChip}>
+            <Text style={styles.daysChipText}>
+              {assignmentDays(assignment) === 1
+                ? '1 day'
+                : `${assignmentDays(assignment)} days`}
+            </Text>
+          </View>
         </View>
 
         {assignment.floater_stores?.length > 0 && (
@@ -231,29 +344,31 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
           </View>
         )}
 
-        <Text style={styles.assignmentRef}>{assignment.name}</Text>
-      </View>
-    );
-  };
-
-  const renderStatTile = (
-    label: string,
-    value: number,
-    target: StatusFilter,
-    activeColor: string,
-  ) => {
-    const active = statusFilter === target;
-    return (
-      <TouchableOpacity
-        activeOpacity={0.8}
-        style={[styles.statTile, active && {backgroundColor: activeColor}]}
-        onPress={() => setStatusFilter(target)}>
-        <Text style={[styles.statValue, active && {color: Colors.white}]}>
-          {value}
-        </Text>
-        <Text style={[styles.statLabel, active && {color: Colors.white}]}>
-          {label}
-        </Text>
+        <View style={styles.cardFooter}>
+          <Text style={styles.assignmentRef} numberOfLines={1}>
+            {assignment.name}
+          </Text>
+          {!cancelled && (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              activeOpacity={0.8}
+              disabled={cancellingName === assignment.name}
+              onPress={() => confirmCancel(assignment)}>
+              {cancellingName === assignment.name ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <>
+                  <Ionicons
+                    name="close-circle-outline"
+                    size={14}
+                    color={Colors.white}
+                  />
+                  <Text style={styles.cancelBtnText}>Cancel Shift</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -277,11 +392,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
             style={[styles.filterBox, styles.filterBoxPromoter]}
             activeOpacity={0.8}
             onPress={() => setPromoterModalVisible(true)}>
-            <Ionicons
-              name="person-outline"
-              size={16}
-              color={Colors.orange}
-            />
+            <Ionicons name="person-outline" size={16} color={Colors.orange} />
             <View style={styles.filterBoxTextWrap}>
               <Text
                 style={[
@@ -292,8 +403,8 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
                 {promotersLoading
                   ? 'Loading...'
                   : employee === ''
-                    ? 'Promoter'
-                    : selectedPromoterLabel}
+                  ? 'Promoter'
+                  : selectedPromoterLabel}
               </Text>
             </View>
             {employee !== '' && (
@@ -345,11 +456,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
         ) : employee === '' ? (
           <View style={[styles.emptyState, boxShadow]}>
             <View style={styles.emptyIconBox}>
-              <Ionicons
-                name="calendar-outline"
-                size={28}
-                color={Colors.gray}
-              />
+              <Ionicons name="calendar-outline" size={28} color={Colors.gray} />
             </View>
             <Text style={styles.emptyTitle}>No promoter selected</Text>
             <Text style={styles.emptySub}>
@@ -373,17 +480,23 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
         ) : (
           <>
             {/* ── Summary / hero ── */}
-            <View style={styles.summaryBar}>
+            <View style={[styles.summaryBar, boxShadow]}>
               <View style={styles.summaryTopRow}>
                 <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{getInitials(employeeName)}</Text>
+                  <Text style={styles.avatarText}>
+                    {getInitials(employeeName)}
+                  </Text>
                 </View>
                 <View style={styles.summaryMeta}>
                   <Text style={styles.summaryName} numberOfLines={1}>
                     {employeeName}
                   </Text>
                   <Text style={styles.summaryPeriod}>
-                    {monthLabel} {year} roster
+                    {periodStart
+                      ? `${moment(periodStart).format('DD MMM YYYY')} - ${moment(
+                          periodEnd,
+                        ).format('DD MMM YYYY')}`
+                      : `${monthLabel} ${year}`}
                   </Text>
                 </View>
                 <View style={styles.aonChip}>
@@ -392,43 +505,56 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
                 </View>
               </View>
 
-              <View style={styles.statTiles}>
-                {renderStatTile(
-                  'All',
-                  assignments.length,
-                  'all',
-                  Colors.orange,
-                )}
-                {renderStatTile(
-                  'Active',
-                  activeCount,
-                  'active',
-                  '#15803D',
-                )}
-                {renderStatTile(
-                  'Cancelled',
-                  cancelledCount,
-                  'cancelled',
-                  '#B91C1C',
-                )}
+              <View style={styles.summaryDaysRow}>
+                <Ionicons
+                  name="hourglass-outline"
+                  size={12}
+                  color={Colors.orange}
+                />
+                <Text style={styles.summaryDaysText}>
+                  {totalWorkDays} work day{totalWorkDays === 1 ? '' : 's'} in
+                  this period
+                </Text>
               </View>
             </View>
 
             <View style={styles.listHeaderRow}>
               <Text style={styles.listHeaderText}>
-                {filteredAssignments.length} assignment
-                {filteredAssignments.length === 1 ? '' : 's'}
+                {assignments.length} assignment
+                {assignments.length === 1 ? '' : 's'}
               </Text>
-              {statusFilter !== 'all' && (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => setStatusFilter('all')}>
-                  <Text style={styles.showAllText}>Show all</Text>
-                </TouchableOpacity>
-              )}
             </View>
 
-            {filteredAssignments.map(renderAssignment)}
+            {groupedByDay.map(group => (
+              <View key={group.dateKey} style={styles.dayGroup}>
+                <TouchableOpacity
+                  style={styles.dayHeader}
+                  activeOpacity={0.7}
+                  onPress={() =>
+                    navigation.navigate('PromoterDayDetailScreen', {
+                      employee,
+                      date: group.dateKey,
+                    })
+                  }>
+                  <View style={styles.dayHeaderLeft}>
+                    <Text style={styles.dayHeaderDate}>{group.label}</Text>
+                    <Text style={styles.dayHeaderWeekday}>{group.weekday}</Text>
+                  </View>
+                  <View style={styles.dayHeaderCount}>
+                    <Text style={styles.dayHeaderCountText}>
+                      {group.items.length} shift
+                      {group.items.length === 1 ? '' : 's'}
+                    </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={12}
+                      color={Colors.gray}
+                    />
+                  </View>
+                </TouchableOpacity>
+                {group.items.map(renderAssignment)}
+              </View>
+            ))}
           </>
         )}
       </ScrollView>
@@ -725,7 +851,7 @@ const styles = StyleSheet.create({
 
   // ── Summary bar ──────────────────────────────────────────────────────────────
   summaryBar: {
-    backgroundColor: Colors.darkButton,
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
@@ -753,16 +879,16 @@ const styles = StyleSheet.create({
   summaryName: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
-    color: Colors.white,
+    color: Colors.darkButton,
   },
   summaryPeriod: {
     fontFamily: Fonts.regular,
     fontSize: Size.xxs,
-    color: '#C4C4C4',
+    color: Colors.gray,
     marginTop: 2,
   },
   aonChip: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: ORANGE_SOFT,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -776,29 +902,21 @@ const styles = StyleSheet.create({
   aonLabel: {
     fontFamily: Fonts.regular,
     fontSize: 9,
-    color: '#C4C4C4',
+    color: Colors.gray,
   },
-  statTiles: {
+  summaryDaysRow: {
     flexDirection: 'row',
-    gap: 8,
-  },
-  statTile: {
-    flex: 1,
-    borderRadius: 10,
-    paddingVertical: 10,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    gap: 6,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
-  statValue: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    color: Colors.white,
-  },
-  statLabel: {
-    fontFamily: Fonts.regular,
+  summaryDaysText: {
+    fontFamily: Fonts.medium,
     fontSize: 10,
-    color: '#C4C4C4',
-    marginTop: 2,
+    color: Colors.textSecondary,
   },
 
   // ── List header ──────────────────────────────────────────────────────────────
@@ -814,10 +932,42 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: Colors.darkButton,
   },
-  showAllText: {
-    fontFamily: Fonts.medium,
+
+  // ── Day grouping ─────────────────────────────────────────────────────────────
+  dayGroup: {marginBottom: 4},
+  dayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  dayHeaderLeft: {flexDirection: 'row', alignItems: 'baseline', gap: 8},
+  dayHeaderDate: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+  },
+  dayHeaderWeekday: {
+    fontFamily: Fonts.regular,
     fontSize: Size.xxs,
-    color: Colors.orange,
+    color: Colors.gray,
+    textTransform: 'capitalize',
+  },
+  dayHeaderCount: {
+    marginLeft: 'auto',
+    backgroundColor: Colors.lightGray,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  dayHeaderCountText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: Colors.textSecondary,
   },
 
   // ── Assignment cards ─────────────────────────────────────────────────────────
@@ -914,6 +1064,17 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.gray,
   },
+  daysChip: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  daysChipText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 10,
+    color: '#2563EB',
+  },
   floaterWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -948,10 +1109,33 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     flexShrink: 1,
   },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 10,
+  },
   assignmentRef: {
-    marginTop: 8,
+    flex: 1,
     fontFamily: Fonts.regular,
     fontSize: 10,
     color: Colors.gray,
+  },
+  cancelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#B91C1C',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minWidth: 96,
+    justifyContent: 'center',
+  },
+  cancelBtnText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 10,
+    color: Colors.white,
   },
 });

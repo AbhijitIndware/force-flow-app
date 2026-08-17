@@ -3364,6 +3364,8 @@ export interface RSupervisorPromoterRoster {
       aon_days: number;
       month: number;
       year: number;
+      period_start: string;
+      period_end: string;
       assignments: SupervisorRosterAssignment[];
     };
   };

@@ -108,11 +108,15 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       value: s.store_id,
     }));
     setStoreList(prev => {
-      if (storePage === 1) {return newOptions;}
+      if (storePage === 1) {
+        return newOptions;
+      }
       const merged = [...prev, ...newOptions];
       const seen = new Set<string>();
       return merged.filter(o => {
-        if (seen.has(o.value)) {return false;}
+        if (seen.has(o.value)) {
+          return false;
+        }
         seen.add(o.value);
         return true;
       });
@@ -133,8 +137,12 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
   const handleLoadMoreStores = useCallback(() => {
     const pagination = optionsData?.message?.data?.pagination;
-    if (!pagination || optionsFetching) {return;}
-    if (storePage >= pagination.total_pages) {return;}
+    if (!pagination || optionsFetching) {
+      return;
+    }
+    if (storePage >= pagination.total_pages) {
+      return;
+    }
     setStorePage(p => p + 1);
   }, [optionsData, optionsFetching, storePage]);
 
@@ -165,11 +173,15 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       value: s.store_id,
     }));
     setFloaterList(prev => {
-      if (floaterPage === 1) {return newOptions;}
+      if (floaterPage === 1) {
+        return newOptions;
+      }
       const merged = [...prev, ...newOptions];
       const seen = new Set<string>();
       return merged.filter(o => {
-        if (seen.has(o.value)) {return false;}
+        if (seen.has(o.value)) {
+          return false;
+        }
         seen.add(o.value);
         return true;
       });
@@ -183,15 +195,21 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
   const handleLoadMoreFloaterStores = useCallback(() => {
     const pagination = floaterOptionsData?.message?.data?.pagination;
-    if (!pagination || floaterOptionsFetching) {return;}
-    if (floaterPage >= pagination.total_pages) {return;}
+    if (!pagination || floaterOptionsFetching) {
+      return;
+    }
+    if (floaterPage >= pagination.total_pages) {
+      return;
+    }
     setFloaterPage(p => p + 1);
   }, [floaterOptionsData, floaterOptionsFetching, floaterPage]);
 
   const toggleFloaterStore = (id: string, name: string) => {
     setFloaterStores(prev => {
       const exists = prev.find(s => s.id === id);
-      if (exists) {return prev.filter(s => s.id !== id);}
+      if (exists) {
+        return prev.filter(s => s.id !== id);
+      }
       return [...prev, {id, name}];
     });
   };
@@ -221,7 +239,10 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       return;
     }
     if (startDate > endDate) {
-      Toast.show({type: 'error', text1: 'End date cannot be before start date'});
+      Toast.show({
+        type: 'error',
+        text1: 'End date cannot be before start date',
+      });
       return;
     }
 
@@ -240,6 +261,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
     try {
       const res = await createShiftAssignment(payload).unwrap();
+      console.log('🚀 ~ handleSubmit ~ res:', res);
       if (res?.message?.success) {
         const created = res.message.data;
         Toast.show({
@@ -264,10 +286,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
         error?.data?.message ||
         'Failed to create shift assignment';
       let messageText = serverMessage;
-      if (
-        typeof serverMessage === 'string' &&
-        serverMessage.startsWith('[')
-      ) {
+      if (typeof serverMessage === 'string' && serverMessage.startsWith('[')) {
         try {
           const parsed = JSON.parse(serverMessage);
           messageText = parsed?.[0]?.message ?? serverMessage;
@@ -558,10 +577,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
                     style={styles.modalItem}
                     onPress={() => toggleFloaterStore(item.value, item.label)}>
                     <View
-                      style={[
-                        styles.checkbox,
-                        selected && styles.checkboxOn,
-                      ]}>
+                      style={[styles.checkbox, selected && styles.checkboxOn]}>
                       {selected && (
                         <Ionicons name="checkmark" size={13} color="#fff" />
                       )}
@@ -578,9 +594,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
               }}
               ListEmptyComponent={
                 <Text style={styles.emptyText}>
-                  {floaterOptionsFetching
-                    ? 'Loading...'
-                    : 'No stores found'}
+                  {floaterOptionsFetching ? 'Loading...' : 'No stores found'}
                 </Text>
               }
             />
