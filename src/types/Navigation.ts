@@ -108,6 +108,8 @@ export type SoAppStackParamList = {
   WeeklyOffScreen: undefined;
   LateCheckinApprovalScreen: undefined;
   LateCheckinRequestScreen: undefined;
+  CreatePromoterShiftScreen: undefined;
+  PromoterShiftsScreen: undefined;
 };
 
 export type menuType = {

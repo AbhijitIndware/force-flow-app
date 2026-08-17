@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { BaggageClaim, FilePlus2, Hotel, Package } from 'lucide-react-native';
+import { BaggageClaim, CalendarPlus, CalendarRange, FilePlus2, Hotel, Package } from 'lucide-react-native';
 import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -124,6 +124,64 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <Package strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Add Distributor</Text>
+        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+          <Ionicons
+            name="chevron-forward-outline"
+            size={12}
+            color={Colors.darkButton}
+          />
+        </View>
+      </TouchableOpacity>
+      <Divider
+        width={1}
+        color={Colors.lightGray}
+        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+      />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('CreatePromoterShiftScreen')}
+        style={styles.IconlinkBox}>
+        <View
+          style={[
+            styles.iconbox,
+            {
+              width: 35,
+              height: 35,
+              borderRadius: 10,
+              backgroundColor: Colors.darkButton,
+            },
+          ]}>
+          <CalendarPlus strokeWidth={2} color={Colors.white} size={20} />
+        </View>
+        <Text style={styles.linkTitle}>Create Promoter Shift</Text>
+        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+          <Ionicons
+            name="chevron-forward-outline"
+            size={12}
+            color={Colors.darkButton}
+          />
+        </View>
+      </TouchableOpacity>
+      <Divider
+        width={1}
+        color={Colors.lightGray}
+        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+      />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('PromoterShiftsScreen')}
+        style={styles.IconlinkBox}>
+        <View
+          style={[
+            styles.iconbox,
+            {
+              width: 35,
+              height: 35,
+              borderRadius: 10,
+              backgroundColor: Colors.darkButton,
+            },
+          ]}>
+          <CalendarRange strokeWidth={2} color={Colors.white} size={20} />
+        </View>
+        <Text style={styles.linkTitle}>Promoter Shifts</Text>
         <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
           <Ionicons
             name="chevron-forward-outline"
