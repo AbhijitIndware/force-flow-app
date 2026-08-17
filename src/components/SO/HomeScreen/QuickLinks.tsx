@@ -6,12 +6,19 @@ import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import { useAppSelector } from '../../../store/hook';
 
 interface QuickLinksProps {
   navigation: any;
 }
 
 export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const isSoOrIsr =
+    employee?.designation === 'Sales Officer' ||
+    employee?.designation === 'ISR';
   return (
     <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
       <Text
@@ -137,59 +144,63 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
         color={Colors.lightGray}
         style={{ marginBottom: 10, borderStyle: 'dashed' }}
       />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('CreatePromoterShiftScreen')}
-        style={styles.IconlinkBox}>
-        <View
-          style={[
-            styles.iconbox,
-            {
-              width: 35,
-              height: 35,
-              borderRadius: 10,
-              backgroundColor: Colors.darkButton,
-            },
-          ]}>
-          <CalendarPlus strokeWidth={2} color={Colors.white} size={20} />
-        </View>
-        <Text style={styles.linkTitle}>Create Promoter Shift</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={12}
-            color={Colors.darkButton}
+      {!isSoOrIsr && (
+        <>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('CreatePromoterShiftScreen')}
+            style={styles.IconlinkBox}>
+            <View
+              style={[
+                styles.iconbox,
+                {
+                  width: 35,
+                  height: 35,
+                  borderRadius: 10,
+                  backgroundColor: Colors.darkButton,
+                },
+              ]}>
+              <CalendarPlus strokeWidth={2} color={Colors.white} size={20} />
+            </View>
+            <Text style={styles.linkTitle}>Create Promoter Shift</Text>
+            <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={12}
+                color={Colors.darkButton}
+              />
+            </View>
+          </TouchableOpacity>
+          <Divider
+            width={1}
+            color={Colors.lightGray}
+            style={{ marginBottom: 10, borderStyle: 'dashed' }}
           />
-        </View>
-      </TouchableOpacity>
-      <Divider
-        width={1}
-        color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
-      />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('PromoterShiftsScreen')}
-        style={styles.IconlinkBox}>
-        <View
-          style={[
-            styles.iconbox,
-            {
-              width: 35,
-              height: 35,
-              borderRadius: 10,
-              backgroundColor: Colors.darkButton,
-            },
-          ]}>
-          <CalendarRange strokeWidth={2} color={Colors.white} size={20} />
-        </View>
-        <Text style={styles.linkTitle}>Promoter Shifts</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={12}
-            color={Colors.darkButton}
-          />
-        </View>
-      </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('PromoterShiftsScreen')}
+            style={styles.IconlinkBox}>
+            <View
+              style={[
+                styles.iconbox,
+                {
+                  width: 35,
+                  height: 35,
+                  borderRadius: 10,
+                  backgroundColor: Colors.darkButton,
+                },
+              ]}>
+              <CalendarRange strokeWidth={2} color={Colors.white} size={20} />
+            </View>
+            <Text style={styles.linkTitle}>Promoter Shifts</Text>
+            <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={12}
+                color={Colors.darkButton}
+              />
+            </View>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };

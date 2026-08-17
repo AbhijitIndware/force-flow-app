@@ -103,6 +103,9 @@ const HomeScreen = ({ navigation }: Props) => {
 
   // ── Global state ────────────────────────────────────────────────────────────
   const employee = useAppSelector(s => s.persistedReducer.authSlice.employee);
+  const isSoOrIsr =
+    employee?.designation === 'Sales Officer' ||
+    employee?.designation === 'ISR';
   const selectedStore = useAppSelector(
     s => s.persistedReducer.pjpSlice.selectedStore,
   );
@@ -585,7 +588,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
           <QuickLinks navigation={navigation} />
 
-          <LateCheckinApprovalLink navigation={navigation} />
+          {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
 
           <ClaimsSection navigation={navigation} />
 

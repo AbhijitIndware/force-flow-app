@@ -6,12 +6,19 @@ import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import { useAppSelector } from '../../../store/hook';
 
 interface ClaimsSectionProps {
   navigation: any;
 }
 
 export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
+  const employee = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const isSoOrIsr =
+    employee?.designation === 'Sales Officer' ||
+    employee?.designation === 'ISR';
   return (
     <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
       <Text
@@ -83,30 +90,34 @@ export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
         color={Colors.lightGray}
         style={{ marginBottom: 10, borderStyle: 'dashed' }}
       />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('ExpenseApprovalScreen', { index: 0 })}
-        style={styles.IconlinkBox}>
-        <View
-          style={[
-            styles.iconbox,
-            {
-              width: 35,
-              height: 35,
-              borderRadius: 10,
-              backgroundColor: '#F59E0B',
-            },
-          ]}>
-          <CheckCircle2 strokeWidth={2} color={Colors.white} size={20} />
-        </View>
-        <Text style={styles.linkTitle}>Expense - Approval</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={12}
-            color={Colors.darkButton}
-          />
-        </View>
-      </TouchableOpacity>
+      {!isSoOrIsr && (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate('ExpenseApprovalScreen', { index: 0 })
+          }
+          style={styles.IconlinkBox}>
+          <View
+            style={[
+              styles.iconbox,
+              {
+                width: 35,
+                height: 35,
+                borderRadius: 10,
+                backgroundColor: '#F59E0B',
+              },
+            ]}>
+            <CheckCircle2 strokeWidth={2} color={Colors.white} size={20} />
+          </View>
+          <Text style={styles.linkTitle}>Expense - Approval</Text>
+          <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+            <Ionicons
+              name="chevron-forward-outline"
+              size={12}
+              color={Colors.darkButton}
+            />
+          </View>
+        </TouchableOpacity>
+      )}
       {/* <Divider
         width={1}
         color={Colors.lightGray}
