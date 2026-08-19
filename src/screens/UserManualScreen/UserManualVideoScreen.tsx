@@ -1,7 +1,7 @@
-
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -15,6 +15,13 @@ import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import Feather from 'react-native-vector-icons/Ionicons';
+import {
+  BookOpen,
+  CalendarClock,
+  Clock,
+  HardDrive,
+  Languages,
+} from 'lucide-react-native';
 import Video from 'react-native-video';
 import {WebView} from 'react-native-webview';
 import {useGetManualVideoQuery} from '../../features/user-manual/user-manual-api';
@@ -34,13 +41,27 @@ type Props = {
 };
 
 const UserManualVideoScreen = ({navigation, route}: Props) => {
-  const {video: passedVideo, video_id} = route.params;
+  const {video: passedVideo, video_id: routeVideoId} = route.params;
   const [loadError, setLoadError] = useState(false);
 
-  const {data: resolvedData, isFetching: resolving} = useGetManualVideoQuery(
-    {video_id: video_id as string},
-    {skip: !!passedVideo || !video_id},
-  );
+  // Resolve by id when deep-linked; a full video object is used as-is.
+  const video_id = routeVideoId ?? passedVideo?.video_id;
+
+  const {
+    data: resolvedData,
+    isFetching: resolving,
+    refetch,
+  } = useGetManualVideoQuery({video_id: video_id as string}, {skip: !video_id});
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    if (!video_id) {
+      return;
+    }
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [video_id, refetch]);
 
   const video: UserManualVideo | undefined =
     passedVideo ?? resolvedData?.data?.video;
@@ -67,6 +88,14 @@ const UserManualVideoScreen = ({navigation, route}: Props) => {
         <ScrollView
           nestedScrollEnabled={true}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.orange]}
+              tintColor={Colors.orange}
+            />
+          }
           contentContainerStyle={styles.content}>
           {/* Player */}
           <View style={styles.playerBox}>
@@ -101,32 +130,51 @@ const UserManualVideoScreen = ({navigation, route}: Props) => {
 
           {/* Details */}
           <View style={styles.detailCard}>
-            <Text style={styles.videoTitle}>{video.title}</Text>
-            {video.description ? (
-              <Text style={styles.videoDesc}>{video.description}</Text>
-            ) : null}
+            <View style={styles.detailHeader}>
+              <View style={styles.detailIconBox}>
+                <BookOpen size={16} color={Colors.orange} />
+              </View>
+              <Text style={styles.videoTitle} numberOfLines={2}>
+                {video.title}
+              </Text>
+            </View>
+
             <View style={styles.metaRow}>
               {video.duration ? (
                 <View style={styles.metaChip}>
+                  <Clock size={12} color={Colors.darkGray} strokeWidth={2} />
                   <Text style={styles.metaChipText}>{video.duration}</Text>
                 </View>
               ) : null}
               {video.file_size ? (
                 <View style={styles.metaChip}>
+                  <HardDrive size={12} color={Colors.darkGray} strokeWidth={2} />
                   <Text style={styles.metaChipText}>{video.file_size}</Text>
                 </View>
               ) : null}
               {video.language ? (
                 <View style={styles.metaChip}>
+                  <Languages size={12} color={Colors.darkGray} strokeWidth={2} />
                   <Text style={styles.metaChipText}>{video.language}</Text>
                 </View>
               ) : null}
-              {video.video_id ? (
-                <View style={styles.metaChip}>
-                  <Text style={styles.metaChipText}>{video.video_id}</Text>
-                </View>
-              ) : null}
             </View>
+
+            {video.description ? (
+              <>
+                <View style={styles.detailDivider} />
+                <Text style={styles.videoDesc}>{video.description}</Text>
+              </>
+            ) : null}
+
+            {video.updated_on ? (
+              <View style={styles.updatedRow}>
+                <CalendarClock size={13} color={Colors.gray} strokeWidth={2} />
+                <Text style={styles.updatedText}>
+                  Updated on {video.updated_on.slice(0, 10)}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       ) : (
@@ -181,7 +229,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loaderBox: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30},
+  loaderBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
   errorText: {
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
@@ -194,16 +247,33 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#ECECEC',
     shadowColor: '#9F9D9D',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  detailIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: Colors.lightOrange,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   videoTitle: {
+    flex: 1,
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
     color: Colors.darkButton,
+    lineHeight: 20,
   },
   videoDesc: {
     fontFamily: Fonts.regular,
@@ -214,14 +284,33 @@ const styles = StyleSheet.create({
   },
   metaRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12},
   metaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     backgroundColor: Colors.lightestGray,
     borderRadius: 50,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   metaChipText: {
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
     color: Colors.darkGray,
+  },
+  detailDivider: {
+    height: 1,
+    backgroundColor: '#ECECEC',
+    marginVertical: 12,
+  },
+  updatedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  updatedText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: Colors.gray,
   },
 });

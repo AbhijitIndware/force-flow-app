@@ -1,7 +1,8 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -24,7 +25,11 @@ import {
   useGetUserManualQuery,
 } from '../../features/user-manual/user-manual-api';
 import ReusableDropdown from '../../components/ui-lib/resusable-dropdown';
-import {UserManualCategory, UserManualVideo} from '../../types/userManualType';
+import {
+  UserManualCategory,
+  UserManualSection,
+  UserManualVideo,
+} from '../../types/userManualType';
 import {SoAppStackParamList} from '../../types/Navigation';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -51,16 +56,27 @@ const UserManualScreen = ({navigation}: Props) => {
     return () => clearTimeout(t);
   }, [search]);
 
-  const {data: categoriesData} = useGetManualCategoriesQuery(undefined);
-  console.log('🚀 ~ UserManualScreen ~ categoriesData:', categoriesData);
+  const {data: categoriesData, refetch: refetchCategories} =
+    useGetManualCategoriesQuery(undefined);
 
-  const {data: manualData, isFetching: manualLoading} = useGetUserManualQuery({
+  const {
+    data: manualData,
+    isLoading: manualInitialLoading,
+    isFetching: manualLoading,
+    refetch: refetchManual,
+  } = useGetUserManualQuery({
     category:
       selectedCategory === ALL_CATEGORIES ? undefined : selectedCategory,
     language: selectedLanguage,
     search: debouncedSearch || undefined,
   });
-  console.log('🚀 ~ UserManualScreen ~ manualData:', manualData);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.allSettled([refetchManual(), refetchCategories()]);
+    setRefreshing(false);
+  }, [refetchManual, refetchCategories]);
 
   // Normalize the categories endpoint across plausible response shapes.
   const rawCategoriesData = categoriesData as unknown as
@@ -78,8 +94,11 @@ const UserManualScreen = ({navigation}: Props) => {
     ? (rawCategories as UserManualCategory[])
     : [];
 
-  const sections = manualData?.data?.sections ?? [];
-  const languages = manualData?.data?.languages ?? [];
+  const rawManual = manualData as unknown as Record<string, any> | undefined;
+  const sections: UserManualSection[] =
+    rawManual?.data?.sections ?? rawManual?.message?.data?.sections ?? [];
+  const languages: string[] =
+    rawManual?.data?.languages ?? rawManual?.message?.data?.languages ?? [];
 
   // Fall back to categories derived from the manual's own sections so the
   // chips/dropdown still populate if the categories endpoint is empty.
@@ -97,12 +116,13 @@ const UserManualScreen = ({navigation}: Props) => {
     ...apiCategories,
     ...sectionCategories,
   ];
-  console.log('🚀 ~ UserManualScreen ~ categories:', categories);
 
-  const openVideo = (video: UserManualVideo) =>
-    navigation.navigate('UserManualVideoScreen', {video});
+  const openVideo = (video: UserManualVideo) => {
+    return navigation.navigate('UserManualVideoScreen', {video});
+  };
 
-  const activeManualLoading = manualLoading || debouncedSearch !== search;
+  const activeManualLoading =
+    (manualLoading && !refreshing) || debouncedSearch !== search;
 
   return (
     <SafeAreaView style={[flexCol, styles.safeArea]}>
@@ -114,10 +134,23 @@ const UserManualScreen = ({navigation}: Props) => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        nestedScrollEnabled={true}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}>
+      {manualInitialLoading ? (
+        <View style={styles.fullLoaderBox}>
+          <ActivityIndicator size="large" color={Colors.orange} />
+        </View>
+      ) : (
+        <ScrollView
+          nestedScrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.orange]}
+              tintColor={Colors.orange}
+            />
+          }
+          contentContainerStyle={styles.content}>
         {/* Search + category */}
         <View style={styles.searchRow}>
           <View style={styles.searchBox}>
@@ -291,11 +324,11 @@ const UserManualScreen = ({navigation}: Props) => {
               </View>
               <View style={styles.sectionHeaderText}>
                 <Text style={styles.sectionTitle}>{section.category_name}</Text>
-                {section.description ? (
+                {/* {section.description ? (
                   <Text style={styles.sectionDesc} numberOfLines={2}>
                     {section.description}
                   </Text>
-                ) : null}
+                ) : null} */}
               </View>
               {section.video_count > 0 && (
                 <Text style={styles.sectionCount}>{section.video_count}</Text>
@@ -325,11 +358,11 @@ const UserManualScreen = ({navigation}: Props) => {
                     <Text style={styles.videoTitle} numberOfLines={1}>
                       {video.title}
                     </Text>
-                    {video.description ? (
+                    {/* {video.description ? (
                       <Text style={styles.videoDesc} numberOfLines={1}>
                         {video.description}
                       </Text>
-                    ) : null}
+                    ) : null} */}
                     <View style={styles.videoMetaRow}>
                       {video.duration ? (
                         <Text style={styles.videoMeta}>{video.duration}</Text>
@@ -358,6 +391,7 @@ const UserManualScreen = ({navigation}: Props) => {
           </View>
         ))}
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -460,6 +494,7 @@ const styles = StyleSheet.create({
   },
   chipCountTextActive: {color: Colors.white},
   loaderBox: {paddingVertical: 30, alignItems: 'center'},
+  fullLoaderBox: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   emptyBox: {alignItems: 'center', paddingVertical: 50, gap: 6},
   emptyTitle: {
     fontFamily: Fonts.semiBold,
