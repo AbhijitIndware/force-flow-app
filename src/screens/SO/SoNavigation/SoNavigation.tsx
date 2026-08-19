@@ -52,6 +52,8 @@ import NotificationListScreen from '../../NotificationListScreen';
 import CreatePromoterShiftScreen from '../HomeScreen/CreatePromoterShiftScreen';
 import PromoterShiftsScreen from '../HomeScreen/PromoterShiftsScreen';
 import PromoterDayDetailScreen from '../HomeScreen/PromoterDayDetailScreen';
+import UserManualScreen from '../../UserManualScreen/UserManualScreen';
+import UserManualVideoScreen from '../../UserManualScreen/UserManualVideoScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -323,6 +325,16 @@ const SoNavigation = () => {
       <Stack.Screen
         name="PromoterDayDetailScreen"
         component={PromoterDayDetailScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="UserManualScreen"
+        component={UserManualScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="UserManualVideoScreen"
+        component={UserManualVideoScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

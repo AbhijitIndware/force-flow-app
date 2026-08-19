@@ -23,6 +23,7 @@ import {
     LogOut,
     ChevronRight,
 } from 'lucide-react-native';
+import UserManualCard from '../../../components/ui-lib/user-manual-card';
 import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
@@ -144,6 +145,14 @@ const DistributorProfileScreen = ({ navigation }: any) => {
                         <InfoRow icon={Globe} label="Zone" value={distributor?.zone} />
                     </Section>
                 </View>
+                {/* ── User Manual Card ── */}
+                <View style={styles.manualCardWrap}>
+                    <UserManualCard
+                        onPress={() => navigation.navigate('UserManualScreen')}
+                        accent={THEME.primary}
+                        accentBg={THEME.primaryLight}
+                    />
+                </View>
                 {/* ── High-Visibility Logout Card ── */}
                 <TouchableOpacity
                     style={styles.logoutCard}
@@ -249,7 +258,11 @@ const styles = StyleSheet.create({
     },
     chipText: { fontSize: 12, color: THEME.primary, fontFamily: Fonts.semiBold },
 
-    infoWrapper: { gap: 16 }, logoutCard: {
+    infoWrapper: { gap: 16 },
+    manualCardWrap: {
+        marginTop: 20,
+    },
+    logoutCard: {
         marginTop: 24,
         backgroundColor: THEME.white,
         borderRadius: 20,

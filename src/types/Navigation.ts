@@ -1,4 +1,5 @@
 import {PjpDailyStore} from './baseType';
+import {UserManualVideo} from './userManualType';
 
 //Stack ParamList Type
 export type MainNavigationStackParamList = {
@@ -7,6 +8,8 @@ export type MainNavigationStackParamList = {
   LoginScreen: undefined;
   SignupScreen: undefined;
   DistributorNavigation: undefined;
+  UserManualScreen: undefined;
+  UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
 };
 export type PromoterAppStackParamList = {
   Home: undefined;
@@ -27,6 +30,8 @@ export type PromoterAppStackParamList = {
   AddStoreActivityScreen: undefined;
   ProfileScreen: undefined;
   NotificationListScreen: undefined;
+  UserManualScreen: undefined;
+  UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
 };
 export type DistributorAppStackParamList = {
   DistributorHome: undefined;
@@ -37,6 +42,8 @@ export type DistributorAppStackParamList = {
   PurchaseOrderDetailScreen: {order_id?: string};
   DeliveryNoteDetailScreen: {id: string};
   NotificationListScreen: undefined;
+  UserManualScreen: undefined;
+  UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
 };
 export type SoAppStackParamList = {
   Home: undefined;
@@ -111,6 +118,8 @@ export type SoAppStackParamList = {
   CreatePromoterShiftScreen: undefined;
   PromoterShiftsScreen: undefined;
   PromoterDayDetailScreen: {employee?: string; date?: string} | undefined;
+  UserManualScreen: undefined;
+  UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
 };
 
 export type menuType = {

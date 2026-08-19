@@ -5,6 +5,8 @@ import {MainNavigationStackParamList} from '../../types/Navigation';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
+import UserManualScreen from '../UserManualScreen/UserManualScreen';
+import UserManualVideoScreen from '../UserManualScreen/UserManualVideoScreen';
 import {useAppDispatch, useAppSelector} from '../../store/hook';
 import {
   Text,
@@ -147,6 +149,11 @@ const AuthStackNavigator = ({insets}: any) => (
       initialRouteName="LoginScreen">
       <AuthStack.Screen name="LoginScreen" component={LoginScreen} />
       <AuthStack.Screen name="SignupScreen" component={SignupScreen} />
+      <AuthStack.Screen name="UserManualScreen" component={UserManualScreen} />
+      <AuthStack.Screen
+        name="UserManualVideoScreen"
+        component={UserManualVideoScreen}
+      />
     </AuthStack.Navigator>
   </View>
 );

@@ -17,7 +17,8 @@ import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
-import {Eye, EyeOff, Lock, LogIn, UserRound} from 'lucide-react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {Eye, EyeOff, Lock, LogIn, UserRound, BookOpen} from 'lucide-react-native';
 import {useLoginMutation} from '../../features/auth/auth';
 import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
 import {getFcmToken} from '../../utils/fcm';
@@ -25,11 +26,18 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {loginSchema} from '../../types/schema';
 import {APP_VERSION} from '../../utils/utils';
+import {MainNavigationStackParamList} from '../../types/Navigation';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 const {width} = Dimensions.get('window');
 
 let initial = {usr: '', pwd: ''};
 
-const LoginScreen = () => {
+type NavigationProp = NativeStackNavigationProp<
+  MainNavigationStackParamList,
+  'LoginScreen'
+>;
+
+const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
   const [login, {isLoading}] = useLoginMutation();
   const [registerFcmToken] = useRegisterFcmTokenMutation();
   const [secureText, setSecureText] = useState(true);
@@ -203,6 +211,17 @@ const LoginScreen = () => {
           </View>
         </View>
         <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.manualLink}
+            onPress={() => navigation.navigate('UserManualScreen')}>
+            <BookOpen strokeWidth={1.8} color={Colors.orange} size={16} />
+            <Text style={styles.manualLinkText}>Check the user manual</Text>
+            <Ionicons
+              name="chevron-forward-outline"
+              size={16}
+              color={Colors.orange}
+            />
+          </TouchableOpacity>
           <Image
             source={require('../../assets/images/brand.png')}
             resizeMode="contain"
@@ -267,6 +286,23 @@ const styles = StyleSheet.create({
   footerLogoImage: {
     width: width * 0.3,
     height: 40,
+  },
+  manualLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.white,
+    borderRadius: 50,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    marginBottom: 18,
+    borderWidth: 1,
+    borderColor: '#FFE3C7',
+  },
+  manualLinkText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
   },
   LoginBody: {
     backgroundColor: Colors.orange,

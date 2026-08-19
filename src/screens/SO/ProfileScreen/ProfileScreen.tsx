@@ -20,6 +20,7 @@ import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {CirclePower} from 'lucide-react-native';
 import {Divider} from '@rneui/themed';
+import UserManualCard from '../../../components/ui-lib/user-manual-card';
 import {useAppDispatch, useAppSelector} from '../../../store/hook';
 import {logout} from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
@@ -352,6 +353,11 @@ const ProfileScreen = ({navigation}: Props) => {
                 </Text>
               </View>
             </View>
+            <View style={styles.manualCardWrap}>
+              <UserManualCard
+                onPress={() => navigation.navigate('UserManualScreen')}
+              />
+            </View>
             <TouchableOpacity
               style={styles.checkinButton}
               onPress={() => handleLogout()}>
@@ -408,6 +414,9 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.white,
     lineHeight: 22,
+  },
+  manualCardWrap: {
+    marginTop: 20,
   },
   //header-box-section css start
   headerSec: {

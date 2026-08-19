@@ -1,18 +1,26 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { BaggageClaim, CalendarPlus, CalendarRange, FilePlus2, Hotel, Package } from 'lucide-react-native';
-import { Divider } from '@rneui/themed';
-import { Colors } from '../../../utils/colors';
-import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
-import { useAppSelector } from '../../../store/hook';
+import {
+  BaggageClaim,
+  BookOpen,
+  CalendarPlus,
+  CalendarRange,
+  FilePlus2,
+  Hotel,
+  Package,
+} from 'lucide-react-native';
+import {Divider} from '@rneui/themed';
+import {Colors} from '../../../utils/colors';
+import {Fonts} from '../../../constants';
+import {Size} from '../../../utils/fontSize';
+import {useAppSelector} from '../../../store/hook';
 
 interface QuickLinksProps {
   navigation: any;
 }
 
-export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
+export const QuickLinks: React.FC<QuickLinksProps> = ({navigation}) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
@@ -20,11 +28,11 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
     employee?.designation === 'Sales Officer' ||
     employee?.designation === 'ISR';
   return (
-    <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
+    <View style={[styles.LinkSection, {paddingVertical: 15, marginTop: 10}]}>
       <Text
         style={[
           styles.SectionHeading,
-          { marginBottom: 10, paddingHorizontal: 20 },
+          {marginBottom: 10, paddingHorizontal: 20},
         ]}>
         Quick links
       </Text>
@@ -44,7 +52,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <FilePlus2 strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Add PJP</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+        <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
           <Ionicons
             name="chevron-forward-outline"
             size={12}
@@ -55,7 +63,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
       <Divider
         width={1}
         color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+        style={{marginBottom: 10, borderStyle: 'dashed'}}
       />
       <TouchableOpacity
         onPress={() => navigation.navigate('AddStoreScreen')}
@@ -73,7 +81,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <Hotel strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Add Store</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+        <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
           <Ionicons
             name="chevron-forward-outline"
             size={12}
@@ -84,11 +92,11 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
       <Divider
         width={1}
         color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+        style={{marginBottom: 10, borderStyle: 'dashed'}}
       />
       <TouchableOpacity
         style={styles.IconlinkBox}
-        onPress={() => navigation.navigate('OrdersScreen', { index: 0 })}>
+        onPress={() => navigation.navigate('OrdersScreen', {index: 0})}>
         <View
           style={[
             styles.iconbox,
@@ -102,7 +110,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <BaggageClaim strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Orders</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+        <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
           <Ionicons
             name="chevron-forward-outline"
             size={12}
@@ -113,7 +121,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
       <Divider
         width={1}
         color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+        style={{marginBottom: 10, borderStyle: 'dashed'}}
       />
       <TouchableOpacity
         onPress={() => navigation.navigate('AddDistributorScreen')}
@@ -131,7 +139,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <Package strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Add Distributor</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+        <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
           <Ionicons
             name="chevron-forward-outline"
             size={12}
@@ -142,7 +150,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
       <Divider
         width={1}
         color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
+        style={{marginBottom: 10, borderStyle: 'dashed'}}
       />
       {!isSoOrIsr && (
         <>
@@ -162,7 +170,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
               <CalendarPlus strokeWidth={2} color={Colors.white} size={20} />
             </View>
             <Text style={styles.linkTitle}>Create Promoter Shift</Text>
-            <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+            <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
               <Ionicons
                 name="chevron-forward-outline"
                 size={12}
@@ -173,7 +181,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
           <Divider
             width={1}
             color={Colors.lightGray}
-            style={{ marginBottom: 10, borderStyle: 'dashed' }}
+            style={{marginBottom: 10, borderStyle: 'dashed'}}
           />
           <TouchableOpacity
             onPress={() => navigation.navigate('PromoterShiftsScreen')}
@@ -191,7 +199,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
               <CalendarRange strokeWidth={2} color={Colors.white} size={20} />
             </View>
             <Text style={styles.linkTitle}>Promoter Shifts</Text>
-            <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+            <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
               <Ionicons
                 name="chevron-forward-outline"
                 size={12}
@@ -199,14 +207,43 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
               />
             </View>
           </TouchableOpacity>
+          <Divider
+            width={1}
+            color={Colors.lightGray}
+            style={{marginBottom: 10, borderStyle: 'dashed'}}
+          />
         </>
       )}
+      {/* <TouchableOpacity
+        onPress={() => navigation.navigate('UserManualScreen')}
+        style={styles.IconlinkBox}>
+        <View
+          style={[
+            styles.iconbox,
+            {
+              width: 35,
+              height: 35,
+              borderRadius: 10,
+              backgroundColor: Colors.darkButton,
+            },
+          ]}>
+          <BookOpen strokeWidth={2} color={Colors.white} size={20} />
+        </View>
+        <Text style={styles.linkTitle}>Check the user manual</Text>
+        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+          <Ionicons
+            name="chevron-forward-outline"
+            size={12}
+            color={Colors.darkButton}
+          />
+        </View>
+      </TouchableOpacity> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  LinkSection: { backgroundColor: Colors.white },
+  LinkSection: {backgroundColor: Colors.white},
   SectionHeading: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.md,

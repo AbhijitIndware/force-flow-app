@@ -516,7 +516,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                 color={Colors.lightGray}
                 style={{borderStyle: 'dashed'}}
               />
-              <TouchableOpacity style={styles.listLink}>
+              <TouchableOpacity
+                style={styles.listLink}
+                onPress={() => navigation.navigate('UserManualScreen')}>
                 <View style={styles.linkIconBox}>
                   <BookOpen strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
