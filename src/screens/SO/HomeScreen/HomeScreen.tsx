@@ -62,6 +62,7 @@ import {YearPickerModal} from '../../../components/SO/HomeScreen/YearPickerModal
 import {BookOpen} from 'lucide-react-native';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import {useGetProfileDataQuery} from '../../../features/auth/auth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -118,6 +119,15 @@ const HomeScreen = ({navigation}: Props) => {
   const isSoOrIsr =
     employee?.designation === 'Sales Officer' ||
     employee?.designation === 'ISR';
+
+  // Fetch the full employee profile by id so the header greeting and stats
+  // show the latest details even after a cold start (authSlice.employee is
+  // restored with only zone/designation).
+  const empId = useAppSelector(s => s.persistedReducer.authSlice.empId);
+  useGetProfileDataQuery(
+    {emp_id: empId as string},
+    {refetchOnMountOrArgChange: true, refetchOnFocus: true, skip: !empId},
+  );
   const selectedStore = useAppSelector(
     s => s.persistedReducer.pjpSlice.selectedStore,
   );

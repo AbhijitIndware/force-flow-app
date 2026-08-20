@@ -31,6 +31,8 @@ import {
 } from './src/utils/fcm';
 import {navigationRef, navigate} from './src/utils/navigationRef';
 import {fcmApi} from './src/features/fcm/fccm-api';
+import {restoreSession} from './src/features/auth/auth';
+import {loadSecureSession} from './src/utils/secureStorage';
 
 function handleNotificationPress(data: Record<string, any>) {
   if (!data?.type) return;
@@ -76,9 +78,20 @@ notifee.onBackgroundEvent(async ({type, detail}) => {
 });
 
 function App(): React.JSX.Element {
+  const [sessionRestored, setSessionRestored] = React.useState(false);
+
   useEffect(() => {
     requestFCMPermission();
     createNotificationChannel();
+
+    // Restore the session (sid + api credentials) from the secure Keychain
+    // before the navigation tree mounts. authSlice is no longer persisted to
+    // AsyncStorage, so this is the only cold-start source of truth.
+    (async () => {
+      const session = await loadSecureSession();
+      store.dispatch(restoreSession(session));
+      setSessionRestored(true);
+    })();
 
     // Handle notification tap when app was opened from a killed state
     getInitialNotification(firebaseMessaging).then(remoteMessage => {
@@ -159,7 +172,7 @@ function App(): React.JSX.Element {
                   barStyle={isDarkMode ? 'light-content' : 'dark-content'}
                 />
                 <DisclaimerModal />
-                <MainNavigation />
+                {sessionRestored ? <MainNavigation /> : <FullScreenLoader />}
               </NavigationContainer>
             </View>
           </PaperProvider>

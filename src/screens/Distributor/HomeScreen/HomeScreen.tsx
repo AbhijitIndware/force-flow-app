@@ -40,6 +40,7 @@ import {
   useGetPendingCountsQuery,
   useGetPurchaseOrdersListQuery,
 } from '../../../features/base/distributor-api';
+import {useGetProfileDataQuery} from '../../../features/auth/auth';
 import {DistributorAppStackParamList} from '../../../types/Navigation';
 
 const {width} = Dimensions.get('window');
@@ -181,6 +182,18 @@ const DistributorHomeScreen = ({navigation}: Props) => {
     state => (state?.persistedReducer as any)?.authSlice?.distributor,
   );
 
+  // Fetch the full employee profile by id so the greeting shows the latest
+  // details even after a cold start (authSlice.employee is restored with only
+  // zone/designation).
+  const empId = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.empId,
+  );
+  const {data: profileData} = useGetProfileDataQuery(
+    {emp_id: empId as string},
+    {refetchOnMountOrArgChange: true, skip: !empId},
+  );
+  const profileEmployee = profileData?.message?.employee;
+
   // ── API Calls ──────────────────────────────────────────────────────────────
   const {
     data: dashboardData,
@@ -252,7 +265,9 @@ const DistributorHomeScreen = ({navigation}: Props) => {
                 <Text style={styles.welcomeText}>
                   Welcome back,{'\n'}
                   <Text style={styles.name}>
-                    {distributor?.distributor_name ?? 'Distributor'}
+                    {distributor?.distributor_name ??
+                      profileEmployee?.full_name ??
+                      'Distributor'}
                   </Text>
                 </Text>
                 <View style={styles.metaRow}>

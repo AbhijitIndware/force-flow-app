@@ -11,7 +11,7 @@ import {
 // headers are attached and a 401 never triggers the logout flow.
 const userManualBaseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
-  credentials: 'include',
+  credentials: 'omit',
 });
 
 export const userManualApi = createApi({

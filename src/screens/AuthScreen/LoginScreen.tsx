@@ -20,6 +20,7 @@ import Input from '@rneui/themed/dist/Input';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Eye, EyeOff, Lock, LogIn, UserRound, BookOpen} from 'lucide-react-native';
 import {useLoginMutation} from '../../features/auth/auth';
+import {saveSecureSession} from '../../utils/secureStorage';
 import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
 import {getFcmToken} from '../../utils/fcm';
 import Toast from 'react-native-toast-message';
@@ -58,6 +59,19 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
           };
           let res = await login({data: payload}).unwrap();
           if (res?.message?.success) {
+            const m = res.message;
+            // Persist only session credentials to the secure Keychain. Full
+            // profile PII stays in memory (Redux) and is never written to
+            // AsyncStorage.
+            await saveSecureSession({
+              sid: m.user?.sid ?? '',
+              emp_id: m.employee?.id,
+              api_key: m.api_credentials?.api_key,
+              api_secret: m.api_credentials?.api_secret,
+              zone: m.employee?.zone,
+              designation: m.employee?.designation,
+              user: m.user ?? null,
+            });
             Toast.show({
               type: 'success',
               text1: `✅ ${res?.message?.message}`,

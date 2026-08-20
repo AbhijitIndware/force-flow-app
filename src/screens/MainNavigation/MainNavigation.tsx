@@ -20,7 +20,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
   useCheckSessionQuery,
   setSessionExpired,
-  logout,
+  performLogout,
 } from '../../features/auth/auth';
 import DistributorNavigation from '../Distributor/DistributorNavigation/DistributorNavigation';
 import NetInfo from '@react-native-community/netinfo';
@@ -84,7 +84,7 @@ const MainNavigation = () => {
       // Small delay so the user can read the banner before being logged out
       const timer = setTimeout(() => {
         dispatch(setSessionExpired(false));
-        dispatch(logout());
+        dispatch(performLogout());
       }, 3000);
       return () => clearTimeout(timer);
     }

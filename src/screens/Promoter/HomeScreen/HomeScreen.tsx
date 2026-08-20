@@ -37,6 +37,7 @@ import {
   useGetPromoterHomeQuery,
   usePromoterStatusQuery,
 } from '../../../features/base/promoter-base-api';
+import {useGetProfileDataQuery} from '../../../features/auth/auth';
 import {useAppSelector} from '../../../store/hook';
 import {
   IPromoterHomeData,
@@ -124,6 +125,18 @@ const HomeScreen = ({navigation, route}: Props) => {
   );
   console.log('🚀 ~ HomeScreen ~ statusData:', statusData);
 
+  // Fetch the full employee profile by id so the greeting shows the latest
+  // employee details even after a cold start (authSlice.employee is restored
+  // with only zone/designation).
+  const empId = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.empId,
+  );
+  const {data: profileData} = useGetProfileDataQuery(
+    {emp_id: empId as string},
+    {refetchOnMountOrArgChange: true, skip: !empId},
+  );
+  const profileEmployee = profileData?.message?.employee;
+
   const homeData = data?.message?.data;
   const attendance = homeData?.attendance;
   const target = homeData?.target;
@@ -174,7 +187,9 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <View style={styles.greetingRow}>
                   <Text style={styles.welcomeText}>
                     Hello{' '}
-                    <Text style={styles.name}>{employee?.employee_name}</Text>
+                    <Text style={styles.name}>
+                      {profileEmployee?.full_name || employee?.employee_name}
+                    </Text>
                   </Text>
                   <View style={styles.dateBox}>
                     <Text style={styles.dateText}>

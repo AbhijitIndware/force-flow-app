@@ -31,7 +31,7 @@ import { Size } from '../../../utils/fontSize';
 import { DistributorInfo } from '../../../types/distributorType';
 import { APP_VERSION } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
-import { logout } from '../../../features/auth/auth';
+import { performLogout } from '../../../features/auth/auth';
 import { baseApi } from '../../../features/base/base-api';
 import { dropdownApi } from '../../../features/dropdown/dropdown-api';
 import { persistor } from '../../../store/store';
@@ -85,7 +85,7 @@ const DistributorProfileScreen = ({ navigation }: any) => {
 
     const handleLogout = () => {
         Toast.show({ type: 'success', text1: 'Logged out successfully' });
-        dispatch(logout());
+        dispatch(performLogout());
         dispatch(baseApi.util.resetApiState());
         dispatch(dropdownApi.util.resetApiState());
         persistor.purge();

@@ -17,6 +17,9 @@ import { userManualApi } from '../features/user-manual/user-manual-api';
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
+  // Never persist authentication state (sid, api_key/api_secret, user PII) to
+  // AsyncStorage. Credentials live in the secure Keychain instead.
+  blacklist: ['authSlice'],
 };
 
 const authReducer = combineReducers({

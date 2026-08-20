@@ -22,7 +22,7 @@ import {CirclePower} from 'lucide-react-native';
 import {Divider} from '@rneui/themed';
 import UserManualCard from '../../../components/ui-lib/user-manual-card';
 import {useAppDispatch, useAppSelector} from '../../../store/hook';
-import {logout} from '../../../features/auth/auth';
+import {performLogout} from '../../../features/auth/auth';
 import Toast from 'react-native-toast-message';
 import {persistor} from '../../../store/store';
 import {baseApi} from '../../../features/base/base-api';
@@ -63,7 +63,7 @@ const ProfileScreen = ({navigation}: Props) => {
       text1: '🔒 Logout successful',
       position: 'top',
     });
-    dispatch(logout());
+    dispatch(performLogout());
     dispatch(baseApi.util.resetApiState()); // clear RTK Query cache
     dispatch(dropdownApi.util.resetApiState()); // clear RTK Query cache
     persistor.purge();

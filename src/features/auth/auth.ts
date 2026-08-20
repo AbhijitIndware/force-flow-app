@@ -1,6 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
-import { createSlice } from '@reduxjs/toolkit';
-import { apiBaseUrl } from '../apiBaseUrl.js';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { baseQueryWithAuthGuard } from '../utility';
 import {
   ApiCredentials,
@@ -11,6 +10,7 @@ import {
   RLogin,
 } from '../../types/authType';
 import { Distributor } from '../../types/baseType.js';
+import { clearSecureSession, SecureSession } from '../../utils/secureStorage';
 
 //Auth api calling
 export const authApi = createApi({
@@ -33,7 +33,7 @@ export const authApi = createApi({
     }),
     getProfileData: builder.query<EmployeeProfileResponse, { emp_id: string }>({
       query: ({ emp_id }) => ({
-        url: `/method/salesforce_management.mobile_app_apis.authentications.profile.profile_data`,
+        url: '/method/salesforce_management.mobile_app_apis.authentications.profile.profile_data',
         method: 'GET',
         params: {
           emp_id,
@@ -92,6 +92,20 @@ export const authSlice = createSlice({
     setGlobalError: (state, action) => {
       state.globalError = action.payload;
     },
+    restoreSession: (state, action) => {
+      const session = action.payload as SecureSession | null;
+      state.sId = session?.sid ?? null;
+      state.api_credentials =
+        session?.api_key && session?.api_secret
+          ? { api_key: session.api_key, api_secret: session.api_secret }
+          : null;
+      state.empId = session?.emp_id ?? null;
+      state.user = session?.user ?? null;
+      state.employee =
+        session?.zone || session?.designation
+          ? ({ zone: session.zone, designation: session.designation } as unknown as Employee)
+          : null;
+    },
   },
   extraReducers: builder => {
     builder
@@ -138,7 +152,19 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logout, setSessionExpired, setGlobalError } = authSlice.actions;
+export const { logout, setSessionExpired, setGlobalError, restoreSession } =
+  authSlice.actions;
 export default authSlice.reducer;
+
+// Async logout: clears Keychain (secure storage) before resetting in-memory
+// Redux state. Used by profile screens and on session expiry.
+export const performLogout = createAsyncThunk(
+  'authSlice/performLogout',
+  async (_, thunkAPI) => {
+    await clearSecureSession();
+    thunkAPI.dispatch(logout());
+  },
+);
+
 export const { useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery } =
   authApi;

@@ -95,6 +95,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
+  console.log('🚀 ~ AddSaleScreen ~ user:', user);
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
@@ -102,6 +103,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const [addSalesOrder] = useCreateSalesOrderWithStockMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
   const [triggerStoreFetch, {data: storeData}] = useLazyGetDailyStoreQuery();
+  console.log('🚀 ~ AddSaleScreen ~ storeData:', storeData);
   const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });
@@ -162,7 +164,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           actions.resetForm();
           seededWarehouseRef.current = null;
           setSeededCount(0);
-          navigation.navigate('OrdersScreen', {index: 0});
+          navigation.replace('OrdersScreen', {index: 0});
         } else {
           Toast.show({
             type: 'error',
@@ -288,7 +290,9 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     value: store.warehouse_id,
     label: getStoreLabel(store),
     outstanding_amount: store.outstanding_amount,
-    imageUrl: store.store_image ? `${imageBaseUrl}${store.store_image}` : undefined,
+    imageUrl: store.store_image
+      ? `${imageBaseUrl}${store.store_image}`
+      : undefined,
   }));
 
   if (orderId && isFetching) {
