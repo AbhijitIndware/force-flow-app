@@ -23,6 +23,8 @@ import {flexCol} from '../../../utils/styles';
 import {Switch} from 'react-native';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
 import {AUTO_TA_THRESHOLD} from '../../../types/schema';
+import Toast from 'react-native-toast-message';
+import {validateFile} from '../../../utils/uploadValidation';
 
 interface Props {
   values: Record<string, string | any>;
@@ -104,6 +106,19 @@ const AddExpenseItemV2: React.FC<Props> = ({
 
       const {uri, name, type} = doc[0];
 
+      const validation = validateFile(
+        {name, type, size: doc[0].size},
+        {allowPdf: true},
+      );
+      if (!validation.valid) {
+        Toast.show({
+          type: 'error',
+          text1: `Attachment rejected: ${validation.reason}`,
+          position: 'top',
+        });
+        return;
+      }
+
       setFieldValue('attachment', {
         uri,
         name,
@@ -128,6 +143,20 @@ const AddExpenseItemV2: React.FC<Props> = ({
     }
 
     const asset = result.assets[0];
+
+    const validation = validateFile({
+      name: asset.fileName,
+      type: asset.type,
+      size: asset.fileSize,
+    });
+    if (!validation.valid) {
+      Toast.show({
+        type: 'error',
+        text1: `Attachment rejected: ${validation.reason}`,
+        position: 'top',
+      });
+      return;
+    }
 
     setFieldValue('attachment', {
       uri: asset.uri,

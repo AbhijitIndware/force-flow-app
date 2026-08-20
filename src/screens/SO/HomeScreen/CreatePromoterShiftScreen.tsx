@@ -261,7 +261,6 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
     try {
       const res = await createShiftAssignment(payload).unwrap();
-      console.log('🚀 ~ handleSubmit ~ res:', res);
       if (res?.message?.success) {
         const created = res.message.data;
         Toast.show({

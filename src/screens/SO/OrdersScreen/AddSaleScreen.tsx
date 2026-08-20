@@ -95,7 +95,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const user = useAppSelector(
     state => state?.persistedReducer?.authSlice?.user,
   );
-  console.log('🚀 ~ AddSaleScreen ~ user:', user);
   const selectedStore = useAppSelector(
     state => state?.persistedReducer?.pjpSlice?.selectedStore,
   );
@@ -103,7 +102,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const [addSalesOrder] = useCreateSalesOrderWithStockMutation();
   const [updateSaleOrder] = useUpdateSaleOrderMutation();
   const [triggerStoreFetch, {data: storeData}] = useLazyGetDailyStoreQuery();
-  console.log('🚀 ~ AddSaleScreen ~ storeData:', storeData);
   const {data: salesDetails, isFetching} = useGetSalesOrderByIdQuery(orderId, {
     skip: orderId === null || orderId === undefined,
   });

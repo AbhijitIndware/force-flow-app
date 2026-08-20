@@ -123,7 +123,6 @@ const HomeScreen = ({navigation, route}: Props) => {
       refetchOnMountOrArgChange: true,
     },
   );
-  console.log('🚀 ~ HomeScreen ~ statusData:', statusData);
 
   // Fetch the full employee profile by id so the greeting shows the latest
   // employee details even after a cold start (authSlice.employee is restored

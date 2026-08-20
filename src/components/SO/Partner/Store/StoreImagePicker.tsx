@@ -14,6 +14,8 @@ import { Upload, X, Plus } from 'lucide-react-native';
 import { pick } from '@react-native-documents/picker';
 import { launchCamera } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
+import Toast from 'react-native-toast-message';
+import { validateFile } from '../../../../utils/uploadValidation';
 
 interface StoreImageValue {
   mime: string;
@@ -41,6 +43,18 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
       if (!docs?.length) return;
       const doc = docs[0];
       const base64 = await convertToBase64(doc.uri);
+      const validation = validateFile(
+        { name: doc.name, type: doc.type, size: doc.size },
+        { allowPdf: false, base64Data: base64 },
+      );
+      if (!validation.valid) {
+        Toast.show({
+          type: 'error',
+          text1: `Image rejected: ${validation.reason}`,
+          position: 'top',
+        });
+        return;
+      }
       setPreviewUri(doc.uri);
       onChange({ mime: doc.type || 'image/jpeg', data: base64 });
     } catch (err) {
@@ -54,6 +68,18 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
+    const validation = validateFile(
+      { name: asset.fileName, type: asset.type, size: asset.fileSize },
+      { allowPdf: false, base64Data: base64 },
+    );
+    if (!validation.valid) {
+      Toast.show({
+        type: 'error',
+        text1: `Image rejected: ${validation.reason}`,
+        position: 'top',
+      });
+      return;
+    }
     setPreviewUri(asset.uri!);
     onChange({ mime: asset.type || 'image/jpeg', data: base64 });
   };

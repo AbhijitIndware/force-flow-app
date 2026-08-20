@@ -31,6 +31,8 @@ import { useLazyGetDailyStoreQuery } from '../../../features/dropdown/dropdown-a
 import { useAppSelector } from '../../../store/hook';
 import { useGetDailyPjpListQuery } from '../../../features/base/base-api';
 import { useLazyGetVCDistributorDetailsQuery } from '../../../features/tada/tadaApiv2';
+import Toast from 'react-native-toast-message';
+import { validateFile } from '../../../utils/uploadValidation';
 
 const MAX_IMAGES = 3;
 
@@ -151,10 +153,22 @@ const AddVisibilityComponent = ({
       const newImages: ImageItem[] = [];
 
       for (const doc of selected) {
+        const validation = validateFile(
+          {name: doc.name, type: doc.type, size: doc.size},
+          {allowPdf: false, base64Data: await convertToBase64(doc.uri)},
+        );
+        if (!validation.valid) {
+          Toast.show({
+            type: 'error',
+            text1: `Skipped "${doc.name || 'file'}": ${validation.reason}`,
+            position: 'top',
+          });
+          continue;
+        }
         const base64 = await convertToBase64(doc.uri);
         newUris.push(doc.uri);
         newImages.push({
-          mime: doc.type || 'application/octet-stream',
+          mime: doc.type || 'image/jpeg',
           data: base64,
           source: 'Gallery',
         });
@@ -179,6 +193,18 @@ const AddVisibilityComponent = ({
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
+    const validation = validateFile(
+      {name: asset.fileName, type: asset.type, size: asset.fileSize},
+      {allowPdf: false, base64Data: base64},
+    );
+    if (!validation.valid) {
+      Toast.show({
+        type: 'error',
+        text1: `Image rejected: ${validation.reason}`,
+        position: 'top',
+      });
+      return;
+    }
     appendImage(asset.uri!, {
       mime: asset.type || 'image/jpeg',
       data: base64,

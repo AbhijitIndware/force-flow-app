@@ -23,6 +23,7 @@ import {
   useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
 import { fileToBase64 } from '../../../utils/fileUtils';
+import { validateFile } from '../../../utils/uploadValidation';
 import { useAppSelector } from '../../../store/hook';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
 import { Switch } from 'react-native-paper';
@@ -180,6 +181,18 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
           item.attachment.uri,
           item.attachment.type,
         );
+        const validation = validateFile(
+          {name: item.attachment.name, type: item.attachment.type},
+          {allowPdf: true, base64Data: base64},
+        );
+        if (!validation.valid) {
+          Toast.show({
+            type: 'error',
+            text1: `Attachment rejected: ${validation.reason}`,
+            position: 'top',
+          });
+          return;
+        }
         imageData = { mime: item.attachment.type, data: base64 };
       }
       const rowRes = await addExpenseRow({
