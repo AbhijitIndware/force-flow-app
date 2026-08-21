@@ -71,7 +71,9 @@ export const dailyPjpSchema = Yup.object()
     'stores-or-activities',
     'At least one store or one planned activity is required.',
     function (values) {
-      const hasStores = (values.stores ?? []).some(s => (s as any).store?.trim());
+      const hasStores = (values.stores ?? []).some(s =>
+        (s as any).store?.trim(),
+      );
       const hasActivities = (values.planned_activities ?? []).some(
         (a: any) => a.activity_type?.trim() || a.activity_location?.trim(),
       );
@@ -150,7 +152,7 @@ export const expenseItemSchema = Yup.object().shape({
   attachment: Yup.mixed()
     .nullable()
     .test('attachment-required', 'Attachment is required', function (value) {
-      const { claim_type, amount } = this.parent;
+      const {claim_type, amount} = this.parent;
       const isBike = claim_type === 'TA - Bike (Petrol)';
       const isAuto = claim_type === 'TA - Auto';
       const amountNum = parseFloat(amount) || 0;
@@ -233,7 +235,13 @@ export const visibilityClaimSchema = Yup.object().shape({
   date: Yup.string().required('Date is required'),
 
   images: Yup.array()
-    .of(Yup.object({ mime: Yup.string(), data: Yup.string(), source: Yup.string().oneOf(['Gallery', 'Camera']).optional() }))
+    .of(
+      Yup.object({
+        mime: Yup.string(),
+        data: Yup.string(),
+        source: Yup.string().oneOf(['Gallery', 'Camera']).optional(),
+      }),
+    )
     .min(1, 'At least one image required')
     .max(3)
     .required(),

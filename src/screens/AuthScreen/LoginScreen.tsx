@@ -18,7 +18,14 @@ import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Eye, EyeOff, Lock, LogIn, UserRound, BookOpen} from 'lucide-react-native';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  LogIn,
+  UserRound,
+  BookOpen,
+} from 'lucide-react-native';
 import {useLoginMutation} from '../../features/auth/auth';
 import {saveSecureSession} from '../../utils/secureStorage';
 import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
@@ -27,7 +34,10 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {loginSchema} from '../../types/schema';
 import {APP_VERSION} from '../../utils/utils';
-import {getUserFacingError, getSafeServerMessage} from '../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../utils/errorMessage';
 import {MainNavigationStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 const {width} = Dimensions.get('window');
@@ -96,8 +106,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
         } catch (error: any) {
           Toast.show({
             type: 'error',
-            text1:
-              getUserFacingError(error, 'Internal Server Error'),
+            text1: getUserFacingError(error, 'Internal Server Error'),
             text2: 'Please try again later.',
             position: 'top',
             visibilityTime: 6000,
@@ -156,6 +165,9 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
               keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="username"
+              textContentType="username"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,
@@ -178,10 +190,13 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
             />
             <Input
               secureTextEntry={secureText}
+              contextMenuHidden={true}
               style={styles.inputBox}
               inputStyle={{paddingTop: 15}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
+              autoComplete="password"
+              textContentType="password"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,

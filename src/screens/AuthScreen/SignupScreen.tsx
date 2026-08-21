@@ -16,7 +16,14 @@ import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
-import {EyeOff, Lock, Mail, UserRound, UserRoundPen} from 'lucide-react-native';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  UserRound,
+  UserRoundPen,
+} from 'lucide-react-native';
 const {width} = Dimensions.get('window');
 
 type Props = {
@@ -32,6 +39,52 @@ const SignupScreen = ({navigation, route}: Props) => {
       setRefreshing(false);
     }, 2000);
   }, []);
+
+  // NOTE: this screen has no signup API call wired up anywhere in the
+  // codebase (unlike LoginScreen, which calls useLoginMutation). The fields
+  // below are now controlled and validated locally so the UI isn't
+  // silently discarding what the user types, but submission still just
+  // navigates to HomeScreen. Wire this to a real signup mutation before
+  // treating this screen as production-ready.
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [secureText, setSecureText] = useState(true);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    password?: string;
+  }>({});
+
+  const validate = () => {
+    const nextErrors: {name?: string; email?: string; password?: string} = {};
+    if (!name.trim()) {
+      nextErrors.name = 'Name is required';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      nextErrors.email = 'Email is required';
+    } else if (!emailRegex.test(email)) {
+      nextErrors.email = 'Please enter a valid email address';
+    }
+    if (!password) {
+      nextErrors.password = 'Password is required';
+    } else if (password.length < 8) {
+      nextErrors.password = 'Password must be at least 8 characters';
+    }
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSignup = () => {
+    if (!validate()) {
+      return;
+    }
+    // TODO: replace with a real signup mutation once the backend endpoint
+    // is available. Currently just proceeds to HomeScreen like before.
+    navigation.navigate('HomeScreen');
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -83,6 +136,8 @@ const SignupScreen = ({navigation, route}: Props) => {
               inputStyle={{paddingTop: 18}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
+              autoComplete="name"
+              textContentType="name"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,
@@ -92,6 +147,10 @@ const SignupScreen = ({navigation, route}: Props) => {
                 justifyContent: 'center',
                 margin: 0,
               }}
+              value={name}
+              onChangeText={setName}
+              errorMessage={errors.name}
+              errorStyle={{color: '#FFEFE0', marginBottom: 10}}
               placeholder="Name"
               leftIcon={<UserRound color={Colors.white} />}
             />
@@ -100,6 +159,10 @@ const SignupScreen = ({navigation, route}: Props) => {
               inputStyle={{paddingTop: 18}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              textContentType="emailAddress"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,
@@ -109,15 +172,22 @@ const SignupScreen = ({navigation, route}: Props) => {
                 justifyContent: 'center',
                 margin: 0,
               }}
+              value={email}
+              onChangeText={setEmail}
+              errorMessage={errors.email}
+              errorStyle={{color: '#FFEFE0', marginBottom: 10}}
               placeholder=" E-mail ID"
               leftIcon={<Mail color={Colors.white} />}
             />
             <Input
-              secureTextEntry={true}
+              secureTextEntry={secureText}
+              contextMenuHidden={true}
               style={styles.inputBox}
-              inputStyle={{paddingTop: 18}}
+              inputStyle={{paddingTop: 15}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
+              autoComplete="password-new"
+              textContentType="newPassword"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,
@@ -126,18 +196,25 @@ const SignupScreen = ({navigation, route}: Props) => {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
+              value={password}
+              onChangeText={setPassword}
+              errorMessage={errors.password}
+              errorStyle={{color: '#FFEFE0', marginBottom: 10}}
               placeholder="Password"
               leftIcon={<Lock color={Colors.white} />}
               rightIcon={
-                <TouchableOpacity>
-                  <EyeOff color={Colors.white} />
-                  {/* <Eye color={Colors.white}  /> */}
+                <TouchableOpacity onPress={() => setSecureText(prev => !prev)}>
+                  {secureText ? (
+                    <EyeOff color={Colors.white} />
+                  ) : (
+                    <Eye color={Colors.white} />
+                  )}
                 </TouchableOpacity>
               }
             />
             <TouchableOpacity
               style={styles.checkinButton}
-              onPress={() => navigation.navigate('HomeScreen')}>
+              onPress={handleSignup}>
               <UserRoundPen strokeWidth={1.4} color={Colors.white} />
               <Text style={styles.checkinButtonText}>Sign Up</Text>
             </TouchableOpacity>
