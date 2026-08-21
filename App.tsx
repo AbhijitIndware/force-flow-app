@@ -15,6 +15,7 @@ import DisclaimerModal from './DisclaimerModal';
 import {useNetworkStatus} from './src/hooks/useNetworkStatus';
 import {SlowNetworkBanner} from './src/components/ui-lib/slow-network-banner';
 import BootSplash from 'react-native-bootsplash';
+import {AppErrorBoundary} from './src/components/ui/AppErrorBoundary';
 import {
   getMessaging,
   setBackgroundMessageHandler,
@@ -156,30 +157,32 @@ function App(): React.JSX.Element {
   const networkStatus = useNetworkStatus();
 
   return (
-    <Provider store={store}>
-      <PersistGate loading={<FullScreenLoader />} persistor={persistor}>
-        <SafeAreaProvider>
-          <PaperProvider>
-            <View style={{flex: 1}}>
-              <SlowNetworkBanner
-                isVisible={networkStatus.isSlowNetwork}
-                effectiveType={networkStatus.effectiveType}
-              />
-              <NavigationContainer
-                ref={navigationRef}
-                onReady={() => BootSplash.hide({fade: true})}>
-                <StatusBar
-                  barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+    <AppErrorBoundary>
+      <Provider store={store}>
+        <PersistGate loading={<FullScreenLoader />} persistor={persistor}>
+          <SafeAreaProvider>
+            <PaperProvider>
+              <View style={{flex: 1}}>
+                <SlowNetworkBanner
+                  isVisible={networkStatus.isSlowNetwork}
+                  effectiveType={networkStatus.effectiveType}
                 />
-                <DisclaimerModal />
-                {sessionRestored ? <MainNavigation /> : <FullScreenLoader />}
-              </NavigationContainer>
-            </View>
-          </PaperProvider>
-          <Toast config={toastConfig} />
-        </SafeAreaProvider>
-      </PersistGate>
-    </Provider>
+                <NavigationContainer
+                  ref={navigationRef}
+                  onReady={() => BootSplash.hide({fade: true})}>
+                  <StatusBar
+                    barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+                  />
+                  <DisclaimerModal />
+                  {sessionRestored ? <MainNavigation /> : <FullScreenLoader />}
+                </NavigationContainer>
+              </View>
+            </PaperProvider>
+            <Toast config={toastConfig} />
+          </SafeAreaProvider>
+        </PersistGate>
+      </Provider>
+    </AppErrorBoundary>
   );
 }
 

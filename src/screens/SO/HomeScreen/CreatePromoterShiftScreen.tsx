@@ -33,6 +33,7 @@ import {
   useGetAssignmentOptionsQuery,
   useGetMyPromotersQuery,
 } from '../../../features/base/promoter-base-api';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -274,29 +275,19 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
         Toast.show({
           type: 'error',
           text1: 'Could not create shift',
-          text2: (res?.message as any)?.message || 'Please try again',
+          text2: getSafeServerMessage((res?.message as any)?.message) ?? 'Please try again',
           position: 'top',
         });
       }
     } catch (error: any) {
-      const serverMessage =
-        error?.data?.message?.message ||
-        error?.data?._server_messages ||
-        error?.data?.message ||
-        'Failed to create shift assignment';
-      let messageText = serverMessage;
-      if (typeof serverMessage === 'string' && serverMessage.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(serverMessage);
-          messageText = parsed?.[0]?.message ?? serverMessage;
-        } catch {
-          messageText = serverMessage;
-        }
-      }
+      const messageText = getUserFacingError(
+        error,
+        'Failed to create shift assignment',
+      );
       Toast.show({
         type: 'error',
         text1: 'Could not create shift',
-        text2: String(messageText),
+        text2: messageText,
         position: 'top',
       });
     }

@@ -27,6 +27,7 @@ import {
 } from '../../../features/base/promoter-base-api';
 import {Camera, Trash2, Upload} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -126,7 +127,7 @@ const AddProductFeedbackScreen = ({navigation}: Props) => {
       Toast.show({
         type: 'error',
         text1: 'Submission failed',
-        text2: err?.message ?? 'Something went wrong',
+        text2: getUserFacingError(err, 'Something went wrong'),
       });
     }
   };

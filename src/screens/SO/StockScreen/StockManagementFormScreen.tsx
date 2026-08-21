@@ -28,6 +28,7 @@ import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import { StockDashboardItem } from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -262,7 +263,7 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
     } catch (error: any) {
       Alert.alert(
         'Error',
-        error?.data?.message || 'Failed to update stock. Please try again.',
+        getUserFacingError(error, 'Failed to update stock. Please try again.'),
       );
     }
   };

@@ -29,6 +29,7 @@ import moment from 'moment';
 import { useAppSelector } from '../../../store/hook';
 import { Animated } from 'react-native';
 import AddMarketForm from '../../../components/SO/Activity/MarketVisit/AddMarketForm';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 const initial = {
   store_name: '',
@@ -114,7 +115,7 @@ const AddMarketVisitScreen = ({
         if (res?.message?.status === 'success') {
           Toast.show({
             type: 'success',
-            text1: `✅ ${res.message.message}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
           actions.resetForm();
@@ -122,7 +123,7 @@ const AddMarketVisitScreen = ({
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -130,8 +131,7 @@ const AddMarketVisitScreen = ({
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+          text1: getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

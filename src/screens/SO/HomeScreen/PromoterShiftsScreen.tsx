@@ -33,6 +33,7 @@ import {
   useGetPromoterRosterQuery,
   useCancelShiftAssignmentMutation,
 } from '../../../features/base/promoter-base-api';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -162,36 +163,23 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
         Toast.show({
           type: 'success',
           text1: 'Shift cancelled',
-          text2: res?.message?.message || `${assignment.shift_type} at ${assignment.store_name}`,
+          text2: getSafeServerMessage(res?.message?.message) ?? `${assignment.shift_type} at ${assignment.store_name}`,
           position: 'top',
         });
       } else {
         Toast.show({
           type: 'error',
           text1: 'Could not cancel shift',
-          text2: res?.message?.message || 'Please try again',
+          text2: getSafeServerMessage(res?.message?.message) ?? 'Please try again',
           position: 'top',
         });
       }
     } catch (error: any) {
-      const serverMessage =
-        error?.data?.message?.message ||
-        error?.data?._server_messages ||
-        error?.data?.message ||
-        'Failed to cancel shift';
-      let messageText = serverMessage;
-      if (typeof serverMessage === 'string' && serverMessage.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(serverMessage);
-          messageText = parsed?.[0]?.message ?? serverMessage;
-        } catch {
-          messageText = serverMessage;
-        }
-      }
+      const messageText = getUserFacingError(error, 'Failed to cancel shift');
       Toast.show({
         type: 'error',
         text1: 'Could not cancel shift',
-        text2: String(messageText),
+        text2: messageText,
         position: 'top',
       });
     } finally {

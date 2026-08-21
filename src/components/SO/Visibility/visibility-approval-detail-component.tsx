@@ -24,6 +24,10 @@ import {
   useRejectVisibilityClaimMutation,
 } from '../../../features/tada/tadaApiv2';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -162,7 +166,7 @@ const VisibilityApprovalDetailComponent = ({
         ],
       );
     } catch (error: any) {
-      Alert.alert('Error', error?.data?.message || 'Failed to approve claim');
+      Alert.alert('Error', getUserFacingError(error, 'Failed to approve claim'));
     }
   };
 
@@ -199,7 +203,7 @@ const VisibilityApprovalDetailComponent = ({
         ],
       );
     } catch (error: any) {
-      Alert.alert('Error', error?.data?.message || 'Failed to reject claim');
+      Alert.alert('Error', getUserFacingError(error, 'Failed to reject claim'));
     }
   };
 

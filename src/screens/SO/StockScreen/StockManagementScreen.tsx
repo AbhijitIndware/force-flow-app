@@ -39,6 +39,7 @@ import {
 import { useAppSelector } from '../../../store/hook';
 import { getStoreLabel } from '../../../utils/utils';
 import { StockDashboardItem } from '../../../types/baseType';
+import { getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -362,7 +363,7 @@ const StockManagementScreen = ({ navigation }: Props) => {
         <View style={styles.warningContainer}>
           <AlertCircle size={40} color={Colors.orange} />
           <Text style={styles.warningText}>
-            {stockStatusData.message.warning}
+            {getSafeServerMessage(stockStatusData.message.warning) ?? ''}
           </Text>
         </View>
       ) : (

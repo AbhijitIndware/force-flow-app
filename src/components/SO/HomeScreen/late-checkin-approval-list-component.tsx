@@ -21,6 +21,10 @@ import {
   useApproveRejectLateCheckinMutation,
 } from '../../../features/base/base-api';
 import { LateCheckinApprovalRecord } from '../../../types/baseType';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 const LateCheckinApprovalListComponent = () => {
   const { data, isLoading, isFetching, refetch } =
@@ -66,7 +70,7 @@ const LateCheckinApprovalListComponent = () => {
       } else {
         Toast.show({
           type: 'error',
-          text1: res?.message?.message || 'Something went wrong. Please try again.',
+          text1: getSafeServerMessage(res?.message?.message) ?? 'Something went wrong. Please try again.',
           position: 'top',
         });
       }
@@ -74,7 +78,7 @@ const LateCheckinApprovalListComponent = () => {
       Toast.show({
         type: 'error',
         text1: '❌ Error',
-        text2: err?.data?.message?.message || 'Something went wrong. Please try again.',
+        text2: getUserFacingError(err, 'Something went wrong. Please try again.'),
         position: 'top',
       });
     }

@@ -9,6 +9,10 @@ import moment from 'moment';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../../utils/errorMessage';
 
 type Props = {
   detail: RSoDetailData;
@@ -36,21 +40,21 @@ const CreatePoFromSo = ({detail, navigation}: Props) => {
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
-          text1: `✅ ${res.message.message}`,
+          text1: getSafeServerMessage(res.message.message) ?? 'Success',
           position: 'top',
         });
         navigation.navigate('OrdersScreen');
       } else {
         Toast.show({
           type: 'error',
-          text1: `❌ ${res.message.message || 'Something went wrong'}`,
+          text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
           position: 'top',
         });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+        text1: getUserFacingError(error, 'Internal Server Error'),
         text2: 'Please try again later.',
         position: 'top',
       });

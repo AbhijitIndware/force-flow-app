@@ -24,6 +24,7 @@ import {SoAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import CalendarView from '../../../components/weeklyoff/CalendarView';
 import Toast from 'react-native-toast-message';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -57,14 +58,14 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
       Toast.show({
         type: 'success',
         text1: 'Weekly Off Marked',
-        text2: res.message.message,
+        text2: getSafeServerMessage(res.message.message) ?? '',
         position: 'top',
       });
     } catch (err: any) {
       Toast.show({
         type: 'error',
         text1: 'Failed to Mark',
-        text2: err?.data?.message ?? 'Something went wrong',
+        text2: getUserFacingError(err, 'Something went wrong'),
         position: 'top',
       });
     }
@@ -85,14 +86,14 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
               Toast.show({
                 type: 'success',
                 text1: 'Weekly Off Removed',
-                text2: res.message.message,
+                text2: getSafeServerMessage(res.message.message) ?? '',
                 position: 'top',
               });
             } catch (err: any) {
               Toast.show({
                 type: 'error',
                 text1: 'Failed to Remove',
-                text2: err?.data?.message ?? 'Something went wrong',
+                text2: getUserFacingError(err, 'Something went wrong'),
                 position: 'top',
               });
             }

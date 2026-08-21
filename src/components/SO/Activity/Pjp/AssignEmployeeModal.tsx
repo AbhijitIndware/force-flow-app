@@ -19,6 +19,10 @@ import Toast from 'react-native-toast-message';
 import {windowHeight} from '../../../../utils/utils';
 import {Icon, UserCircle2Icon} from 'lucide-react-native';
 import {Employee} from '../../../../types/baseType';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../../utils/errorMessage';
 
 interface Props {
   visible: boolean;
@@ -77,7 +81,7 @@ const AssignEmployeeModal: React.FC<Props> = ({
         Toast.show({
           type: 'success',
           text1: '✅ Copied PJP successfully',
-          text2: res?.message?.message,
+          text2: getSafeServerMessage(res?.message?.message) ?? '',
           position: 'top',
         });
       } else {
@@ -97,8 +101,7 @@ const AssignEmployeeModal: React.FC<Props> = ({
       Toast.show({
         type: 'error',
         text1: '❌ Failed to copy PJP',
-        text2:
-          error?.data?.message?.error[0]?.error || 'Please try again later.',
+        text2: getUserFacingError(error, 'Please try again later.'),
         position: 'top',
       });
     }

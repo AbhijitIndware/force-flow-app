@@ -26,6 +26,7 @@ import {useAddDistributorMutation} from '../../../features/base/base-api';
 import {Animated} from 'react-native';
 import AddPurchaseForm from '../../../components/SO/Order/Purchase/AddPurchaseForm';
 import {REmployee} from '../../../types/dropdownType';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 let initial = {
   distributor_name: '',
@@ -79,7 +80,7 @@ const AddPurchaseScreen = ({
         if (res?.message?.status === 'success') {
           Toast.show({
             type: 'success',
-            text1: `✅ ${res.message.message}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
           actions.resetForm();
@@ -87,7 +88,7 @@ const AddPurchaseScreen = ({
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -96,8 +97,7 @@ const AddPurchaseScreen = ({
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+          text1: getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

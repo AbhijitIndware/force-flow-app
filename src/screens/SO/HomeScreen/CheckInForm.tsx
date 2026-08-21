@@ -38,6 +38,7 @@ import LoadingScreen from '../../../components/ui/LoadingScreen';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import AddCheckInForm from '../../../components/SO/Home/check-in-form';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -197,7 +198,7 @@ const CheckInForm = ({ navigation }: Props) => {
       Toast.show({
         type: 'error',
         text1: '❌ Verification error',
-        text2: err?.data?.message?.message ?? 'Please try again later.',
+        text2: getUserFacingError(err, 'Please try again later.'),
       });
     } finally {
       setLocationLoading(false)
@@ -214,7 +215,7 @@ const CheckInForm = ({ navigation }: Props) => {
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
-          text1: `✅ ${res.message.message}`,
+          text1: getSafeServerMessage(res.message.message) ?? 'Success',
           position: 'top',
         });
         setConfirmModalVisible(false);
@@ -224,13 +225,13 @@ const CheckInForm = ({ navigation }: Props) => {
       } else {
         Toast.show({
           type: 'error',
-          text1: `❌ ${res.message.message || 'Something went wrong'}`,
+          text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
         });
       }
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${err?.data?.message?.message || 'Internal Server Error'}`,
+        text1: getUserFacingError(err, 'Internal Server Error'),
       });
     } finally {
       setLoading(false);

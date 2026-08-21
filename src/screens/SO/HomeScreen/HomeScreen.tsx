@@ -63,6 +63,7 @@ import {BookOpen} from 'lucide-react-native';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {useGetProfileDataQuery} from '../../../features/auth/auth';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ function extractServerMessage(resp: any): string | null {
     if (!resp?._server_messages) return null;
     const arr = JSON.parse(resp._server_messages);
     if (!arr?.length) return null;
-    return JSON.parse(arr[0])?.message ?? null;
+    return getSafeServerMessage(JSON.parse(arr[0])?.message) ?? null;
   } catch {
     return null;
   }
@@ -351,7 +352,7 @@ const HomeScreen = ({navigation}: Props) => {
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
-          text1: `✅ ${res.message.message || 'Checked out successfully'}`,
+          text1: getSafeServerMessage(res.message.message) ?? 'Checked out successfully',
           position: 'top',
         });
         dispatch(setSelectedStore(''));
@@ -361,7 +362,7 @@ const HomeScreen = ({navigation}: Props) => {
       } else {
         Toast.show({
           type: 'error',
-          text1: `❌ ${res.message?.message || 'Check-out failed'}`,
+          text1: getSafeServerMessage(res?.message?.message) ?? 'Check-out failed',
           position: 'top',
         });
       }
@@ -401,7 +402,7 @@ const HomeScreen = ({navigation}: Props) => {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Started',
-          text2: res.message.message,
+          text2: getSafeServerMessage(res.message.message) ?? 'PJP Started',
         });
         refetchLocationTracker();
       }
@@ -409,7 +410,7 @@ const HomeScreen = ({navigation}: Props) => {
       Toast.show({
         type: 'error',
         text1: '❌ Failed to start PJP',
-        text2: err?.data?.message ?? 'Please try again',
+        text2: getUserFacingError(err, 'Please try again'),
       });
     } finally {
       setIsStartingPjp(false);
@@ -434,7 +435,7 @@ const HomeScreen = ({navigation}: Props) => {
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: err?.data?.message || 'Failed to check out',
+        text1: getUserFacingError(err, 'Failed to check out'),
       });
     }
   };

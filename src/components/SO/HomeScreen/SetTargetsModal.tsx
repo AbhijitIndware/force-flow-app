@@ -24,6 +24,10 @@ import {
 import MultiSelectDropdown, {
   MultiSelectOption,
 } from '../../ui-lib/multiselect-dropdown';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 const MODAL_MAX_HEIGHT = SCREEN_HEIGHT * 0.78;
@@ -291,9 +295,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: `❌ ${
-          err?.data?.message || err?.message || 'Failed to save targets'
-        }`,
+        text1: getUserFacingError(err, 'Failed to save targets'),
       });
     }
   };

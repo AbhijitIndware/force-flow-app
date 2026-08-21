@@ -31,6 +31,7 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
 import MinStoresWarningModal from '../../../components/SO/Activity/Pjp/MinStoresWarningModal';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -187,13 +188,13 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           if ((res?.message as any)?.already_existed) {
             Toast.show({
               type: 'error',
-              text1: `❌ ${res.message.message || 'Something went wrong'}`,
+              text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
               position: 'top',
             });
           } else {
             Toast.show({
               type: 'success',
-              text1: `✅ ${res.message.message}`,
+              text1: getSafeServerMessage(res.message.message) ?? 'Success',
               position: 'top',
             });
             resetForm({values: getInitial()});
@@ -202,7 +203,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -239,8 +240,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         }
         Toast.show({
           type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+          text1: getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

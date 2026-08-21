@@ -19,6 +19,7 @@ import {Size} from '../../../utils/fontSize';
 import {Fonts} from '../../../constants';
 import {Colors} from '../../../utils/colors';
 import {InvoiceData} from '../../../types/baseType';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type Props = {
   detail: InvoiceData;
@@ -54,7 +55,7 @@ const SaleInvoiceComponent = ({detail, refetch}: Props) => {
       } else {
         Toast.show({
           type: 'error',
-          text1: res?._error_message || 'Failed to submit invoice',
+          text1: getSafeServerMessage(res?._error_message) ?? 'Failed to submit invoice',
           position: 'top',
         });
       }
@@ -63,7 +64,7 @@ const SaleInvoiceComponent = ({detail, refetch}: Props) => {
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to submit invoice',
+        text1: getUserFacingError(error, 'Failed to submit invoice'),
         position: 'top',
       });
     }

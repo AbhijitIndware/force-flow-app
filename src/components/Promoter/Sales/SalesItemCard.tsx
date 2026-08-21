@@ -13,6 +13,7 @@ import {
   useSubmitSalesOrderMutation,
   useCancelSalesOrderMutation,
 } from '../../../features/base/promoter-base-api';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 interface Props {
   time: string;
@@ -79,14 +80,14 @@ const SalesItemCard: React.FC<Props> = ({
       } else {
         Toast.show({
           type: 'error',
-          text1: res?.message?.message || 'Something went wrong',
+          text1: getSafeServerMessage(res?.message?.message) ?? 'Something went wrong',
           position: 'top',
         });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Something went wrong',
+        text1: getUserFacingError(error, 'Something went wrong'),
         position: 'top',
       });
     } finally {

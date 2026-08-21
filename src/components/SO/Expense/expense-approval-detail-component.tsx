@@ -26,6 +26,10 @@ import {
 } from '../../../features/tada/tadaApiv2';
 import { Expense } from '../../../types/tadaType';
 import Toast from 'react-native-toast-message';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -353,14 +357,14 @@ const ExpenseApprovalDetailComponent = ({
         Toast.show({
           type: 'error',
           text1: 'Failed',
-          text2: res?.message?.message || 'Failed to update expense item',
+          text2: getSafeServerMessage(res?.message?.message) ?? 'Failed to update expense item',
         });
       }
     } catch (err: any) {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: err?.data?.message || 'Something went wrong',
+        text2: getUserFacingError(err, 'Something went wrong'),
       });
     }
   };
@@ -403,14 +407,14 @@ const ExpenseApprovalDetailComponent = ({
                   type: 'error',
                   text1: 'Failed',
                   text2:
-                    res?.message?.message || 'Failed to delete expense item',
+                    getSafeServerMessage(res?.message?.message) ?? 'Failed to delete expense item',
                 });
               }
             } catch (err: any) {
               Toast.show({
                 type: 'error',
                 text1: 'Error',
-                text2: err?.data?.message || 'Something went wrong',
+                text2: getUserFacingError(err, 'Something went wrong'),
               });
             }
           },
@@ -481,7 +485,7 @@ const ExpenseApprovalDetailComponent = ({
         Toast.show({
           type: 'error',
           text1: 'Approval Failed',
-          text2: res?.message?.message || 'Failed to approve claim',
+          text2: getSafeServerMessage(res?.message?.message) ?? 'Failed to approve claim',
           // position: 'bottom',
           // visibilityTime: 3000,
         });
@@ -490,7 +494,7 @@ const ExpenseApprovalDetailComponent = ({
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: error?.data?.message || 'Failed to approve claim',
+        text2: getUserFacingError(error, 'Failed to approve claim'),
         // position: 'bottom',
         // visibilityTime: 3000,
       });
@@ -535,7 +539,7 @@ const ExpenseApprovalDetailComponent = ({
               Toast.show({
                 type: 'error',
                 text1: 'Rejection Failed',
-                text2: error?.data?.message || 'Failed to reject claim',
+                text2: getUserFacingError(error, 'Failed to reject claim'),
                 // position: 'bottom',
                 // visibilityTime: 3000,
               });

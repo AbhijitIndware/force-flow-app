@@ -33,6 +33,10 @@ import { DraftStatusBadge } from './AddExpense/DraftStatusBadge';
 import { ProgressOverlay } from './AddExpense/ProgressOverlay';
 import { ExpenseRowCard } from './AddExpense/ExpenseRowCard';
 import { ExpenseClaimResponse } from '../../../types/tadaType';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 export type LocalExpenseItem = {
   expense_type: string;
@@ -157,7 +161,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
       draftAttempted.current = false;
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Failed to create draft',
+        text1: getUserFacingError(error, 'Failed to create draft'),
         position: 'top',
       });
     } finally {
@@ -216,7 +220,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Failed to add expense item',
+        text1: getUserFacingError(error, 'Failed to add expense item'),
         position: 'top',
       });
     } finally {
@@ -239,7 +243,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1: error?.data?.message?.message || 'Failed to remove item',
+          text1: getUserFacingError(error, 'Failed to remove item'),
           position: 'top',
         });
         return;
@@ -279,7 +283,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Failed to submit expense',
+        text1: getUserFacingError(error, 'Failed to submit expense'),
         position: 'top',
       });
     } finally {
@@ -299,7 +303,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
       if (res?.message?.status === 'error') {
         Toast.show({
           type: 'error',
-          text1: res.message.message || 'Failed to revise claim',
+          text1: getSafeServerMessage(res.message.message) ?? 'Failed to revise claim',
           position: 'top',
         });
         return;
@@ -315,7 +319,7 @@ const AddExpenseComponent = ({ navigation, existingClaimId, existingDetail }: Pr
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message?.message || 'Failed to revise claim',
+        text1: getUserFacingError(error, 'Failed to revise claim'),
         position: 'top',
       });
     } finally {

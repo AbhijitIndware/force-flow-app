@@ -20,6 +20,7 @@ import {flexCol} from '../../../utils/styles';
 import {markActivitySchema} from '../../../types/schema';
 import {useAppSelector} from '../../../store/hook';
 import {windowWidth} from '../../../utils/utils';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -64,7 +65,7 @@ const MarkActivityScreen = ({navigation}: Props) => {
         if (res?.message?.success === true) {
           Toast.show({
             type: 'success',
-            text1: `✅ ${res.message.message}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
           actions.resetForm();
@@ -72,7 +73,7 @@ const MarkActivityScreen = ({navigation}: Props) => {
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -81,8 +82,7 @@ const MarkActivityScreen = ({navigation}: Props) => {
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+          text1: getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

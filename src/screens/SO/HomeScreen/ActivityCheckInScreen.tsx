@@ -36,6 +36,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import { launchCamera } from 'react-native-image-picker';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -200,13 +201,12 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
         setConfirmModalVisible(false);
         navigation.goBack();
       } else if (!res?.message?.success) {
-        Alert.alert('Check-In Failed', res?.message?.message || "Something went wrong");
-        Toast.show({ type: 'error', text1: res?.message?.message || 'Check-In Failed' });
+        Alert.alert('Check-In Failed', getSafeServerMessage(res?.message?.message) ?? "Something went wrong");
+        Toast.show({ type: 'error', text1: getSafeServerMessage(res?.message?.message) ?? 'Check-In Failed' });
       }
     } catch (error: any) {
       const errMsg =
-        error?.data?.message ||
-        'Failed to check in';
+        getUserFacingError(error, 'Failed to check in');
       Toast.show({
         type: 'error',
         text1: errMsg,

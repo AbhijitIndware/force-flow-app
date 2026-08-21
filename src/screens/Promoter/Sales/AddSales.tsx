@@ -31,6 +31,7 @@ import {
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 const {width} = Dimensions.get('window');
 
@@ -102,14 +103,15 @@ const AddSalesScreen = ({navigation}: Props) => {
         if (res?.message?.success) {
           Toast.show({
             type: 'success',
-            text1: `✅ ${res.message.message || 'Sales order created successfully'}`,
+            text1:
+              getSafeServerMessage(res.message.message) ?? 'Sales order created successfully',
             position: 'top',
           });
           navigation.navigate('SalesScreen');
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -117,7 +119,7 @@ const AddSalesScreen = ({navigation}: Props) => {
         Toast.show({
           type: 'error',
           text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+            getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

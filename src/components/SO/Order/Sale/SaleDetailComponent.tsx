@@ -17,6 +17,7 @@ import CreatePoFromSo from './CreatePoFromSo';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { getUserFacingError, getSafeServerMessage } from '../../../../utils/errorMessage';
 
 type Props = {
   detail: RSoDetailData;
@@ -75,11 +76,11 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
         type: res?.message?.success ? 'success' : 'error',
         text1: res?.message?.success
           ? '✅ Sales order submitted successfully'
-          : `❌ ${res.message.message || 'Something went wrong'}`,
+          : getSafeServerMessage(res.message.message) ?? 'Something went wrong',
         position: 'top',
       });
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
+      Toast.show({ type: 'error', text1: getUserFacingError(error, 'Internal Server Error'), position: 'top' });
     }
   };
 
@@ -89,14 +90,14 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
         order_id: order_details?.order_id, action: 'Reject', reason: cancelReason,
       }).unwrap();
       if (res?.message?.success) {
-        Toast.show({ type: 'success', text1: `✅ ${res.message.message}`, position: 'top' });
+        Toast.show({ type: 'success', text1: getSafeServerMessage(res.message.message) ?? 'Success', position: 'top' });
         setCancelReason('');
         setCancelModalVisible(false);
       } else {
-        Toast.show({ type: 'error', text1: `❌ ${res.message.message || 'Something went wrong'}`, position: 'top' });
+        Toast.show({ type: 'error', text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong', position: 'top' });
       }
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
+      Toast.show({ type: 'error', text1: getUserFacingError(error, 'Internal Server Error'), position: 'top' });
     }
   };
 
@@ -114,11 +115,11 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
       }).unwrap();
       Toast.show({
         type: res?.message?.success ? 'success' : 'error',
-        text1: res?.message?.success ? `✅ ${res.message.message}` : `❌ ${res.message.message || 'Something went wrong'}`,
+        text1: res?.message?.success ? (getSafeServerMessage(res.message.message) ?? 'Success') : (getSafeServerMessage(res.message.message) ?? 'Something went wrong'),
         position: 'top',
       });
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: `❌ ${error?.data?.message?.message || 'Internal Server Error'}`, position: 'top' });
+      Toast.show({ type: 'error', text1: getUserFacingError(error, 'Internal Server Error'), position: 'top' });
     }
   };
 

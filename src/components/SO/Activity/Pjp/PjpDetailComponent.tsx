@@ -24,6 +24,10 @@ import {
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MinStoresWarningModal from './MinStoresWarningModal';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../../utils/errorMessage';
 
 type Props = {
   detail: PjpDailyStore;
@@ -135,7 +139,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Started',
-          text2: res.message.message,
+          text2: getSafeServerMessage(res.message.message) ?? '',
         });
         refetch?.();
       }
@@ -143,7 +147,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
       Toast.show({
         type: 'error',
         text1: '❌ Failed to start PJP',
-        text2: err?.data?.message ?? 'Please try again',
+        text2: getUserFacingError(err, 'Please try again'),
       });
     } finally {
       setLoading(false);
@@ -168,7 +172,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         Toast.show({
           type: 'success',
           text1: '✅ PJP Completed',
-          text2: res.message.message,
+          text2: getSafeServerMessage(res.message.message) ?? '',
         });
         refetch?.();
       }
@@ -176,7 +180,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
       Toast.show({
         type: 'error',
         text1: '❌ Failed to end PJP',
-        text2: err?.data?.message ?? 'Please try again',
+        text2: getUserFacingError(err, 'Please try again'),
       });
     } finally {
       setLoading(false);

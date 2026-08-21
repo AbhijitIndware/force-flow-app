@@ -29,6 +29,7 @@ import {REmployee} from '../../../types/dropdownType';
 import {useAddDistributorMutation} from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddDistributorForm from '../../../components/SO/Partner/Distributor/AddDistributorForm';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
@@ -122,7 +123,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
         if (res?.message?.status === 'success') {
           Toast.show({
             type: 'success',
-            text1: `✅ ${res.message.message}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
           actions.resetForm();
@@ -130,7 +131,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
         } else {
           Toast.show({
             type: 'error',
-            text1: `❌ ${res.message.message || 'Something went wrong'}`,
+            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
             position: 'top',
           });
         }
@@ -139,8 +140,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1:
-            `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+          text1: getUserFacingError(error, 'Internal Server Error'),
           text2: 'Please try again later.',
           position: 'top',
         });

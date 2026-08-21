@@ -28,6 +28,7 @@ import {
 } from '../../../features/base/promoter-base-api';
 import {Camera, Trash2, Upload, X} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
+import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -131,14 +132,14 @@ const AddStoreActivityScreen = ({navigation}: Props) => {
       Toast.show({
         type: 'success',
         text1: 'Activity uploaded',
-        text2: res.message?.data?.store_name ?? 'Store activity recorded',
+        text2: getSafeServerMessage(res.message?.data?.store_name) ?? 'Store activity recorded',
       });
       navigation.goBack();
     } catch (err: any) {
       Toast.show({
         type: 'error',
         text1: 'Upload failed',
-        text2: err?.message ?? 'Something went wrong',
+        text2: getUserFacingError(err, 'Something went wrong'),
       });
     }
   };

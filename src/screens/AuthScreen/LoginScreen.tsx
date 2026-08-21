@@ -27,6 +27,7 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {loginSchema} from '../../types/schema';
 import {APP_VERSION} from '../../utils/utils';
+import {getUserFacingError, getSafeServerMessage} from '../../utils/errorMessage';
 import {MainNavigationStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 const {width} = Dimensions.get('window');
@@ -74,7 +75,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
             });
             Toast.show({
               type: 'success',
-              text1: `✅ ${res?.message?.message}`,
+              text1: getSafeServerMessage(res?.message?.message) ?? 'Success',
               position: 'top',
             });
             action.resetForm();
@@ -87,7 +88,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
           } else {
             Toast.show({
               type: 'error',
-              text1: `❌ ${res?.message?.message}` || 'Error',
+              text1: getSafeServerMessage(res?.message?.message) ?? 'Error',
               position: 'top',
               visibilityTime: 6000,
             });
@@ -96,7 +97,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
           Toast.show({
             type: 'error',
             text1:
-              `❌ ${error?.data?.message?.message}` || 'Internal Server Error',
+              getUserFacingError(error, 'Internal Server Error'),
             text2: 'Please try again later.',
             position: 'top',
             visibilityTime: 6000,

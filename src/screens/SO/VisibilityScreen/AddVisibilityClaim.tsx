@@ -25,6 +25,7 @@ import {
   CreateVisibilityClaimPayload,
   ImagePayload,
 } from '../../../types/tadaType';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -88,16 +89,14 @@ const AddVisibilityScreen = ({ navigation }: Props) => {
           Toast.show({
             type: 'error',
             text1: 'Failed to submit visibility claim',
-            text2: res.message?.message as string,
+            text2: getSafeServerMessage(res.message?.message) ?? '',
             position: 'top',
           });
         }
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1:
-            error?.data?.message?.message ||
-            'Failed to submit visibility claim',
+          text1: getUserFacingError(error, 'Failed to submit visibility claim'),
           text2: 'Please try again',
           position: 'top',
         });

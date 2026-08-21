@@ -17,6 +17,10 @@ import PageHeader from '../../../components/ui/PageHeader';
 import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
 import { Size } from '../../../utils/fontSize';
 import { useEffect, useState } from 'react';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -223,7 +227,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                 Toast.show({
                     type: 'error',
                     text1: 'Permission Denied',
-                    text2: res?.message?.message || "You don't have permission to approve",
+                    text2: getSafeServerMessage(res?.message?.message) ?? "You don't have permission to approve",
                 });
                 return;
             }
@@ -235,7 +239,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
             Toast.show({
                 type: 'error',
                 text1: 'Action Failed',
-                text2: err?.data?.message || 'Failed to approve order',
+                text2: getUserFacingError(err, 'Failed to approve order'),
             });
         }
     };

@@ -27,6 +27,7 @@ import { Camera, MapPin, Navigation, Save } from 'lucide-react-native';
 import { launchCamera } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -135,13 +136,13 @@ const AddActivityLocationScreen = ({
       } else {
         Toast.show({
           type: 'error',
-          text1: res?.message?.message || 'Failed to create location',
+          text1: getSafeServerMessage(res?.message?.message) ?? 'Failed to create location',
         });
       }
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: error?.data?.message || 'Failed to create location',
+        text1: getUserFacingError(error, 'Failed to create location'),
       });
     }
   };

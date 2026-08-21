@@ -23,6 +23,7 @@ import {
 } from 'react-native';
 import type {FetchBaseQueryError} from '@reduxjs/toolkit/query';
 import type {SerializedError} from '@reduxjs/toolkit';
+import {getUserFacingError} from '../../utils/errorMessage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RtkError = FetchBaseQueryError | SerializedError | undefined;
@@ -44,47 +45,22 @@ export function extractApiErrorMessage(error: RtkError): string | null {
 
   // FetchBaseQueryError with status + data
   if ('status' in error) {
-    const data = (error as any).data;
-
-    // Frappe/ERPNext style: { message: "..." } or { exc_type: "...", message: "..." }
-    if (data?.message && typeof data.message === 'string') {
-      return data.message;
-    }
-    if (data?.exception && typeof data.exception === 'string') {
-      return data.exception;
-    }
-    if (data?._server_messages) {
-      try {
-        const msgs = JSON.parse(data._server_messages);
-        if (Array.isArray(msgs) && msgs.length > 0) {
-          // Some messages are strings, some are JSON strings
-          try {
-            const parsed = JSON.parse(msgs[0]);
-            return parsed?.message || msgs[0];
-          } catch {
-            return msgs[0];
-          }
-        }
-      } catch {}
-    }
-
-    // Generic HTTP error
     const status = error.status;
     if (status === 'FETCH_ERROR') return 'Network error — could not reach server.';
     if (status === 'PARSING_ERROR') return 'Unexpected server response.';
     if (status === 'TIMEOUT_ERROR') return 'Request timed out.';
     if (typeof status === 'number') {
-      if (status === 400) return 'Bad request — please check your input.';
+      if (status === 401) return 'Session expired. Please log in again.';
       if (status === 403) return 'You do not have permission to do this.';
       if (status === 404) return 'Resource not found.';
-      if (status === 500) return 'Server error — please try again later.';
+      if (status >= 500) return 'Server error — please try again later.';
       return `Request failed (${status}).`;
     }
   }
 
   // SerializedError
   if ('message' in error && error.message) {
-    return error.message;
+    return getUserFacingError(error);
   }
 
   return 'Something went wrong. Please try again.';
