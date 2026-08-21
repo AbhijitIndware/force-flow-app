@@ -24,6 +24,7 @@ class MainActivity : ReactActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     RNBootSplash.init(this, R.style.BootTheme)
-    super.onCreate(savedInstanceState)
+    // react-native-screens < 4.16 must not restore Fragment state on activity recreation.
+    super.onCreate(null)
   }
 }
