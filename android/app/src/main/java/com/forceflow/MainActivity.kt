@@ -40,6 +40,23 @@ class MainActivity : ReactActivity() {
     // View property — applying it to the root decor view covers all
     // touch targets within this single Activity.
     window.decorView.setFilterTouchesWhenObscured(true)
+
+    // Runtime instrumentation / anti-tampering checks
+    // — prevent analysis via Frida, Objection, Xposed, or debuggers
+    if (isDebuggerAttached) {
+      // Exit immediately if a debugger is attached — this prevents
+      // runtime hooking and analysis of application logic.
+      finishAndRemoveTask()
+      System.exit(0)
+    }
+
+    // Basic root detection — check for common su binaries and
+    // Magisk/SuperSU indicators. This is a defensive measure;,
+    // determined attackers may bypass, but it raises the bar.
+    if (isRootPresent()) {
+      finishAndRemoveTask()
+      System.exit(0)
+    }
   }
 
   override fun onResume() {
@@ -51,5 +68,34 @@ class MainActivity : ReactActivity() {
       WindowManager.LayoutParams.FLAG_SECURE,
       WindowManager.LayoutParams.FLAG_SECURE
     )
+  }
+
+  /**
+   * Returns true if a debugger is attached to the process.
+   * Uses Android's native Debug API for reliable detection.
+   */
+  private fun isDebuggerAttached(): Boolean {
+    return android.os.Debug.isDebuggerConnected() || android.os.Debug.isDebuggerActive()
+  }
+
+  /**
+   * Returns true if the device appears to be rooted.
+   * Checks for common su binaries and root indicators.
+   */
+  private fun isRootPresent(): Boolean {
+    val rootBinaries = listOf("su", "magisk", "superuser", "superSU")
+    val checkPaths = listOf("/sbin", "/system/bin", "/system/xbin", "/vendor/bin", "/proc")
+    val binaryFound = rootBinaries.any { binary ->
+      checkPaths.any { path -> java.io.File("$path/$binary").exists() } ||
+        try {
+          java.lang.Runtime.getRuntime().exec("which $binary").inputStream.bufferedReader().readText().trim().isNotEmpty()
+        } catch (_: Exception) {
+          false
+        }
+    }
+    return binaryFound ||
+      java.io.File("/system/app/SuperSU").exists() ||
+      java.io.File("/system/xbin/su").exists() ||
+      java.io.File("/system/bin/su").exists()
   }
 }
