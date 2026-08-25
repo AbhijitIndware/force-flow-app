@@ -132,7 +132,7 @@ const RecentTeamSaleScreen = ({
     <View style={styles.root}>
       {/* ── Header bar ── */}
       <View style={styles.headerBar}>
-        <Text style={styles.headerTitle}>Recent team sales</Text>
+        <Text style={styles.headerTitle}></Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconBtn}>
             <Search size={16} color={Colors.darkButton} strokeWidth={1.8} />

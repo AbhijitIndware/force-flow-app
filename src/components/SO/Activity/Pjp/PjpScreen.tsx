@@ -6,32 +6,32 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Colors} from '../../../../utils/colors';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
-import {Clock2, EllipsisVertical, Funnel, Search} from 'lucide-react-native';
-import {useGetDailyPjpListQuery} from '../../../../features/base/base-api';
-import {useCallback, useEffect, useState} from 'react';
-import {PjpDailyStore} from '../../../../types/baseType';
-import {flexRow} from '../../../../utils/styles';
-import {FlatList} from 'react-native';
-import {RefreshControl} from 'react-native';
-import {ActivityIndicator} from 'react-native';
-import {windowHeight} from '../../../../utils/utils';
+import { Colors } from '../../../../utils/colors';
+import { Fonts } from '../../../../constants';
+import { Size } from '../../../../utils/fontSize';
+import { Clock2, EllipsisVertical, Funnel, Search } from 'lucide-react-native';
+import { useGetDailyPjpListQuery } from '../../../../features/base/base-api';
+import { useCallback, useEffect, useState } from 'react';
+import { PjpDailyStore } from '../../../../types/baseType';
+import { flexRow } from '../../../../utils/styles';
+import { FlatList } from 'react-native';
+import { RefreshControl } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { windowHeight } from '../../../../utils/utils';
 import moment from 'moment';
 import AssignEmployeeModal from './AssignEmployeeModal';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const PJPScreen = ({navigation}: any) => {
+const PJPScreen = ({ navigation }: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<PjpDailyStore[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
 
-  const {data, isLoading, isFetching, refetch, isUninitialized} =
+  const { data, isLoading, isFetching, refetch, isUninitialized } =
     useGetDailyPjpListQuery({
       page,
       page_size: PAGE_SIZE,
@@ -74,13 +74,13 @@ const PJPScreen = ({navigation}: any) => {
       !isFetching &&
       data?.message?.data &&
       data?.message?.data?.pagination?.page <
-        data?.message?.data?.pagination?.total_pages
+      data?.message?.data?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
   };
 
-  const renderItem = ({item}: {item: PjpDailyStore}) => (
+  const renderItem = ({ item }: { item: PjpDailyStore }) => (
     <View style={styles.atteddanceCard}>
       <TouchableOpacity
         onPress={() => {
@@ -98,7 +98,7 @@ const PJPScreen = ({navigation}: any) => {
             })}
           </Text>
         </View>
-        <View style={{flex: 1.5, paddingLeft: 10}}>
+        <View style={{ flex: 1.5, paddingLeft: 10 }}>
           <Text style={styles.contentText}>Emp name</Text>
           <Text
             style={[
@@ -141,15 +141,15 @@ const PJPScreen = ({navigation}: any) => {
       <View
         style={[
           styles.bodyContent,
-          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
+          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
         ]}>
-        <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>Recent PJP</Text>
-          {/* <View style={styles.bodyHeaderIcon}>
+        {/* <View style={styles.bodyHeader}> */}
+        {/* <Text style={styles.bodyHeaderTitle}>Recent PJP</Text> */}
+        {/* <View style={styles.bodyHeaderIcon}>
             <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
             <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
           </View> */}
-        </View>
+        {/* </View> */}
 
         <View
           style={{
@@ -174,7 +174,7 @@ const PJPScreen = ({navigation}: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{fontSize: 16, color: 'gray'}}>No Pjp Found</Text>
+              <Text style={{ fontSize: 16, color: 'gray' }}>No Pjp Found</Text>
             </View>
           ) : (
             <FlatList
@@ -203,7 +203,7 @@ export default PJPScreen;
 
 const styles = StyleSheet.create({
   //bodyContent section css
-  bodyContent: {flex: 1},
+  bodyContent: { flex: 1 },
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     padding: 8,
     shadowColor: '#000',
     shadowOpacity: 0.2,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 5,
     zIndex: 999,
