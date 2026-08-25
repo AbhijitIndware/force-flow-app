@@ -29,7 +29,7 @@ const LateCheckinApprovalLink: React.FC<Props> = ({ navigation }) => {
           <CheckCircle2 strokeWidth={2} color={Colors.white} size={20} />
         </View>
         <Text style={styles.linkTitle}>Late Check-In Approval</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+        <View style={[styles.arrobox]}>
           <Ionicons
             name="chevron-forward-outline"
             size={12}
@@ -48,29 +48,30 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingVertical: 15,
     marginTop: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
   },
   IconlinkBox: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 10,
+    // marginBottom: 10,
   },
   iconbox: {
-    width: 60,
-    height: 60,
-    backgroundColor: Colors.sucess,
-    borderRadius: 18,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
+
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.Orangelight,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   linkTitle: {
+    // flex: 1,
     color: Colors.darkButton,
-    fontSize: Size.sm,
+    fontSize: Size.xs,
     fontFamily: Fonts.medium,
+    lineHeight: 18,
   },
   arrobox: {
     width: 20,

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   RefreshControl,
   SafeAreaView,
@@ -8,21 +8,21 @@ import {
   View,
   Text,
 } from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {useIsFocused} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useIsFocused } from '@react-navigation/native';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
 import {
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../utils/utils';
-import {useAppDispatch, useAppSelector} from '../../../store/hook';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {ICheckOut, LocationPayload, StoreData} from '../../../types/baseType';
+import { useAppDispatch, useAppSelector } from '../../../store/hook';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { ICheckOut, LocationPayload, StoreData } from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {
@@ -45,25 +45,26 @@ import {
 } from '../../../features/base/base-api';
 
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import {HeaderSection} from '../../../components/SO/HomeScreen/HeaderSection';
-import {StatsOverview} from '../../../components/SO/HomeScreen/StatsOverview';
-import {FilterSection} from '../../../components/SO/HomeScreen/FilterSection';
-import {TeamAttendance} from '../../../components/SO/HomeScreen/TeamAttendance';
-import {TeamPerformance} from '../../../components/SO/HomeScreen/TeamPerformance';
-import {ActivityCheckInBlock} from '../../../components/SO/HomeScreen/ActivityCheckInBlock';
-import {QuickLinks} from '../../../components/SO/HomeScreen/QuickLinks';
-import {ClaimsSection} from '../../../components/SO/HomeScreen/ClaimsSection';
+import { HeaderSection } from '../../../components/SO/HomeScreen/HeaderSection';
+import { StatsOverview } from '../../../components/SO/HomeScreen/StatsOverview';
+import { FilterSection } from '../../../components/SO/HomeScreen/FilterSection';
+import { TeamAttendance } from '../../../components/SO/HomeScreen/TeamAttendance';
+import { TeamPerformance } from '../../../components/SO/HomeScreen/TeamPerformance';
+import { ActivityCheckInBlock } from '../../../components/SO/HomeScreen/ActivityCheckInBlock';
+import { QuickLinks } from '../../../components/SO/HomeScreen/QuickLinks';
+import { ClaimsSection } from '../../../components/SO/HomeScreen/ClaimsSection';
 import LateCheckinApprovalLink from '../../../components/SO/HomeScreen/LateCheckinApprovalLink';
-import {StockAndActivityLinks} from '../../../components/SO/HomeScreen/StockAndActivityLinks';
-import {CheckoutConfirmModal} from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
-import {SetTargetsModal} from '../../../components/SO/HomeScreen/SetTargetsModal';
-import {MonthPickerModal} from '../../../components/SO/HomeScreen/MonthPickerModal';
-import {YearPickerModal} from '../../../components/SO/HomeScreen/YearPickerModal';
-import {BookOpen} from 'lucide-react-native';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {useGetProfileDataQuery} from '../../../features/auth/auth';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import { StockAndActivityLinks } from '../../../components/SO/HomeScreen/StockAndActivityLinks';
+import { CheckoutConfirmModal } from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
+import { SetTargetsModal } from '../../../components/SO/HomeScreen/SetTargetsModal';
+import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
+import { YearPickerModal } from '../../../components/SO/HomeScreen/YearPickerModal';
+import { BookOpen } from 'lucide-react-native';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { useGetProfileDataQuery } from '../../../features/auth/auth';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { PromotorShift } from '../../../components/SO/HomeScreen/PromoterShift';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
   'HomeScreen'
 >;
-type Props = {navigation: NavigationProp; route: any};
+type Props = { navigation: NavigationProp; route: any };
 type FilterMode = 'month' | 'month_range' | 'date_range';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ function extractServerMessage(resp: any): string | null {
 async function getLocation(): Promise<string | null> {
   const granted = await requestLocationPermission();
   if (!granted) {
-    Toast.show({type: 'error', text1: '📍 Location permission required'});
+    Toast.show({ type: 'error', text1: '📍 Location permission required' });
     return null;
   }
   return await getCurrentLocation();
@@ -103,12 +104,12 @@ async function getParsedLocation() {
   if (!location) return null;
   const [latitude, longitude] = location.split(',').map(Number);
   if (isNaN(latitude) || isNaN(longitude)) return null;
-  return {latitude, longitude};
+  return { latitude, longitude };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const HomeScreen = ({navigation}: Props) => {
+const HomeScreen = ({ navigation }: Props) => {
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
 
@@ -121,13 +122,15 @@ const HomeScreen = ({navigation}: Props) => {
     employee?.designation === 'Sales Officer' ||
     employee?.designation === 'ISR';
 
+
+
   // Fetch the full employee profile by id so the header greeting and stats
   // show the latest details even after a cold start (authSlice.employee is
   // restored with only zone/designation).
   const empId = useAppSelector(s => s.persistedReducer.authSlice.empId);
   useGetProfileDataQuery(
-    {emp_id: empId as string},
-    {refetchOnMountOrArgChange: true, refetchOnFocus: true, skip: !empId},
+    { emp_id: empId as string },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true, skip: !empId },
   );
   const selectedStore = useAppSelector(
     s => s.persistedReducer.pjpSlice.selectedStore,
@@ -175,7 +178,7 @@ const HomeScreen = ({navigation}: Props) => {
           month: selectedMonth - 1,
           day: 1,
         }).format('YYYY-MM-DD'),
-        to_date: moment({year: selectedYear, month: selectedMonth - 1})
+        to_date: moment({ year: selectedYear, month: selectedMonth - 1 })
           .endOf('month')
           .format('YYYY-MM-DD'),
       };
@@ -188,9 +191,9 @@ const HomeScreen = ({navigation}: Props) => {
 
   // Params for attendance/pjp/value-target queries (support month_range too)
   const apiParams = useMemo(() => {
-    const base = {employee: employee?.id as string};
+    const base = { employee: employee?.id as string };
     if (filterMode === 'month')
-      return {...base, month: selectedMonth, year: selectedYear};
+      return { ...base, month: selectedMonth, year: selectedYear };
     if (filterMode === 'month_range')
       return {
         ...base,
@@ -198,7 +201,7 @@ const HomeScreen = ({navigation}: Props) => {
         to_month: toMonth,
         year: selectedYear,
       };
-    return {...base, ...dateRangeParams};
+    return { ...base, ...dateRangeParams };
   }, [
     filterMode,
     selectedMonth,
@@ -214,54 +217,54 @@ const HomeScreen = ({navigation}: Props) => {
     data: pjpWorkflowData,
     isFetching: isPjpWorkflowLoading,
     refetch: refetchPjpWorkflow,
-  } = useGetPjpNextActionQuery(undefined, {refetchOnFocus: true});
+  } = useGetPjpNextActionQuery(undefined, { refetchOnFocus: true });
 
-  const {data: prodData, refetch: refetchProdCount} = useGetProdCountQuery(
-    {date: TODAY},
-    {refetchOnMountOrArgChange: true},
+  const { data: prodData, refetch: refetchProdCount } = useGetProdCountQuery(
+    { date: TODAY },
+    { refetchOnMountOrArgChange: true },
   );
 
   const {
     data: locationTrackerData,
     isFetching: isLocationTrackerFetching,
     refetch: refetchLocationTracker,
-  } = useGetLocationTrackerQuery(undefined, {refetchOnMountOrArgChange: true});
+  } = useGetLocationTrackerQuery(undefined, { refetchOnMountOrArgChange: true });
 
-  const {data: activityStatusData, refetch: refetchActivityStatus} =
+  const { data: activityStatusData, refetch: refetchActivityStatus } =
     useGetActivityCheckInStatusQuery(undefined, {
       refetchOnMountOrArgChange: true,
     });
 
-  const {data: attendanceData, refetch: refetchAttendance} =
-    useGetAsmAttendanceTabQuery(apiParams, {skip: !employee?.id});
+  const { data: attendanceData, refetch: refetchAttendance } =
+    useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
 
-  const {data: pjpTargetData, refetch: refetchPjpTarget} =
-    useGetAsmPjpTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const { data: pjpTargetData, refetch: refetchPjpTarget } =
+    useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
 
-  const {data: valueTargetData, refetch: refetchValueTarget} =
-    useGetAsmTargetVsAchievementQuery(apiParams, {skip: !employee?.id});
+  const { data: valueTargetData, refetch: refetchValueTarget } =
+    useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
 
-  const {data: soStatsData, refetch: refetchSoStats} = useGetSoStatsQuery(
+  const { data: soStatsData, refetch: refetchSoStats } = useGetSoStatsQuery(
     dateRangeParams,
-    {skip: !employee?.id},
+    { skip: !employee?.id },
   );
 
-  const {data: ddnData, refetch: refetchDdnStats} = useGetDdnStatsQuery(
+  const { data: ddnData, refetch: refetchDdnStats } = useGetDdnStatsQuery(
     dateRangeParams,
-    {skip: !employee?.id},
+    { skip: !employee?.id },
   );
 
-  const {data: employeeTargetsData, refetch: refetchEmployeeTargets} =
+  const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
     useGetEmployeeTargetsQuery(
-      {month: selectedMonth, year: selectedYear},
-      {skip: !employee?.id},
+      { month: selectedMonth, year: selectedYear },
+      { skip: !employee?.id },
     );
 
   // ── Mutations ────────────────────────────────────────────────────────────────
-  const [pjpInitialize, {data: pjpInitData}] = usePjpInitializeMutation();
-  const [checkOut, {isLoading: isCheckingOut}] = useCheckOutMutation();
+  const [pjpInitialize, { data: pjpInitData }] = usePjpInitializeMutation();
+  const [checkOut, { isLoading: isCheckingOut }] = useCheckOutMutation();
   const [startPjp] = useStartPjpMutation();
-  const [activityCheckOut, {isLoading: isActivityCheckingOut}] =
+  const [activityCheckOut, { isLoading: isActivityCheckingOut }] =
     useActivityCheckOutMutation();
 
   // ── Derived values ───────────────────────────────────────────────────────────
@@ -385,7 +388,7 @@ const HomeScreen = ({navigation}: Props) => {
       const existingPjp =
         locationTrackerData?.message?.data?.pjp_records[0]?.name;
       if (!existingPjp) {
-        Toast.show({type: 'error', text1: '❌ No PJP found for today'});
+        Toast.show({ type: 'error', text1: '❌ No PJP found for today' });
         return;
       }
 
@@ -429,7 +432,7 @@ const HomeScreen = ({navigation}: Props) => {
         current_location: location,
       }).unwrap();
       if (res.message.success) {
-        Toast.show({type: 'success', text1: '✅ Activity Checked Out'});
+        Toast.show({ type: 'success', text1: '✅ Activity Checked Out' });
         refetchActivityStatus();
       }
     } catch (err: any) {
@@ -482,7 +485,7 @@ const HomeScreen = ({navigation}: Props) => {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       {refreshing ? (
         <LoadingScreen />
       ) : (
@@ -613,7 +616,9 @@ const HomeScreen = ({navigation}: Props) => {
 
           {/* <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} /> */}
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+
+
+          <View style={[styles.container, { paddingTop: 10 }]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
             <View style={styles.newStoreCard}>
               <TouchableOpacity
@@ -623,17 +628,22 @@ const HomeScreen = ({navigation}: Props) => {
                   <BookOpen strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
                 <Text style={styles.listLinkText}>Check the user manual</Text>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={16}
-                  color={Colors.gray}
-                />
+                <View style={[styles.arrobox]}>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={12}
+                    color={Colors.darkButton}
+                  />
+                </View>
               </TouchableOpacity>
             </View>
           </View>
-          <QuickLinks navigation={navigation} />
 
           {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
+
+          <QuickLinks navigation={navigation} />
+
+          {!isSoOrIsr && <PromotorShift navigation={navigation} />}
 
           <ClaimsSection navigation={navigation} />
 
@@ -651,7 +661,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.transparent,
     position: 'relative',
-    paddingHorizontal: 20,
   },
 
   //target&achivement section css start
@@ -659,19 +668,13 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
     color: Colors.darkButton,
+    paddingHorizontal: 20,
   },
 
   newStoreCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    marginBottom: 30,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
   },
   listLink: {
     flexDirection: 'row',
@@ -694,5 +697,15 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     fontFamily: Fonts.medium,
     lineHeight: 18,
+  },
+  arrobox: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#F0F2F6',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
   },
 });
