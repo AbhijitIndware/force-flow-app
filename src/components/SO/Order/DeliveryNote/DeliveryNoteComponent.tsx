@@ -6,18 +6,24 @@ import {
   StyleSheet,
   Text,
   View,
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
-import {Funnel, Search} from 'lucide-react-native';
+import {
+  Truck,
+  Store,
+  Building2,
+  Calendar,
+  ChevronRight,
+  Package,
+} from 'lucide-react-native';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
 import {Colors} from '../../../../utils/colors';
 import {useGetDeliveryNotesListQuery} from '../../../../features/base/base-api';
 import {useCallback, useEffect, useState} from 'react';
 import {IDistributorDeliveryNote} from '../../../../types/baseType';
-import {FlatList} from 'react-native';
-import {soStatusColors, windowHeight} from '../../../../utils/utils';
-import {TouchableOpacity} from 'react-native';
-import {flexRow} from '../../../../utils/styles';
+import {windowHeight} from '../../../../utils/utils';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -67,83 +73,99 @@ const DeliveryNoteComponent = ({navigation}: any) => {
     }
   };
 
-  const renderItem = ({item}: {item: IDistributorDeliveryNote}) => (
-    <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Text style={styles.time}>DDN ID: {item.delivery_note_id}</Text>
-        </View>
-        <View
-          style={[
-            flexRow,
-            {
-              gap: 0,
-              position: 'relative',
-              width: '50%',
-              maxWidth: 190,
-              justifyContent: 'flex-end',
-            },
-          ]}>
-          {(() => {
-            const statusColor =
-              item.workflow_state === 'Approved' ||
-              item.workflow_state === 'Submitted'
-                ? '#049a3bff'
-                : item.workflow_state === 'Cancelled'
-                ? '#EF4444'
-                : '#FACC15';
-            return (
-              <Text
-                style={[
-                  styles.present,
-                  {
-                    backgroundColor: `${statusColor}20`,
-                    color: statusColor,
-                  },
-                ]}>
-                {item.workflow_state}
-              </Text>
-            );
-          })()}
-        </View>
-      </View>
+  const renderItem = ({item}: {item: IDistributorDeliveryNote}) => {
+    const rawColor =
+      item.workflow_state === 'Approved' || item.workflow_state === 'Submitted'
+        ? '#16A34A'
+        : item.workflow_state === 'Cancelled'
+        ? '#DC2626'
+        : '#D97706';
+
+    const dateObj = new Date(item.posting_date);
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleString('default', {month: 'short'}).toUpperCase();
+    const year = dateObj.getFullYear();
+
+    return (
       <TouchableOpacity
+        activeOpacity={0.9}
         onPress={() => {
           navigation.navigate('DeliveryNoteDetailScreen', {
             id: item.delivery_note_id,
           });
         }}
-        style={styles.cardbody}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>
-            {new Date(item.posting_date).getDate()}
-          </Text>
-          <Text style={styles.monthText}>
-            {new Date(item.posting_date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
+        style={styles.orderCard}>
+        {/* Card Header: Delivery Note ID & Status Pill */}
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.orderIdBadge}>
+            <Truck size={12} color="#059669" />
+            <Text style={styles.orderIdText}>{item.delivery_note_id}</Text>
+          </View>
+          <View
+            style={[
+              styles.statusPill,
+              {
+                backgroundColor: `${rawColor}18`,
+                borderColor: `${rawColor}40`,
+              },
+            ]}>
+            <View style={[styles.statusDot, {backgroundColor: rawColor}]} />
+            <Text style={[styles.statusText, {color: rawColor}]}>
+              {item.workflow_state}
+            </Text>
+          </View>
         </View>
-        <View style={{flex: 1}}>
-          <Text style={styles.contentText} numberOfLines={1}>
-            Store: {item.store_name}
-          </Text>
-          <Text style={styles.contentText} numberOfLines={1}>
-            Distributor: {item.distributor_name}
-          </Text>
-          <Text
-            style={{
-              fontFamily: Fonts.semiBold,
-              fontSize: Size.xs,
-              color: Colors.darkButton,
-              marginTop: 4,
-            }}>
-            Amount: ₹{item.grand_total} | Qty: {item.delivered_qty}
-          </Text>
+
+        {/* Card Body */}
+        <View style={styles.cardBodyRow}>
+          {/* Date Box */}
+          <View style={styles.dateBox}>
+            <View style={styles.dateHeader}>
+              <Text style={styles.monthText}>{month}</Text>
+            </View>
+            <View style={styles.dateBody}>
+              <Text style={styles.dayText}>{day}</Text>
+            </View>
+          </View>
+
+          {/* Details Column */}
+          <View style={styles.detailsContent}>
+            <View style={styles.infoRow}>
+              <Store size={13} color="#4B5563" />
+              <Text style={styles.storeNameText} numberOfLines={1} ellipsizeMode="tail">
+                {item.store_name || 'N/A'}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Building2 size={12} color="#9CA3AF" />
+              <Text style={styles.distributorText} numberOfLines={1} ellipsizeMode="tail">
+                {item.distributor_name || 'N/A'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.cardDivider} />
+
+        {/* Card Footer */}
+        <View style={styles.cardFooterRow}>
+          <View style={styles.footerQtyWrap}>
+            <Package size={11} color="#6B7280" />
+            <Text style={styles.footerQtyText}>Qty: {item.delivered_qty ?? 0}</Text>
+          </View>
+          <View style={styles.amountContainer}>
+            <Text style={styles.amountLabel}>Amount: </Text>
+            <Text style={styles.amountValue}>
+              ₹{Number(item.grand_total || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+            </Text>
+            <ChevronRight size={14} color="#9CA3AF" style={{marginLeft: 2}} />
+          </View>
         </View>
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <View
@@ -159,13 +181,6 @@ const DeliveryNoteComponent = ({navigation}: any) => {
           styles.bodyContent,
           {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
         ]}>
-        {/* <View style={styles.bodyHeader}>
-          <Text style={styles.bodyHeaderTitle}>Recent Delivery Notes</Text>
-          <View style={styles.bodyHeaderIcon}>
-            <Search size={20} color="#4A4A4A" strokeWidth={1.7} />
-            <Funnel size={20} color="#4A4A4A" strokeWidth={1.7} />
-          </View>
-        </View> */}
         <View
           style={{
             flex: 1,
@@ -214,114 +229,152 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   bodyContent: {flex: 1},
-  bodyHeader: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingVertical: 10,
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E4E9',
+    paddingHorizontal: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#1F2937',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  bodyHeaderTitle: {
-    color: Colors.darkButton,
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    lineHeight: 20,
-  },
-  bodyHeaderIcon: {
-    display: 'flex',
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 20,
+    marginBottom: 6,
   },
-  atteddanceCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 10,
-  },
-  cardHeader: {
-    display: 'flex',
+  orderIdBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
   },
-  timeSection: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    width: '50%',
-    maxWidth: 175,
-  },
-  time: {
-    color: Colors.darkButton,
+  orderIdText: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    lineHeight: 18,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  present: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-    fontFamily: Fonts.regular,
     fontSize: Size.xxs,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 10,
-    maxWidth: 130,
-    textAlign: 'center',
+    color: '#047857',
   },
-  cardbody: {
-    display: 'flex',
+  statusPill: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    textTransform: 'capitalize',
+  },
+  cardBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
-    paddingTop: 0,
   },
   dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.darkButton,
+    width: 42,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
     alignItems: 'center',
-    paddingTop: 5,
   },
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
+  dateHeader: {
+    width: '100%',
+    backgroundColor: '#059669',
+    paddingVertical: 1,
+    alignItems: 'center',
   },
   monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
+    fontFamily: Fonts.bold,
+    fontSize: 8,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  contentText: {
-    fontFamily: Fonts.regular,
+  dateBody: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayText: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.sm,
     color: Colors.darkButton,
+  },
+  detailsContent: {
+    flex: 1,
+    gap: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  storeNameText: {
+    fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
-    lineHeight: 20,
+    color: Colors.darkButton,
+    flex: 1,
+  },
+  distributorText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+    flex: 1,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 6,
+  },
+  cardFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerQtyWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  footerQtyText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#4B5563',
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  amountLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+  },
+  amountValue: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.xs,
+    color: '#0F172A',
   },
   centered: {
     height: windowHeight * 0.5,

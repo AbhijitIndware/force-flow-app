@@ -40,6 +40,36 @@ export const authApi = createApi({
         },
       }),
     }),
+    sendOtp: builder.mutation<
+      { message: { success: boolean; message: string } },
+      { email: string }
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.authentications.login.send_otp',
+        method: 'POST',
+        body,
+      }),
+    }),
+    verifyOtpAndDelete: builder.mutation<
+      { message: { success: boolean; reset_token: string; message: string } },
+      { email: string; otp: string }
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.authentications.login.verify_otp_and_delete',
+        method: 'POST',
+        body,
+      }),
+    }),
+    resetPassword: builder.mutation<
+      { message: { success: boolean; message: string } },
+      { reset_token: string; new_password: string }
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.authentications.login.reset_pwd',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -55,6 +85,8 @@ interface InitialState {
   distributor: Distributor | null | undefined;
   sessionExpired: boolean;
   globalError: any | null;
+  resetToken: string | null;
+  rateLimitUntil: number | null;
 }
 const initialState: InitialState = {
   status: null,
@@ -68,6 +100,8 @@ const initialState: InitialState = {
   distributor: null,
   sessionExpired: false,
   globalError: null,
+  resetToken: null,
+  rateLimitUntil: null,
 };
 
 //auth api response handling(saving the token)
@@ -85,12 +119,23 @@ export const authSlice = createSlice({
       state.sId = null;
       state.empId = null;
       state.sessionExpired = false;
+      state.resetToken = null;
+      state.rateLimitUntil = null;
     },
     setSessionExpired: (state, action) => {
       state.sessionExpired = action.payload;
     },
     setGlobalError: (state, action) => {
       state.globalError = action.payload;
+    },
+    setResetToken: (state, action) => {
+      state.resetToken = action.payload;
+    },
+    clearResetToken: state => {
+      state.resetToken = null;
+    },
+    setRateLimitUntil: (state, action) => {
+      state.rateLimitUntil = action.payload;
     },
     restoreSession: (state, action) => {
       const session = action.payload as SecureSession | null;
@@ -152,8 +197,15 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logout, setSessionExpired, setGlobalError, restoreSession } =
-  authSlice.actions;
+export const {
+  logout,
+  setSessionExpired,
+  setGlobalError,
+  setResetToken,
+  clearResetToken,
+  setRateLimitUntil,
+  restoreSession,
+} = authSlice.actions;
 export default authSlice.reducer;
 
 // Async logout: clears Keychain (secure storage) before resetting in-memory
@@ -166,5 +218,11 @@ export const performLogout = createAsyncThunk(
   },
 );
 
-export const { useLoginMutation, useCheckSessionQuery, useGetProfileDataQuery } =
-  authApi;
+export const {
+  useLoginMutation,
+  useCheckSessionQuery,
+  useGetProfileDataQuery,
+  useSendOtpMutation,
+  useVerifyOtpAndDeleteMutation,
+  useResetPasswordMutation,
+} = authApi;

@@ -4,6 +4,7 @@ import SoNavigation from '../SO/SoNavigation/SoNavigation';
 import {MainNavigationStackParamList} from '../../types/Navigation';
 import {createStackNavigator} from '@react-navigation/stack';
 import LoginScreen from '../AuthScreen/LoginScreen';
+import ForgotPasswordScreen from '../AuthScreen/ForgotPasswordScreen';
 import SignupScreen from '../AuthScreen/SignupScreen';
 import UserManualScreen from '../UserManualScreen/UserManualScreen';
 import UserManualVideoScreen from '../UserManualScreen/UserManualVideoScreen';
@@ -148,6 +149,10 @@ const AuthStackNavigator = ({insets}: any) => (
       screenOptions={{headerShown: false}}
       initialRouteName="LoginScreen">
       <AuthStack.Screen name="LoginScreen" component={LoginScreen} />
+      <AuthStack.Screen
+        name="ForgotPasswordScreen"
+        component={ForgotPasswordScreen}
+      />
       <AuthStack.Screen name="SignupScreen" component={SignupScreen} />
       <AuthStack.Screen name="UserManualScreen" component={UserManualScreen} />
       <AuthStack.Screen

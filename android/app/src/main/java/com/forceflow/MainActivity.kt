@@ -43,17 +43,17 @@ class MainActivity : ReactActivity() {
 
     // Runtime instrumentation / anti-tampering checks
     // — prevent analysis via Frida, Objection, Xposed, or debuggers
-    if (isDebuggerAttached) {
-      // Exit immediately if a debugger is attached — this prevents
+    if (isDebuggerAttached()) {
+      // Exit immediately if a debugger is attached in non-debug mode — this prevents
       // runtime hooking and analysis of application logic.
       finishAndRemoveTask()
       System.exit(0)
     }
 
     // Basic root detection — check for common su binaries and
-    // Magisk/SuperSU indicators. This is a defensive measure;,
+    // Magisk/SuperSU indicators. This is a defensive measure;
     // determined attackers may bypass, but it raises the bar.
-    if (isRootPresent()) {
+    if (!BuildConfig.DEBUG && isRootPresent()) {
       finishAndRemoveTask()
       System.exit(0)
     }
@@ -72,10 +72,11 @@ class MainActivity : ReactActivity() {
 
   /**
    * Returns true if a debugger is attached to the process.
-   * Uses Android's native Debug API for reliable detection.
+   * Uses Android's native Debug API for reliable detection in production builds.
    */
   private fun isDebuggerAttached(): Boolean {
-    return android.os.Debug.isDebuggerConnected() || android.os.Debug.isDebuggerActive()
+    if (BuildConfig.DEBUG) return false
+    return android.os.Debug.isDebuggerConnected()
   }
 
   /**

@@ -1,3 +1,5 @@
+import {isExpiredTokenError} from './security';
+
 const UNSAFE_MESSAGE_PATTERN = /Traceback|File "|Exception|Error:/i;
 
 export function getUserFacingError(
@@ -9,7 +11,7 @@ export function getUserFacingError(
   const msg =
     typeof data?.message === 'string'
       ? data.message
-      : data?.message?.message;
+      : data?.message?.message ?? data?.exception;
 
   if (msg && !UNSAFE_MESSAGE_PATTERN.test(msg)) {
     return msg;
@@ -25,6 +27,10 @@ export function getUserFacingError(
     return 'You do not have permission to perform this action.';
   }
 
+  if (status === 429) {
+    return 'Too many attempts. Please wait before trying again.';
+  }
+
   if (status === 404) {
     return 'Requested resource was not found.';
   }
@@ -34,6 +40,24 @@ export function getUserFacingError(
   }
 
   return fallback;
+}
+
+export function getPermissionErrorMessage(error: any): string {
+  const data = error?.data ?? error;
+  const message =
+    typeof data?.message === 'string'
+      ? data.message
+      : data?.message?.message ?? data?.exception;
+
+  if (message && !UNSAFE_MESSAGE_PATTERN.test(message)) {
+    return message;
+  }
+
+  return 'You do not have permission to access this data.';
+}
+
+export function isExpiredResetTokenError(error: any): boolean {
+  return isExpiredTokenError(error);
 }
 
 export function getSafeServerMessage(

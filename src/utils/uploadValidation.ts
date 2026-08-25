@@ -1,8 +1,7 @@
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+export const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 export const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg',
-  'image/jpg',
   'image/png',
 ]);
 
@@ -15,7 +14,6 @@ export const ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'pdf']);
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
   'image/png': 'png',
   'application/pdf': 'pdf',
 };

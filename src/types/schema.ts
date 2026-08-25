@@ -1,4 +1,8 @@
 import * as Yup from 'yup';
+import { FORBIDDEN_NAME_CHARACTERS } from '../utils/security';
+
+const forbiddenNameTest = (value?: string | null) =>
+  !value || !FORBIDDEN_NAME_CHARACTERS.test(value);
 
 export const loginSchema = Yup.object().shape({
   usr: Yup.string().required('UserId is required'),
@@ -6,7 +10,9 @@ export const loginSchema = Yup.object().shape({
 });
 
 export const distributorSchema = Yup.object().shape({
-  distributor_name: Yup.string().required('Distributor name is required'),
+  distributor_name: Yup.string()
+    .required('Distributor name is required')
+    .test('no-forbidden-chars', 'Distributor name cannot contain <, >, -, {, }, [, ], or control characters', forbiddenNameTest),
   distributor_sap_code: Yup.string().required('SAP code is required'),
   distributor_group: Yup.string().required('Please select a distributor group'),
   distributor_code: Yup.string().required('Distributor code is required'),
@@ -23,8 +29,12 @@ export const distributorSchema = Yup.object().shape({
 });
 
 export const storeSchema = Yup.object().shape({
-  store_name: Yup.string().required('Store name is required'),
-  store_owner_name: Yup.string().required('Store owner name is required'),
+  store_name: Yup.string()
+    .required('Store name is required')
+    .test('no-forbidden-chars', 'Store name cannot contain <, >, -, {, }, [, ], or control characters', forbiddenNameTest),
+  store_owner_name: Yup.string()
+    .required('Store owner name is required')
+    .test('no-forbidden-chars', 'Owner name cannot contain <, >, -, {, }, [, ], or control characters', forbiddenNameTest),
   store_type: Yup.string().required('Store type is required'),
   store_category: Yup.string().required('Store category is required'),
   zone: Yup.string().required('Zone is required'),
@@ -204,6 +214,10 @@ export const PromoterCheckOutSchema = Yup.object().shape({
 });
 
 export const addSalesInvoiceSchema = Yup.object({
+  discount_percentage: Yup.number()
+    .min(0, 'Discount percentage cannot be less than 0%')
+    .max(50, 'Discount percentage cannot exceed 50%')
+    .optional(),
   items: Yup.array()
     .of(
       Yup.object({
@@ -213,11 +227,6 @@ export const addSalesInvoiceSchema = Yup.object({
           .typeError('Quantity must be a number')
           .required('Quantity is required')
           .positive('Quantity must be greater than 0'),
-
-        rate: Yup.number()
-          .typeError('Rate must be a number')
-          .required('Rate is required')
-          .positive('Rate must be greater than 0'),
 
         warehouse: Yup.string().required('Warehouse is required'),
       }),

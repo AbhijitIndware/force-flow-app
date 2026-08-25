@@ -310,7 +310,7 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
         ]}
         onPress={handleActionPress}
         activeOpacity={0.88}
-        disabled={loading || isCompleted || !isToday}>
+        disabled={loading || isCompleted || (!isRunning && !isToday)}>
         <View style={styles.actionInner}>
           <View style={styles.actionIconWrap}>
             <Text style={styles.actionIcon}>
@@ -333,12 +333,14 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
               {loading
                 ? 'Fetching your location...'
                 : isCompleted
-                  ? "Today's route is done"
+                  ? 'Route plan is completed'
                   : isRunning
-                    ? `Tap to finish today's route`
+                    ? detail?.is_overnight_outstation_journey === 1
+                      ? 'Tap to finish outstation route'
+                      : 'Tap to finish PJP route'
                     : !isToday
                       ? `PJP date: ${moment(detail?.date, 'YYYY-MM-DD').format('DD MMM YYYY')}`
-                      : `Tap to begin today's route`}
+                      : 'Tap to begin route'}
             </Text>
           </View>
         </View>

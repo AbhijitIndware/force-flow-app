@@ -6,6 +6,7 @@ export type MainNavigationStackParamList = {
   PromoterNavigation: undefined;
   SoNavigation: undefined;
   LoginScreen: undefined;
+  ForgotPasswordScreen: undefined;
   SignupScreen: undefined;
   DistributorNavigation: undefined;
   UserManualScreen: undefined;

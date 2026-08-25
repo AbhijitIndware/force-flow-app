@@ -1,4 +1,3 @@
-/* eslint-disable react-native/no-inline-styles */
 import {
   ActivityIndicator,
   Dimensions,
@@ -7,8 +6,16 @@ import {
   StyleSheet,
   Text,
   View,
+  FlatList,
+  TouchableOpacity,
 } from 'react-native';
-import { Funnel, Search } from 'lucide-react-native';
+import {
+  ShoppingBag,
+  Store,
+  Building2,
+  Calendar,
+  ChevronRight,
+} from 'lucide-react-native';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
 import { Colors } from '../../../../utils/colors';
@@ -16,10 +23,7 @@ import { useGetSalesOrderListQuery } from '../../../../features/base/base-api';
 import { useCallback, useEffect, useState } from 'react';
 import { SalesOrderType } from '../../../../types/baseType';
 import { imageBaseUrl } from '../../../../features/apiBaseUrl';
-import { FlatList } from 'react-native';
 import { soStatusColors, windowHeight } from '../../../../utils/utils';
-import { TouchableOpacity } from 'react-native';
-import { flexRow } from '../../../../utils/styles';
 
 const { width } = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -75,119 +79,93 @@ const SalesOrder = ({ navigation }: any) => {
     }
   };
 
-  const renderItem = ({ item }: any) => (
-    <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Text style={styles.time}>SO ID: {item.order_id}</Text>
-        </View>
-        <View
-          style={[
-            flexRow,
-            {
-              gap: 0,
-              position: 'relative',
-              width: '50%',
-              maxWidth: 190,
-              justifyContent: 'flex-end',
-            },
-          ]}>
-          <Text
-            style={[
-              styles.present,
-              {
-                backgroundColor:
-                  `${soStatusColors[item.status]}30` || Colors.lightSuccess,
-                color: soStatusColors[item.status] || '#fff',
-              },
-            ]}>
-            {item.status}
-          </Text>
-          {/* Three dot menu */}
-          {/* <TouchableOpacity
-            onPress={() =>
-              setSelectedOrderId(
-                selectedOrderId === item.order_id ? null : item.order_id,
-              )
-            }>
-            <Text style={styles.threeDot}>⋮</Text>
-          </TouchableOpacity> */}
-          {/* Modal for dropdown */}
-          {selectedOrderId === item.order_id && (
-            <>
-              {/* Backdrop to detect outside press */}
-              <TouchableOpacity
-                style={StyleSheet.absoluteFillObject}
-                activeOpacity={1}
-                onPress={() => setSelectedOrderId(null)}
-              />
-              <View style={styles.dropdownMenu}>
-                {item?.status === 'Draft' && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedOrderId(null);
-                      navigation.navigate('AddSaleScreen', {
-                        orderId: item?.order_id,
-                      });
-                    }}>
-                    <Text style={styles.menuItem}>Edit</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedOrderId(null);
-                    navigation.navigate('SaleDetailScreen', {
-                      id: item.order_id,
-                    });
-                  }}>
-                  <Text style={styles.menuItem}>View</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </View>
-      </View>
+  const renderItem = ({ item }: { item: SalesOrderType }) => {
+    const rawColor = soStatusColors[item.status] || '#6B7280';
+    const dateObj = new Date(item.transaction_date);
+    const day = dateObj.getDate();
+    const month = dateObj.toLocaleString('default', { month: 'short' }).toUpperCase();
+    const year = dateObj.getFullYear();
+
+    return (
       <TouchableOpacity
+        activeOpacity={0.9}
         onPress={() => {
-          // setModalVisible(false);
           navigation.navigate('SaleDetailScreen', {
             id: item.order_id,
           });
         }}
-        style={styles.cardbody}>
-        {item.store_image && (
-          <Image
-            source={{ uri: imageBaseUrl + item.store_image }}
-            style={styles.storeThumb}
-          />
-        )}
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>
-            {new Date(item.transaction_date).getDate()}
-          </Text>
-          <Text style={styles.monthText}>
-            {new Date(item.transaction_date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
+        style={styles.orderCard}>
+        {/* Card Header: Order ID & Status Badge */}
+        <View style={styles.cardHeaderRow}>
+          <View style={styles.orderIdBadge}>
+            <ShoppingBag size={12} color="#C2410C" />
+            <Text style={styles.orderIdText}>{item.order_id}</Text>
+          </View>
+          <View
+            style={[
+              styles.statusPill,
+              {
+                backgroundColor: `${rawColor}18`,
+                borderColor: `${rawColor}40`,
+              },
+            ]}>
+            <View style={[styles.statusDot, { backgroundColor: rawColor }]} />
+            <Text style={[styles.statusText, { color: rawColor }]}>
+              {item.status}
+            </Text>
+          </View>
         </View>
-        <View>
-          <Text style={styles.contentText}>Store: {item.store_name}</Text>
-          <Text style={styles.contentText}>
-            Distributor: {item.distributor}
-          </Text>
-          <Text
-            style={{
-              fontFamily: Fonts.semiBold,
-              fontSize: Size.sm,
-              color: Colors.darkButton,
-            }}>
-            PO Amount: ₹{item.grand_total}
-          </Text>
+
+        {/* Card Body */}
+        <View style={styles.cardBodyRow}>
+          {/* Date Badge Box */}
+          <View style={styles.dateBox}>
+            <View style={styles.dateHeader}>
+              <Text style={styles.monthText}>{month}</Text>
+            </View>
+            <View style={styles.dateBody}>
+              <Text style={styles.dayText}>{day}</Text>
+            </View>
+          </View>
+
+          {/* Details Column */}
+          <View style={styles.detailsContent}>
+            <View style={styles.infoRow}>
+              <Store size={13} color="#4B5563" />
+              <Text style={styles.storeNameText} numberOfLines={1} ellipsizeMode="tail">
+                {item.store_name || 'N/A'}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Building2 size={12} color="#9CA3AF" />
+              <Text style={styles.distributorText} numberOfLines={1} ellipsizeMode="tail">
+                {item.distributor || 'N/A'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.cardDivider} />
+
+        {/* Card Footer */}
+        <View style={styles.cardFooterRow}>
+          <View style={styles.footerDateWrap}>
+            <Calendar size={11} color="#9CA3AF" />
+            <Text style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
+          </View>
+          <View style={styles.amountContainer}>
+            <Text style={styles.amountLabel}>PO Amount: </Text>
+            <Text style={styles.amountValue}>
+              ₹{Number(item.grand_total || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+            </Text>
+            <ChevronRight size={14} color="#9CA3AF" style={{ marginLeft: 2 }} />
+          </View>
         </View>
       </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <View
@@ -377,206 +355,158 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 20,
   },
-
-  //atteddanceCard section css
-  atteddanceCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 10,
+  // Redesigned Order Card Styles
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#1F2937',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  cardHeader: {
-    display: 'flex',
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
+    marginBottom: 6,
   },
-  timeSection: {
-    display: 'flex',
+  orderIdBadge: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     alignItems: 'center',
-    width: '50%',
-    maxWidth: 175,
+    gap: 4,
+    backgroundColor: '#FFF7ED',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFEDD5',
   },
-  time: {
-    color: Colors.darkButton,
+  orderIdText: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    lineHeight: 18,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-
-  present: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-    fontFamily: Fonts.regular,
     fontSize: Size.xxs,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 10,
-    maxWidth: 130,
-    textAlign: 'center',
+    color: '#C2410C',
   },
-
-  lateEntry: {
-    backgroundColor: Colors.holdLight,
-    color: Colors.orange,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  leave: {
-    backgroundColor: Colors.lightBlue,
-    color: Colors.blue,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-  absent: {
-    backgroundColor: Colors.lightDenger,
-    color: Colors.denger,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  cardbody: {
-    display: 'flex',
+  statusPill: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    gap: 10,
-    paddingTop: 0,
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
   },
-  storeThumb: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    textTransform: 'capitalize',
+  },
+  cardBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.darkButton,
+    width: 42,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
     alignItems: 'center',
-    paddingTop: 5,
   },
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
+  dateHeader: {
+    width: '100%',
+    backgroundColor: Colors.Orangelight,
+    paddingVertical: 1,
+    alignItems: 'center',
   },
   monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
+    fontFamily: Fonts.bold,
+    fontSize: 8,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  contentText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
-    lineHeight: 20,
-  },
-
-  checkinButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
+  dateBody: {
+    flex: 1,
     justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'absolute',
-    bottom: -65,
-    gap: 5,
-    zIndex: 1,
-    width: width * 0.9,
+    alignItems: 'center',
   },
-  checkinButtonText: {
-    fontFamily: Fonts.medium,
+  dayText: {
+    fontFamily: Fonts.bold,
     fontSize: Size.sm,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-  countBoxSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 17,
-    flexDirection: 'row',
-  },
-  countBox: {
-    backgroundColor: Colors.white,
-    width: '33.33%',
-    borderRadius: 15,
-    padding: 10,
-    minHeight: 135,
-    shadowColor: '#9F9D9D',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 15,
-  },
-  countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
-  },
-  countBoxTitle: {
-    fontFamily: Fonts.regular,
     color: Colors.darkButton,
-    fontSize: Size.xs,
-    lineHeight: 18,
   },
-  countBoxDay: {
+  detailsContent: {
+    flex: 1,
+    gap: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  storeNameText: {
     fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
     color: Colors.darkButton,
-    fontSize: Size.xslg,
-    lineHeight: 20,
-    position: 'relative',
+    flex: 1,
   },
-  //countBox-section css end
+  distributorText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+    flex: 1,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 6,
+  },
+  cardFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerDateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  footerDateText: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  amountLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+  },
+  amountValue: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.xs,
+    color: '#0F172A',
+  },
   dropdownMenu: {
     position: 'absolute',
-    top: 25, // adjust based on where you want it
-    right: 0, // aligns to right of parent
+    top: 25,
+    right: 0,
     backgroundColor: '#fff',
     borderRadius: 6,
     padding: 8,

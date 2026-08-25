@@ -1,13 +1,18 @@
 /* eslint-disable react-native/no-inline-styles */
-import {StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
-import {PurchaseOrder} from '../../../../types/baseType';
-import {Fonts} from '../../../../constants';
-import {Colors} from '../../../../utils/colors';
-import {Size} from '../../../../utils/fontSize';
-import {soStatusColors, windowWidth} from '../../../../utils/utils';
-import {flexRow} from '../../../../utils/styles';
-import {TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { PurchaseOrder } from '../../../../types/baseType';
+import { Fonts } from '../../../../constants';
+import { Colors } from '../../../../utils/colors';
+import { Size } from '../../../../utils/fontSize';
+import { soStatusColors } from '../../../../utils/utils';
+import {
+  FileCheck,
+  Building2,
+  Calendar,
+  ChevronRight,
+  Clock,
+} from 'lucide-react-native';
 
 const PurchaseComponent = ({
   item,
@@ -20,451 +25,244 @@ const PurchaseComponent = ({
   selectedOrderId: string | null;
   setSelectedOrderId: any;
 }) => {
+  const rawColor = soStatusColors[item.status] || '#4B5563';
+  const dateObj = new Date(item.transaction_date);
+  const day = dateObj.getDate();
+  const month = dateObj.toLocaleString('default', { month: 'short' }).toUpperCase();
+  const year = dateObj.getFullYear();
+
   return (
-    <View style={styles.atteddanceCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.timeSection}>
-          <Text style={styles.time}>PO ID: {item.order_id}</Text>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => {
+        setSelectedOrderId(null);
+        navigation.navigate('PurchaseDetailScreen', {
+          id: item.order_id,
+        });
+      }}
+      style={styles.orderCard}>
+      {/* Card Header: PO ID & Status Pill */}
+      <View style={styles.cardHeaderRow}>
+        <View style={styles.orderIdBadge}>
+          <FileCheck size={12} color="#1D4ED8" />
+          <Text style={styles.orderIdText}>{item.order_id}</Text>
         </View>
         <View
           style={[
-            flexRow,
+            styles.statusPill,
             {
-              gap: 0,
-              position: 'relative',
-              width: '50%',
-              maxWidth: 190,
-              justifyContent: 'flex-end',
+              backgroundColor: `${rawColor}18`,
+              borderColor: `${rawColor}40`,
             },
           ]}>
-          <Text
-            style={[
-              styles.present,
-              {
-                backgroundColor:
-                  `${soStatusColors[item.status]}30` || Colors.lightSuccess,
-                color: soStatusColors[item.status] || '#fff',
-              },
-            ]}>
+          <View style={[styles.statusDot, { backgroundColor: rawColor }]} />
+          <Text style={[styles.statusText, { color: rawColor }]}>
             {item.status}
           </Text>
-          {/* Three dot menu */}
-          {/* <TouchableOpacity
-            onPress={() =>
-              setSelectedOrderId(
-                selectedOrderId === item.order_id ? null : item.order_id,
-              )
-            }>
-            <Text style={styles.threeDot}>⋮</Text>
-          </TouchableOpacity> */}
-          {/* Modal for dropdown */}
-          {selectedOrderId === item.order_id && (
-            <>
-              {/* Backdrop to detect outside press */}
-              <TouchableOpacity
-                style={StyleSheet.absoluteFillObject}
-                activeOpacity={1}
-                onPress={() => setSelectedOrderId(null)}
-              />
-              <View style={styles.dropdownMenu}>
-                {/* {item?.status === 'Draft' && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedOrderId(null); 
-                    }}>
-                    <Text style={styles.menuItem}>Edit</Text>
-                  </TouchableOpacity>
-                )} */}
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedOrderId(null);
-                    navigation.navigate('PurchaseDetailScreen', {
-                      id: item.order_id,
-                    });
-                  }}>
-                  <Text style={styles.menuItem}>View</Text>
-                </TouchableOpacity>
-              </View>
-            </>
+        </View>
+      </View>
+
+      {/* Card Body */}
+      <View style={styles.cardBodyRow}>
+        {/* Date Box */}
+        <View style={styles.dateBox}>
+          <View style={styles.dateHeader}>
+            <Text style={styles.monthText}>{month}</Text>
+          </View>
+          <View style={styles.dateBody}>
+            <Text style={styles.dayText}>{day}</Text>
+          </View>
+        </View>
+
+        {/* Details Column */}
+        <View style={styles.detailsContent}>
+          <View style={styles.infoRow}>
+            <Building2 size={13} color="#4B5563" />
+            <Text style={styles.distributorNameText} numberOfLines={1} ellipsizeMode="tail">
+              {item.distributor_name || 'N/A'}
+            </Text>
+          </View>
+
+          {!!item.schedule_date && (
+            <View style={styles.infoRow}>
+              <Clock size={11} color="#9CA3AF" />
+              <Text style={styles.scheduleText} numberOfLines={1}>
+                Schedule: {item.schedule_date}
+              </Text>
+            </View>
           )}
         </View>
       </View>
-      <TouchableOpacity
-        onPress={() => {
-          setSelectedOrderId(null);
-          navigation.navigate('PurchaseDetailScreen', {
-            id: item.order_id,
-          });
-        }}
-        style={styles.cardbody}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>
-            {new Date(item.transaction_date).getDate()}
-          </Text>
-          <Text style={styles.monthText}>
-            {new Date(item.transaction_date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
+
+      {/* Divider */}
+      <View style={styles.cardDivider} />
+
+      {/* Card Footer */}
+      <View style={styles.cardFooterRow}>
+        <View style={styles.footerDateWrap}>
+          <Calendar size={11} color="#9CA3AF" />
+          <Text style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
         </View>
-        <View>
-          <Text
-            style={styles.contentText}
-            numberOfLines={2}
-            ellipsizeMode="tail">
-            Distributor: {item.distributor_name}
+        <View style={styles.amountContainer}>
+          <Text style={styles.amountLabel}>PO Amount: </Text>
+          <Text style={styles.amountValue}>
+            ₹{Number(item.grand_total || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
-          <Text
-            style={styles.contentText}
-            numberOfLines={2}
-            ellipsizeMode="tail">
-            Schedule Date: {item.schedule_date}
-          </Text>
-          <Text
-            style={{
-              fontFamily: Fonts.semiBold,
-              fontSize: Size.sm,
-              color: Colors.darkButton,
-            }}>
-            PO Amount: ₹{item.grand_total.toLocaleString()}
-          </Text>
+          <ChevronRight size={14} color="#9CA3AF" style={{ marginLeft: 2 }} />
         </View>
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 export default PurchaseComponent;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.transparent,
-    position: 'relative',
-    paddingHorizontal: 20,
-  },
-
-  //header-box-section css start
-  headerSec: {
-    backgroundColor: Colors.white,
-    minHeight: 150,
-    width: '100%',
-    paddingHorizontal: 20,
-    borderBottomRightRadius: 40,
-    borderBottomLeftRadius: 40,
-    position: 'relative',
-    zIndex: 1,
-    // iOS Shadow
-    shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    paddingBottom: 20,
-
-    // Android Shadow
-    elevation: 2,
-  },
-  arrobox: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#F0F2F6',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 100,
-  },
-  salesHeaderData: {
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 0,
-  },
-  threeDot: {
-    fontSize: 20,
-    paddingHorizontal: 10,
-    color: '#374151',
-  },
-  welcomeText: {
-    fontFamily: Fonts.light,
-    color: Colors.white,
-    fontSize: Size.xsmd,
-    textAlign: 'center',
-  },
-  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
-  welcomBox: {
-    padding: 15,
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingVertical: 20,
-    marginTop: 10,
-    position: 'relative',
-    bottom: -0,
-    marginBottom: -30,
-  },
-
-  linkBox: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    backgroundColor: Colors.Orangelight,
-    borderRadius: 15,
-    padding: 12,
-    gap: 10,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#9C9C9C',
-  },
-  linkContent: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    color: Colors.white,
-    gap: 5,
-    alignItems: 'center',
-    width: windowWidth * 0.76,
-  },
-
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
-
-  //bodyContent section css
-  bodyContent: {flex: 1},
-  bodyHeader: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  orderCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     paddingVertical: 10,
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E4E9',
+    paddingHorizontal: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#1F2937',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  bodyHeaderTitle: {
-    color: Colors.darkButton,
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.xsmd,
-    lineHeight: 20,
-  },
-  bodyHeaderIcon: {
-    display: 'flex',
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 20,
+    marginBottom: 6,
   },
-
-  //atteddanceCard section css
-  atteddanceCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    marginTop: 10,
-  },
-  cardHeader: {
-    display: 'flex',
+  orderIdBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
-  timeSection: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    width: '50%',
-    maxWidth: 175,
-    flexWrap: 'wrap',
-  },
-  time: {
-    color: Colors.darkButton,
+  orderIdText: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.xs,
-    lineHeight: 18,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-
-  present: {
-    backgroundColor: Colors.lightSuccess,
-    color: Colors.sucess,
-    fontFamily: Fonts.regular,
     fontSize: Size.xxs,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 10,
-    maxWidth: 130,
-    textAlign: 'center',
+    color: '#1E40AF',
   },
-
-  lateEntry: {
-    backgroundColor: Colors.holdLight,
-    color: Colors.orange,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  leave: {
-    backgroundColor: Colors.lightBlue,
-    color: Colors.blue,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-  absent: {
-    backgroundColor: Colors.lightDenger,
-    color: Colors.denger,
-    fontFamily: Fonts.regular,
-    fontSize: Size.sm,
-    lineHeight: 18,
-    padding: 8,
-    borderRadius: 50,
-    paddingHorizontal: 15,
-  },
-
-  cardbody: {
-    display: 'flex',
+  statusPill: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    textTransform: 'capitalize',
+  },
+  cardBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
-    paddingTop: 0,
   },
   dateBox: {
-    width: 50,
-    height: 50,
-    borderColor: Colors.darkButton,
+    width: 42,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
     alignItems: 'center',
-    paddingTop: 5,
   },
-  dateText: {
-    fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
-    color: Colors.darkButton,
-    padding: 0,
-    margin: 0,
-    lineHeight: 18,
+  dateHeader: {
+    width: '100%',
+    backgroundColor: Colors.darkButton,
+    paddingVertical: 1,
+    alignItems: 'center',
   },
   monthText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
+    fontFamily: Fonts.bold,
+    fontSize: 8,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
-  contentText: {
-    fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
-    lineHeight: 20,
-    width: windowWidth * 0.6,
-  },
-
-  checkinButton: {
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
+  dateBody: {
+    flex: 1,
     justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'absolute',
-    bottom: -65,
-    gap: 5,
-    zIndex: 1,
-    width: windowWidth * 0.9,
+    alignItems: 'center',
   },
-  checkinButtonText: {
-    fontFamily: Fonts.medium,
+  dayText: {
+    fontFamily: Fonts.bold,
     fontSize: Size.sm,
-    color: Colors.white,
-    lineHeight: 22,
-  },
-  countBoxSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    display: 'flex',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    gap: 17,
-    flexDirection: 'row',
-  },
-  countBox: {
-    backgroundColor: Colors.white,
-    width: '33.33%',
-    borderRadius: 15,
-    padding: 10,
-    minHeight: 135,
-    shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 15,
-  },
-  countBoxIcon: {
-    width: 45,
-    height: 45,
-    display: 'flex',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    marginBottom: 10,
-    marginLeft: 'auto',
-  },
-  countBoxTitle: {
-    fontFamily: Fonts.regular,
     color: Colors.darkButton,
-    fontSize: Size.xs,
-    lineHeight: 18,
   },
-  countBoxDay: {
+  detailsContent: {
+    flex: 1,
+    gap: 2,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  distributorNameText: {
     fontFamily: Fonts.semiBold,
+    fontSize: Size.xs,
     color: Colors.darkButton,
-    fontSize: Size.xslg,
-    lineHeight: 20,
-    position: 'relative',
+    flex: 1,
   },
-  //countBox-section css end
-  dropdownMenu: {
-    position: 'absolute',
-    top: 25, // adjust based on where you want it
-    right: 0, // aligns to right of parent
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 999,
+  scheduleText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+    flex: 1,
   },
-  menuItem: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    fontSize: 14,
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 6,
+  },
+  cardFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerDateWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  footerDateText: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  amountLabel: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#6B7280',
+  },
+  amountValue: {
+    fontFamily: Fonts.bold,
+    fontSize: Size.xs,
+    color: '#0F172A',
   },
 });

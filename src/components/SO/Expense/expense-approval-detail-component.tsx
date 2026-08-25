@@ -353,19 +353,40 @@ const ExpenseApprovalDetailComponent = ({
         });
         setEditRowModalVisible(false);
         setSelectedExpense(null);
+      } else if (
+        res?.message?.error_code === 'OVER_CEILING' ||
+        res?.message?.status === 'error'
+      ) {
+        Toast.show({
+          type: 'error',
+          text1: 'Sanction Ceiling Exceeded',
+          text2:
+            getSafeServerMessage(res?.message?.message) ??
+            'Sanction amount exceeds category ceiling.',
+          visibilityTime: 6000,
+        });
+        // Keep edit modal open and preserve form values
       } else {
         Toast.show({
           type: 'error',
           text1: 'Failed',
-          text2: getSafeServerMessage(res?.message?.message) ?? 'Failed to update expense item',
+          text2:
+            getSafeServerMessage(res?.message?.message) ??
+            'Failed to update expense item',
         });
       }
     } catch (err: any) {
+      const isCeiling =
+        err?.data?.error_code === 'OVER_CEILING' ||
+        err?.data?.message?.error_code === 'OVER_CEILING';
+
       Toast.show({
         type: 'error',
-        text1: 'Error',
-        text2: getUserFacingError(err, 'Something went wrong'),
+        text1: isCeiling ? 'Sanction Ceiling Exceeded' : 'Error',
+        text2: getUserFacingError(err, 'Failed to update expense item'),
+        visibilityTime: 6000,
       });
+      // Do not close modal on ceiling error to preserve user input
     }
   };
 

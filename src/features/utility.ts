@@ -10,12 +10,14 @@ import {
   clearSecureSession,
   getCachedSecureSession,
 } from '../utils/secureStorage';
+import {getRetryAfterUntil} from '../utils/security';
 
 // We avoid importing from ./auth/auth to prevent circular dependencies.
 // Action types are derived from the 'authSlice' slice name.
 const LOGOUT_TYPE = 'authSlice/logout';
 const SET_SESSION_EXPIRED_TYPE = 'authSlice/setSessionExpired';
 const SET_GLOBAL_ERROR_TYPE = 'authSlice/setGlobalError';
+const SET_RATE_LIMIT_UNTIL_TYPE = 'authSlice/setRateLimitUntil';
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: apiBaseUrl,
@@ -52,7 +54,8 @@ export const baseQueryWithAuthGuard: BaseQueryFn<
   const result = await baseQuery(args, api, extraOptions);
 
   if (result?.error) {
-    if (result.error.status === 401) {
+    const status = result.error.status;
+    if (status === 401) {
       // Show the session-expired banner, then log out after a short delay
       api.dispatch({type: SET_SESSION_EXPIRED_TYPE, payload: true});
       setTimeout(() => {
@@ -60,6 +63,16 @@ export const baseQueryWithAuthGuard: BaseQueryFn<
         clearSecureSession();
         api.dispatch({type: LOGOUT_TYPE});
       }, 3000);
+    } else if (status === 429) {
+      // HTTP 429 Too Many Requests: Parse Retry-After header/body and set countdown
+      const until = getRetryAfterUntil(result);
+      if (until) {
+        api.dispatch({type: SET_RATE_LIMIT_UNTIL_TYPE, payload: until});
+      }
+      api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
+    } else if (status === 403) {
+      // HTTP 403 Forbidden: Do NOT log out user, just surface permission error
+      api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
     } else {
       // Dispatch other errors to global state
       api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
@@ -94,7 +107,8 @@ export const baseQueryForTadaWithAuthGuard: BaseQueryFn<
   const result = await baseQueryForTada(args, api, extraOptions);
 
   if (result?.error) {
-    if (result.error.status === 401) {
+    const status = result.error.status;
+    if (status === 401) {
       // Show the session-expired banner, then log out after a short delay
       api.dispatch({type: SET_SESSION_EXPIRED_TYPE, payload: true});
       setTimeout(() => {
@@ -102,6 +116,14 @@ export const baseQueryForTadaWithAuthGuard: BaseQueryFn<
         clearSecureSession();
         api.dispatch({type: LOGOUT_TYPE});
       }, 3000);
+    } else if (status === 429) {
+      const until = getRetryAfterUntil(result);
+      if (until) {
+        api.dispatch({type: SET_RATE_LIMIT_UNTIL_TYPE, payload: until});
+      }
+      api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
+    } else if (status === 403) {
+      api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
     } else {
       // Dispatch other errors to global state
       api.dispatch({type: SET_GLOBAL_ERROR_TYPE, payload: result.error});
