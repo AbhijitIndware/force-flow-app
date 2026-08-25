@@ -1,8 +1,9 @@
-import React, {useMemo, useState} from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Modal,
   RefreshControl,
   SafeAreaView,
@@ -13,27 +14,28 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 
 import PageHeader from '../../../components/ui/PageHeader';
-import {MonthPickerModal} from '../../../components/SO/HomeScreen/MonthPickerModal';
-import {YearPickerModal} from '../../../components/SO/HomeScreen/YearPickerModal';
-import {flexCol, boxShadow} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {SupervisorRosterAssignment} from '../../../types/baseType';
-import {getInitials} from '../../../utils/utils';
+import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
+import { YearPickerModal } from '../../../components/SO/HomeScreen/YearPickerModal';
+import { flexCol, boxShadow } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { SupervisorRosterAssignment } from '../../../types/baseType';
+import { getInitials } from '../../../utils/utils';
 import {
   useGetMyPromotersQuery,
   useGetPromoterRosterQuery,
   useCancelShiftAssignmentMutation,
 } from '../../../features/base/promoter-base-api';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -52,7 +54,7 @@ const RED_SOFT = '#FBE8E8';
 const assignmentDays = (a: SupervisorRosterAssignment) =>
   Math.max(1, moment(a.end_date).diff(moment(a.start_date), 'days') + 1);
 
-const PromoterShiftsScreen = ({navigation}: Props) => {
+const PromoterShiftsScreen = ({ navigation }: Props) => {
   const now = moment();
   const [employee, setEmployee] = useState('');
   const [month, setMonth] = useState(now.month() + 1);
@@ -66,7 +68,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
 
   const [cancelShiftAssignment] = useCancelShiftAssignmentMutation();
 
-  const {data: promotersData, isLoading: promotersLoading} =
+  const { data: promotersData, isLoading: promotersLoading } =
     useGetMyPromotersQuery();
 
   const promoterOptions = useMemo(() => {
@@ -84,7 +86,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
     data: rosterData,
     isFetching: rosterFetching,
     refetch,
-  } = useGetPromoterRosterQuery({employee, month, year}, {skip: !employee});
+  } = useGetPromoterRosterQuery({ employee, month, year }, { skip: !employee });
 
   const employeeName = rosterData?.message?.data?.employee_name ?? '';
   const aonDays = rosterData?.message?.data?.aon_days ?? 0;
@@ -192,7 +194,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
       'Cancel shift?',
       `Cancel ${assignment.shift_type || 'this shift'} at ${assignment.store_name}?`,
       [
-        {text: 'Keep', style: 'cancel'},
+        { text: 'Keep', style: 'cancel' },
         {
           text: 'Cancel Shift',
           style: 'destructive',
@@ -280,13 +282,17 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
         </Text>
 
         <View style={styles.cardRow}>
-          <View style={styles.iconBox}>
-            <Ionicons
-              name="storefront-outline"
-              size={14}
-              color={Colors.darkButton}
+          {assignment.store_image ? (
+            <Image
+              source={{ uri: `${imageBaseUrl}${assignment.store_image}` }}
+              style={styles.storeImage}
+              resizeMode="cover"
             />
-          </View>
+          ) : (
+            <View style={styles.iconBox}>
+              <Ionicons name="storefront-outline" size={14} color={Colors.darkButton} />
+            </View>
+          )}
           <Text style={styles.cardText} numberOfLines={1}>
             {assignment.store_name}
           </Text>
@@ -362,7 +368,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
   };
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Promoter Shifts"
         navigation={() => navigation.goBack()}
@@ -391,13 +397,13 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
                 {promotersLoading
                   ? 'Loading...'
                   : employee === ''
-                  ? 'Promoter'
-                  : selectedPromoterLabel}
+                    ? 'Promoter'
+                    : selectedPromoterLabel}
               </Text>
             </View>
             {employee !== '' && (
               <TouchableOpacity
-                hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 onPress={() => setEmployee('')}>
                 <Ionicons name="close" size={14} color={Colors.gray} />
               </TouchableOpacity>
@@ -439,7 +445,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
           <ActivityIndicator
             size="large"
             color={Colors.orange}
-            style={{marginTop: 40}}
+            style={{ marginTop: 40 }}
           />
         ) : employee === '' ? (
           <View style={[styles.emptyState, boxShadow]}>
@@ -482,8 +488,8 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
                   <Text style={styles.summaryPeriod}>
                     {periodStart
                       ? `${moment(periodStart).format('DD MMM YYYY')} - ${moment(
-                          periodEnd,
-                        ).format('DD MMM YYYY')}`
+                        periodEnd,
+                      ).format('DD MMM YYYY')}`
                       : `${monthLabel} ${year}`}
                   </Text>
                 </View>
@@ -621,7 +627,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
               keyExtractor={item => item.value}
               style={styles.modalList}
               keyboardShouldPersistTaps="handled"
-              renderItem={({item}) => {
+              renderItem={({ item }) => {
                 const selected = item.value === employee;
                 return (
                   <TouchableOpacity
@@ -647,7 +653,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
                     <Text
                       style={[
                         styles.modalItemText,
-                        selected && {color: Colors.darkButton},
+                        selected && { color: Colors.darkButton },
                       ]}
                       numberOfLines={1}>
                       {item.label}
@@ -676,7 +682,7 @@ const PromoterShiftsScreen = ({navigation}: Props) => {
 export default PromoterShiftsScreen;
 
 const styles = StyleSheet.create({
-  content: {padding: 16, paddingBottom: 40},
+  content: { padding: 16, paddingBottom: 40 },
 
   // ── Filter panel ──────────────────────────────────────────────────────────────
   filterCard: {
@@ -706,7 +712,7 @@ const styles = StyleSheet.create({
   filterBoxYear: {
     flex: 0.8,
   },
-  filterBoxTextWrap: {flex: 1},
+  filterBoxTextWrap: { flex: 1 },
   filterBoxText: {
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
@@ -765,7 +771,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     padding: 0,
   },
-  modalList: {maxHeight: 420},
+  modalList: { maxHeight: 420 },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -776,7 +782,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderRadius: 8,
   },
-  modalItemSel: {backgroundColor: '#FFF7ED'},
+  modalItemSel: { backgroundColor: '#FFF7ED' },
   modalAvatar: {
     width: 32,
     height: 32,
@@ -785,13 +791,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalAvatarSel: {backgroundColor: Colors.orange},
+  modalAvatarSel: { backgroundColor: Colors.orange },
   modalAvatarText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.xxs,
     color: Colors.textSecondary,
   },
-  modalAvatarTextSel: {color: Colors.white},
+  modalAvatarTextSel: { color: Colors.white },
   modalItemText: {
     flex: 1,
     fontSize: Size.xs,
@@ -814,6 +820,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     alignItems: 'center',
     marginTop: 8,
+  },
+  storeImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 5,
+    marginRight: 6,
   },
   emptyIconBox: {
     width: 56,
@@ -863,7 +875,7 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.white,
   },
-  summaryMeta: {flex: 1},
+  summaryMeta: { flex: 1 },
   summaryName: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
@@ -922,7 +934,7 @@ const styles = StyleSheet.create({
   },
 
   // ── Day grouping ─────────────────────────────────────────────────────────────
-  dayGroup: {marginBottom: 4},
+  dayGroup: { marginBottom: 4 },
   dayHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -930,7 +942,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingHorizontal: 2,
   },
-  dayHeaderLeft: {flexDirection: 'row', alignItems: 'baseline', gap: 8},
+  dayHeaderLeft: { flexDirection: 'row', alignItems: 'baseline', gap: 8 },
   dayHeaderDate: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
@@ -967,7 +979,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  cardCancelled: {opacity: 0.55},
+  cardCancelled: { opacity: 0.55 },
   cardAccent: {
     position: 'absolute',
     left: 0,
@@ -1005,18 +1017,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
-  statusPillActive: {backgroundColor: '#E7F8EA'},
-  statusPillSecondary: {backgroundColor: BLUE_SOFT},
-  statusPillFloater: {backgroundColor: ORANGE_SOFT},
-  statusPillCancelled: {backgroundColor: RED_SOFT},
+  statusPillActive: { backgroundColor: '#E7F8EA' },
+  statusPillSecondary: { backgroundColor: BLUE_SOFT },
+  statusPillFloater: { backgroundColor: ORANGE_SOFT },
+  statusPillCancelled: { backgroundColor: RED_SOFT },
   statusPillText: {
     fontFamily: Fonts.semiBold,
     fontSize: 10,
   },
-  statusTextActive: {color: '#15803D'},
-  statusTextSecondary: {color: '#2563EB'},
-  statusTextFloater: {color: '#C2410C'},
-  statusTextCancelled: {color: '#B91C1C'},
+  statusTextActive: { color: '#15803D' },
+  statusTextSecondary: { color: '#2563EB' },
+  statusTextFloater: { color: '#C2410C' },
+  statusTextCancelled: { color: '#B91C1C' },
   cardTitle: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.xs,

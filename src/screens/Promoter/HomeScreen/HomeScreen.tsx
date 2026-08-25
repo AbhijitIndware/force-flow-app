@@ -10,16 +10,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
-import {Fonts} from '../../../constants';
+import React, { useCallback, useState } from 'react';
+import { PromoterAppStackParamList } from '../../../types/Navigation';
+import { Fonts } from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Size} from '../../../utils/fontSize';
-import {Divider} from '@rneui/themed';
+import { Size } from '../../../utils/fontSize';
+import { Divider } from '@rneui/themed';
 import {
   ArrowRight,
   BookOpen,
@@ -37,16 +37,16 @@ import {
   useGetPromoterHomeQuery,
   usePromoterStatusQuery,
 } from '../../../features/base/promoter-base-api';
-import {useGetProfileDataQuery} from '../../../features/auth/auth';
-import {useAppSelector} from '../../../store/hook';
+import { useGetProfileDataQuery } from '../../../features/auth/auth';
+import { useAppSelector } from '../../../store/hook';
 import {
   IPromoterHomeData,
   IAttendanceStatusData,
 } from '../../../types/baseType';
-import {TargetMetricBox} from '../../../components/SO/HomeScreen/Common';
+import { TargetMetricBox } from '../../../components/SO/HomeScreen/Common';
 import moment from 'moment';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -59,7 +59,7 @@ type Props = {
 };
 
 const getLastCheckMessage = (attendance: IPromoterHomeData['attendance']) => {
-  const {checked_in, checked_out, checkin_time, checkout_time} = attendance;
+  const { checked_in, checked_out, checkin_time, checkout_time } = attendance;
 
   const checkInTime = checkin_time
     ? moment(checkin_time, 'HH:mm:ss.SSSSSS').format('hh:mm A')
@@ -106,7 +106,7 @@ const getStoreStatusLabel = (store: {
   return 'Not Checked In';
 };
 
-const HomeScreen = ({navigation, route}: Props) => {
+const HomeScreen = ({ navigation, route }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const {
@@ -117,7 +117,7 @@ const HomeScreen = ({navigation, route}: Props) => {
     refetchOnMountOrArgChange: true,
   });
 
-  const {data: statusData, isLoading: statusLoading} = usePromoterStatusQuery(
+  const { data: statusData, isLoading: statusLoading } = usePromoterStatusQuery(
     undefined,
     {
       refetchOnMountOrArgChange: true,
@@ -130,9 +130,9 @@ const HomeScreen = ({navigation, route}: Props) => {
   const empId = useAppSelector(
     state => state?.persistedReducer?.authSlice?.empId,
   );
-  const {data: profileData} = useGetProfileDataQuery(
-    {emp_id: empId as string},
-    {refetchOnMountOrArgChange: true, skip: !empId},
+  const { data: profileData } = useGetProfileDataQuery(
+    { emp_id: empId as string },
+    { refetchOnMountOrArgChange: true, skip: !empId },
   );
   const profileEmployee = profileData?.message?.employee;
 
@@ -146,8 +146,8 @@ const HomeScreen = ({navigation, route}: Props) => {
   const salesPct =
     target && target.sales_target > 0
       ? parseFloat(
-          ((target.achieved_value / target.sales_target) * 100).toFixed(2),
-        )
+        ((target.achieved_value / target.sales_target) * 100).toFixed(2),
+      )
       : 0;
   const ddnPct =
     target && target.ddn_target > 0
@@ -180,7 +180,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }>
           <View style={styles.headerSec}>
-            <View style={{position: 'relative', marginBottom: 0}}>
+            <View style={{ position: 'relative', marginBottom: 0 }}>
               <View style={styles.welcomBox}>
                 {/* ── Greeting + Date Row ── */}
                 <View style={styles.greetingRow}>
@@ -258,7 +258,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               {/* ── View attendance link ── */}
               <View style={styles.planLink}>
                 <TouchableOpacity
-                  style={{flexDirection: 'row', alignItems: 'center'}}
+                  style={{ flexDirection: 'row', alignItems: 'center' }}
                   onPress={() => navigation.navigate('AttendanceScreen')}>
                   <Text style={styles.planLinkText}>
                     View Attendance & Shift Records
@@ -274,7 +274,7 @@ const HomeScreen = ({navigation, route}: Props) => {
           </View>
 
           {storesToday.length > 0 && (
-            <View style={[styles.container, {paddingTop: 25}]}>
+            <View style={[styles.container, { paddingTop: 25 }]}>
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.SectionHeading}>Today's Stores</Text>
                 <View style={styles.storeCountBadge}>
@@ -292,13 +292,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                 const statusColor = isOut
                   ? '#dc2626'
                   : isIn
-                  ? '#16a34a'
-                  : Colors.gray;
+                    ? '#16a34a'
+                    : Colors.gray;
                 const statusBg = isOut
                   ? '#FEF2F2'
                   : isIn
-                  ? '#E6F7EE'
-                  : '#F2F3F5';
+                    ? '#E6F7EE'
+                    : '#F2F3F5';
                 return (
                   <View key={store.store ?? idx} style={styles.storeCard}>
                     <View style={styles.storeIconBox}>
@@ -330,15 +330,15 @@ const HomeScreen = ({navigation, route}: Props) => {
                     </View>
 
                     <View
-                      style={[styles.storeStatus, {backgroundColor: statusBg}]}>
+                      style={[styles.storeStatus, { backgroundColor: statusBg }]}>
                       <View
                         style={[
                           styles.statusDot,
-                          {backgroundColor: statusColor},
+                          { backgroundColor: statusColor },
                         ]}
                       />
                       <Text
-                        style={[styles.storeStatusText, {color: statusColor}]}>
+                        style={[styles.storeStatusText, { color: statusColor }]}>
                         {statusLabel}
                       </Text>
                     </View>
@@ -417,38 +417,35 @@ const HomeScreen = ({navigation, route}: Props) => {
             </TouchableOpacity>
           </View> */}
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>
               Target vs Achievement{' '}
-              <Text style={{fontFamily: Fonts.regular}}>(Value)</Text>
+              <Text style={{ fontFamily: Fonts.regular }}>(Value)</Text>
             </Text>
             <View style={styles.metricRow}>
               <TargetMetricBox
                 label="Sales Target"
-                achieved={`₹${
-                  (target?.achieved_value ?? 0) % 1 !== 0
+                achieved={`₹${(target?.achieved_value ?? 0) % 1 !== 0
                     ? (target?.achieved_value ?? 0).toFixed(2)
                     : target?.achieved_value ?? 0
-                }`}
-                target={`₹${
-                  target?.sales_target?.toLocaleString('en-IN') || 0
-                }`}
+                  }`}
+                target={`₹${target?.sales_target?.toLocaleString('en-IN') || 0
+                  }`}
                 rate={target?.percentage ?? salesPct}
                 accentColor="#0F6E56"
               />
               <TargetMetricBox
                 label="DDN Target"
-                achieved={`₹${
-                  (target?.ddn_value ?? 0) % 1 !== 0
+                achieved={`₹${(target?.ddn_value ?? 0) % 1 !== 0
                     ? (target?.ddn_value ?? 0).toFixed(2)
                     : target?.ddn_value ?? 0
-                }`}
+                  }`}
                 target={`₹${target?.ddn_target?.toLocaleString('en-IN') || 0}`}
                 rate={ddnPct}
                 accentColor="#185FA5"
               />
             </View>
-            <View style={[styles.metricRow, {marginTop: 10}]}>
+            <View style={[styles.metricRow, { marginTop: 10 }]}>
               <TargetMetricBox
                 label="Orders"
                 achieved={`${target?.order_count || 0}`}
@@ -507,7 +504,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             </View>
           </View> */}
 
-          <View style={[styles.container, {paddingTop: 20}]}>
+          <View style={[styles.container, { paddingTop: 20 }]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
             <View style={styles.newStoreCard}>
               <TouchableOpacity
@@ -528,7 +525,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               <Divider
                 width={1}
                 color={Colors.lightGray}
-                style={{borderStyle: 'dashed'}}
+                style={{ borderStyle: 'dashed' }}
               />
               <TouchableOpacity
                 style={styles.listLink}
@@ -545,11 +542,11 @@ const HomeScreen = ({navigation, route}: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-          <View style={[styles.LinkSection, {paddingVertical: 15}]}>
+          <View style={[styles.LinkSection, { paddingVertical: 15 }]}>
             <Text
               style={[
                 styles.SectionHeading,
-                {marginBottom: 10, paddingHorizontal: 20},
+                { marginBottom: 10, paddingHorizontal: 20 },
               ]}>
               Quick links
             </Text>
@@ -559,12 +556,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={[styles.linkTitle]}>Create Sales Order</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -575,7 +572,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
@@ -583,12 +580,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>New Stock Entry</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -648,7 +645,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
@@ -656,7 +653,7 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <MessageSquareQuote
                   strokeWidth={2}
@@ -665,7 +662,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
               <Text style={styles.linkTitle}>Feedback</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -676,7 +673,7 @@ const HomeScreen = ({navigation, route}: Props) => {
             <Divider
               width={1}
               color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
+              style={{ marginBottom: 10, borderStyle: 'dashed' }}
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
@@ -684,12 +681,12 @@ const HomeScreen = ({navigation, route}: Props) => {
               <View
                 style={[
                   styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
+                  { width: 35, height: 35, borderRadius: 10 },
                 ]}>
                 <Camera strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Store Activity</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+              <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
                   size={12}
@@ -723,7 +720,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: {width: 0, height: 6},
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -737,7 +734,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: Size.sm,
   },
-  name: {fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white},
+  name: { fontFamily: Fonts.medium, fontSize: Size.sm, color: Colors.white },
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.orange,
@@ -794,7 +791,7 @@ const styles = StyleSheet.create({
     width: '80%',
   },
 
-  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
+  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
   storeInfoCard: {
     backgroundColor: Colors.orange,
     borderRadius: 12,
@@ -874,7 +871,7 @@ const styles = StyleSheet.create({
     padding: 15,
     minHeight: 107,
     shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
@@ -935,7 +932,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     marginBottom: 8,
     shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
@@ -1010,8 +1007,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
   },
-  dataBoxSection: {paddingTop: 15},
-  metricRow: {flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12},
+  dataBoxSection: { paddingTop: 15 },
+  metricRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 },
   dataBox: {
     backgroundColor: Colors.white,
     borderRadius: 14,
@@ -1023,7 +1020,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  positionValue: {display: 'flex', flexDirection: 'row', alignItems: 'center'},
+  positionValue: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
   incressValu: {
     display: 'flex',
     flexDirection: 'row',
@@ -1090,7 +1087,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
     shadowColor: '#9F9D9D',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
@@ -1128,7 +1125,7 @@ const styles = StyleSheet.create({
   },
 
   //incentive section css start
-  LinkSection: {backgroundColor: Colors.white},
+  LinkSection: { backgroundColor: Colors.white },
 
   IconlinkBox: {
     display: 'flex',

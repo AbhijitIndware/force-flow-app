@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,25 +13,25 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
 import PageHeader from '../../../components/ui/PageHeader';
 import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
-import {flexCol, boxShadow} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {SoAppStackParamList} from '../../../types/Navigation';
+import { flexCol, boxShadow } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { SoAppStackParamList } from '../../../types/Navigation';
 import {
   SupervisorActivityRow,
   SupervisorAttendanceByStore,
   SupervisorOrderRow,
   SupervisorStockTakeRow,
 } from '../../../types/baseType';
-import {getInitials} from '../../../utils/utils';
-import {imageBaseUrl} from '../../../features/apiBaseUrl';
+import { getInitials } from '../../../utils/utils';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import {
   useGetMyPromotersQuery,
   useGetPromoterDayQuery,
@@ -44,7 +44,7 @@ type NavigationProp = NativeStackNavigationProp<
 
 type Props = {
   navigation: NavigationProp;
-  route: {params?: {employee?: string; date?: string}};
+  route: { params?: { employee?: string; date?: string } };
 };
 
 const ORANGE_SOFT = '#FFF1E0';
@@ -54,13 +54,13 @@ const GREEN_SOFT = '#E7F8EA';
 const PURPLE_SOFT = '#EDE7FE';
 
 const SECTION_COLORS = {
-  attendance: {icon: 'time-outline', color: '#2563EB', bg: BLUE_SOFT},
-  stock: {icon: 'file-tray-outline', color: '#15803D', bg: GREEN_SOFT},
-  orders: {icon: 'cart-outline', color: '#C2410C', bg: ORANGE_SOFT},
-  activities: {icon: 'sparkles-outline', color: '#7C3AED', bg: PURPLE_SOFT},
+  attendance: { icon: 'time-outline', color: '#2563EB', bg: BLUE_SOFT },
+  stock: { icon: 'file-tray-outline', color: '#15803D', bg: GREEN_SOFT },
+  orders: { icon: 'cart-outline', color: '#C2410C', bg: ORANGE_SOFT },
+  activities: { icon: 'sparkles-outline', color: '#7C3AED', bg: PURPLE_SOFT },
 } as const;
 
-const PromoterDayDetailScreen = ({navigation, route}: Props) => {
+const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
   const today = moment().format('YYYY-MM-DD');
   const [employee, setEmployee] = useState(route?.params?.employee ?? '');
   const [date, setDate] = useState(route?.params?.date ?? today);
@@ -68,7 +68,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
   const [promoterSearch, setPromoterSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
-  const {data: promotersData, isLoading: promotersLoading} =
+  const { data: promotersData, isLoading: promotersLoading } =
     useGetMyPromotersQuery();
 
   const promoterOptions = useMemo(() => {
@@ -88,7 +88,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
     isFetching,
     error,
     refetch,
-  } = useGetPromoterDayQuery({employee, date}, {skip: !employee});
+  } = useGetPromoterDayQuery({ employee, date }, { skip: !employee });
 
   const data = dayData?.message?.data;
   const employeeName = data?.employee_name ?? '';
@@ -100,6 +100,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
   const orderRows = data?.orders?.rows ?? [];
   const orderTotal = data?.orders?.total_value ?? 0;
   const activityRows = data?.activities?.rows ?? [];
+  // const todayShifts = data?.today_shifts ?? [];
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -135,9 +136,9 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
       icon = 'close-circle';
     }
     return (
-      <View style={[styles.statusPill, {backgroundColor: bg}]}>
+      <View style={[styles.statusPill, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={11} color={color} />
-        <Text style={[styles.statusPillText, {color}]}>{status}</Text>
+        <Text style={[styles.statusPillText, { color }]}>{status}</Text>
       </View>
     );
   };
@@ -148,12 +149,12 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
       <View
         style={[
           styles.wfPill,
-          {backgroundColor: approved ? GREEN_SOFT : '#F0F0F0'},
+          { backgroundColor: approved ? GREEN_SOFT : '#F0F0F0' },
         ]}>
         <Text
           style={[
             styles.wfPillText,
-            {color: approved ? '#15803D' : '#555555'},
+            { color: approved ? '#15803D' : '#555555' },
           ]}>
           {state}
         </Text>
@@ -241,7 +242,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
             {row.images.slice(0, 4).map((img, idx) => (
               <Image
                 key={`${img}-${idx}`}
-                source={{uri: `${imageBaseUrl}${img}`}}
+                source={{ uri: `${imageBaseUrl}${img}` }}
                 style={styles.thumb}
               />
             ))}
@@ -278,7 +279,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
     const meta = SECTION_COLORS[key];
     return (
       <View style={styles.sectionHeader}>
-        <View style={[styles.sectionIconBox, {backgroundColor: meta.bg}]}>
+        <View style={[styles.sectionIconBox, { backgroundColor: meta.bg }]}>
           <Ionicons name={meta.icon} size={16} color={meta.color} />
         </View>
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -295,7 +296,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
     bg: string,
   ) => (
     <View style={styles.heroStat}>
-      <View style={[styles.heroStatIcon, {backgroundColor: bg}]}>
+      <View style={[styles.heroStatIcon, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={14} color={color} />
       </View>
       <Text style={styles.heroStatValue}>{value}</Text>
@@ -380,6 +381,37 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
             </View>
             {renderAttendanceStatus(attendance?.status)}
           </View>
+
+          {/* {todayShifts.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.storesRow}
+              contentContainerStyle={styles.storesRowContent}>
+              {todayShifts.map(shift => (
+                <View key={shift.shift_assignment} style={styles.storeChip}>
+                  {shift.store_image ? (
+                    <Image
+                      source={{ uri: `${imageBaseUrl}${shift.store_image}` }}
+                      style={styles.storeChipImage}
+                    />
+                  ) : (
+                    <View style={[styles.storeChipImage, styles.storeChipImageFallback]}>
+                      <Ionicons name="storefront-outline" size={14} color="#2563EB" />
+                    </View>
+                  )}
+                  <View style={styles.storeChipMeta}>
+                    <Text style={styles.storeChipName} numberOfLines={1}>
+                      {shift.store_name}
+                    </Text>
+                    <Text style={styles.storeChipTime} numberOfLines={1}>
+                      {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          ) : null} */}
 
           <View style={styles.heroStatsRow}>
             {renderHeroStat(
@@ -546,7 +578,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
   };
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader title="Promoter Day" navigation={() => navigation.goBack()} />
 
       <View style={[styles.filterCard, boxShadow]}>
@@ -565,8 +597,8 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
               {promotersLoading
                 ? 'Loading...'
                 : employee === ''
-                ? 'Promoter'
-                : selectedPromoterLabel}
+                  ? 'Promoter'
+                  : selectedPromoterLabel}
             </Text>
           </View>
           <Ionicons name="chevron-down" size={14} color={Colors.gray} />
@@ -649,7 +681,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
               keyExtractor={item => item.value}
               style={styles.modalList}
               keyboardShouldPersistTaps="handled"
-              renderItem={({item}) => {
+              renderItem={({ item }) => {
                 const selected = item.value === employee;
                 return (
                   <TouchableOpacity
@@ -675,7 +707,7 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
                     <Text
                       style={[
                         styles.modalItemText,
-                        selected && {color: Colors.darkButton},
+                        selected && { color: Colors.darkButton },
                       ]}
                       numberOfLines={1}>
                       {item.label}
@@ -704,9 +736,9 @@ const PromoterDayDetailScreen = ({navigation, route}: Props) => {
 export default PromoterDayDetailScreen;
 
 const styles = StyleSheet.create({
-  content: {padding: 16, paddingBottom: 40},
-  fetching: {marginVertical: 12},
-  loading: {marginTop: 40},
+  content: { padding: 16, paddingBottom: 40 },
+  fetching: { marginVertical: 12 },
+  loading: { marginTop: 40 },
 
   filterCard: {
     backgroundColor: Colors.white,
@@ -730,9 +762,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 9,
   },
-  dateBox: {flex: 1},
-  hiddenLabel: {fontSize: 0, height: 0, marginBottom: 0, overflow: 'hidden'},
-  filterBoxTextWrap: {flex: 1},
+  dateBox: { flex: 1 },
+  hiddenLabel: { fontSize: 0, height: 0, marginBottom: 0, overflow: 'hidden' },
+  filterBoxTextWrap: { flex: 1 },
   filterBoxText: {
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
@@ -776,7 +808,7 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.white,
   },
-  heroMeta: {flex: 1},
+  heroMeta: { flex: 1 },
   heroName: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
@@ -849,7 +881,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: Colors.darkButton,
   },
-  sectionRight: {flexDirection: 'row', alignItems: 'center'},
+  sectionRight: { flexDirection: 'row', alignItems: 'center' },
   countChip: {
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
@@ -888,8 +920,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBoxBlue: {backgroundColor: BLUE_SOFT},
-  iconBoxOrange: {backgroundColor: ORANGE_SOFT},
+  iconBoxBlue: { backgroundColor: BLUE_SOFT },
+  iconBoxOrange: { backgroundColor: ORANGE_SOFT },
   infoText: {
     flex: 1,
     fontFamily: Fonts.medium,
@@ -952,7 +984,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 6,
   },
-  byStoreMeta: {flex: 1},
+  byStoreMeta: { flex: 1 },
   byStoreName: {
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
@@ -1010,14 +1042,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
-  mismatchOk: {backgroundColor: GREEN_SOFT},
-  mismatchBad: {backgroundColor: RED_SOFT},
+  mismatchOk: { backgroundColor: GREEN_SOFT },
+  mismatchBad: { backgroundColor: RED_SOFT },
   mismatchText: {
     fontFamily: Fonts.semiBold,
     fontSize: 11,
   },
-  mismatchTextOk: {color: '#15803D'},
-  mismatchTextBad: {color: '#B91C1C'},
+  mismatchTextOk: { color: '#15803D' },
+  mismatchTextBad: { color: '#B91C1C' },
 
   orderRow: {
     flexDirection: 'row',
@@ -1027,7 +1059,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F7F7F7',
   },
-  orderMeta: {flex: 1},
+  orderMeta: { flex: 1 },
   orderName: {
     fontFamily: Fonts.medium,
     fontSize: Size.xxs,
@@ -1209,7 +1241,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     padding: 0,
   },
-  modalList: {maxHeight: 420},
+  modalList: { maxHeight: 420 },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1220,7 +1252,7 @@ const styles = StyleSheet.create({
     gap: 10,
     borderRadius: 8,
   },
-  modalItemSel: {backgroundColor: '#FFF7ED'},
+  modalItemSel: { backgroundColor: '#FFF7ED' },
   modalAvatar: {
     width: 32,
     height: 32,
@@ -1229,13 +1261,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalAvatarSel: {backgroundColor: Colors.orange},
+  modalAvatarSel: { backgroundColor: Colors.orange },
   modalAvatarText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.xxs,
     color: Colors.textSecondary,
   },
-  modalAvatarTextSel: {color: Colors.white},
+  modalAvatarTextSel: { color: Colors.white },
   modalItemText: {
     flex: 1,
     fontSize: Size.xs,
@@ -1248,5 +1280,48 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: Size.xxs,
     paddingVertical: 24,
+  },
+
+  storesRow: {
+    marginTop: 12,
+  },
+  storesRowContent: {
+    gap: 8,
+    paddingRight: 4,
+  },
+  storeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    maxWidth: 180,
+  },
+  storeChipImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: Colors.lightGray,
+  },
+  storeChipImageFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BLUE_SOFT,
+  },
+  storeChipMeta: {
+    flexShrink: 1,
+  },
+  storeChipName: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xxs,
+    color: Colors.darkButton,
+  },
+  storeChipTime: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: Colors.gray,
+    marginTop: 1,
   },
 });

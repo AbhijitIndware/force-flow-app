@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -15,25 +15,27 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {CalendarPlus} from 'lucide-react-native';
+import { CalendarPlus } from 'lucide-react-native';
 
 import PageHeader from '../../../components/ui/PageHeader';
 import ReusableDropdownv2 from '../../../components/ui-lib/resusable-dropdown-v2';
 import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
-import {flexCol, boxShadow} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {Fonts} from '../../../constants';
-import {Size} from '../../../utils/fontSize';
-import {SoAppStackParamList} from '../../../types/Navigation';
-import {ICreateShiftAssignment} from '../../../types/baseType';
+import { flexCol, boxShadow } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { Fonts } from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { SoAppStackParamList } from '../../../types/Navigation';
+import { ICreateShiftAssignment } from '../../../types/baseType';
 import {
   useCreateShiftAssignmentMutation,
   useGetAssignmentOptionsQuery,
   useGetMyPromotersQuery,
 } from '../../../features/base/promoter-base-api';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -61,7 +63,7 @@ function useDebounce<T>(value: T, delay = 300): T {
 
 const PAGE_SIZE = 20;
 
-const CreatePromoterShiftScreen = ({navigation}: Props) => {
+const CreatePromoterShiftScreen = ({ navigation }: Props) => {
   // ── Form state ──────────────────────────────────────────────────────────────
   const [employee, setEmployee] = useState('');
   const [store, setStore] = useState('');
@@ -72,11 +74,11 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
   const [floater, setFloater] = useState(false);
   const [floaterStores, setFloaterStores] = useState<FloaterStore[]>([]);
 
-  const [createShiftAssignment, {isLoading: isSubmitting}] =
+  const [createShiftAssignment, { isLoading: isSubmitting }] =
     useCreateShiftAssignmentMutation();
 
   // ── Promoters (supervisor's team) ──────────────────────────────────────────
-  const {data: promotersData, isLoading: promotersLoading} =
+  const { data: promotersData, isLoading: promotersLoading } =
     useGetMyPromotersQuery();
 
   const promoterOptions = useMemo(() => {
@@ -91,14 +93,14 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
   const [storePage, setStorePage] = useState(1);
   const debouncedStoreSearch = useDebounce(storeSearch, 300);
 
-  const {data: optionsData, isFetching: optionsFetching} =
+  const { data: optionsData, isFetching: optionsFetching } =
     useGetAssignmentOptionsQuery({
       search: debouncedStoreSearch || undefined,
       page: storePage,
       page_size: PAGE_SIZE,
     });
 
-  const [storeList, setStoreList] = useState<{label: string; value: string}[]>(
+  const [storeList, setStoreList] = useState<{ label: string; value: string }[]>(
     [],
   );
 
@@ -107,6 +109,9 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
     const newOptions = stores.map(s => ({
       label: `${s.store_name} (${s.store_id})`,
       value: s.store_id,
+      imageUrl: s.store_image
+        ? `${imageBaseUrl}${s.store_image}`
+        : undefined,
     }));
     setStoreList(prev => {
       if (storePage === 1) {
@@ -153,18 +158,18 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
   const [floaterPage, setFloaterPage] = useState(1);
   const debouncedFloaterSearch = useDebounce(floaterSearch, 300);
 
-  const {data: floaterOptionsData, isFetching: floaterOptionsFetching} =
+  const { data: floaterOptionsData, isFetching: floaterOptionsFetching } =
     useGetAssignmentOptionsQuery(
       {
         search: debouncedFloaterSearch || undefined,
         page: floaterPage,
         page_size: PAGE_SIZE,
       },
-      {skip: !floater},
+      { skip: !floater },
     );
 
   const [floaterList, setFloaterList] = useState<
-    {label: string; value: string}[]
+    { label: string; value: string }[]
   >([]);
 
   useEffect(() => {
@@ -172,6 +177,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
     const newOptions = stores.map(s => ({
       label: `${s.store_name} (${s.store_id})`,
       value: s.store_id,
+      imageUrl: s.store_image,
     }));
     setFloaterList(prev => {
       if (floaterPage === 1) {
@@ -211,7 +217,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       if (exists) {
         return prev.filter(s => s.id !== id);
       }
-      return [...prev, {id, name}];
+      return [...prev, { id, name }];
     });
   };
 
@@ -228,15 +234,15 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!employee) {
-      Toast.show({type: 'error', text1: 'Select a promoter'});
+      Toast.show({ type: 'error', text1: 'Select a promoter' });
       return;
     }
     if (!store) {
-      Toast.show({type: 'error', text1: 'Select a store'});
+      Toast.show({ type: 'error', text1: 'Select a store' });
       return;
     }
     if (!startDate || !endDate) {
-      Toast.show({type: 'error', text1: 'Select start and end dates'});
+      Toast.show({ type: 'error', text1: 'Select start and end dates' });
       return;
     }
     if (startDate > endDate) {
@@ -250,13 +256,13 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
     const payload: ICreateShiftAssignment = {
       employee,
       store,
-      ...(shiftType ? {shift_type: shiftType} : {}),
+      ...(shiftType ? { shift_type: shiftType } : {}),
       start_date: startDate,
       end_date: endDate,
       is_secondary: isSecondary ? 1 : 0,
       floater: floater ? 1 : 0,
       ...(floater && floaterStores.length
-        ? {floater_stores: floaterStores.map(s => s.id)}
+        ? { floater_stores: floaterStores.map(s => s.id) }
         : {}),
     };
 
@@ -307,14 +313,14 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{false: '#D1D5DB', true: Colors.orange}}
+        trackColor={{ false: '#D1D5DB', true: Colors.orange }}
         thumbColor={Colors.white}
       />
     </View>
   );
 
   return (
-    <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
+    <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
         title="Create Promoter Shift"
         navigation={() => navigation.goBack()}
@@ -322,7 +328,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled">
@@ -364,7 +370,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 
             <View style={styles.fieldRow}>
               <View style={styles.fieldCol}>
-                <ReusableDropdownv2
+                <ReusableDropdown
                   label="Store *"
                   field="store"
                   value={store}
@@ -499,7 +505,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
       {/* Submit footer */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.submitBtn, isSubmitting && {opacity: 0.7}]}
+          style={[styles.submitBtn, isSubmitting && { opacity: 0.7 }]}
           onPress={handleSubmit}
           disabled={isSubmitting}>
           {isSubmitting ? (
@@ -556,11 +562,11 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
                   <ActivityIndicator
                     size="small"
                     color={Colors.orange}
-                    style={{marginVertical: 12}}
+                    style={{ marginVertical: 12 }}
                   />
                 ) : null
               }
-              renderItem={({item}) => {
+              renderItem={({ item }) => {
                 const selected = floaterStores.some(s => s.id === item.value);
                 return (
                   <TouchableOpacity
@@ -575,7 +581,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
                     <Text
                       style={[
                         styles.modalItemText,
-                        selected && {color: Colors.darkButton},
+                        selected && { color: Colors.darkButton },
                       ]}>
                       {item.label}
                     </Text>
@@ -606,7 +612,7 @@ const CreatePromoterShiftScreen = ({navigation}: Props) => {
 export default CreatePromoterShiftScreen;
 
 const styles = StyleSheet.create({
-  content: {padding: 12, paddingBottom: 90},
+  content: { padding: 12, paddingBottom: 90 },
   card: {
     backgroundColor: Colors.white,
     borderRadius: 16,
@@ -626,7 +632,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerText: {flex: 1},
+  headerText: { flex: 1 },
   headerTitle: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.sm,
@@ -638,13 +644,13 @@ const styles = StyleSheet.create({
     color: Colors.gray,
     marginTop: 1,
   },
-  loader: {marginVertical: 12},
-  compactLabel: {fontSize: 11, marginBottom: 3},
+  loader: { marginVertical: 12 },
+  compactLabel: { fontSize: 11, marginBottom: 3 },
   fieldRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  fieldCol: {flex: 1},
+  fieldCol: { flex: 1 },
   fieldDivider: {
     height: 1,
     backgroundColor: '#F0F0F0',
@@ -663,7 +669,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 12,
   },
-  toggleTextWrap: {flex: 1},
+  toggleTextWrap: { flex: 1 },
   toggleLabel: {
     fontFamily: Fonts.medium,
     fontSize: Size.xs,
@@ -679,7 +685,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F0F0F0',
   },
-  floaterSection: {marginTop: 12},
+  floaterSection: { marginTop: 12 },
   floaterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -806,7 +812,7 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     padding: 0,
   },
-  modalList: {maxHeight: 420},
+  modalList: { maxHeight: 420 },
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',

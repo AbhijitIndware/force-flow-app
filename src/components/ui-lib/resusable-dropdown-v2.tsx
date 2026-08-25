@@ -8,6 +8,7 @@ import DropdownComponentV2 from '../ui/CustomDropdown-v2';
 interface DropdownOption {
   label: string;
   value: string;
+  imageUrl?: string;
 }
 
 interface ReusableDropdownProps {

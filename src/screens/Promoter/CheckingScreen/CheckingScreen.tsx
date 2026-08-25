@@ -9,33 +9,34 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {flexCol} from '../../../utils/styles';
-import {Colors} from '../../../utils/colors';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { flexCol } from '../../../utils/styles';
+import { Colors } from '../../../utils/colors';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useState} from 'react';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
+import React, { useCallback, useState } from 'react';
+import { PromoterAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
-import {Size} from '../../../utils/fontSize';
-import {Fonts} from '../../../constants';
+import { Size } from '../../../utils/fontSize';
+import { Fonts } from '../../../constants';
 
-import {CalendarCheck} from 'lucide-react-native';
-import {useAppSelector} from '../../../store/hook';
+import { CalendarCheck } from 'lucide-react-native';
+import { useAppSelector } from '../../../store/hook';
 import {
   useGetAvailableStoreQuery,
   usePromoterCheckinMutation,
 } from '../../../features/base/promoter-base-api';
-import {useFormik} from 'formik';
+import { useFormik } from 'formik';
 import Toast from 'react-native-toast-message';
-import {ICheckInRequest} from '../../../types/baseType';
-import {PromoterCheckinSchema} from '../../../types/schema';
+import { ICheckInRequest } from '../../../types/baseType';
+import { PromoterCheckinSchema } from '../../../types/schema';
 import moment from 'moment';
 import AddCheckInForm from '../../../components/Promoter/Checkin/CheckinForm';
-import {Animated} from 'react-native';
-import {ActivityIndicator} from 'react-native';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import { Animated } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { imageBaseUrl } from '../../../features/apiBaseUrl';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -60,34 +61,34 @@ const initial: ICheckInRequest = {
   address: '',
 };
 
-const CheckingScreen = ({navigation}: Props) => {
-  const {data, isFetching: isDataLoading} = useGetAvailableStoreQuery();
-  const [promoterCheckin, {isLoading}] = usePromoterCheckinMutation();
+const CheckingScreen = ({ navigation }: Props) => {
+  const { data, isFetching: isDataLoading } = useGetAvailableStoreQuery();
+  const [promoterCheckin, { isLoading }] = usePromoterCheckinMutation();
 
   const formattedStartTime = data?.message?.data?.shift_assignment?.start_time
     ? moment(
-        data?.message?.data?.shift_assignment?.start_time,
-        'HH:mm:ss',
-      ).format('hh:mm A')
+      data?.message?.data?.shift_assignment?.start_time,
+      'HH:mm:ss',
+    ).format('hh:mm A')
     : 'N/A';
 
   const formattedEndTime = data?.message?.data?.shift_assignment?.end_time
     ? moment(
-        data?.message?.data?.shift_assignment?.end_time,
-        'HH:mm:ss',
-      ).format('hh:mm A')
+      data?.message?.data?.shift_assignment?.end_time,
+      'HH:mm:ss',
+    ).format('hh:mm A')
     : 'N/A';
 
   const formattedStartDate = data?.message?.data?.shift_assignment?.start_date
     ? moment(data?.message?.data?.shift_assignment?.start_date).format(
-        'DD MMM YYYY',
-      )
+      'DD MMM YYYY',
+    )
     : 'N/A';
 
   const formattedEndDate = data?.message?.data?.shift_assignment?.end_date
     ? moment(data?.message?.data?.shift_assignment?.end_date).format(
-        'DD MMM YYYY',
-      )
+      'DD MMM YYYY',
+    )
     : 'N/A';
 
   const {
@@ -168,6 +169,7 @@ const CheckingScreen = ({navigation}: Props) => {
                 (row: any) => ({
                   label: row.store_name,
                   value: row.store_id,
+                  imageUrl: `${imageBaseUrl}${row.store_image}`,
                 }),
               ) || []
             }

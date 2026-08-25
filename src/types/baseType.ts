@@ -3239,6 +3239,8 @@ export interface SupervisorPromoterAttendance {
   checked_in: boolean;
   checked_out: boolean;
   store: string;
+  store_name: string;
+  store_image: string;
   checkin_time: string | null;
   checkout_time: string | null;
   stores_done: number;
@@ -3342,6 +3344,7 @@ export interface SupervisorRosterAssignment {
   name: string;
   store: string;
   store_name: string;
+  store_image: string;
   shift_type: string;
   start_date: string;
   end_date: string;
@@ -3379,6 +3382,7 @@ export interface AssignmentStoreOption {
   state: string | null;
   start_time: string;
   end_time: string;
+  store_image?: string;
 }
 
 export interface RAssignmentOptions {

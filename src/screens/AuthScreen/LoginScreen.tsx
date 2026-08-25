@@ -104,7 +104,6 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             app_version: APP_VERSION,
           };
           let res = await login({ data: payload }).unwrap();
-          console.log("🚀 ~ LoginScreen ~ res:", res)
           if (res?.message?.success) {
             const m = res.message;
             // Persist only session credentials to the secure Keychain. Full
@@ -154,7 +153,6 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             }
           }
         } catch (error: any) {
-          console.log("🚀 ~ LoginScreen ~ error:", error)
           if (isLockedOutPayload(error?.data)) {
             const secs = getRetryAfterSeconds(error) ?? 300;
             const reason = getSafeServerMessage(error?.data?.message?.message) ?? `Your account has been locked due to multiple failed login attempts. Try again in ${formatLockoutTime(secs)}.`;
