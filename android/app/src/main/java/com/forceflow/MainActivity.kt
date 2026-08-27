@@ -1,7 +1,6 @@
 package com.forceflow
 
 import android.os.Bundle
-import android.view.WindowManager
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -24,14 +23,6 @@ class MainActivity : ReactActivity() {
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Set FLAG_SECURE as early as possible — before the splash screen
-    // touches the window, to prevent the OS from caching a screenshot
-    // of this app's screens into the Recents task-switcher thumbnail.
-    window.setFlags(
-      WindowManager.LayoutParams.FLAG_SECURE,
-      WindowManager.LayoutParams.FLAG_SECURE
-    )
-
     RNBootSplash.init(this, R.style.BootTheme)
     // react-native-screens < 4.16 must not restore Fragment state on activity recreation.
     super.onCreate(null)
@@ -57,17 +48,6 @@ class MainActivity : ReactActivity() {
       finishAndRemoveTask()
       System.exit(0)
     }
-  }
-
-  override fun onResume() {
-    super.onResume()
-    // Re-apply FLAG_SECURE on every resume. Some devices/configurations
-    // may clear window flags when the Activity is paused or when
-    // react-native-screens updates window traits.
-    window.setFlags(
-      WindowManager.LayoutParams.FLAG_SECURE,
-      WindowManager.LayoutParams.FLAG_SECURE
-    )
   }
 
   /**
