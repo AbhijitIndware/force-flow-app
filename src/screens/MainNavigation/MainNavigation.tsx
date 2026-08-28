@@ -142,7 +142,6 @@ const AuthStackNavigator = ({insets}: any) => (
   <View
     style={{
       flex: 1,
-      paddingTop: insets.top,
       paddingBottom: insets.bottom,
     }}>
     <AuthStack.Navigator
@@ -174,7 +173,6 @@ const AppStackNavigator = ({
   <View
     style={{
       flex: 1,
-      paddingTop: insets.top,
       paddingBottom: insets.bottom,
     }}>
     <AppStack.Navigator screenOptions={{headerShown: false}}>

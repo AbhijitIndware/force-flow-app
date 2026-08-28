@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Platform, StatusBar, useColorScheme, View} from 'react-native';
+import {Platform, StatusBar, useColorScheme} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
@@ -9,7 +9,7 @@ import MainNavigation, {
 } from './src/screens/MainNavigation/MainNavigation';
 import Toast from 'react-native-toast-message';
 import {toastConfig} from './src/components/ui-lib/custom-toast';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {PaperProvider} from 'react-native-paper';
 import DisclaimerModal from './DisclaimerModal';
 import {useNetworkStatus} from './src/hooks/useNetworkStatus';
@@ -162,7 +162,7 @@ function App(): React.JSX.Element {
         <PersistGate loading={<FullScreenLoader />} persistor={persistor}>
           <SafeAreaProvider>
             <PaperProvider>
-              <View style={{flex: 1}}>
+              <SafeAreaView edges={['top']} style={{flex: 1}}>
                 <SlowNetworkBanner
                   isVisible={networkStatus.isSlowNetwork}
                   effectiveType={networkStatus.effectiveType}
@@ -176,7 +176,7 @@ function App(): React.JSX.Element {
                   <DisclaimerModal />
                   {sessionRestored ? <MainNavigation /> : <FullScreenLoader />}
                 </NavigationContainer>
-              </View>
+              </SafeAreaView>
             </PaperProvider>
             <Toast config={toastConfig} />
           </SafeAreaProvider>
