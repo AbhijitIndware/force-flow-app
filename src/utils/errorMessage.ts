@@ -2,6 +2,26 @@ import {isExpiredTokenError} from './security';
 
 const UNSAFE_MESSAGE_PATTERN = /Traceback|File "|Exception|Error:/i;
 
+function getFrappeServerMessage(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !value.trim()) return undefined;
+  try {
+    const rows = JSON.parse(value);
+    if (!Array.isArray(rows)) return undefined;
+    for (const row of rows) {
+      if (typeof row !== 'string') continue;
+      try {
+        const parsed = JSON.parse(row);
+        if (typeof parsed?.message === 'string') return parsed.message;
+      } catch {
+        if (row.trim()) return row;
+      }
+    }
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 export function getUserFacingError(
   error: any,
   fallback = 'Something went wrong. Please try again.'
@@ -11,7 +31,8 @@ export function getUserFacingError(
   const msg =
     typeof data?.message === 'string'
       ? data.message
-      : data?.message?.message ?? data?.exception;
+      : data?.message?.message ?? getFrappeServerMessage(data?._server_messages) ??
+        data?.exception;
 
   if (msg && !UNSAFE_MESSAGE_PATTERN.test(msg)) {
     return msg;

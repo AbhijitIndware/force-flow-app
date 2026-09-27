@@ -29,7 +29,7 @@ import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 interface FormValues {
   employee: string;
   date: string;
-  stores: { store: string }[];
+  stores: { store: string; is_unplanned?: 0 | 1 }[];
   planned_activities?: PlannedActivity[];
 }
 
@@ -59,7 +59,7 @@ interface Props {
   loadingMoreEmployees: boolean;
   isPjpStarted: boolean;
   isEditMode?: boolean;
-  initialStoreCount?: number;
+  beatPlan?: string | null;
   initialActivityCount?: number;
 }
 
@@ -79,7 +79,7 @@ const AddPjpForm: React.FC<Props> = ({
   scrollY,
   isPjpStarted,
   isEditMode = false,
-  initialStoreCount = 0,
+  beatPlan = null,
   initialActivityCount = 0,
 }) => {
   const navigation = useNavigation<NavigationProp>();
@@ -302,41 +302,66 @@ const AddPjpForm: React.FC<Props> = ({
         </Text>
       </View>
 
-      {/* ── Store List ── */}
-      {values.stores.map((storeItem, index) => (
-        <View key={index} style={{}}>
-          <StoreDropdownField
-            label={`Store ${index + 1}`}
-            field={`stores[${index}].store`}
-            value={storeItem.store}
-            error={touched.stores?.[index]?.store && errors.stores?.[index]?.store}
-            onChange={(val: string) => {
-              const updatedStores = [...values.stores];
-              updatedStores[index].store = val;
-              setFieldValue('stores', updatedStores);
-            }}
-            navigation={navigation}
-            disabled={index < initialStoreCount}
-          />
-
-          {values.stores.length > 1 && index !== 0 && index >= initialStoreCount && !(isPjpStarted && storeItem.store) && (
-            <TouchableOpacity
-              onPress={() => {
-                const updated = [...values.stores];
-                updated.splice(index, 1);
-                setFieldValue('stores', updated);
-              }}
-              style={{ alignSelf: 'flex-end', marginTop: 0 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                <Trash2 size={12} color="#DC2626" />
-                <Text style={{ color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium }}>
-                  Remove
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
+      {beatPlan && (
+        <View style={{backgroundColor: '#EEF2FF', borderRadius: 8, padding: 10, marginBottom: 8}}>
+          <Text style={{fontSize: 11, color: '#4338CA', fontFamily: Fonts.medium}}>
+            From monthly beat plan · Planned stores cannot be removed
+          </Text>
         </View>
-      ))}
+      )}
+
+      {/* ── Store List ── */}
+      {values.stores.map((storeItem, index) => {
+        const isProtectedPlannedStore =
+          Boolean(beatPlan) && storeItem.is_unplanned !== 1;
+        const isExistingRunningStore =
+          isPjpStarted && Boolean(storeItem.store);
+
+        return (
+          <View key={index} style={{}}>
+            <StoreDropdownField
+              label={'Store ' + (index + 1)}
+              field={'stores[' + index + '].store'}
+              value={storeItem.store}
+              error={touched.stores?.[index]?.store && errors.stores?.[index]?.store}
+              onChange={(val: string) => {
+                const updatedStores = [...values.stores];
+                updatedStores[index] = {
+                  ...updatedStores[index],
+                  store: val,
+                };
+                setFieldValue('stores', updatedStores);
+              }}
+              navigation={navigation}
+              disabled={isProtectedPlannedStore || isExistingRunningStore}
+            />
+
+            {isProtectedPlannedStore && (
+              <Text style={{alignSelf: 'flex-end', color: '#6B7280', fontSize: 10, fontFamily: Fonts.medium}}>
+                Monthly beat plan store
+              </Text>
+            )}
+
+            {!isProtectedPlannedStore &&
+              !isExistingRunningStore && (
+                <TouchableOpacity
+                  onPress={() => {
+                    const updated = [...values.stores];
+                    updated.splice(index, 1);
+                    setFieldValue('stores', updated);
+                  }}
+                  style={{alignSelf: 'flex-end', marginTop: 0}}>
+                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 5}}>
+                    <Trash2 size={12} color="#DC2626" />
+                    <Text style={{color: '#DC2626', fontSize: 11, fontFamily: Fonts.medium}}>
+                      Remove
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+          </View>
+        );
+      })}
 
       {/* ── Add Store Button ── */}
       <TouchableOpacity

@@ -35,6 +35,7 @@ import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import {
   useGetMyPromotersQuery,
   useGetPromoterDayQuery,
+  useGetPromoterSalesQuery,
 } from '../../../features/base/promoter-base-api';
 
 type NavigationProp = NativeStackNavigationProp<
@@ -56,6 +57,7 @@ const PURPLE_SOFT = '#EDE7FE';
 const SECTION_COLORS = {
   attendance: { icon: 'time-outline', color: '#2563EB', bg: BLUE_SOFT },
   stock: { icon: 'file-tray-outline', color: '#15803D', bg: GREEN_SOFT },
+  sales: { icon: 'trending-up-outline', color: '#15803D', bg: GREEN_SOFT },
   orders: { icon: 'cart-outline', color: '#C2410C', bg: ORANGE_SOFT },
   activities: { icon: 'sparkles-outline', color: '#7C3AED', bg: PURPLE_SOFT },
 } as const;
@@ -90,6 +92,19 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
     refetch,
   } = useGetPromoterDayQuery({ employee, date }, { skip: !employee });
 
+  const salesMonth = moment(date);
+  const {
+    data: monthSalesResponse,
+    refetch: refetchMonthSales,
+  } = useGetPromoterSalesQuery(
+    {
+      employee,
+      from_date: salesMonth.clone().startOf('month').format('YYYY-MM-DD'),
+      to_date: salesMonth.clone().endOf('month').format('YYYY-MM-DD'),
+    },
+    {skip: !employee},
+  );
+
   const data = dayData?.message?.data;
   const employeeName = data?.employee_name ?? '';
   const totalHours = Number(data?.total_working_hours ?? 0);
@@ -99,14 +114,17 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
   const stockCount = data?.stock_take?.items_counted ?? 0;
   const orderRows = data?.orders?.rows ?? [];
   const orderTotal = data?.orders?.total_value ?? 0;
+  const sales = data?.sales ?? {sold: 0, sold_value: 0, received: 0, found: 0};
   const activityRows = data?.activities?.rows ?? [];
+  const monthSales = monthSalesResponse?.message?.data?.totals ??
+    {sold: 0, sold_value: 0, received: 0, found: 0};
   // const todayShifts = data?.today_shifts ?? [];
 
   const onRefresh = async () => {
     setRefreshing(true);
     if (employee) {
       try {
-        await refetch();
+        await Promise.all([refetch(), refetchMonthSales()]);
       } catch {
         // ignore
       }
@@ -429,11 +447,11 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
               GREEN_SOFT,
             )}
             {renderHeroStat(
-              'cart-outline',
-              String(orderRows.length),
-              'orders',
-              '#2563EB',
-              BLUE_SOFT,
+              'trending-up-outline',
+              String(sales.sold),
+              'units sold',
+              '#15803D',
+              GREEN_SOFT,
             )}
             {renderHeroStat(
               'sparkles-outline',
@@ -442,6 +460,23 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
               '#7C3AED',
               PURPLE_SOFT,
             )}
+          </View>
+        </View>
+
+        <View style={[styles.card, boxShadow]}>
+          {renderSectionHeader(
+            'sales',
+            `${salesMonth.format('MMMM')} Sales`,
+            <View style={styles.countChip}>
+              <Text style={styles.countChipText}>
+                ₹{Number(monthSales.sold_value).toLocaleString('en-IN')}
+              </Text>
+            </View>,
+          )}
+          <View style={styles.attTimesRow}>
+            <View style={styles.attTimeBox}><Text style={styles.attTimeLabel}>Sold</Text><Text style={styles.attTimeValue}>{monthSales.sold}</Text></View>
+            <View style={styles.attTimeBox}><Text style={styles.attTimeLabel}>Received</Text><Text style={styles.attTimeValue}>{monthSales.received}</Text></View>
+            <View style={styles.attTimeBox}><Text style={styles.attTimeLabel}>Unrecorded</Text><Text style={styles.attTimeValue}>{monthSales.found}</Text></View>
           </View>
         </View>
 
@@ -540,6 +575,43 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
           ) : (
             <Text style={styles.inlineEmptyText}>No stock take recorded.</Text>
           )}
+        </View>
+
+        <View style={[styles.card, boxShadow]}>
+          {renderSectionHeader(
+            'sales',
+            'Sales',
+            <View style={styles.countChip}>
+              <Text style={styles.countChipText}>
+                ₹{Number(sales.sold_value).toLocaleString('en-IN')}
+              </Text>
+            </View>,
+          )}
+          <View style={styles.attTimesRow}>
+            <View style={styles.attTimeBox}>
+              <Text style={styles.attTimeLabel}>Sold</Text>
+              <Text style={styles.attTimeValue}>{sales.sold}</Text>
+            </View>
+            <View style={styles.attTimeBox}>
+              <Text style={styles.attTimeLabel}>Value</Text>
+              <Text style={styles.attTimeValue}>
+                ₹{Number(sales.sold_value).toLocaleString('en-IN')}
+              </Text>
+            </View>
+            <View style={styles.attTimeBox}>
+              <Text style={styles.attTimeLabel}>Received</Text>
+              <Text style={styles.attTimeValue}>{sales.received}</Text>
+            </View>
+            <View style={styles.attTimeBox}>
+              <Text style={styles.attTimeLabel}>Unrecorded</Text>
+              <Text style={styles.attTimeValue}>{sales.found}</Text>
+            </View>
+          </View>
+          {sales.found > 0 ? (
+            <Text style={[styles.inlineEmptyText, {color: '#B45309'}]}>
+              Unrecorded stock found. Deliveries should be recorded when they arrive.
+            </Text>
+          ) : null}
         </View>
 
         <View style={[styles.card, boxShadow]}>

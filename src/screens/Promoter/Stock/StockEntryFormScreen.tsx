@@ -132,12 +132,12 @@ const StockRow: React.FC<StockRowProps> = ({
 
         <View style={styles.col}>
           <Text style={styles.stockLabel}>
-            MTD:{' '}
+            Sold MTD:{' '}
             <Text style={styles.boldText}>{matchItem?.mtd_territory ?? 0}</Text>
           </Text>
           <Text style={styles.stockLabel}>
-            New:{' '}
-            <Text style={styles.boldText}>{matchItem?.new_orders ?? 0}</Text>
+            Received:{' '}
+            <Text style={styles.boldText}>{matchItem?.received_this_month ?? 0}</Text>
           </Text>
         </View>
       </View>

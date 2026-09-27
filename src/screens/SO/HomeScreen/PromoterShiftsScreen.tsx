@@ -33,6 +33,8 @@ import {
   useGetMyPromotersQuery,
   useGetPromoterRosterQuery,
   useCancelShiftAssignmentMutation,
+  useGetAssignmentOptionsQuery,
+  useUpdateAssignmentStoresMutation,
 } from '../../../features/base/promoter-base-api';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
@@ -65,8 +67,13 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
   const [promoterSearch, setPromoterSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [cancellingName, setCancellingName] = useState('');
+  const [editingAssignment, setEditingAssignment] =
+    useState<SupervisorRosterAssignment | null>(null);
+  const [selectedFloaterStores, setSelectedFloaterStores] = useState<string[]>([]);
+  const [storeSearch, setStoreSearch] = useState('');
 
   const [cancelShiftAssignment] = useCancelShiftAssignmentMutation();
+  const [updateAssignmentStores, {isLoading: updatingStores}] = useUpdateAssignmentStoresMutation();
 
   const { data: promotersData, isLoading: promotersLoading } =
     useGetMyPromotersQuery();
@@ -87,6 +94,14 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
     isFetching: rosterFetching,
     refetch,
   } = useGetPromoterRosterQuery({ employee, month, year }, { skip: !employee });
+  const {data: storeOptionsData} = useGetAssignmentOptionsQuery(
+    {
+      search: storeSearch || undefined,
+      page: 1,
+      page_size: 100,
+    },
+    {skip: !editingAssignment},
+  );
 
   const employeeName = rosterData?.message?.data?.employee_name ?? '';
   const aonDays = rosterData?.message?.data?.aon_days ?? 0;
@@ -202,6 +217,46 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
         },
       ],
     );
+  };
+
+  const openStoreEditor = (assignment: SupervisorRosterAssignment) => {
+    setEditingAssignment(assignment);
+    setSelectedFloaterStores(assignment.floater_stores?.map(store => store.store) ?? []);
+    setStoreSearch('');
+  };
+
+  const toggleFloaterStore = (storeId: string) => {
+    setSelectedFloaterStores(current =>
+      current.includes(storeId)
+        ? current.filter(id => id !== storeId)
+        : [...current, storeId],
+    );
+  };
+
+  const saveFloaterStores = async () => {
+    if (!editingAssignment) return;
+    try {
+      const response = await updateAssignmentStores({
+        shift_assignment: editingAssignment.name,
+        floater_stores: selectedFloaterStores,
+      }).unwrap();
+      if (!response?.message?.success) {
+        Toast.show({
+          type: 'error',
+          text1: getSafeServerMessage(response?.message?.message) ?? 'Could not update extra stores',
+        });
+        return;
+      }
+      Toast.show({type: 'success', text1: 'Extra stores updated'});
+      setEditingAssignment(null);
+      setStoreSearch('');
+      refetch();
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: getUserFacingError(error, 'Could not update extra stores'),
+      });
+    }
   };
 
   const renderStatusPill = (assignment: SupervisorRosterAssignment) => {
@@ -342,6 +397,15 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
           <Text style={styles.assignmentRef} numberOfLines={1}>
             {assignment.name}
           </Text>
+          {!cancelled && (
+            <TouchableOpacity
+              style={styles.editStoresBtn}
+              activeOpacity={0.8}
+              onPress={() => openStoreEditor(assignment)}>
+              <Ionicons name="storefront-outline" size={14} color={Colors.darkButton} />
+              <Text style={styles.editStoresText}>Extra stores</Text>
+            </TouchableOpacity>
+          )}
           {!cancelled && (
             <TouchableOpacity
               style={styles.cancelBtn}
@@ -672,6 +736,66 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
                 <Text style={styles.modalEmptyText}>No promoters found</Text>
               }
             />
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        visible={Boolean(editingAssignment)}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditingAssignment(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Extra stores</Text>
+                <Text style={styles.modalSubtitle}>Replace the floater stores for this assignment</Text>
+              </View>
+              <TouchableOpacity onPress={() => setEditingAssignment(null)}>
+                <Ionicons name="close-circle" size={24} color="#555" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.searchBox}>
+              <Ionicons name="search-outline" size={16} color={Colors.gray} />
+              <TextInput
+                value={storeSearch}
+                onChangeText={setStoreSearch}
+                placeholder="Search stores..."
+                placeholderTextColor={Colors.gray}
+                style={styles.searchInput}
+              />
+            </View>
+            <FlatList
+              data={(storeOptionsData?.message?.data?.stores ?? []).filter(
+                store => store.store_id !== editingAssignment?.store,
+              )}
+              keyExtractor={item => item.store_id}
+              style={styles.modalList}
+              renderItem={({item}) => {
+                const selected = selectedFloaterStores.includes(item.store_id);
+                return (
+                  <TouchableOpacity
+                    style={[styles.modalItem, selected && styles.modalItemSel]}
+                    onPress={() => toggleFloaterStore(item.store_id)}>
+                    <Ionicons
+                      name={selected ? 'checkbox' : 'square-outline'}
+                      size={20}
+                      color={selected ? Colors.orange : Colors.gray}
+                    />
+                    <Text style={styles.modalItemText}>{item.store_name} ({item.store_id})</Text>
+                  </TouchableOpacity>
+                );
+              }}
+              ListEmptyComponent={<Text style={styles.modalEmptyText}>No stores found</Text>}
+            />
+            <TouchableOpacity
+              style={[styles.saveStoresBtn, updatingStores && {opacity: 0.6}]}
+              disabled={updatingStores}
+              onPress={saveFloaterStores}>
+              {updatingStores ? <ActivityIndicator color={Colors.white} /> : (
+                <Text style={styles.saveStoresText}>Save extra stores ({selectedFloaterStores.length})</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1137,5 +1261,31 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     fontSize: 10,
     color: Colors.white,
+  },
+  editStoresBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: ORANGE_SOFT,
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+  },
+  editStoresText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 10,
+    color: Colors.darkButton,
+  },
+  saveStoresBtn: {
+    backgroundColor: Colors.darkButton,
+    borderRadius: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+  saveStoresText: {
+    fontFamily: Fonts.semiBold,
+    color: Colors.white,
+    fontSize: Size.xs,
   },
 });

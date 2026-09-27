@@ -219,6 +219,56 @@ export const promoterBaseApi = createApi({
       invalidatesTags: ['Promoter'],
     }),
 
+    // ─── STOCK RECEIVED ──────────────────────────────────────────────────────
+    recordStockReceived: builder.mutation<any, {
+      store?: string;
+      items: {item_code: string; qty: number}[];
+      remarks?: string;
+    }>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_receipt_api.record_stock_received',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    getStockReceived: builder.query<any, {
+      from_date?: string;
+      to_date?: string;
+      store?: string;
+    }>({
+      query: ({from_date, to_date, store}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_receipt_api.get_stock_received',
+        method: 'GET',
+        params: {
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+          ...(store ? {store} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+    cancelStockReceived: builder.mutation<any, {name: string}>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_receipt_api.cancel_stock_received',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    getMySales: builder.query<any, {
+      from_date?: string;
+      to_date?: string;
+      store?: string;
+    }>({
+      query: params => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.sellout_api.get_my_sales',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['Promoter'],
+    }),
+
     // ─── SCREEN 5: REGISTER SALE ──────────────────────────────────────────────
     getDailySecondaryReport: builder.query<
       RSalesReport,
@@ -579,6 +629,33 @@ export const promoterBaseApi = createApi({
       }),
       providesTags: ['Promoter'],
     }),
+    getPromoterSales: builder.query<any, {
+      employee: string;
+      from_date?: string;
+      to_date?: string;
+    }>({
+      query: ({employee, from_date, to_date}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.supervisor_api.get_promoter_sales',
+        method: 'GET',
+        params: {
+          employee,
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+    updateAssignmentStores: builder.mutation<any, {
+      shift_assignment: string;
+      floater_stores: string[];
+    }>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.supervisor_api.update_assignment_stores',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
     getPromoterRoster: builder.query<
       RSupervisorPromoterRoster,
       {employee: string; month?: number; year?: number}
@@ -668,6 +745,12 @@ export const {
   useGetStoreStockStatusQuery,
   useLazyGetStoreStockStatusQuery,
   useCreateStockBalanceMutation,
+  useRecordStockReceivedMutation,
+  useGetStockReceivedQuery,
+  useLazyGetStockReceivedQuery,
+  useCancelStockReceivedMutation,
+  useGetMySalesQuery,
+  useLazyGetMySalesQuery,
 
   // Screen 5 — Register Sale
   useGetDailySecondaryReportQuery,
@@ -733,6 +816,9 @@ export const {
   useLazyGetMyPromotersQuery,
   useGetPromoterDayQuery,
   useLazyGetPromoterDayQuery,
+  useGetPromoterSalesQuery,
+  useLazyGetPromoterSalesQuery,
+  useUpdateAssignmentStoresMutation,
   useGetPromoterRosterQuery,
   useLazyGetPromoterRosterQuery,
   useGetAssignmentOptionsQuery,

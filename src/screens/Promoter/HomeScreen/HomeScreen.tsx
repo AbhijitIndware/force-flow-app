@@ -447,8 +447,8 @@ const HomeScreen = ({ navigation, route }: Props) => {
             </View>
             <View style={[styles.metricRow, { marginTop: 10 }]}>
               <TargetMetricBox
-                label="Orders"
-                achieved={`${target?.order_count || 0}`}
+                label={target?.basis === 'sold' ? 'Sold' : 'Orders'}
+                achieved={`${target?.basis === 'sold' ? target?.achieved_qty || 0 : target?.order_count || 0}`}
                 target=""
                 accentColor="#534AB7"
               />
@@ -552,7 +552,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
             </Text>
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('AddSalesScreen')}>
+              onPress={() => navigation.navigate('MySalesScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -560,7 +560,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
                 ]}>
                 <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={[styles.linkTitle]}>Create Sales Order</Text>
+              <Text style={[styles.linkTitle]}>My Sales</Text>
               <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -576,7 +576,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockScreen')}>
+              onPress={() => navigation.navigate('StockReceivedScreen')}>
               <View
                 style={[
                   styles.iconbox,
@@ -584,7 +584,7 @@ const HomeScreen = ({ navigation, route }: Props) => {
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>New Stock Entry</Text>
+              <Text style={styles.linkTitle}>Stock Received</Text>
               <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
                 <Ionicons
                   name="chevron-forward-outline"

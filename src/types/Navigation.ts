@@ -21,6 +21,8 @@ export type PromoterAppStackParamList = {
   AddSalesScreen: undefined;
   StockScreen: undefined;
   StockEntryFormScreen: {store: string; storeName: string};
+  StockReceivedScreen: undefined;
+  MySalesScreen: undefined;
   IncentiveScreen: undefined;
   CheckingScreen: undefined;
   CheckOutScreen: undefined;
@@ -58,7 +60,7 @@ export type SoAppStackParamList = {
   AddDistributorScreen: undefined;
   AddStoreScreen: {storeId?: string} | undefined;
   AddMarketVisitScreen: undefined;
-  AddPjpScreen: {id?: string} | undefined;
+  AddPjpScreen: {id?: string; beatPlan?: string | null} | undefined;
   AddSaleScreen: {orderId?: string} | undefined;
   AddPurchaseScreen: undefined;
   CheckInForm: undefined;

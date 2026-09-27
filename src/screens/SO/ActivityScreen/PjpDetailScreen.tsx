@@ -13,6 +13,7 @@ import { TouchableOpacity } from 'react-native';
 import PjpDetailComponent from '../../../components/SO/Activity/Pjp/PjpDetailComponent';
 import moment from 'moment';
 import { Fonts } from '../../../constants';
+import { getUserFacingError } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -26,12 +27,15 @@ type Props = {
 const PjpDetailScreen = ({ navigation, route }: Props) => {
   const { details } = route.params;
 
-  const { data, isFetching, refetch } = useGetDailyPjpByIdQuery(
+  const { data, isFetching, isError, error, refetch } = useGetDailyPjpByIdQuery(
     details?.pjp_daily_store_id,
+    {refetchOnMountOrArgChange: true, refetchOnFocus: true},
   );
 
-  const isPastDate = details?.date
-    ? moment(details.date, 'YYYY-MM-DD').isBefore(moment(), 'day')
+  const resolvedDetails = data?.message?.data;
+
+  const isPastDate = resolvedDetails?.date
+    ? moment(resolvedDetails.date, 'YYYY-MM-DD').isBefore(moment(), 'day')
     : false;
 
   return (
@@ -41,11 +45,22 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
       {isFetching ? (
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
       ) : (
+        isError || !resolvedDetails ? (
+          <View style={styles.errorState}>
+            <Text style={styles.errorTitle}>This PJP is no longer available.</Text>
+            <Text style={styles.errorMessage}>
+              {getUserFacingError(error, 'The beat plan may have been revised. Refresh the PJP list and try again.')}
+            </Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.backButtonText}>Back to PJP list</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
         <>
           {!isPastDate && (
             <TouchableOpacity
               style={styles.editBanner}
-              onPress={() => navigation.navigate('AddPjpScreen', { id: details?.pjp_daily_store_id })}
+              onPress={() => navigation.navigate('AddPjpScreen', { id: resolvedDetails.pjp_daily_store_id, beatPlan: resolvedDetails.beat_plan })}
               activeOpacity={0.8}
             >
               <View style={styles.editBannerLeft}>
@@ -57,11 +72,12 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
           )}
 
           <PjpDetailComponent
-            detail={data?.message?.data as PjpDailyStore}
+            detail={resolvedDetails as PjpDailyStore}
             navigation={navigation}
             refetch={refetch}
           />
         </>
+        )
       )}
     </SafeAreaView>
   );
@@ -70,6 +86,37 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
 export default PjpDetailScreen;
 
 const styles = StyleSheet.create({
+  errorState: {
+    margin: 20,
+    padding: 18,
+    borderRadius: 12,
+    backgroundColor: '#FFF7ED',
+    alignItems: 'center',
+  },
+  errorTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 15,
+    color: '#9A3412',
+  },
+  errorMessage: {
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    color: '#7C2D12',
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  backButton: {
+    backgroundColor: Colors.darkButton,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginTop: 12,
+  },
+  backButtonText: {
+    color: Colors.white,
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+  },
   editBanner: {
     flexDirection: 'row',
     alignItems: 'center',

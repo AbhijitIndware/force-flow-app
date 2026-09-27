@@ -113,8 +113,8 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
         <View style={styles.infoBanner}>
           <Info size={14} color={Colors.info} strokeWidth={1.5} />
           <Text style={styles.infoText}>
-            Weekly off cannot be marked if you have already checked in or
-            created a PJP for that date.
+            Weekly Off cannot be marked after you have checked in. An unstarted
+            monthly beat-plan PJP will be removed automatically.
           </Text>
         </View>
 

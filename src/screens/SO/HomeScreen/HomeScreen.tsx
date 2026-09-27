@@ -270,6 +270,8 @@ const HomeScreen = ({ navigation }: Props) => {
   // ── Derived values ───────────────────────────────────────────────────────────
   const pjpState = pjpWorkflowData?.message.data?.current_state;
   const pjpActions = pjpWorkflowData?.message.data?.allowed_actions ?? [];
+  const pjpDocumentName =
+    pjpWorkflowData?.message.data?.pjp_document_name ?? null;
   const activeStoreId = pjpWorkflowData?.message.data?.active_store_id;
   const lateCheckInInfo = pjpWorkflowData?.message?.data?.late_checkin_info;
   const liveWorkingHours = pjpWorkflowData?.message?.data?.live_working_hours;
@@ -386,6 +388,7 @@ const HomeScreen = ({ navigation }: Props) => {
       if (!loc) return;
 
       const existingPjp =
+        pjpDocumentName ??
         locationTrackerData?.message?.data?.pjp_records[0]?.name;
       if (!existingPjp) {
         Toast.show({ type: 'error', text1: '❌ No PJP found for today' });

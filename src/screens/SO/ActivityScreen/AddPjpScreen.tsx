@@ -68,6 +68,7 @@ const mapPjpDetailToForm = (detail: any): any => {
     employee: detail.employee,
     stores: (detail.stores ?? []).map((s: any) => ({
       store: s.store ?? s.store_id,
+      is_unplanned: s.is_unplanned,
     })),
     planned_activities: (detail.planned_activities ?? []).map((a: any) => ({
       activity_type: a.activity_type ?? '',
@@ -97,7 +98,7 @@ export const uniqueByStoreName = <T extends {name: string}>(arr: T[]) => {
 };
 
 const AddPjpScreen = ({navigation, route}: Props) => {
-  const {id} = route?.params ?? {};
+  const {id, beatPlan: routeBeatPlan} = route?.params ?? {};
   const [initialValues, setInitialValues] = useState<any>(getInitial());
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -133,10 +134,10 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     {skip: id === null || id === undefined},
   );
   const pjpStatus = (pjpDetails as any)?.message?.data?.running_status;
+  const beatPlan =
+    (pjpDetails as any)?.message?.data?.beat_plan ?? routeBeatPlan ?? null;
   const isRunning = pjpStatus === 'Running';
 
-  const initialStoreCount =
-    (pjpDetails as any)?.message?.data?.stores?.length ?? 0;
   const initialActivityCount =
     (pjpDetails as any)?.message?.data?.planned_activities?.length ?? 0;
 
@@ -171,13 +172,17 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         setLoading(true);
 
         // if record exists → update, else → add
-        const payload = {data: formValues};
+        const apiValues = {
+          ...formValues,
+          stores: formValues.stores.map(({store}: {store: string}) => ({store})),
+        };
+        const payload = {data: apiValues};
         let res;
 
         if (id) {
           res = await updateDailyPjp({
             data: {
-              ...formValues,
+              ...apiValues,
               document_name: id,
             },
           }).unwrap();
@@ -185,12 +190,15 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           res = await addDailyPjp(payload).unwrap();
         }
         if (res?.message?.status === 'success') {
-          if ((res?.message as any)?.already_existed) {
+          if ('already_existed' in res.message && res.message.already_existed) {
             Toast.show({
-              type: 'error',
-              text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
+              type: 'info',
+              text1:
+                getSafeServerMessage(res.message.message) ??
+                "Today's PJP already exists",
               position: 'top',
             });
+            navigation.navigate('Home');
           } else {
             Toast.show({
               type: 'success',
@@ -240,8 +248,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         }
         Toast.show({
           type: 'error',
-          text1: getUserFacingError(error, 'Internal Server Error'),
-          text2: 'Please try again later.',
+          text1: getUserFacingError(error, 'Unable to save PJP'),
           position: 'top',
         });
       } finally {
@@ -354,7 +361,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         loadingMoreEmployees={loadingEmpMore}
         isPjpStarted={isRunning}
         isEditMode={!!id}
-        initialStoreCount={initialStoreCount}
+        beatPlan={beatPlan}
         initialActivityCount={initialActivityCount}
       />
       <MinStoresWarningModal

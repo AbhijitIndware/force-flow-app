@@ -762,6 +762,7 @@ export interface PjpDailyStore {
   running_status: 'None' | 'Running' | 'Completed' | null;
   planned_activities?: PlannedActivity[];
   is_overnight_outstation_journey?: number;
+  beat_plan?: string | null;
 }
 
 export interface Store {
@@ -773,6 +774,7 @@ export interface Store {
   outstanding_amount: number;
   warehouse: Warehouse[];
   store_image?: string;
+  is_unplanned?: 0 | 1;
 }
 
 export interface Warehouse {
@@ -831,6 +833,7 @@ export interface RPjpCreateResponse {
     status: string;
     message: string;
     document_name: string;
+    already_existed?: boolean;
   };
 }
 
@@ -852,6 +855,7 @@ export interface RPjpDailyStoresForEdit {
       employee: string;
       total_stores: number;
       total_activities: number;
+      beat_plan?: string | null;
       stores: {
         store: string;
         store_name: string;
@@ -863,6 +867,7 @@ export interface RPjpDailyStoresForEdit {
         created_by_employee: string;
         created_by_employee_name: string;
         warehouse_id: string;
+        is_unplanned?: 0 | 1;
       }[];
       planned_activities: {
         activity_type: string;
@@ -2287,6 +2292,8 @@ export interface StockDashboardItem {
   /** Gap between shelf and ERP (physical - current). null = not yet counted */
   stock_difference: number | null;
   new_orders: number | null;
+  /** Quantity treated as received during the current month. */
+  received_this_month?: number;
   /** true when opening>0 OR current>0 OR item appears in any previous SO */
   has_history: boolean;
 }
@@ -2294,6 +2301,10 @@ export interface StockDashboardItem {
 export interface RGetStoreStockStatus {
   message: {
     status: string;
+    /** Legacy SO consumer shape retained by the same endpoint. */
+    data: StockDashboardItem[];
+    /** Promoter stores use recorded deliveries; other stores use orders. */
+    mtd_basis?: 'deliveries' | 'orders';
     /** Present only when no warehouse is configured for the store */
     warning?: string;
     /**
@@ -2513,12 +2524,14 @@ export type PjpDataResponse = {
     end_location: string | null;
     travel_distance: number;
     is_overnight_outstation_journey?: number;
+    beat_plan: string | null;
   };
   stores: {
     store: string;
     store_name: string;
     status: string;
     store_image?: string;
+    is_unplanned: 0 | 1;
   }[];
   store_times: {
     store: string;
@@ -2726,6 +2739,8 @@ export interface IPromoterHomeData {
   };
   target: {
     available: boolean;
+    basis?: 'sold';
+    achieved_qty?: number;
     sales_target: number;
     achieved_value: number;
     percentage: number;
@@ -3119,6 +3134,7 @@ export interface RProductFeedbackList {
 // Master Data — Assigned Stores
 export interface AssignedStore {
   store_id: string;
+  warehouse_id?: string;
   store_name: string;
   city: string | null;
   state: string | null;
@@ -3329,6 +3345,12 @@ export interface IPromoterDayData {
   activities: {
     count: number;
     rows: SupervisorActivityRow[];
+  };
+  sales?: {
+    sold: number;
+    sold_value: number;
+    received: number;
+    found: number;
   };
 }
 

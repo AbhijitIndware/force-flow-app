@@ -101,6 +101,18 @@ const AddSalesScreen = ({navigation}: Props) => {
         const res = await createSalesOrderWithStock(payload).unwrap();
 
         if (res?.message?.success) {
+          if (res?.message?.data?.stock_reconciliation === 'failed') {
+            Toast.show({
+              type: 'error',
+              text1: 'Stock count saved, but system stock was not updated',
+              text2: getSafeServerMessage(
+                res.message.data.stock_reconciliation_error,
+                'Please contact support before retrying.',
+              ),
+              position: 'top',
+            });
+            return;
+          }
           Toast.show({
             type: 'success',
             text1:

@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ArrowRight, Clock, X, CalendarDays, LogIn, LogOut, Store, CheckCircle, FileText } from 'lucide-react-native';
+import { ArrowRight, Clock, X, CalendarDays, LogIn, LogOut, Store, CheckCircle, FileText, CalendarOff } from 'lucide-react-native';
 import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import { Colors } from '../../../utils/colors';
@@ -284,6 +284,15 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                     </TouchableOpacity>
                   )}
                 </>
+              )}
+
+              {can('MARK_WEEKLY_OFF') && pjpState !== 'WEEKLY_OFF' && (
+                <TouchableOpacity
+                  style={[styles.checkinButton, { marginTop: 8 }]}
+                  onPress={() => navigation.navigate('WeeklyOffScreen')}>
+                  <Text style={styles.checkinButtonText}>Mark Weekly Off</Text>
+                  <CalendarOff size={22} color={Colors.white} />
+                </TouchableOpacity>
               )}
 
               {/* ── PJP_RUNNING_IDLE ── travelling, can check into a store ── */}

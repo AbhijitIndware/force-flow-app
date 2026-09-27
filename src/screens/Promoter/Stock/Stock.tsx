@@ -82,15 +82,15 @@ const StockCard = memo(({item}: {item: StockDashboardItem}) => {
         </View>
         <View style={styles.miniMetric}>
           <Text style={styles.miniLabel}>
-            MTD Territory:{' '}
+            Sold MTD:{' '}
             <Text style={styles.miniValue}>{item.mtd_territory || 0}</Text>
           </Text>
         </View>
         <View style={styles.miniMetric}>
           <Text style={styles.miniLabel}>
-            New:{' '}
+            Received:{' '}
             <Text style={[styles.miniValue, {color: Colors.orange}]}>
-              {item.new_orders !== null ? item.new_orders : '—'}
+              {item.received_this_month ?? 0}
             </Text>
           </Text>
         </View>

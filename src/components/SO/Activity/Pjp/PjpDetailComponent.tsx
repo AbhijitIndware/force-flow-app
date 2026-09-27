@@ -13,6 +13,7 @@ import React, {useCallback, useState, useEffect, useRef} from 'react';
 import {LocationPayload, PjpDailyStore} from '../../../../types/baseType';
 import moment from 'moment';
 import {Colors} from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
 import {
   useEndPjpMutation,
   useStartPjpMutation,
@@ -221,6 +222,9 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
               {moment(detail.date, 'YYYY-MM-DD').format('ddd, DD MMM YYYY')}
             </Text>
             <Text style={styles.employeeName}>{detail.employee_name}</Text>
+            {detail.beat_plan && (
+              <Text style={styles.beatPlanLabel}>From monthly beat plan</Text>
+            )}
           </View>
           <View style={[styles.statusPill, {backgroundColor: statusCfg.bg}]}>
             <Animated.View
@@ -526,6 +530,17 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 20,
     gap: 5,
+  },
+  beatPlanLabel: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    backgroundColor: '#EEF2FF',
+    color: '#4338CA',
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   statusDot: {width: 8, height: 8, borderRadius: 4},
   statusText: {fontSize: 12, fontWeight: '600'},

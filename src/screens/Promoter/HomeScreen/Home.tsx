@@ -25,7 +25,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {House, UserCircle2} from 'lucide-react-native';
-import SalesScreen from '../Sales/Sales';
+import MySalesScreen from '../Sales/MySalesScreen';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
 import {useState} from 'react';
@@ -293,9 +293,9 @@ const Home = ({navigation, route}: Props) => {
         /> */}
         <Tab.Screen
           name="Sales"
-          component={SalesScreen}
+          component={MySalesScreen}
           options={{
-            tabBarLabel: 'Sales',
+            tabBarLabel: 'My Sales',
             headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (

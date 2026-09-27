@@ -13,6 +13,7 @@ import { Size } from '../../../../utils/fontSize';
 import { CalendarDays, X } from 'lucide-react-native';
 import { useGetDailyPjpListQuery } from '../../../../features/base/base-api';
 import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { PjpDailyStore } from '../../../../types/baseType';
 import { FlatList } from 'react-native';
 import { RefreshControl } from 'react-native';
@@ -43,6 +44,12 @@ const PJPScreen = ({ navigation }: any) => {
       status: '',
       ...(selectedDate ? { date: selectedDate } : {}),
     });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!isUninitialized) refetch();
+    }, [isUninitialized, refetch]),
+  );
 
   // Reset to page 1 when date filter changes
   useEffect(() => {
@@ -75,7 +82,7 @@ const PJPScreen = ({ navigation }: any) => {
       setRefreshing(false);
       if (!isUninitialized) refetch();
     }, 2000);
-  }, []);
+  }, [isUninitialized, refetch]);
 
   const loadMore = () => {
     if (
@@ -129,6 +136,14 @@ const PJPScreen = ({ navigation }: any) => {
             ]}>
             {item?.employee_name}
           </Text>
+          <View style={styles.badgeRow}>
+            {moment(item.date, 'YYYY-MM-DD').isAfter(moment(), 'day') && (
+              <Text style={styles.upcomingBadge}>Upcoming</Text>
+            )}
+            {item.beat_plan && (
+              <Text style={styles.beatPlanBadge}>Monthly beat plan</Text>
+            )}
+          </View>
         </View>
         {/* Assign Button */}
         <TouchableOpacity
@@ -204,7 +219,6 @@ const PJPScreen = ({ navigation }: any) => {
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleDateChange}
-            maximumDate={new Date()}
           />
         )}
 
@@ -357,6 +371,30 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: Size.sm,
     lineHeight: 20,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 3,
+  },
+  upcomingBadge: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#92400E',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  beatPlanBadge: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#4338CA',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
   },
   assignButton: {
     backgroundColor: Colors.lightGreen,
