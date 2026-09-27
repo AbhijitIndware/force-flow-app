@@ -15,6 +15,11 @@ import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import MapReusableLocationInput from './MapReusableLocationInput';
+import Toast from 'react-native-toast-message';
+import {
+  attendanceCameraOptions,
+  getAttendanceImage,
+} from '../../../utils/attendanceImage';
 
 interface ICheckInRequest {
   store: string;
@@ -49,41 +54,47 @@ const AddCheckInForm: React.FC<Props> = ({
   values,
   errors,
   touched,
-  handleChange,
-  handleBlur,
   setFieldValue,
-  scrollY,
   storeList,
   shift,
 }) => {
   const [reviewVisible, setReviewVisible] = useState(false);
+  const imageError =
+    touched.image && errors.image
+      ? typeof errors.image === 'string'
+        ? errors.image
+        : errors.image.data || errors.image.mime
+      : undefined;
 
   // 📌 CAMERA HANDLER
   const handleOpenCamera = async () => {
-    launchCamera(
-      {
-        mediaType: 'photo',
-        cameraType: 'back',
-        quality: 0.8,
-        includeBase64: true,
-      },
-      response => {
-        if (response.didCancel) return;
-        if (response.errorCode) {
-          console.warn('Camera error: ', response.errorMessage);
-          return;
-        }
-        if (response.assets && response.assets.length > 0) {
-          const photo = response.assets[0];
-          if (photo.base64 && photo.type) {
-            setFieldValue('image', {
-              data: photo.base64,
-              mime: photo.type,
-            });
-          }
-        }
-      },
-    );
+    launchCamera(attendanceCameraOptions, response => {
+      if (response.didCancel) {
+        return;
+      }
+      if (response.errorCode) {
+        Toast.show({
+          type: 'error',
+          text1: 'Unable to take photo',
+          text2: response.errorMessage || 'Please try again.',
+          position: 'top',
+        });
+        return;
+      }
+
+      const result = getAttendanceImage(response.assets?.[0]);
+      if (result.error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Unable to use photo',
+          text2: result.error,
+          position: 'top',
+        });
+        return;
+      }
+
+      setFieldValue('image', result.image);
+    });
   };
 
   return (
@@ -163,6 +174,9 @@ const AddCheckInForm: React.FC<Props> = ({
           ) : null}
         </View>
       </TouchableOpacity>
+      {imageError ? (
+        <Text style={styles.imageError}>{imageError}</Text>
+      ) : null}
 
       {/* 📌 IMAGE REVIEW MODAL */}
       <Modal
@@ -309,6 +323,12 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     paddingTop: 3,
     lineHeight: 14,
+  },
+  imageError: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.denger,
+    marginTop: 4,
   },
   preview: {
     width: 48,

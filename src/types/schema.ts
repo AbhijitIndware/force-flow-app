@@ -186,8 +186,8 @@ export const expenseItemSchema = Yup.object().shape({
 export const PromoterCheckinSchema = Yup.object().shape({
   store: Yup.string().required('Store is required'),
   image: Yup.object().shape({
-    mime: Yup.string().nullable(),
-    data: Yup.string().nullable(),
+    mime: Yup.string().required('Photo is required'),
+    data: Yup.string().required('Photo is required'),
   }),
   latitude: Yup.number()
     .required('Latitude is required')
@@ -201,8 +201,8 @@ export const PromoterCheckinSchema = Yup.object().shape({
 export const PromoterCheckOutSchema = Yup.object().shape({
   // store: Yup.string().required('Store is required'),
   image: Yup.object().shape({
-    mime: Yup.string().nullable(),
-    data: Yup.string().nullable(),
+    mime: Yup.string().required('Photo is required'),
+    data: Yup.string().required('Photo is required'),
   }),
   latitude: Yup.number()
     .required('Latitude is required')
