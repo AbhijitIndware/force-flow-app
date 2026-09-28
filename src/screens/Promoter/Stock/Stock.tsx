@@ -32,7 +32,7 @@ import {
   History,
 } from 'lucide-react-native';
 import {StockDashboardItem} from '../../../types/baseType';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -49,8 +49,27 @@ const CARD_HEIGHT = 124;
 const CARD_MARGIN_BOTTOM = 10;
 const ITEM_HEIGHT = CARD_HEIGHT + CARD_MARGIN_BOTTOM;
 
+const isLowStockItem = (item: StockDashboardItem) => {
+  const flag = item.is_low_stock ?? item.low_stock;
+  if (flag === true || flag === 1 || flag === '1') {
+    return true;
+  }
+
+  if (item.stock_status?.trim().toLowerCase() === 'low stock') {
+    return true;
+  }
+
+  const threshold = item.low_stock_threshold ?? item.reorder_level;
+  return (
+    typeof threshold === 'number' &&
+    Number.isFinite(threshold) &&
+    item.current_stock <= threshold
+  );
+};
+
 // ─── Memoized card to prevent re-renders ─────────────────────────────────────
 const StockCard = memo(({item}: {item: StockDashboardItem}) => {
+  const isLowStock = isLowStockItem(item);
   return (
     <View style={styles.card}>
       <View style={[flexRow, itemsCenter, {justifyContent: 'space-between'}]}>
@@ -65,6 +84,12 @@ const StockCard = memo(({item}: {item: StockDashboardItem}) => {
             <Text style={styles.itemCode}>{item.item_code}</Text>
           </View>
         </View>
+        {isLowStock ? (
+          <View style={styles.lowStockBadge}>
+            <AlertCircle size={12} color="#B45309" />
+            <Text style={styles.lowStockBadgeText}>Low Stock</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.miniMetricsContainer}>
@@ -124,7 +149,9 @@ const StockScreen = ({navigation}: Props) => {
       setSelectedStoreId(value);
       setItemSearch('');
       const store = storesList.find(s => s.value === value);
-      if (store) setSelectedStoreName(store.label);
+      if (store) {
+        setSelectedStoreName(store.label);
+      }
     },
     [storesList],
   );
@@ -148,18 +175,11 @@ const StockScreen = ({navigation}: Props) => {
     );
   }, [stockStatusData]);
 
-  const totalStockValue = useMemo(
-    () =>
-      allItems.reduce(
-        (sum: number, item: any) =>
-          sum + (item.current_stock * item.item_rate || 0),
-        0,
-      ),
-    [allItems],
-  );
 
   const filteredItems = useMemo(() => {
-    if (!itemSearch.trim()) return allItems;
+    if (!itemSearch.trim()) {
+      return allItems;
+    }
     const q = itemSearch.toLowerCase();
     return allItems.filter(
       (item: any) =>
@@ -400,6 +420,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: 10,
     color: Colors.gray,
+  },
+  lowStockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  lowStockBadgeText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 9,
+    color: '#B45309',
   },
   miniMetricsContainer: {
     flexDirection: 'row',

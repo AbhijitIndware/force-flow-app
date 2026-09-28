@@ -156,16 +156,9 @@ const MySalesScreen = ({navigation}: Props) => {
             {item.store_name}
           </Text>
         </View>
-        <View style={styles.itemStats}>
-          <View style={styles.itemStat}>
-            <Text style={styles.itemStatLabel}>Sold</Text>
-            <Text style={styles.itemStatValue}>{item.sold}</Text>
-          </View>
-          <View style={styles.itemStatDivider} />
-          <View style={styles.itemStat}>
-            <Text style={styles.itemStatLabel}>Value</Text>
-            <Text style={styles.itemStatValue}>{money(item.sold_value)}</Text>
-          </View>
+        <View style={{alignItems: 'flex-end'}}>
+          <Text style={styles.value}>{item.sold} sold</Text>
+          <Text style={styles.cardSub}>{money(item.sold_value)}</Text>
         </View>
       </View>
       <View style={styles.metrics}>
@@ -254,7 +247,11 @@ const MySalesScreen = ({navigation}: Props) => {
             <View style={styles.divider} />
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
-                <Ionicons name="download-outline" size={20} color={Colors.blue} />
+                <Ionicons
+                  name="download-outline"
+                  size={20}
+                  color={Colors.blue}
+                />
               </View>
               <Text style={styles.statLabel}>Received</Text>
               <Text style={styles.statValue}>{totals.received}</Text>
@@ -263,7 +260,11 @@ const MySalesScreen = ({navigation}: Props) => {
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
                 <Ionicons
-                  name={totals.found > 0 ? 'warning-outline' : 'checkmark-circle-outline'}
+                  name={
+                    totals.found > 0
+                      ? 'warning-outline'
+                      : 'checkmark-circle-outline'
+                  }
                   size={20}
                   color={totals.found > 0 ? '#B45309' : '#15803D'}
                 />
@@ -474,9 +475,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   cardSub: {
-    fontFamily: Fonts.regular,
-    color: Colors.gray,
-    fontSize: 10,
+    fontFamily: Fonts.semiBold,
+    color: Colors.black,
+    fontSize: 15,
     marginTop: 2,
   },
   value: {fontFamily: Fonts.semiBold, color: '#15803D', fontSize: 13},

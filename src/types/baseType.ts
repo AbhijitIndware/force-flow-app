@@ -2294,6 +2294,11 @@ export interface StockDashboardItem {
   new_orders: number | null;
   /** Quantity treated as received during the current month. */
   received_this_month?: number;
+  is_low_stock?: boolean | 0 | 1 | '0' | '1';
+  low_stock?: boolean | 0 | 1 | '0' | '1';
+  stock_status?: string | null;
+  low_stock_threshold?: number | null;
+  reorder_level?: number | null;
   /** true when opening>0 OR current>0 OR item appears in any previous SO */
   has_history: boolean;
 }

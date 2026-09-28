@@ -516,12 +516,12 @@ const HomeScreen = ({navigation, route}: Props) => {
             <View style={styles.newStoreCard}>
               <TouchableOpacity
                 style={styles.listLink}
-                onPress={() => navigation.navigate('StockReceivedScreen')}>
+                onPress={() => navigation.navigate('StockScreen')}>
                 <View style={styles.linkIconBox}>
                   <Package strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
                 <Text style={styles.listLinkText}>
-                  Set up the opening stock of a store
+                  Set up the opening stock entry of a store
                 </Text>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -591,7 +591,31 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Stock Update Management</Text>
+              <Text style={styles.linkTitle}>Stock Receive</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
+            />
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('StockScreen')}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {width: 35, height: 35, borderRadius: 10},
+                ]}>
+                <Package strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Stock Entry</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"

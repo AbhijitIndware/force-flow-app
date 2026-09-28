@@ -325,7 +325,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Stock Update Management"
+        title="Stock Receive"
         navigation={() => navigation.navigation.goBack()}
       />
       <View style={styles.storePicker}>
