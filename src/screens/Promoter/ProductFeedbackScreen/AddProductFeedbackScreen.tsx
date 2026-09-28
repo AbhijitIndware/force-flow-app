@@ -155,17 +155,15 @@ const AddProductFeedbackScreen = ({navigation}: Props) => {
               placeholder="Select type"
             />
 
-            {stores.length > 1 ? (
-              <ReusableDropdown
-                label="Store"
-                field="store"
-                value={store}
-                data={stores}
-                onChange={setStore}
-                placeholder="Select store"
-                marginBottom={16}
-              />
-            ) : null}
+            <ReusableDropdown
+              label="Store (Optional)"
+              field="store"
+              value={store}
+              data={stores}
+              onChange={setStore}
+              placeholder="Select store"
+              marginBottom={16}
+            />
 
             <Text style={styles.label}>Remarks</Text>
             <TextInput

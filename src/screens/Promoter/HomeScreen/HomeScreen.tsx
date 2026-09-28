@@ -516,12 +516,12 @@ const HomeScreen = ({navigation, route}: Props) => {
             <View style={styles.newStoreCard}>
               <TouchableOpacity
                 style={styles.listLink}
-                onPress={() => navigation.navigate('StockScreen')}>
+                onPress={() => navigation.navigate('StockReceivedScreen')}>
                 <View style={styles.linkIconBox}>
                   <Package strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
                 <Text style={styles.listLinkText}>
-                  Set up the opening stock of your store
+                  Set up the opening stock of a store
                 </Text>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -1102,11 +1102,13 @@ const styles = StyleSheet.create({
   listLink: {
     flexDirection: 'row',
     alignItems: 'center',
+    // flexWrap: 'wrap',
     gap: 12,
     paddingVertical: 14,
     paddingRight: 10,
   },
   linkIconBox: {
+    flexShrink: 0,
     width: 36,
     height: 36,
     borderRadius: 10,
@@ -1115,11 +1117,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listLinkText: {
-    // flex: 1,
+    flex: 1,
+    flexShrink: 1,
+    flexWrap: 'wrap',
     color: Colors.darkButton,
     fontSize: Size.xs,
     fontFamily: Fonts.medium,
     lineHeight: 18,
+    maxWidth: '100%',
   },
   arrobox: {
     width: 20,

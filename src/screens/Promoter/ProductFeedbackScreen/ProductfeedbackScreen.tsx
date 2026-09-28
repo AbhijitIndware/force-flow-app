@@ -90,7 +90,10 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
   const renderFeedback = ({item}: {item: ProductFeedbackItem}) => {
     const dateTime = moment(item.time);
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('ProductFeedbackDetailScreen', {feedback: item})}>
         <View style={styles.cardTopRow}>
           <View style={styles.cardHeader}>
             <View style={styles.typeAvatar}>
@@ -116,7 +119,7 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
 
         <View style={styles.contentRow}>
           <View style={styles.textCol}>
-            <Text style={styles.remark} numberOfLines={3}>
+            <Text style={styles.remark} numberOfLines={1}>
               {item.remarks || 'No remarks'}
             </Text>
           </View>
@@ -125,11 +128,12 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
             <TouchableOpacity
               style={styles.imageWrap}
               activeOpacity={0.8}
-              onPress={() =>
+              onPress={(e) => {
+                e.stopPropagation();
                 openReview(`${imageBaseUrl}${item.image}`, [
                   `${imageBaseUrl}${item.image}`,
-                ], 0)
-              }>
+                ], 0);
+              }}>
               <Image
                 source={{uri: `${imageBaseUrl}${item.image}`}}
                 style={styles.feedbackImage}
@@ -138,7 +142,7 @@ const ProductFeedbackScreen = ({navigation}: Props) => {
             </TouchableOpacity>
           ) : null}
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 

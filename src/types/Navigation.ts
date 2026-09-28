@@ -1,4 +1,4 @@
-import {PjpDailyStore} from './baseType';
+import {PjpDailyStore, ProductFeedbackItem} from './baseType';
 import {UserManualVideo} from './userManualType';
 
 //Stack ParamList Type
@@ -29,6 +29,7 @@ export type PromoterAppStackParamList = {
   DownloadScreen: undefined;
   ProductFeedbackScreen: undefined;
   AddProductFeedbackScreen: undefined;
+  ProductFeedbackDetailScreen: {feedback: ProductFeedbackItem};
   StoreActivityScreen: undefined;
   AddStoreActivityScreen: undefined;
   ProfileScreen: undefined;
