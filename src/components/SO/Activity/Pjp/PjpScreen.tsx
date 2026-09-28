@@ -7,26 +7,26 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Colors } from '../../../../utils/colors';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import { CalendarDays, X } from 'lucide-react-native';
-import { useGetDailyPjpListQuery } from '../../../../features/base/base-api';
-import { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
-import { PjpDailyStore } from '../../../../types/baseType';
-import { FlatList } from 'react-native';
-import { RefreshControl } from 'react-native';
-import { ActivityIndicator } from 'react-native';
-import { windowHeight } from '../../../../utils/utils';
+import {Colors} from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {CalendarDays, X} from 'lucide-react-native';
+import {useGetDailyPjpListQuery} from '../../../../features/base/base-api';
+import {useCallback, useEffect, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
+import {PjpDailyStore} from '../../../../types/baseType';
+import {FlatList} from 'react-native';
+import {RefreshControl} from 'react-native';
+import {ActivityIndicator} from 'react-native';
+import {windowHeight} from '../../../../utils/utils';
 import moment from 'moment';
 import AssignEmployeeModal from './AssignEmployeeModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const PJPScreen = ({ navigation }: any) => {
+const PJPScreen = ({navigation}: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
   const [orders, setOrders] = useState<PjpDailyStore[]>([]);
@@ -37,13 +37,14 @@ const PJPScreen = ({ navigation }: any) => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const { data, isLoading, isFetching, refetch, isUninitialized } =
+  const {data, isLoading, isFetching, refetch, isUninitialized} =
     useGetDailyPjpListQuery({
       page,
       page_size: PAGE_SIZE,
       status: '',
-      ...(selectedDate ? { date: selectedDate } : {}),
+      ...(selectedDate ? {date: selectedDate} : {}),
     });
+  console.log('🚀 ~ PJPScreen ~ data:', data);
 
   useFocusEffect(
     useCallback(() => {
@@ -89,7 +90,7 @@ const PJPScreen = ({ navigation }: any) => {
       !isFetching &&
       data?.message?.data &&
       data?.message?.data?.pagination?.page <
-      data?.message?.data?.pagination?.total_pages
+        data?.message?.data?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
@@ -106,7 +107,7 @@ const PJPScreen = ({ navigation }: any) => {
     setSelectedDate('');
   };
 
-  const renderItem = ({ item }: { item: PjpDailyStore }) => (
+  const renderItem = ({item}: {item: PjpDailyStore}) => (
     <View style={styles.atteddanceCard}>
       <TouchableOpacity
         onPress={() => {
@@ -123,7 +124,7 @@ const PJPScreen = ({ navigation }: any) => {
             })}
           </Text>
         </View>
-        <View style={{ flex: 1.5, paddingLeft: 10 }}>
+        <View style={{flex: 1.5, paddingLeft: 10}}>
           <Text style={styles.contentText}>Emp name</Text>
           <Text
             style={[
@@ -174,9 +175,8 @@ const PJPScreen = ({ navigation }: any) => {
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 70 },
+          {paddingHorizontal: 16, paddingTop: 10, paddingBottom: 70},
         ]}>
-
         {/* ── Date Filter Bar ── */}
         <View style={styles.filterBar}>
           <TouchableOpacity
@@ -222,7 +222,7 @@ const PJPScreen = ({ navigation }: any) => {
           />
         )}
 
-        <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
+        <View style={{flex: 1, backgroundColor: Colors.lightBg}}>
           {isLoading && page === 1 ? (
             <View
               style={{
@@ -239,9 +239,11 @@ const PJPScreen = ({ navigation }: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{ fontSize: 16, color: 'gray' }}>
+              <Text style={{fontSize: 16, color: 'gray'}}>
                 {selectedDate
-                  ? `No PJP found for ${moment(selectedDate).format('DD MMM YYYY')}`
+                  ? `No PJP found for ${moment(selectedDate).format(
+                      'DD MMM YYYY',
+                    )}`
                   : 'No PJP Found'}
               </Text>
             </View>
@@ -271,7 +273,7 @@ const PJPScreen = ({ navigation }: any) => {
 export default PJPScreen;
 
 const styles = StyleSheet.create({
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
 
   // ── Date filter bar
   filterBar: {
@@ -333,7 +335,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F1F5F9',
     shadowColor: '#1F2937',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
@@ -419,7 +421,7 @@ const styles = StyleSheet.create({
     padding: 8,
     shadowColor: '#000',
     shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowRadius: 4,
     elevation: 5,
     zIndex: 999,

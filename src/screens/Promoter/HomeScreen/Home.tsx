@@ -34,6 +34,7 @@ import {useAppSelector} from '../../../store/hook';
 import {getInitials} from '../../../utils/utils';
 import {useGetUnreadNotificationCountQuery} from '../../../features/fcm/fccm-api';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
+import StockReceivedScreen from '../Stock/StockReceivedScreen';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
@@ -258,8 +259,8 @@ const Home = ({navigation, route}: Props) => {
         />
 
         <Tab.Screen
-          name="Stock"
-          component={StockScreen}
+          name="StockReceivedScreen"
+          component={StockReceivedScreen}
           options={{
             tabBarLabel: 'Stock',
             headerShown: false,

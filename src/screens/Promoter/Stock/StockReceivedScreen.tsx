@@ -34,10 +34,15 @@ import {
   getUserFacingError,
 } from '../../../utils/errorMessage';
 
-type Props = NativeStackScreenProps<
+type NavigationProp = NativeStackScreenProps<
   PromoterAppStackParamList,
   'StockReceivedScreen'
 >;
+
+type Props = {
+  navigation: NavigationProp;
+  route: any;
+};
 type Tab = 'record' | 'history';
 
 const StockReceivedScreen = ({navigation}: Props) => {
@@ -230,35 +235,31 @@ const StockReceivedScreen = ({navigation}: Props) => {
               />
             </View>
           )}
-          ListFooterComponent={
-            <View style={styles.footerForm}>
-              <Text style={styles.fieldLabel}>Remarks (optional)</Text>
-              <TextInput
-                style={styles.remarksInput}
-                placeholder="Challan or invoice number"
-                placeholderTextColor={Colors.gray}
-                value={remarks}
-                onChangeText={setRemarks}
-              />
-              <TouchableOpacity
-                style={[styles.primaryButton, saving && styles.disabled]}
-                disabled={saving}
-                onPress={submit}>
-                {saving ? (
-                  <ActivityIndicator color={Colors.white} />
-                ) : (
-                  <Text style={styles.primaryButtonText}>
-                    Record Stock Received
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          }
           ListEmptyComponent={
             <Text style={styles.empty}>No active stock items found.</Text>
           }
         />
       )}
+      <View style={styles.footerForm}>
+        <Text style={styles.fieldLabel}>Remarks (optional)</Text>
+        <TextInput
+          style={styles.remarksInput}
+          placeholder="Challan or invoice number"
+          placeholderTextColor={Colors.gray}
+          value={remarks}
+          onChangeText={setRemarks}
+        />
+        <TouchableOpacity
+          style={[styles.primaryButton, saving && styles.disabled]}
+          disabled={saving}
+          onPress={submit}>
+          {saving ? (
+            <ActivityIndicator color={Colors.white} />
+          ) : (
+            <Text style={styles.primaryButtonText}>Record Stock Received</Text>
+          )}
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -324,8 +325,8 @@ const StockReceivedScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Stock Received"
-        navigation={() => navigation.goBack()}
+        title="Stock Update Management"
+        navigation={() => navigation.navigation.goBack()}
       />
       <View style={styles.storePicker}>
         <ReusableDropdown
@@ -437,9 +438,9 @@ const styles = StyleSheet.create({
   },
   footerForm: {
     backgroundColor: Colors.white,
-    marginTop: 4,
     padding: 14,
-    borderRadius: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.lightGray,
   },
   fieldLabel: {
     fontFamily: Fonts.medium,
