@@ -11,11 +11,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import React, { useState } from 'react';
-import { flexCol, flexRow } from '../../utils/styles';
-import { Colors } from '../../utils/colors';
-import { Fonts } from '../../constants';
-import { Size } from '../../utils/fontSize';
+import React, {useState} from 'react';
+import {flexCol, flexRow} from '../../utils/styles';
+import {Colors} from '../../utils/colors';
+import {Fonts} from '../../constants';
+import {Size} from '../../utils/fontSize';
 import Input from '@rneui/themed/dist/Input';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
@@ -27,28 +27,25 @@ import {
   BookOpen,
   AlertCircle,
 } from 'lucide-react-native';
-import { useLoginMutation } from '../../features/auth/auth';
-import { saveSecureSession } from '../../utils/secureStorage';
-import { useRegisterFcmTokenMutation } from '../../features/fcm/fccm-api';
-import { getFcmToken } from '../../utils/fcm';
+import {useLoginMutation} from '../../features/auth/auth';
+import {saveSecureSession} from '../../utils/secureStorage';
+import {useRegisterFcmTokenMutation} from '../../features/fcm/fccm-api';
+import {getFcmToken} from '../../utils/fcm';
 import Toast from 'react-native-toast-message';
-import { useFormik } from 'formik';
-import { loginSchema } from '../../types/schema';
-import { APP_VERSION } from '../../utils/utils';
+import {useFormik} from 'formik';
+import {loginSchema} from '../../types/schema';
+import {APP_VERSION} from '../../utils/utils';
 import {
   getUserFacingError,
   getSafeServerMessage,
 } from '../../utils/errorMessage';
-import {
-  isLockedOutPayload,
-  getRetryAfterSeconds,
-} from '../../utils/security';
-import { useEffect } from 'react';
-import { MainNavigationStackParamList } from '../../types/Navigation';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-const { width } = Dimensions.get('window');
+import {isLockedOutPayload, getRetryAfterSeconds} from '../../utils/security';
+import {useEffect} from 'react';
+import {MainNavigationStackParamList} from '../../types/Navigation';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+const {width} = Dimensions.get('window');
 
-let initial = { usr: '', pwd: '' };
+let initial = {usr: '', pwd: ''};
 
 type NavigationProp = NativeStackNavigationProp<
   MainNavigationStackParamList,
@@ -64,8 +61,8 @@ const formatLockoutTime = (totalSeconds: number): string => {
   return `${secs}s`;
 };
 
-const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
-  const [login, { isLoading }] = useLoginMutation();
+const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
+  const [login, {isLoading}] = useLoginMutation();
   const [registerFcmToken] = useRegisterFcmTokenMutation();
   const [secureText, setSecureText] = useState(true);
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
@@ -90,7 +87,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
   }, [lockoutSeconds]);
 
   // Form handling & validation using formik & yup schemas
-  const { values, errors, touched, handleChange, handleBlur, handleSubmit } =
+  const {values, errors, touched, handleChange, handleBlur, handleSubmit} =
     useFormik({
       initialValues: initial,
       validationSchema: loginSchema,
@@ -103,7 +100,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             pwd: value.pwd,
             app_version: APP_VERSION,
           };
-          let res = await login({ data: payload }).unwrap();
+          let res = await login({data: payload}).unwrap();
           if (res?.message?.success) {
             const m = res.message;
             // Persist only session credentials to the secure Keychain. Full
@@ -128,12 +125,16 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             const fcmToken = await getFcmToken();
             if (fcmToken) {
               const deviceOs = Platform.OS === 'ios' ? 'iOS' : 'Android';
-              registerFcmToken({ fcm_token: fcmToken, device_os: deviceOs });
+              registerFcmToken({fcm_token: fcmToken, device_os: deviceOs});
             }
           } else {
             if (isLockedOutPayload(res?.message)) {
               const secs = getRetryAfterSeconds(res) ?? 300;
-              const reason = getSafeServerMessage(res?.message?.message) ?? `Your account has been locked due to multiple failed login attempts. Try again in ${formatLockoutTime(secs)}.`;
+              const reason =
+                getSafeServerMessage(res?.message?.message) ??
+                `Your account has been locked due to multiple failed login attempts. Try again in ${formatLockoutTime(
+                  secs,
+                )}.`;
               setLockoutSeconds(secs);
               setLockoutReason(reason);
               Toast.show({
@@ -155,7 +156,11 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
         } catch (error: any) {
           if (isLockedOutPayload(error?.data)) {
             const secs = getRetryAfterSeconds(error) ?? 300;
-            const reason = getSafeServerMessage(error?.data?.message?.message) ?? `Your account has been locked due to multiple failed login attempts. Try again in ${formatLockoutTime(secs)}.`;
+            const reason =
+              getSafeServerMessage(error?.data?.message?.message) ??
+              `Your account has been locked due to multiple failed login attempts. Try again in ${formatLockoutTime(
+                secs,
+              )}.`;
             setLockoutSeconds(secs);
             setLockoutReason(reason);
             Toast.show({
@@ -167,7 +172,9 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             });
           } else if (error?.status === 429) {
             const secs = getRetryAfterSeconds(error) ?? 60;
-            const reason = `Too many requests sent from your device. Please wait ${formatLockoutTime(secs)} before trying again.`;
+            const reason = `Too many requests sent from your device. Please wait ${formatLockoutTime(
+              secs,
+            )} before trying again.`;
             setLockoutSeconds(secs);
             setLockoutReason(reason);
             Toast.show({
@@ -201,7 +208,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
       ]}>
       <ScrollView
         nestedScrollEnabled={true}
-        contentContainerStyle={{ flexGrow: 1 }}>
+        contentContainerStyle={{flexGrow: 1}}>
         <View style={styles.header}>
           <Image
             source={require('../../assets/images/softsence-logo-login.png')}
@@ -233,11 +240,11 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             }}>
             Enter credentials to Login
           </Text>
-          <View style={{ paddingTop: 20 }}>
+          <View style={{paddingTop: 20}}>
             <Input
               style={styles.inputBox}
-              inputStyle={{ paddingTop: 15 }}
-              labelStyle={{ color: Colors.white }}
+              inputStyle={{paddingTop: 15}}
+              labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -267,8 +274,8 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
               secureTextEntry={secureText}
               contextMenuHidden={true}
               style={styles.inputBox}
-              inputStyle={{ paddingTop: 15 }}
-              labelStyle={{ color: Colors.white }}
+              inputStyle={{paddingTop: 15}}
+              labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
               autoComplete="password"
               textContentType="password"
@@ -313,8 +320,8 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
                   alignItems: 'flex-start',
                   gap: 10,
                 }}>
-                <AlertCircle color="#D32F2F" size={20} style={{ marginTop: 2 }} />
-                <View style={{ flex: 1 }}>
+                <AlertCircle color="#D32F2F" size={20} style={{marginTop: 2}} />
+                <View style={{flex: 1}}>
                   <Text
                     style={{
                       fontFamily: Fonts.bold,
@@ -347,7 +354,9 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
                 marginBottom: 15,
                 marginTop: -5,
               }}
-              onPress={() => navigation.navigate('ForgotPasswordScreen' as any)}>
+              onPress={() =>
+                navigation.navigate('ForgotPasswordScreen' as any)
+              }>
               <Text
                 style={{
                   fontFamily: Fonts.medium,
@@ -362,7 +371,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
             <TouchableOpacity
               style={[
                 styles.checkinButton,
-                (isLoading || !!lockoutSeconds) && { opacity: 0.7 },
+                (isLoading || !!lockoutSeconds) && {opacity: 0.7},
               ]}
               onPress={() => handleSubmit()}
               disabled={isLoading || !!lockoutSeconds}>
@@ -373,7 +382,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
                   Locked ({formatLockoutTime(lockoutSeconds)})
                 </Text>
               ) : (
-                <View style={[flexRow, { gap: 10 }]}>
+                <View style={[flexRow, {gap: 10}]}>
                   <LogIn strokeWidth={1.4} color={Colors.white} />
                   <Text style={styles.checkinButtonText}>Login</Text>
                 </View>
@@ -407,7 +416,7 @@ const LoginScreen = ({ navigation }: { navigation: NavigationProp }) => {
               marginTop: 20,
             }}>
             App Version:{' '}
-            <Text style={{ fontFamily: Fonts.bold, color: Colors.darkGray }}>
+            <Text style={{fontFamily: Fonts.bold, color: Colors.darkGray}}>
               {APP_VERSION}
             </Text>
           </Text>
@@ -431,7 +440,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
 
@@ -453,6 +462,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingBottom: 10,
+    marginTop: 20,
   },
   footerLogoImage: {
     width: width * 0.3,
