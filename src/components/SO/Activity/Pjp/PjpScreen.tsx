@@ -1,183 +1,369 @@
-/* eslint-disable react-native/no-inline-styles */
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
-  Dimensions,
+  ActivityIndicator,
+  FlatList,
   Platform,
+  RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Colors} from '../../../../utils/colors';
-import {Fonts} from '../../../../constants';
-import {Size} from '../../../../utils/fontSize';
-import {CalendarDays, X} from 'lucide-react-native';
-import {useGetDailyPjpListQuery} from '../../../../features/base/base-api';
-import {useCallback, useEffect, useState} from 'react';
-import {useFocusEffect} from '@react-navigation/native';
-import {PjpDailyStore} from '../../../../types/baseType';
-import {FlatList} from 'react-native';
-import {RefreshControl} from 'react-native';
-import {ActivityIndicator} from 'react-native';
-import {windowHeight} from '../../../../utils/utils';
-import moment from 'moment';
-import AssignEmployeeModal from './AssignEmployeeModal';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import {useFocusEffect} from '@react-navigation/native';
+import {CalendarDays, ChevronRight, X} from 'lucide-react-native';
+import moment from 'moment';
 
-const {width} = Dimensions.get('window');
-const PAGE_SIZE = 10;
+import {Fonts} from '../../../../constants';
+import {
+  useGetCompletedPjpsQuery,
+  useGetUpcomingPjpsQuery,
+} from '../../../../features/base/base-api';
+import {
+  PjpDailyStore,
+  PjpListItem,
+  PjpListParams,
+  PjpListStatus,
+} from '../../../../types/baseType';
+import {Colors} from '../../../../utils/colors';
+import {Size} from '../../../../utils/fontSize';
+import {windowHeight} from '../../../../utils/utils';
+import AssignEmployeeModal from './AssignEmployeeModal';
+
+const PAGE_SIZE = 20;
+type Tab = 'upcoming' | 'completed';
+type CompletedStatus = '' | 'Completed' | 'Not ended' | 'Not started';
+
+const COMPLETED_FILTERS: {label: string; value: CompletedStatus}[] = [
+  {label: 'All', value: ''},
+  {label: 'Completed', value: 'Completed'},
+  {label: 'Not ended', value: 'Not ended'},
+  {label: 'Missed', value: 'Not started'},
+];
+
+const STATUS_CONFIG: Record<
+  PjpListStatus,
+  {label: string; color: string; backgroundColor: string}
+> = {
+  Ready: {label: 'Today', color: '#1D4ED8', backgroundColor: '#DBEAFE'},
+  Running: {
+    label: 'In progress',
+    color: '#A16207',
+    backgroundColor: '#FEF3C7',
+  },
+  Scheduled: {
+    label: 'Scheduled',
+    color: '#4338CA',
+    backgroundColor: '#EEF2FF',
+  },
+  Completed: {
+    label: 'Completed',
+    color: '#15803D',
+    backgroundColor: '#DCFCE7',
+  },
+  'Not ended': {
+    label: 'Not ended',
+    color: '#A16207',
+    backgroundColor: '#FEF3C7',
+  },
+  'Not started': {
+    label: 'Missed',
+    color: '#B91C1C',
+    backgroundColor: '#FEE2E2',
+  },
+};
 
 const PJPScreen = ({navigation}: any) => {
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [page, setPage] = useState<number>(1);
-  const [orders, setOrders] = useState<PjpDailyStore[]>([]);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [assignModalVisible, setAssignModalVisible] = useState(false);
-
-  // Date filter state
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<Tab>('upcoming');
+  const [page, setPage] = useState(1);
+  const [pjps, setPjps] = useState<PjpListItem[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedPjp, setSelectedPjp] = useState<PjpListItem | null>(null);
+  const [selectedDate, setSelectedDate] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [completedStatus, setCompletedStatus] = useState<CompletedStatus>('');
 
-  const {data, isLoading, isFetching, refetch, isUninitialized} =
-    useGetDailyPjpListQuery({
+  const commonParams = useMemo<PjpListParams>(
+    () => ({
       page,
       page_size: PAGE_SIZE,
-      status: '',
-      ...(selectedDate ? {date: selectedDate} : {}),
-    });
-  console.log('🚀 ~ PJPScreen ~ data:', data);
+      ...(selectedDate ? {from_date: selectedDate, to_date: selectedDate} : {}),
+    }),
+    [page, selectedDate],
+  );
+
+  const upcomingQuery = useGetUpcomingPjpsQuery(
+    {...commonParams, order: 'asc'},
+    {
+      skip: activeTab !== 'upcoming',
+      refetchOnMountOrArgChange: true,
+    },
+  );
+  const completedQuery = useGetCompletedPjpsQuery(
+    {
+      ...commonParams,
+      order: 'desc',
+      ...(completedStatus ? {status: completedStatus} : {}),
+    },
+    {
+      skip: activeTab !== 'completed',
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  const activeQuery = activeTab === 'upcoming' ? upcomingQuery : completedQuery;
+  const {data, isLoading, isFetching, isError, isUninitialized, refetch} =
+    activeQuery;
+  const responseData = data?.message?.data;
+  const serverToday = responseData?.today;
+  const businessError =
+    data?.message?.status === 'fail' ? data.message.message : undefined;
+
+  useEffect(() => {
+    setPage(1);
+    setPjps([]);
+  }, [activeTab, completedStatus, selectedDate]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!isUninitialized) refetch();
+      setPage(1);
+      if (!isUninitialized) {
+        refetch();
+      }
     }, [isUninitialized, refetch]),
   );
 
-  // Reset to page 1 when date filter changes
   useEffect(() => {
-    setPage(1);
-    setOrders([]);
-  }, [selectedDate]);
+    const newPjps = responseData?.pjps;
+    const responsePage = responseData?.pagination?.page;
+    if (!newPjps || !responsePage) {
+      return;
+    }
 
-  // Append new data when page changes
-  useEffect(() => {
-    const newData = data?.message?.data?.pjp_daily_stores;
-    const pagination = data?.message?.data?.pagination;
-
-    if (!newData) return;
-
-    setOrders(prev => {
-      if (pagination?.page === 1) {
-        return newData;
+    setPjps(previous => {
+      if (responsePage === 1) {
+        return newPjps;
       }
-      const map = new Map();
-      [...prev, ...newData].forEach(item => {
-        map.set(item.pjp_daily_store_id, item);
-      });
-      return Array.from(map.values());
-    });
-  }, [data]);
 
-  const onRefresh = useCallback(() => {
+      const byName = new Map(previous.map(item => [item.name, item]));
+      newPjps.forEach(item => byName.set(item.name, item));
+      return Array.from(byName.values());
+    });
+  }, [responseData]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    setPage(1);
+    try {
+      if (!isUninitialized) {
+        await refetch();
+      }
+    } finally {
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
+    }
   }, [isUninitialized, refetch]);
 
   const loadMore = () => {
-    if (
-      !isFetching &&
-      data?.message?.data &&
-      data?.message?.data?.pagination?.page <
-        data?.message?.data?.pagination?.total_pages
-    ) {
-      setPage(prev => prev + 1);
+    if (!isFetching && responseData?.pagination?.has_more) {
+      setPage(current => current + 1);
     }
   };
 
-  const handleDateChange = (_: any, date?: Date) => {
+  const handleDateChange = (_: unknown, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setSelectedDate(moment(date).format('YYYY-MM-DD'));
     }
   };
 
-  const clearDateFilter = () => {
-    setSelectedDate('');
+  const selectTab = (tab: Tab) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+    }
   };
 
-  const renderItem = ({item}: {item: PjpDailyStore}) => (
-    <View style={styles.atteddanceCard}>
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('PjpDetailScreen', {
-            details: item,
-          });
-        }}
-        style={styles.cardbody}>
-        <View style={styles.dateBox}>
-          <Text style={styles.dateText}>{new Date(item.date).getDate()}</Text>
-          <Text style={styles.monthText}>
-            {new Date(item.date).toLocaleString('default', {
-              month: 'short',
-            })}
-          </Text>
-        </View>
-        <View style={{flex: 1.5, paddingLeft: 10}}>
-          <Text style={styles.contentText}>Emp name</Text>
-          <Text
-            style={[
-              styles.contentText,
-              {
-                fontFamily: Fonts.semiBold,
-                fontSize: Size.sm,
-                color: Colors.darkButton,
-              },
-            ]}>
-            {item?.employee_name}
-          </Text>
-          <View style={styles.badgeRow}>
-            {moment(item.date, 'YYYY-MM-DD').isAfter(moment(), 'day') && (
-              <Text style={styles.upcomingBadge}>Upcoming</Text>
-            )}
-            {item.beat_plan && (
-              <Text style={styles.beatPlanBadge}>Monthly beat plan</Text>
-            )}
-          </View>
-        </View>
-        {/* Assign Button */}
+  const getRelativeDateLabel = (date: string, day: string) => {
+    if (!serverToday) {
+      return day;
+    }
+    const difference = moment(date, 'YYYY-MM-DD').diff(
+      moment(serverToday, 'YYYY-MM-DD'),
+      'days',
+    );
+    if (difference === 0) {
+      return 'Today';
+    }
+    if (difference === 1) {
+      return 'Tomorrow';
+    }
+    return day;
+  };
+
+  const openPjp = (item: PjpListItem) => {
+    navigation.navigate('PjpDetailScreen', {
+      details: {
+        pjp_daily_store_id: item.name,
+      } as PjpDailyStore,
+      readOnly: item.status === 'Scheduled',
+      listStatus: item.status,
+    });
+  };
+
+  const renderItem = ({item}: {item: PjpListItem}) => {
+    const status = STATUS_CONFIG[item.status];
+    const isToday = item.date === serverToday;
+
+    return (
+      <View style={[styles.pjpCard, isToday && styles.todayCard]}>
         <TouchableOpacity
-          style={styles.assignButton}
-          onPress={() => setAssignModalVisible(true)}>
-          <Text style={styles.assignButtonText}>Assign</Text>
+          style={styles.cardMain}
+          onPress={() => openPjp(item)}
+          activeOpacity={0.8}>
+          <View style={[styles.dateBox, isToday && styles.todayDateBox]}>
+            <Text style={[styles.dateText, isToday && styles.todayDateText]}>
+              {moment(item.date, 'YYYY-MM-DD').format('DD')}
+            </Text>
+            <Text style={[styles.monthText, isToday && styles.todayDateText]}>
+              {moment(item.date, 'YYYY-MM-DD').format('MMM')}
+            </Text>
+          </View>
+
+          <View style={styles.cardContent}>
+            <View style={styles.cardTitleRow}>
+              <Text style={styles.cardTitle}>
+                {getRelativeDateLabel(item.date, item.day)}
+              </Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  {backgroundColor: status.backgroundColor},
+                ]}>
+                <Text style={[styles.statusText, {color: status.color}]}>
+                  {status.label}
+                </Text>
+              </View>
+            </View>
+
+            <Text style={styles.fullDate}>
+              {moment(item.date, 'YYYY-MM-DD').format('DD MMM YYYY')}
+            </Text>
+
+            <View style={styles.countRow}>
+              <Text style={styles.countText}>{item.total_stores} stores</Text>
+              <Text style={styles.countDot}>·</Text>
+              <Text style={styles.visitedText}>
+                {item.visited_stores} visited
+              </Text>
+              {item.pending_stores > 0 ? (
+                <>
+                  <Text style={styles.countDot}>·</Text>
+                  <Text style={styles.countText}>
+                    {item.pending_stores} pending
+                  </Text>
+                </>
+              ) : null}
+              {item.missed_stores > 0 ? (
+                <>
+                  <Text style={styles.countDot}>·</Text>
+                  <Text style={styles.missedText}>
+                    {item.missed_stores} missed
+                  </Text>
+                </>
+              ) : null}
+            </View>
+
+            {item.beat_plan ||
+            item.unplanned_stores > 0 ||
+            item.planned_activities > 0 ? (
+              <View style={styles.badgeRow}>
+                {item.beat_plan ? (
+                  <Text style={styles.beatPlanBadge}>Monthly beat plan</Text>
+                ) : null}
+                {item.unplanned_stores > 0 ? (
+                  <Text style={styles.unplannedBadge}>
+                    {item.unplanned_stores} unplanned
+                  </Text>
+                ) : null}
+                {item.planned_activities > 0 ? (
+                  <Text style={styles.activityBadge}>
+                    {item.planned_activities} activities
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
+
+            {activeTab === 'completed' &&
+            (item.first_check_in ||
+              item.last_check_out ||
+              item.travel_distance_km !== null) ? (
+              <Text style={styles.daySummary}>
+                {item.first_check_in
+                  ? `In ${item.first_check_in.slice(0, 5)}`
+                  : ''}
+                {item.first_check_in && item.last_check_out ? '  ·  ' : ''}
+                {item.last_check_out
+                  ? `Out ${item.last_check_out.slice(0, 5)}`
+                  : ''}
+                {(item.first_check_in || item.last_check_out) &&
+                item.travel_distance_km !== null
+                  ? '  ·  '
+                  : ''}
+                {item.travel_distance_km !== null
+                  ? `${item.travel_distance_km.toFixed(1)} km`
+                  : ''}
+              </Text>
+            ) : null}
+          </View>
+
+          <ChevronRight size={16} color="#94A3B8" />
         </TouchableOpacity>
 
-        {/* Assign Modal */}
-        <AssignEmployeeModal
-          visible={assignModalVisible}
-          onClose={() => setAssignModalVisible(false)}
-          sourcePjp={item?.pjp_daily_store_id}
-          date={item?.date}
-        />
-      </TouchableOpacity>
-    </View>
-  );
+        <View style={styles.cardFooter}>
+          <Text style={styles.pjpId} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <TouchableOpacity
+            style={styles.assignButton}
+            onPress={() => setSelectedPjp(item)}>
+            <Text style={styles.assignButtonText}>Assign</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  const initialLoading =
+    (isLoading || isFetching) && page === 1 && pjps.length === 0;
 
   return (
-    <View
-      style={{
-        width: '100%',
-        flex: 1,
-        backgroundColor: Colors.lightBg,
-        position: 'relative',
-      }}>
-      <View
-        style={[
-          styles.bodyContent,
-          {paddingHorizontal: 16, paddingTop: 10, paddingBottom: 70},
-        ]}>
-        {/* ── Date Filter Bar ── */}
+    <View style={styles.screen}>
+      <View style={styles.bodyContent}>
+        <View style={styles.tabs}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
+            onPress={() => selectTab('upcoming')}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'upcoming' && styles.activeTabText,
+              ]}>
+              Upcoming
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'completed' && styles.activeTab]}
+            onPress={() => selectTab('completed')}>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'completed' && styles.activeTabText,
+              ]}>
+              Completed
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.filterBar}>
           <TouchableOpacity
             style={[
@@ -196,76 +382,120 @@ const PJPScreen = ({navigation}: any) => {
                 selectedDate ? styles.dateChipTextActive : undefined,
               ]}>
               {selectedDate
-                ? moment(selectedDate).format('DD MMM YYYY')
+                ? moment(selectedDate, 'YYYY-MM-DD').format('DD MMM YYYY')
                 : 'Filter by date'}
             </Text>
           </TouchableOpacity>
 
           {selectedDate ? (
             <TouchableOpacity
-              style={styles.clearBtn}
-              onPress={clearDateFilter}
+              style={styles.clearButton}
+              onPress={() => setSelectedDate('')}
               activeOpacity={0.7}>
               <X size={13} color="#6B7280" />
-              <Text style={styles.clearBtnText}>Clear</Text>
+              <Text style={styles.clearButtonText}>Clear</Text>
             </TouchableOpacity>
           ) : null}
         </View>
 
-        {/* Native Date Picker */}
-        {showDatePicker && (
+        {showDatePicker ? (
           <DateTimePicker
-            value={selectedDate ? new Date(selectedDate) : new Date()}
+            value={
+              selectedDate ? new Date(`${selectedDate}T00:00:00`) : new Date()
+            }
             mode="date"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleDateChange}
           />
-        )}
+        ) : null}
 
-        <View style={{flex: 1, backgroundColor: Colors.lightBg}}>
-          {isLoading && page === 1 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <ActivityIndicator size="large" />
+        {activeTab === 'completed' ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.statusFilters}>
+            {COMPLETED_FILTERS.map(filter => (
+              <TouchableOpacity
+                key={filter.label}
+                style={[
+                  styles.statusFilter,
+                  completedStatus === filter.value && styles.activeStatusFilter,
+                ]}
+                onPress={() => setCompletedStatus(filter.value)}>
+                <Text
+                  style={[
+                    styles.statusFilterText,
+                    completedStatus === filter.value &&
+                      styles.activeStatusFilterText,
+                  ]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        ) : null}
+
+        <View style={styles.listContainer}>
+          {initialLoading ? (
+            <View style={styles.stateContainer}>
+              <ActivityIndicator size="large" color={Colors.orange} />
             </View>
-          ) : orders.length === 0 ? (
-            <View
-              style={{
-                height: windowHeight * 0.5,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Text style={{fontSize: 16, color: 'gray'}}>
+          ) : isError || businessError ? (
+            <View style={styles.stateContainer}>
+              <Text style={styles.errorTitle}>Could not load PJP list</Text>
+              <Text style={styles.errorMessage}>
+                {businessError || 'Please check your connection and try again.'}
+              </Text>
+              <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : pjps.length === 0 ? (
+            <View style={styles.stateContainer}>
+              <Text style={styles.emptyText}>
                 {selectedDate
-                  ? `No PJP found for ${moment(selectedDate).format(
-                      'DD MMM YYYY',
-                    )}`
-                  : 'No PJP Found'}
+                  ? `No ${activeTab} PJP found for ${moment(
+                      selectedDate,
+                      'YYYY-MM-DD',
+                    ).format('DD MMM YYYY')}`
+                  : `No ${activeTab} PJP found`}
               </Text>
             </View>
           ) : (
             <FlatList
-              data={orders}
-              nestedScrollEnabled={true}
+              data={pjps}
+              nestedScrollEnabled
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               renderItem={renderItem}
-              keyExtractor={(item, index) => item.pjp_daily_store_id + index}
+              keyExtractor={item => item.name}
               showsVerticalScrollIndicator={false}
               onEndReached={loadMore}
-              onEndReachedThreshold={0.5}
+              onEndReachedThreshold={0.4}
+              contentContainerStyle={styles.listContent}
               ListFooterComponent={
-                isFetching ? <ActivityIndicator size="small" /> : null
+                isFetching && page > 1 ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={Colors.orange}
+                    style={styles.footerLoader}
+                  />
+                ) : null
               }
             />
           )}
         </View>
       </View>
+
+      {selectedPjp ? (
+        <AssignEmployeeModal
+          visible
+          onClose={() => setSelectedPjp(null)}
+          sourcePjp={selectedPjp.name}
+          date={selectedPjp.date}
+        />
+      ) : null}
     </View>
   );
 };
@@ -273,9 +503,42 @@ const PJPScreen = ({navigation}: any) => {
 export default PJPScreen;
 
 const styles = StyleSheet.create({
-  bodyContent: {flex: 1},
-
-  // ── Date filter bar
+  screen: {
+    width: '100%',
+    flex: 1,
+    backgroundColor: Colors.lightBg,
+  },
+  bodyContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 70,
+  },
+  tabs: {
+    flexDirection: 'row',
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: Colors.orange,
+    marginBottom: 10,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
+  activeTab: {
+    backgroundColor: '#FFBF83',
+  },
+  tabText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: Colors.white,
+  },
+  activeTabText: {
+    color: Colors.white,
+    fontFamily: Fonts.semiBold,
+  },
   filterBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,7 +554,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.white,
   },
   dateChipActive: {
     borderColor: Colors.darkButton,
@@ -306,7 +569,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
   },
-  clearBtn: {
+  clearButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -317,118 +580,253 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     backgroundColor: '#F9FAFB',
   },
-  clearBtnText: {
+  clearButtonText: {
     fontFamily: Fonts.regular,
     fontSize: Size.xs,
     color: '#6B7280',
   },
-
-  // ── Card
-  atteddanceCard: {
-    flexDirection: 'column',
-    gap: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginTop: 8,
+  statusFilters: {
+    gap: 7,
+    paddingBottom: 10,
+  },
+  statusFilter: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+    backgroundColor: Colors.white,
+  },
+  activeStatusFilter: {
+    borderColor: Colors.orange,
+    backgroundColor: '#FFF7ED',
+  },
+  statusFilterText: {
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    color: '#64748B',
+  },
+  activeStatusFilterText: {
+    color: Colors.orange,
+  },
+  listContainer: {
+    flex: 1,
+    backgroundColor: Colors.lightBg,
+  },
+  listContent: {
+    paddingBottom: 12,
+  },
+  pjpCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E8EDF3',
     shadowColor: '#1F2937',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
+    overflow: 'hidden',
   },
-  cardbody: {
+  todayCard: {
+    borderColor: '#93C5FD',
+    borderWidth: 1.5,
+  },
+  cardMain: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   dateBox: {
-    width: 44,
-    height: 44,
-    borderColor: Colors.darkButton,
+    width: 40,
+    height: 42,
+    borderColor: '#CBD5E1',
     borderWidth: 1,
-    borderRadius: 10,
-    backgroundColor: Colors.transparent,
-    flexDirection: 'column',
+    borderRadius: 8,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  todayDateBox: {
+    backgroundColor: Colors.darkButton,
+    borderColor: Colors.darkButton,
+  },
   dateText: {
     fontFamily: Fonts.semiBold,
-    fontSize: Size.sm,
+    fontSize: 13,
     color: Colors.darkButton,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   monthText: {
     fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    fontSize: Size.xs,
+    color: '#64748B',
+    fontSize: 9,
   },
-  contentText: {
-    fontFamily: Fonts.regular,
+  todayDateText: {
+    color: Colors.white,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  cardTitle: {
+    flex: 1,
+    fontFamily: Fonts.semiBold,
+    fontSize: 12,
     color: Colors.darkButton,
-    fontSize: Size.sm,
-    lineHeight: 20,
+  },
+  fullDate: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: '#64748B',
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  statusText: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 8,
+  },
+  countRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 3,
+  },
+  countText: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: '#64748B',
+  },
+  visitedText: {
+    fontFamily: Fonts.medium,
+    fontSize: 9,
+    color: '#15803D',
+  },
+  missedText: {
+    fontFamily: Fonts.medium,
+    fontSize: 9,
+    color: '#B91C1C',
+  },
+  countDot: {
+    color: '#CBD5E1',
+    fontSize: 9,
   },
   badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 4,
-    marginTop: 3,
-  },
-  upcomingBadge: {
-    fontFamily: Fonts.medium,
-    fontSize: 10,
-    color: '#92400E',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    gap: 3,
+    marginTop: 4,
   },
   beatPlanBadge: {
     fontFamily: Fonts.medium,
-    fontSize: 10,
+    fontSize: 8,
     color: '#4338CA',
     backgroundColor: '#EEF2FF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: 8,
+  },
+  unplannedBadge: {
+    fontFamily: Fonts.medium,
+    fontSize: 8,
+    color: '#9A3412',
+    backgroundColor: '#FFEDD5',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+  },
+  activityBadge: {
+    fontFamily: Fonts.medium,
+    fontSize: 8,
+    color: '#0369A1',
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+  },
+  daySummary: {
+    fontFamily: Fonts.regular,
+    fontSize: 8,
+    color: '#475569',
+    marginTop: 4,
+  },
+  cardFooter: {
+    minHeight: 28,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  pjpId: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: 8,
+    color: '#94A3B8',
   },
   assignButton: {
     backgroundColor: Colors.lightGreen,
-    borderRadius: 10,
+    borderRadius: 7,
     paddingVertical: 3,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
+    paddingHorizontal: 9,
   },
   assignButtonText: {
     color: Colors.black,
     fontFamily: Fonts.medium,
+    fontSize: 10,
+  },
+  stateContainer: {
+    minHeight: windowHeight * 0.42,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  emptyText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.sm,
+    color: Colors.gray,
+    textAlign: 'center',
+    textTransform: 'capitalize',
+  },
+  errorTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.sm,
+    color: '#B91C1C',
+  },
+  errorMessage: {
+    fontFamily: Fonts.regular,
     fontSize: Size.xs,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 5,
   },
-  dropdownMenu: {
-    position: 'absolute',
-    top: 25,
-    right: 0,
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: {width: 0, height: 2},
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 999,
+  retryButton: {
+    marginTop: 12,
+    backgroundColor: Colors.darkButton,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  menuItem: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    fontSize: 14,
+  retryButtonText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: Colors.white,
+  },
+  footerLoader: {
+    paddingVertical: 14,
   },
 });

@@ -25,7 +25,7 @@ type Props = {
   route: any;
 };
 const PjpDetailScreen = ({ navigation, route }: Props) => {
-  const { details } = route.params;
+  const { details, readOnly = false } = route.params;
 
   const { data, isFetching, isError, error, refetch } = useGetDailyPjpByIdQuery(
     details?.pjp_daily_store_id,
@@ -57,7 +57,7 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
           </View>
         ) : (
         <>
-          {!isPastDate && (
+          {!isPastDate && !readOnly && (
             <TouchableOpacity
               style={styles.editBanner}
               onPress={() => navigation.navigate('AddPjpScreen', { id: resolvedDetails.pjp_daily_store_id, beatPlan: resolvedDetails.beat_plan })}

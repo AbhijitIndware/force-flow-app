@@ -156,9 +156,16 @@ const MySalesScreen = ({navigation}: Props) => {
             {item.store_name}
           </Text>
         </View>
-        <View style={{alignItems: 'flex-end'}}>
-          <Text style={styles.value}>{item.sold} sold</Text>
-          <Text style={styles.cardSub}>{money(item.sold_value)}</Text>
+        <View style={styles.itemStats}>
+          <View style={styles.itemStat}>
+            <Text style={styles.itemStatLabel}>Sold</Text>
+            <Text style={styles.itemStatValue}>{item.sold}</Text>
+          </View>
+          <View style={styles.itemStatDivider} />
+          <View style={styles.itemStat}>
+            <Text style={styles.itemStatLabel}>Value</Text>
+            <Text style={styles.itemStatValue}>{money(item.sold_value)}</Text>
+          </View>
         </View>
       </View>
       <View style={styles.metrics}>
@@ -227,25 +234,49 @@ const MySalesScreen = ({navigation}: Props) => {
       </View>
 
       <View style={styles.summary}>
-        <View style={styles.primaryStat}>
-          <Text style={styles.primaryLabel}>Sold</Text>
-          <Text style={styles.primaryValue}>{totals.sold}</Text>
-          <Text style={styles.primaryMoney}>{money(totals.sold_value)}</Text>
-        </View>
-        <View style={styles.secondaryStats}>
-          <View style={styles.smallStat}>
-            <Text style={styles.smallValue}>{totals.received}</Text>
-            <Text style={styles.smallLabel}>Received</Text>
-          </View>
-          <View style={styles.smallStat}>
-            <Text
-              style={[
-                styles.smallValue,
-                totals.found > 0 && {color: '#B45309'},
-              ]}>
-              {totals.found}
-            </Text>
-            <Text style={styles.smallLabel}>Unrecorded</Text>
+        <View style={styles.statsCard}>
+          <View style={styles.statRow}>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Ionicons name="cube-outline" size={20} color={Colors.orange} />
+              </View>
+              <Text style={styles.statLabel}>Sold</Text>
+              <Text style={styles.statValue}>{totals.sold}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Ionicons name="cash-outline" size={20} color={Colors.orange} />
+              </View>
+              <Text style={styles.statLabel}>Sold Value</Text>
+              <Text style={styles.statValue}>{money(totals.sold_value)}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Ionicons name="download-outline" size={20} color={Colors.blue} />
+              </View>
+              <Text style={styles.statLabel}>Received</Text>
+              <Text style={styles.statValue}>{totals.received}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Ionicons
+                  name={totals.found > 0 ? 'warning-outline' : 'checkmark-circle-outline'}
+                  size={20}
+                  color={totals.found > 0 ? '#B45309' : '#15803D'}
+                />
+              </View>
+              <Text style={styles.statLabel}>Unrecorded</Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  totals.found > 0 && {color: '#B45309'},
+                ]}>
+                {totals.found}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -323,23 +354,55 @@ const styles = StyleSheet.create({
   disabled: {opacity: 0.35},
   summary: {
     margin: 12,
-    flexDirection: 'row',
-    backgroundColor: Colors.darkButton,
+    paddingBottom: 8,
+  },
+  statsCard: {
+    backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  primaryStat: {flex: 1},
-  primaryLabel: {color: '#D1D5DB', fontFamily: Fonts.medium, fontSize: 11},
-  primaryValue: {color: Colors.white, fontFamily: Fonts.bold, fontSize: 30},
-  primaryMoney: {
-    color: Colors.orange,
-    fontFamily: Fonts.semiBold,
-    fontSize: 15,
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  secondaryStats: {flexDirection: 'row', flex: 1, alignItems: 'center'},
-  smallStat: {flex: 1, alignItems: 'center'},
-  smallValue: {color: Colors.white, fontFamily: Fonts.bold, fontSize: 20},
-  smallLabel: {color: '#D1D5DB', fontFamily: Fonts.regular, fontSize: 9},
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#FFF4E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statLabel: {
+    color: Colors.gray,
+    fontFamily: Fonts.medium,
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  statValue: {
+    color: Colors.darkButton,
+    fontFamily: Fonts.bold,
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  divider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#F0F0F0',
+  },
   notice: {
     marginHorizontal: 12,
     marginBottom: 8,
@@ -417,6 +480,33 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   value: {fontFamily: Fonts.semiBold, color: '#15803D', fontSize: 13},
+  itemStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginLeft: 8,
+  },
+  itemStat: {
+    alignItems: 'flex-end',
+    flex: 1,
+  },
+  itemStatLabel: {
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 9,
+    textTransform: 'uppercase',
+  },
+  itemStatValue: {
+    fontFamily: Fonts.bold,
+    color: Colors.darkButton,
+    fontSize: 13,
+    marginTop: 1,
+  },
+  itemStatDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#F0F0F0',
+  },
   metrics: {
     flexDirection: 'row',
     justifyContent: 'space-between',

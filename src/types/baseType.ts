@@ -3460,3 +3460,64 @@ export interface RCancelShiftAssignment {
     message: string;
   };
 }
+
+export type PjpListStatus =
+  | 'Ready'
+  | 'Running'
+  | 'Scheduled'
+  | 'Completed'
+  | 'Not ended'
+  | 'Not started';
+
+export interface PjpListStore {
+  store: string;
+  store_name: string;
+  status: 'Pending' | 'Visited' | 'Missed';
+  is_unplanned: 0 | 1;
+}
+
+export interface PjpListItem {
+  name: string;
+  date: string;
+  day: string;
+  status: PjpListStatus;
+  running_status: 'None' | 'Running' | 'Completed';
+  beat_plan: string | null;
+  is_overnight_outstation_journey?: 0 | 1;
+  travel_distance_km: number | null;
+  first_check_in: string | null;
+  last_check_out: string | null;
+  total_stores: number;
+  visited_stores: number;
+  pending_stores: number;
+  missed_stores: number;
+  unplanned_stores: number;
+  planned_activities: number;
+  stores: PjpListStore[];
+}
+
+export interface PjpListParams {
+  order?: 'asc' | 'desc';
+  page?: number;
+  page_size?: number;
+  from_date?: string;
+  to_date?: string;
+  status?: 'Completed' | 'Not ended' | 'Not started';
+  employee?: string;
+}
+
+export interface RPjpList {
+  message: {
+    status: 'success' | 'fail';
+    message?: string;
+    data?: {
+      list: 'upcoming' | 'completed';
+      employee: string;
+      employee_name: string;
+      today: string;
+      order: 'asc' | 'desc';
+      pjps: PjpListItem[];
+      pagination: PaginationInfo & {has_more: boolean};
+    };
+  };
+}

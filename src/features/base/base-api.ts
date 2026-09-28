@@ -101,6 +101,8 @@ import {
   RGetLiveWorkingHours,
   IAddActivityLocationImage,
   RAddActivityLocationImage,
+  PjpListParams,
+  RPjpList,
 } from '../../types/baseType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
@@ -376,6 +378,24 @@ export const baseApi = createApi({
         },
       }),
       providesTags: ['PJP'],
+    }),
+    getUpcomingPjps: builder.query<RPjpList, PjpListParams>({
+      query: params => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp_lists.get_upcoming_pjps',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['PJP'],
+      keepUnusedDataFor: 0,
+    }),
+    getCompletedPjps: builder.query<RPjpList, PjpListParams>({
+      query: params => ({
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp_lists.get_completed_pjps',
+        method: 'GET',
+        params,
+      }),
+      providesTags: ['PJP'],
+      keepUnusedDataFor: 0,
     }),
     getDailyPjpById: builder.query<RPjpDailyById, string>({
       query: id => ({
@@ -1731,6 +1751,8 @@ export const {
   //PJP
   useGetDailyPjpListQuery,
   useLazyGetDailyPjpListQuery,
+  useGetUpcomingPjpsQuery,
+  useGetCompletedPjpsQuery,
   useGetDailyPjpByIdQuery,
   useGetLastPjpStoresQuery,
   useUpdateDailyPjpMutation,

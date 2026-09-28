@@ -1,4 +1,4 @@
-import {PjpDailyStore, ProductFeedbackItem} from './baseType';
+import {PjpDailyStore, PjpListStatus, ProductFeedbackItem} from './baseType';
 import {UserManualVideo} from './userManualType';
 
 //Stack ParamList Type
@@ -69,7 +69,11 @@ export type SoAppStackParamList = {
   NotificationListScreen: undefined;
   SaleDetailScreen: {id: string};
   PurchaseDetailScreen: {id: string};
-  PjpDetailScreen: {details: PjpDailyStore};
+  PjpDetailScreen: {
+    details: PjpDailyStore;
+    readOnly?: boolean;
+    listStatus?: PjpListStatus;
+  };
   StockReport: {reportName: string};
   TeamsSalesReport: {reportName: string};
   AsmDashboard: undefined;
