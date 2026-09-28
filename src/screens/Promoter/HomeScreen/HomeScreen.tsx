@@ -521,7 +521,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                   <Package strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
                 <Text style={styles.listLinkText}>
-                  Set up the opening stock entry of a store
+                  Set up the opening stock count of a store
                 </Text>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -559,15 +559,15 @@ const HomeScreen = ({navigation, route}: Props) => {
             </Text>
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('MySalesScreen')}>
+              onPress={() => navigation.navigate('StockScreen')}>
               <View
                 style={[
                   styles.iconbox,
                   {width: 35, height: 35, borderRadius: 10},
                 ]}>
-                <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
+                <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={[styles.linkTitle]}>My Sales</Text>
+              <Text style={styles.linkTitle}>Stock Count</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -607,15 +607,15 @@ const HomeScreen = ({navigation, route}: Props) => {
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockScreen')}>
+              onPress={() => navigation.navigate('MySalesScreen')}>
               <View
                 style={[
                   styles.iconbox,
                   {width: 35, height: 35, borderRadius: 10},
                 ]}>
-                <Package strokeWidth={2} color={Colors.white} size={20} />
+                <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Stock Entry</Text>
+              <Text style={[styles.linkTitle]}>My Sales</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"

@@ -242,7 +242,7 @@ const StockScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title="Stock Management"
+        title="Stock Count"
         navigation={() => navigation.goBack()}
       />
 
