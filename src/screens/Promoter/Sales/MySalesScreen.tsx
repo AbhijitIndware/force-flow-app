@@ -241,7 +241,7 @@ const MySalesScreen = ({navigation}: Props) => {
               <View style={styles.statIcon}>
                 <Ionicons name="cash-outline" size={20} color={Colors.orange} />
               </View>
-              <Text style={styles.statLabel}>Sold Value</Text>
+              <Text style={styles.statLabel}>Sold Value (MRP)</Text>
               <Text style={styles.statValue}>{money(totals.sold_value)}</Text>
             </View>
             <View style={styles.divider} />
@@ -258,7 +258,11 @@ const MySalesScreen = ({navigation}: Props) => {
             </View>
             <View style={styles.divider} />
             <View style={styles.statItem}>
-              <View style={styles.statIcon}>
+              <View
+                style={[
+                  styles.statIcon,
+                  totals.found > 0 && styles.statIconWarning,
+                ]}>
                 <Ionicons
                   name={
                     totals.found > 0
@@ -286,7 +290,7 @@ const MySalesScreen = ({navigation}: Props) => {
         <View style={styles.notice}>
           <Ionicons name="warning-outline" color="#B45309" size={17} />
           <Text style={styles.noticeText}>
-            Unrecorded stock found. Record deliveries when they arrive.
+            Stock appeared without a delivery entry — record deliveries in Receive Stock
           </Text>
         </View>
       ) : null}
@@ -386,6 +390,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF4E5',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  statIconWarning: {
+    backgroundColor: '#FEF3C7',
   },
   statLabel: {
     color: Colors.gray,

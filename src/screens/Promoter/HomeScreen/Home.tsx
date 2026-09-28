@@ -105,11 +105,11 @@ function MyTabBar({state, descriptors, navigation}: any) {
               height: 90,
               backgroundColor: Colors.midBlack,
               margin: 0,
-              padding: 8,
+              padding: 2,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 5,
+              gap: 2,
               // paddingBottom: 15,
             }}>
             <View style={[styles.tabButton]}>
@@ -262,7 +262,7 @@ const Home = ({navigation, route}: Props) => {
           name="StockReceivedScreen"
           component={StockReceivedScreen}
           options={{
-            tabBarLabel: 'Stock',
+            tabBarLabel: 'Stock Receive',
             headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (

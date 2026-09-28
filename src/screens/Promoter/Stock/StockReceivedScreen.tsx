@@ -134,7 +134,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
         type: 'success',
         text1:
           getSafeServerMessage(response.message.message) ??
-          'Stock received recorded',
+          'Delivery saved',
       });
       setQuantities({});
       setRemarks('');
@@ -222,7 +222,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
               <View style={{flex: 1}}>
                 <Text style={styles.itemName}>{item.item_name}</Text>
                 <Text style={styles.itemMeta} numberOfLines={1}>
-                  {item.item_code} · Current: {item.current_stock ?? 0}
+                  Current stock: {item.current_stock ?? 0}
                 </Text>
               </View>
               <TextInput
@@ -256,7 +256,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
           {saving ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={styles.primaryButtonText}>Record Stock Received</Text>
+            <Text style={styles.primaryButtonText}>Save Delivery</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -325,7 +325,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Stock Receive"
+        title="Receive Stock"
         navigation={() => navigation.navigation.goBack()}
       />
       <View style={styles.storePicker}>
@@ -354,7 +354,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
             onPress={() => setTab(value)}>
             <Text
               style={[styles.tabText, tab === value && styles.activeTabText]}>
-              {value === 'record' ? 'Record Delivery' : 'History'}
+              {value === 'record' ? 'New Delivery' : 'Deliveries'}
             </Text>
           </TouchableOpacity>
         ))}

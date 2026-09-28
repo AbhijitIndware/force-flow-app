@@ -28,7 +28,10 @@ import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import {StockDashboardItem} from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -47,15 +50,7 @@ interface StockItemEntry {
   isPrev: boolean;
 }
 
-// ─── Column widths — mirrors SaleItemField ────────────────────────────────────
-const COL = {
-  item: 190,
-  stock: 130,
-  qty: 70,
-  action: 40,
-};
-
-// ─── Stock Row ────────────────────────────────────────────────────────────────
+// ─── Stock Row (vertical stacked layout) ────────────────────────────────────────
 interface StockRowProps {
   index: number;
   entry: StockItemEntry;
@@ -93,14 +88,12 @@ const StockRow: React.FC<StockRowProps> = ({
         entry.isPrev && styles.prevRow,
         isFilled && !entry.isPrev && styles.filledRow,
       ]}>
-      {/* ── Item column ── */}
-      <View style={[styles.col, {width: COL.item}]}>
+      {/* ── Item Name ── */}
+      <View style={styles.itemNameWrap}>
         {entry.isPrev ? (
-          <View style={styles.prevItemWrap}>
-            <Text style={styles.prevItemName} numberOfLines={2}>
-              {entry.itemName || entry.itemCode}
-            </Text>
-          </View>
+          <Text style={styles.prevItemName} numberOfLines={2}>
+            {entry.itemName || entry.itemCode}
+          </Text>
         ) : (
           <SaleItemDropdown
             field={`stock_item_${index}`}
@@ -117,39 +110,36 @@ const StockRow: React.FC<StockRowProps> = ({
         )}
       </View>
 
-      {/* --- Stock --- */}
-      <View style={[flexRow, {width: COL.stock}]}>
-        <View style={styles.col}>
-          <Text style={styles.stockLabel}>
-            Opening:{' '}
-            <Text style={styles.boldText}>{matchItem?.opening_stock ?? 0}</Text>
-          </Text>
-          <Text style={styles.stockLabel}>
-            Current:{' '}
-            <Text style={styles.boldText}>{matchItem?.current_stock ?? 0}</Text>
+      {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
+      <View style={styles.stockDetailsWrap}>
+        <View style={styles.stockDetailItem}>
+          <Text style={styles.stockDetailLabel}>Opening</Text>
+          <Text style={styles.stockDetailValue}>
+            {matchItem?.opening_stock ?? 0}
           </Text>
         </View>
-
-        <View style={styles.col}>
-          <Text style={styles.stockLabel}>
-            Sold MTD:{' '}
-            <Text style={styles.boldText}>{matchItem?.mtd_territory ?? 0}</Text>
+        <View style={styles.stockDetailItem}>
+          <Text style={styles.stockDetailLabel}>Received</Text>
+          <Text style={styles.stockDetailValue}>
+            {matchItem?.received_this_month ?? 0}
           </Text>
-          <Text style={styles.stockLabel}>
-            Received:{' '}
-            <Text style={styles.boldText}>{matchItem?.received_this_month ?? 0}</Text>
+        </View>
+        <View style={styles.stockDetailItem}>
+          <Text style={styles.stockDetailLabel}>Sold MTD</Text>
+          <Text style={styles.stockDetailValue}>
+            {matchItem?.mtd_territory ?? 0}
           </Text>
         </View>
       </View>
 
-      {/* ── Stock Count Input ── */}
-      <View style={[styles.col, {width: COL.qty, alignItems: 'center'}]}>
+      {/* ── On Shelf Now Input ── */}
+      <View style={styles.qtyInputWrap}>
         <TextInput
           style={styles.qtyInput}
           keyboardType="numeric"
-          placeholder="0"
-          value={String(entry.quantity)}
+          placeholder=""
           placeholderTextColor="#9ca3af"
+          value={entry.quantity}
           onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
         />
       </View>
@@ -157,7 +147,7 @@ const StockRow: React.FC<StockRowProps> = ({
       {/* ── Delete ── */}
       <TouchableOpacity
         onPress={() => onRemove(index)}
-        style={[styles.col, {width: COL.action, alignItems: 'center'}]}
+        style={styles.deleteBtn}
         disabled={entry.isPrev}>
         <Ionicons name="trash-outline" size={18} color="#dc2626" />
       </TouchableOpacity>
@@ -250,7 +240,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
       }).unwrap();
 
       if (response.message) {
-        Toast.show({type: 'success', text1: 'Stock updated successfully'});
+        Toast.show({type: 'success', text1: 'Stock count saved'});
         navigation.goBack();
       }
     } catch (error: any) {
@@ -277,82 +267,66 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
 
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: '#ffffff'}]}>
-      <PageHeader title={storeName} navigation={() => navigation.goBack()} />
+      <PageHeader
+        title={`Count Stock Update`}
+        navigation={() => navigation.goBack()}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{flex: 1}}>
         <ScrollView contentContainerStyle={{paddingBottom: 100}}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={true}
-            style={styles.tableScroll}>
-            <View>
-              <View style={styles.headerRow}>
-                <Text style={[styles.headerText, {width: COL.item}]}>Item</Text>
-                <Text
-                  style={[
-                    styles.headerText,
-                    {width: COL.stock, textAlign: 'center'},
-                  ]}>
-                  Stock
-                </Text>
-                <Text
-                  style={[
-                    styles.headerText,
-                    {width: COL.qty, textAlign: 'center'},
-                  ]}>
-                  Stock Count
-                </Text>
-                <View style={{width: COL.action}} />
-              </View>
-
-              {prevCount > 0 && (
-                <View style={styles.sectionDivider}>
-                  <Text style={styles.sectionDividerText}>
-                    Previous items ({prevCount})
-                  </Text>
-                </View>
-              )}
-
-              {entries.map((entry, index) => {
-                const showNewLabel =
-                  !entry.isPrev && (index === 0 || entries[index - 1]?.isPrev);
-                const matchItem = allItems?.find(
-                  item => item?.item_code === entry.itemCode,
-                );
-
-                return (
-                  <React.Fragment key={index}>
-                    {showNewLabel && newCount > 0 && (
-                      <View
-                        style={[
-                          styles.sectionDivider,
-                          styles.sectionDividerNew,
-                        ]}>
-                        <Text
-                          style={[
-                            styles.sectionDividerText,
-                            {color: Colors.orange},
-                          ]}>
-                          New items
-                        </Text>
-                      </View>
-                    )}
-                    <StockRow
-                      index={index}
-                      entry={entry}
-                      allItemsDropdown={allItemsDropdown}
-                      onQtyChange={handleQtyChange}
-                      onItemChange={handleItemChange}
-                      onRemove={handleRemoveItem}
-                      matchItem={matchItem as StockDashboardItem}
-                    />
-                  </React.Fragment>
-                );
-              })}
+          <View style={styles.tableContainer}>
+            {/* Header */}
+            <View style={styles.headerRow}>
+              <Text style={styles.headerItem}>Item</Text>
+              <Text style={styles.headerStock}>Stock Details</Text>
+              <Text style={styles.headerQty}>On shelf now</Text>
+              <View style={styles.headerAction} />
             </View>
-          </ScrollView>
+
+            {prevCount > 0 && (
+              <View style={styles.sectionDivider}>
+                <Text style={styles.sectionDividerText}>
+                  Previous items ({prevCount})
+                </Text>
+              </View>
+            )}
+
+            {entries.map((entry, index) => {
+              const showNewLabel =
+                !entry.isPrev && (index === 0 || entries[index - 1]?.isPrev);
+              const matchItem = allItems?.find(
+                item => item?.item_code === entry.itemCode,
+              );
+
+              return (
+                <React.Fragment key={index}>
+                  {showNewLabel && newCount > 0 && (
+                    <View
+                      style={[styles.sectionDivider, styles.sectionDividerNew]}>
+                      <Text
+                        style={[
+                          styles.sectionDividerText,
+                          {color: Colors.orange},
+                        ]}>
+                        New items
+                      </Text>
+                    </View>
+                  )}
+                  <StockRow
+                    index={index}
+                    entry={entry}
+                    allItemsDropdown={allItemsDropdown}
+                    onQtyChange={handleQtyChange}
+                    onItemChange={handleItemChange}
+                    onRemove={handleRemoveItem}
+                    matchItem={matchItem as StockDashboardItem}
+                  />
+                </React.Fragment>
+              );
+            })}
+          </View>
 
           <TouchableOpacity style={styles.tableAddBtn} onPress={handleAddItem}>
             <Text style={styles.addMoreText}>+ Select item to add...</Text>
@@ -373,7 +347,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
           disabled={isSubmitting}>
           <Save size={18} color={Colors.white} />
           <Text style={styles.submitButtonText}>
-            {isSubmitting ? 'Submitting...' : 'Submit Stock'}
+            {isSubmitting ? 'Saving...' : 'Save Count'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -384,7 +358,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
 export default StockEntryFormScreen;
 
 const styles = StyleSheet.create({
-  tableScroll: {
+  tableContainer: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderColor: '#e5e7eb',
@@ -392,15 +366,37 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#f9fafb',
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
+    alignItems: 'center',
   },
-  headerText: {
+  headerItem: {
+    flex: 2,
     color: '#6b7280',
     fontSize: 11,
     fontFamily: Fonts.medium,
     paddingHorizontal: 8,
+  },
+  headerStock: {
+    flex: 2,
+    color: '#6b7280',
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
+  headerQty: {
+    flex: 1,
+    color: '#6b7280',
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
+  headerAction: {
+    width: 40,
   },
   sectionDivider: {
     paddingHorizontal: 12,
@@ -423,7 +419,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
   },
@@ -431,17 +428,42 @@ const styles = StyleSheet.create({
   oddRow: {backgroundColor: '#f9fafb'},
   prevRow: {backgroundColor: '#fffbeb'},
   filledRow: {backgroundColor: '#f0fdf4'},
-  col: {paddingHorizontal: 6, justifyContent: 'center'},
-  prevItemWrap: {
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-    position: 'relative',
+  itemNameWrap: {
+    flex: 2,
+    minWidth: 0,
   },
   prevItemName: {
     fontSize: 12,
     fontFamily: Fonts.semiBold,
     color: '#111827',
-    paddingRight: 30,
+  },
+  stockDetailsWrap: {
+    flex: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+  },
+  stockDetailItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stockDetailLabel: {
+    fontSize: 8,
+    fontFamily: Fonts.regular,
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  stockDetailValue: {
+    fontSize: 11,
+    fontFamily: Fonts.semiBold,
+    color: '#111827',
+    marginTop: 2,
+  },
+  qtyInputWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   qtyInput: {
     width: 70,
@@ -449,8 +471,15 @@ const styles = StyleSheet.create({
     borderColor: '#d1d5db',
     height: 40,
     textAlign: 'center',
-    borderRadius: 4,
-    fontSize: Size.xxs,
+    borderRadius: 6,
+    fontSize: Size.sm,
+    fontFamily: Fonts.medium,
+    color: '#111827',
+  },
+  deleteBtn: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tableAddBtn: {
     padding: 10,
@@ -494,8 +523,4 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     color: Colors.white,
   },
-  boldText: {
-    fontWeight: 'bold',
-  },
-  stockLabel: {fontSize: 10, color: '#6b7280'},
 });

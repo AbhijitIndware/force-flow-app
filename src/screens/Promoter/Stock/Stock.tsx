@@ -142,7 +142,12 @@ const StockScreen = ({navigation}: Props) => {
         value: s.store_id,
       })) ?? [];
     setStoresList(stores);
-  }, [assignedStoresData]);
+    // Pre-select first/main store
+    if (stores.length > 0 && !selectedStoreId) {
+      setSelectedStoreId(stores[0].value);
+      setSelectedStoreName(stores[0].label);
+    }
+  }, [assignedStoresData, selectedStoreId]);
 
   const handleStoreSelect = useCallback(
     (value: string) => {
@@ -242,7 +247,7 @@ const StockScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title="Stock Count"
+        title="Count Stock"
         navigation={() => navigation.goBack()}
       />
 
@@ -256,7 +261,7 @@ const StockScreen = ({navigation}: Props) => {
           error={false}
           field="label"
           label=""
-          selectedLabel={selectedStoreName}
+          selectedLabel={selectedStoreName || undefined}
           marginBottom={0}
         />
       </View>
@@ -326,7 +331,7 @@ const StockScreen = ({navigation}: Props) => {
               })
             }>
             <History size={24} color={Colors.white} />
-            <Text style={styles.fabText}>Update Physical Stock</Text>
+            <Text style={styles.fabText}>Count Stock</Text>
           </TouchableOpacity>
         </View>
       )}
