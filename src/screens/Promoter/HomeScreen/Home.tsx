@@ -24,7 +24,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Feather from 'react-native-vector-icons/Feather';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {House, UserCircle2} from 'lucide-react-native';
+import {House, UserCircle2, Package} from 'lucide-react-native';
 import MySalesScreen from '../Sales/MySalesScreen';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
@@ -102,7 +102,7 @@ function MyTabBar({state, descriptors, navigation}: any) {
             onPress={onPress}
             style={{
               flex: 1,
-              height: 90,
+              height: 80,
               backgroundColor: Colors.midBlack,
               margin: 0,
               padding: 2,
@@ -116,15 +116,16 @@ function MyTabBar({state, descriptors, navigation}: any) {
               {options.tabBarIcon &&
                 options.tabBarIcon({
                   color: isFocused ? Colors.orange : Colors.white,
-                  size: 28,
+                  size: 25,
                   focused: isFocused,
                 })}
             </View>
             <Text
               style={{
                 color: isFocused ? Colors.orange : Colors.white,
-                fontSize: 12,
+                fontSize: 10,
                 fontFamily: Fonts.regular,
+                textAlign: 'center',
               }}>
               {label}
             </Text>
@@ -259,17 +260,35 @@ const Home = ({navigation, route}: Props) => {
         />
 
         <Tab.Screen
+          name="StockScreen"
+          component={StockScreen}
+          options={{
+            tabBarLabel: 'Count Stock',
+            headerShown: false,
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Package
+                  strokeWidth={2}
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}
+                />
+              );
+            },
+          }}
+        />
+
+        <Tab.Screen
           name="StockReceivedScreen"
           component={StockReceivedScreen}
           options={{
-            tabBarLabel: 'Stock Receive',
+            tabBarLabel: 'Receive Stock',
             headerShown: false,
             tabBarIcon: ({color, size, focused}) => {
               return (
                 <Feather
                   name="box"
                   color={focused ? Colors.white : Colors.white}
-                  size={28}
+                  size={25}
                 />
               );
             },
@@ -303,7 +322,7 @@ const Home = ({navigation, route}: Props) => {
                 <Ionicons
                   name="stats-chart-outline"
                   color={focused ? Colors.white : Colors.white}
-                  size={28}
+                  size={25}
                 />
               );
             },
@@ -322,7 +341,7 @@ const Home = ({navigation, route}: Props) => {
             tabBarLabel: 'Profile',
             headerShown: false,
             tabBarIcon: ({focused}) => (
-              <UserCircle2 strokeWidth={2} color={Colors.white} size={25} />
+              <UserCircle2 strokeWidth={2} color={Colors.white} size={24} />
             ),
           }}
         />

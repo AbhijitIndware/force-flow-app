@@ -521,7 +521,8 @@ const HomeScreen = ({navigation, route}: Props) => {
                   <Package strokeWidth={1.8} color={Colors.white} size={18} />
                 </View>
                 <Text style={styles.listLinkText}>
-                  Set up the opening stock count of a store
+                  Count stock — your first count becomes the store's opening
+                  stock
                 </Text>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -567,7 +568,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Stock Count</Text>
+              <Text style={styles.linkTitle}>Count Stock</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -591,7 +592,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ]}>
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Stock Receive</Text>
+              <Text style={styles.linkTitle}>Receive Stock</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -680,19 +681,15 @@ const HomeScreen = ({navigation, route}: Props) => {
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('ProductFeedbackScreen')}>
+              onPress={() => navigation.navigate('StoreActivityScreen')}>
               <View
                 style={[
                   styles.iconbox,
                   {width: 35, height: 35, borderRadius: 10},
                 ]}>
-                <MessageSquareQuote
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={20}
-                />
+                <Camera strokeWidth={2} color={Colors.white} size={20} />
               </View>
-              <Text style={styles.linkTitle}>Feedback</Text>
+              <Text style={styles.linkTitle}>Store Activity</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"
@@ -708,15 +705,19 @@ const HomeScreen = ({navigation, route}: Props) => {
             />
             <TouchableOpacity
               style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StoreActivityScreen')}>
+              onPress={() => navigation.navigate('ProductFeedbackScreen')}>
               <View
                 style={[
                   styles.iconbox,
                   {width: 35, height: 35, borderRadius: 10},
                 ]}>
-                <Camera strokeWidth={2} color={Colors.white} size={20} />
+                <MessageSquareQuote
+                  strokeWidth={2}
+                  color={Colors.white}
+                  size={20}
+                />
               </View>
-              <Text style={styles.linkTitle}>Store Activity</Text>
+              <Text style={styles.linkTitle}>Feedback</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"

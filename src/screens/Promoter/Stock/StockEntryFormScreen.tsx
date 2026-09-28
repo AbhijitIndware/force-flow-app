@@ -79,6 +79,9 @@ const StockRow: React.FC<StockRowProps> = ({
 
   const isEven = index % 2 === 0;
   const isFilled = entry.itemCode && entry.quantity !== '';
+  const currentStock = matchItem?.current_stock ?? 0;
+  const enteredQty = parseInt(entry.quantity, 10);
+  const showDeliveryReminder = !entry.isPrev && !isNaN(enteredQty) && enteredQty > currentStock && currentStock > 0;
 
   return (
     <View
@@ -142,6 +145,14 @@ const StockRow: React.FC<StockRowProps> = ({
           value={entry.quantity}
           onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
         />
+        {showDeliveryReminder && (
+          <View style={styles.deliveryReminder}>
+            <Ionicons name="alert-circle-outline" size={12} color="#B45309" />
+            <Text style={styles.deliveryReminderText}>
+              More than your stock — did a delivery arrive? Record it in Receive Stock first.
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* ── Delete ── */}
@@ -475,6 +486,20 @@ const styles = StyleSheet.create({
     fontSize: Size.sm,
     fontFamily: Fonts.medium,
     color: '#111827',
+  },
+  deliveryReminder: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    paddingHorizontal: 8,
+  },
+  deliveryReminderText: {
+    fontSize: 9,
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    flex: 1,
+    textAlign: 'center',
   },
   deleteBtn: {
     width: 40,
