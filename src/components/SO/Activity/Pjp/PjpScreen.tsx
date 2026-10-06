@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -29,6 +29,7 @@ import {
 import {Colors} from '../../../../utils/colors';
 import {Size} from '../../../../utils/fontSize';
 import {windowHeight} from '../../../../utils/utils';
+import {usePagedList} from '../../../../hooks/usePagedList';
 import AssignEmployeeModal from './AssignEmployeeModal';
 
 const PAGE_SIZE = 20;
@@ -74,10 +75,9 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const PJPScreen = ({navigation}: any) => {
+const PJPScreen = ({navigation, onRefresh: onParentRefresh}: any) => {
   const [activeTab, setActiveTab] = useState<Tab>('upcoming');
   const [page, setPage] = useState(1);
-  const [pjps, setPjps] = useState<PjpListItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPjp, setSelectedPjp] = useState<PjpListItem | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
@@ -120,10 +120,12 @@ const PJPScreen = ({navigation}: any) => {
   const businessError =
     data?.message?.status === 'fail' ? data.message.message : undefined;
 
-  useEffect(() => {
-    setPage(1);
-    setPjps([]);
-  }, [activeTab, completedStatus, selectedDate]);
+  const pjps = usePagedList(
+    activeQuery.currentData?.message?.data?.pjps,
+    page,
+    item => item.name,
+    `${activeTab}|${completedStatus}|${selectedDate}`,
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -134,35 +136,19 @@ const PJPScreen = ({navigation}: any) => {
     }, [isUninitialized, refetch]),
   );
 
-  useEffect(() => {
-    const newPjps = responseData?.pjps;
-    const responsePage = responseData?.pagination?.page;
-    if (!newPjps || !responsePage) {
-      return;
-    }
-
-    setPjps(previous => {
-      if (responsePage === 1) {
-        return newPjps;
-      }
-
-      const byName = new Map(previous.map(item => [item.name, item]));
-      newPjps.forEach(item => byName.set(item.name, item));
-      return Array.from(byName.values());
-    });
-  }, [responseData]);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setPage(1);
+    onParentRefresh?.();
     try {
-      if (!isUninitialized) {
+      if (page !== 1) {
+        setPage(1);
+      } else if (!isUninitialized) {
         await refetch();
       }
     } finally {
       setRefreshing(false);
     }
-  }, [isUninitialized, refetch]);
+  }, [page, isUninitialized, refetch, onParentRefresh]);
 
   const loadMore = () => {
     if (!isFetching && responseData?.pagination?.has_more) {
@@ -173,12 +159,14 @@ const PJPScreen = ({navigation}: any) => {
   const handleDateChange = (_: unknown, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
+      setPage(1);
       setSelectedDate(moment(date).format('YYYY-MM-DD'));
     }
   };
 
   const selectTab = (tab: Tab) => {
     if (tab !== activeTab) {
+      setPage(1);
       setActiveTab(tab);
     }
   };
@@ -333,8 +321,7 @@ const PJPScreen = ({navigation}: any) => {
     );
   };
 
-  const initialLoading =
-    (isLoading || isFetching) && page === 1 && pjps.length === 0;
+  const initialLoading = (isLoading || isFetching) && pjps.length === 0;
 
   return (
     <View style={styles.screen}>
@@ -390,7 +377,10 @@ const PJPScreen = ({navigation}: any) => {
           {selectedDate ? (
             <TouchableOpacity
               style={styles.clearButton}
-              onPress={() => setSelectedDate('')}
+              onPress={() => {
+                setPage(1);
+                setSelectedDate('');
+              }}
               activeOpacity={0.7}>
               <X size={13} color="#6B7280" />
               <Text style={styles.clearButtonText}>Clear</Text>
@@ -413,6 +403,7 @@ const PJPScreen = ({navigation}: any) => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            style={styles.statusFiltersScroll}
             contentContainerStyle={styles.statusFilters}>
             {COMPLETED_FILTERS.map(filter => (
               <TouchableOpacity
@@ -421,7 +412,10 @@ const PJPScreen = ({navigation}: any) => {
                   styles.statusFilter,
                   completedStatus === filter.value && styles.activeStatusFilter,
                 ]}
-                onPress={() => setCompletedStatus(filter.value)}>
+                onPress={() => {
+                  setPage(1);
+                  setCompletedStatus(filter.value);
+                }}>
                 <Text
                   style={[
                     styles.statusFilterText,
@@ -464,7 +458,6 @@ const PJPScreen = ({navigation}: any) => {
           ) : (
             <FlatList
               data={pjps}
-              nestedScrollEnabled
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
@@ -512,7 +505,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 70,
+    // paddingBottom: 70,
   },
   tabs: {
     flexDirection: 'row',
@@ -585,9 +578,16 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: '#6B7280',
   },
+  // Without flexGrow: 0 the horizontal ScrollView stretches to fill the
+  // remaining height of the (now bounded) screen and squeezes the list.
+  statusFiltersScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   statusFilters: {
     gap: 7,
     paddingBottom: 10,
+    alignItems: 'center',
   },
   statusFilter: {
     paddingHorizontal: 12,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../../../utils/colors';
 import React, { useCallback, useEffect, useState } from 'react';
+import { usePagedList } from '../../../../hooks/usePagedList';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
 import { Building2, MapPin, Tag, CalendarDays, ChevronRight } from 'lucide-react-native';
@@ -38,46 +39,43 @@ function getInitials(name: string = ''): string {
 
 const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
   const [page, setPage] = useState<number>(1);
-  const [orders, setOrders] = useState<Distributor[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data, isLoading, isFetching, refetch, isUninitialized } =
-    useGetDistributorListQuery({
-      page,
-      page_size: PAGE_SIZE,
-      status: '',
-    });
+  const { data, currentData, isFetching, refetch } =
+    useGetDistributorListQuery(
+      {
+        page,
+        page_size: PAGE_SIZE,
+        status: '',
+      },
+      { refetchOnMountOrArgChange: true },
+    );
 
+  const orders = usePagedList(
+    currentData?.message?.data?.distributors,
+    page,
+    item => item.name,
+  );
+
+  const totalCount = data?.message?.data?.pagination?.total_count;
   useEffect(() => {
-    if (data?.message?.data) {
-      const fetchedDistributors = data.message.data.distributors ?? [];
-      const paginationData = data.message.data.pagination;
-
-      if (page === 1) {
-        setOrders(fetchedDistributors);
-      } else if (fetchedDistributors.length > 0) {
-        setOrders(prev => {
-          const map = new Map();
-          [...prev, ...fetchedDistributors].forEach(item => {
-            map.set(item.name, item);
-          });
-          return Array.from(map.values());
-        });
-      }
-
-      if (paginationData) {
-        setTotalCount(paginationData.total_count);
-      }
+    if (totalCount !== undefined) {
+      setTotalCount(totalCount);
     }
-  }, [data, page]);
+  }, [totalCount, setTotalCount]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    } finally {
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
-  }, []);
+    }
+  }, [page, refetch]);
 
   const loadMore = () => {
     if (
@@ -156,13 +154,13 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
           { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 70 },
         ]}>
         <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
-          {isLoading ? (
+          {orders.length === 0 && isFetching ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" />
             </View>
           ) : (
             <>
-              {(data?.message?.data?.distributors?.length || 0) === 0 ? (
+              {orders.length === 0 ? (
                 <View style={styles.centered}>
                   <Text style={{ fontSize: 16, color: 'gray' }}>
                     No Distributor Found
@@ -183,7 +181,7 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
                   onEndReached={loadMore}
                   onEndReachedThreshold={0.5}
                   ListFooterComponent={
-                    isFetching ? <ActivityIndicator size="small" /> : null
+                    isFetching && page > 1 ? <ActivityIndicator size="small" /> : null
                   }
                 />
               )}

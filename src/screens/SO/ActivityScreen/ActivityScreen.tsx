@@ -1,8 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import {
-  Animated,
   Dimensions,
-  RefreshControl,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -12,8 +10,7 @@ import {
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, {useCallback, useRef, useState} from 'react';
+import React from 'react';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
@@ -43,20 +40,10 @@ type Props = {
 const today = new Date().toISOString().split('T')[0];
 
 const ActivityScreen = ({navigation, route}: Props) => {
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const {data: prodData, refetch} = useGetProdCountQuery(
     {date: today},
     {refetchOnMountOrArgChange: true},
   );
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      refetch();
-    }, 2000);
-  }, []);
 
   return (
     <SafeAreaView
@@ -68,102 +55,83 @@ const ActivityScreen = ({navigation, route}: Props) => {
         },
       ]}>
       <PageHeader title="Activity" navigation={() => navigation.goBack()} />
-      {refreshing ? (
-        <LoadingScreen />
-      ) : (
-        <Animated.ScrollView
-          onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
-          )}
-          stickyHeaderIndices={[0]} // Index of the Tab header
-          scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
-          <View style={styles.headerSec}>
-            {/* Stat Cards Row */}
-            <View style={styles.statRow}>
-              <View style={styles.statCard}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    {backgroundColor: Colors.holdLight},
-                  ]}>
-                  <ClipboardPenLine
-                    strokeWidth={1.4}
-                    color={Colors.orange}
-                    size={18}
-                  />
-                </View>
-                <View style={styles.statText}>
-                  <Text style={styles.statNum}>
-                    {prodData?.message?.counts?.total_stores ?? 0}
-                  </Text>
-                  <Text style={styles.statLabel}>Total Call</Text>
-                </View>
-              </View>
-
-              <View style={styles.statCard}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    {backgroundColor: Colors.lightSuccess},
-                  ]}>
-                  <MapPinCheck
-                    strokeWidth={1.4}
-                    color={Colors.success}
-                    size={18}
-                  />
-                </View>
-                <View style={styles.statText}>
-                  <Text style={styles.statNum}>
-                    {prodData?.message?.counts?.status_counts?.Visited ?? 0}
-                  </Text>
-                  <Text style={styles.statLabel}>Productive Call</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Action Links Row */}
-            <View style={styles.linksRow}>
-              <TouchableOpacity
-                style={styles.actionLink}
-                onPress={() => navigation.navigate('WeeklyOffScreen')}>
-                <CalendarOff
+      {/* The PJP FlatList is the only scroller, so it virtualizes and
+          paginates on real scroll instead of loading every page up front. */}
+      <View style={{flex: 1}}>
+        <View style={styles.headerSec}>
+          {/* Stat Cards Row */}
+          <View style={styles.statRow}>
+            <View style={styles.statCard}>
+              <View
+                style={[styles.statIcon, {backgroundColor: Colors.holdLight}]}>
+                <ClipboardPenLine
                   strokeWidth={1.4}
                   color={Colors.orange}
-                  size={15}
+                  size={18}
                 />
-                <Text style={styles.actionLinkText}>Mark Weekly Off</Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={11}
-                    color={Colors.white}
-                  />
-                </View>
-              </TouchableOpacity>
+              </View>
+              <View style={styles.statText}>
+                <Text style={styles.statNum}>
+                  {prodData?.message?.counts?.total_stores ?? 0}
+                </Text>
+                <Text style={styles.statLabel}>Total Call</Text>
+              </View>
+            </View>
 
-              <TouchableOpacity
-                style={styles.actionLink}
-                onPress={() => navigation.navigate('ActivityCheckInScreen')}>
-                <FileCheck strokeWidth={1.4} color={Colors.orange} size={15} />
-                <Text style={styles.actionLinkText}>Activity Check-In</Text>
-                <View style={styles.arrobox}>
-                  <Ionicons
-                    name="chevron-forward-outline"
-                    size={11}
-                    color={Colors.white}
-                  />
-                </View>
-              </TouchableOpacity>
+            <View style={styles.statCard}>
+              <View
+                style={[
+                  styles.statIcon,
+                  {backgroundColor: Colors.lightSuccess},
+                ]}>
+                <MapPinCheck
+                  strokeWidth={1.4}
+                  color={Colors.success}
+                  size={18}
+                />
+              </View>
+              <View style={styles.statText}>
+                <Text style={styles.statNum}>
+                  {prodData?.message?.counts?.status_counts?.Visited ?? 0}
+                </Text>
+                <Text style={styles.statLabel}>Productive Call</Text>
+              </View>
             </View>
           </View>
-          <PJPScreen navigation={navigation} />
-        </Animated.ScrollView>
-      )}
+
+          {/* Action Links Row */}
+          <View style={styles.linksRow}>
+            <TouchableOpacity
+              style={styles.actionLink}
+              onPress={() => navigation.navigate('WeeklyOffScreen')}>
+              <CalendarOff strokeWidth={1.4} color={Colors.orange} size={15} />
+              <Text style={styles.actionLinkText}>Mark Weekly Off</Text>
+              <View style={styles.arrobox}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={11}
+                  color={Colors.white}
+                />
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionLink}
+              onPress={() => navigation.navigate('ActivityCheckInScreen')}>
+              <FileCheck strokeWidth={1.4} color={Colors.orange} size={15} />
+              <Text style={styles.actionLinkText}>Activity Check-In</Text>
+              <View style={styles.arrobox}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={11}
+                  color={Colors.white}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <PJPScreen navigation={navigation} onRefresh={refetch} />
+      </View>
 
       {/* <View
         style={{

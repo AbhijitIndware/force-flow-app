@@ -1,14 +1,12 @@
 import {
   ActivityIndicator,
-  FlatList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Colors } from '../../../utils/colors';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { Funnel, Search } from 'lucide-react-native';
@@ -19,8 +17,7 @@ import { EmployeeData } from '../../../types/baseType';
 type Props = {
   navigation: any;
   data: EmployeeData[];
-  refetch: any;
-  isFetching: boolean;
+  isLoading: boolean;
 };
 
 // ── Initials helper ───────────────────────────────────────────────────────────
@@ -98,22 +95,8 @@ const SaleCard = ({ item, index }: { item: EmployeeData; index: number }) => {
 };
 
 // ── Main screen ───────────────────────────────────────────────────────────────
-const RecentSaleScreen = ({ navigation, data, refetch, isFetching }: Props) => {
+const RecentSaleScreen = ({ navigation, data, isLoading }: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
-  const [sale, setSales] = useState<EmployeeData[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      refetch();
-    }, 2000);
-  }, [refetch]);
-
-  useEffect(() => {
-    if (data) setSales(data);
-  }, [data]);
 
   return (
     <View style={styles.root}>
@@ -141,34 +124,24 @@ const RecentSaleScreen = ({ navigation, data, refetch, isFetching }: Props) => {
       </View>
 
       {/* ── Content ── */}
-      {isFetching ? (
+      {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={Colors.orange} />
         </View>
-      ) : sale.length === 0 ? (
+      ) : data.length === 0 ? (
         <View style={styles.centered}>
           <Text style={styles.emptyText}>No recent sales found</Text>
         </View>
       ) : (
-        <FlatList
-          data={sale}
-          nestedScrollEnabled={true}
-          contentContainerStyle={{ paddingBottom: 30, paddingTop: 4 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[Colors.orange]}
-              tintColor={Colors.orange}
+        <View style={{ paddingBottom: 30, paddingTop: 4 }}>
+          {data.map((item, index) => (
+            <SaleCard
+              key={`${item.employee_id}-${index}-${item?.designation}`}
+              item={item}
+              index={index}
             />
-          }
-          renderItem={({ item, index }) => <SaleCard item={item} index={index} />}
-          keyExtractor={(item, index) =>
-            `${item.employee_id}-${index}-${item?.designation}`
-          }
-          showsVerticalScrollIndicator={false}
-          onEndReachedThreshold={0.5}
-        />
+          ))}
+        </View>
       )}
     </View>
   );

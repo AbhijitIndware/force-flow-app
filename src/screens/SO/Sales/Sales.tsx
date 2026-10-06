@@ -11,7 +11,6 @@ import {
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LoadingScreen from '../../../components/ui/LoadingScreen';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import {Fonts} from '../../../constants';
@@ -58,7 +57,13 @@ const SalesScreen = ({navigation, route}: Props) => {
     employee?.designation === 'Area Sales Executive' ||
     employee?.designation === 'ASE';
 
-  const {data, refetch, isFetching} = useGetSalesRepotsQuery({
+  // currentData is only the result for the current args, so switching tabs
+  // shows the loader instead of the previous tab's rows.
+  const {
+    currentData: data,
+    refetch,
+    isFetching,
+  } = useGetSalesRepotsQuery({
     view_type: isAsm
       ? index === 1
         ? 'self'
@@ -68,12 +73,17 @@ const SalesScreen = ({navigation, route}: Props) => {
       : 'team_include_self',
   });
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      await refetch();
+    } finally {
       setRefreshing(false);
-    }, 2000);
-  }, []);
+    }
+  }, [refetch]);
+
+  const listData = data?.message?.data || [];
+  const isListLoading = isFetching && !data;
 
   useEffect(() => {
     if (initialIndex !== undefined) {
@@ -91,69 +101,60 @@ const SalesScreen = ({navigation, route}: Props) => {
         },
       ]}>
       <PageHeader title="Sales" navigation={() => navigation.goBack()} />
-      {refreshing ? (
-        <LoadingScreen />
-      ) : (
-        <Animated.ScrollView
-          onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false},
-          )}
-          stickyHeaderIndices={[1]} // Index of the Tab header
-          scrollEventThrottle={16}
-          contentContainerStyle={{position: 'relative'}}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
-          <View style={styles.headerSec}>
-            {/* Stat Cards */}
-            <View style={styles.statRow}>
-              <View style={styles.statCard}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    {backgroundColor: Colors.holdLight},
-                  ]}>
-                  <ClipboardPenLine
-                    strokeWidth={1.4}
-                    color={Colors.orange}
-                    size={18}
-                  />
-                </View>
-                <View style={styles.statText}>
-                  <Text style={styles.statNum}>
-                    {data?.message?.summary?.total_orders ?? 0}
-                  </Text>
-                  <Text style={styles.statLabel}>Total Sales</Text>
-                </View>
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {y: scrollY}}}],
+          {useNativeDriver: false},
+        )}
+        stickyHeaderIndices={[1]} // Index of the Tab header
+        scrollEventThrottle={16}
+        contentContainerStyle={{position: 'relative'}}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }>
+        <View style={styles.headerSec}>
+          {/* Stat Cards */}
+          <View style={styles.statRow}>
+            <View style={styles.statCard}>
+              <View
+                style={[styles.statIcon, {backgroundColor: Colors.holdLight}]}>
+                <ClipboardPenLine
+                  strokeWidth={1.4}
+                  color={Colors.orange}
+                  size={18}
+                />
               </View>
-
-              <View style={styles.statCard}>
-                <View
-                  style={[
-                    styles.statIcon,
-                    {backgroundColor: Colors.lightSuccess},
-                  ]}>
-                  <MapPinCheck
-                    strokeWidth={1.4}
-                    color={Colors.success}
-                    size={18}
-                  />
-                </View>
-                <View style={styles.statText}>
-                  <Text style={styles.statNum}>
-                    ₹
-                    {Number(data?.message?.summary?.total_value || 0).toFixed(
-                      2,
-                    )}
-                  </Text>
-                  <Text style={styles.statLabel}>Total Value</Text>
-                </View>
+              <View style={styles.statText}>
+                <Text style={styles.statNum}>
+                  {data?.message?.summary?.total_orders ?? 0}
+                </Text>
+                <Text style={styles.statLabel}>Total Sales</Text>
               </View>
             </View>
 
-            {/* Action Links */}
-            {/* <View style={styles.linksRow}>
+            <View style={styles.statCard}>
+              <View
+                style={[
+                  styles.statIcon,
+                  {backgroundColor: Colors.lightSuccess},
+                ]}>
+                <MapPinCheck
+                  strokeWidth={1.4}
+                  color={Colors.success}
+                  size={18}
+                />
+              </View>
+              <View style={styles.statText}>
+                <Text style={styles.statNum}>
+                  ₹{Number(data?.message?.summary?.total_value || 0).toFixed(2)}
+                </Text>
+                <Text style={styles.statLabel}>Total Value</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Action Links */}
+          {/* <View style={styles.linksRow}>
               <TouchableOpacity
                 style={styles.actionLink}
                 onPress={() =>
@@ -172,126 +173,121 @@ const SalesScreen = ({navigation, route}: Props) => {
                 </View>
               </TouchableOpacity>
             </View> */}
-          </View>
+        </View>
 
-          <View style={styles.tabSection}>
-            <Tab
-              value={index}
-              onChange={e => setIndex(e)}
-              indicatorStyle={{
-                height: 0,
+        <View style={styles.tabSection}>
+          <Tab
+            value={index}
+            onChange={e => setIndex(e)}
+            indicatorStyle={{
+              height: 0,
+            }}
+            variant="primary"
+            style={{backgroundColor: Colors.transparent, padding: 0}}>
+            {isAsm && (
+              <Tab.Item
+                title="Dashboard"
+                titleStyle={{
+                  fontSize: Size.xs,
+                  fontFamily: Fonts.medium,
+                  lineHeight: 9,
+                  width: width * 1,
+                }}
+                containerStyle={active => ({
+                  backgroundColor: active ? Colors.Orangelight : undefined,
+                  borderRadius: active ? 10 : undefined,
+                  borderColor: active ? '#FFBF83' : undefined,
+                  borderTopWidth: active ? 1 : undefined,
+                  borderLeftWidth: active ? 1 : undefined,
+                  borderRightWidth: active ? 1 : undefined,
+                })}
+              />
+            )}
+            <Tab.Item
+              title="Individual"
+              titleStyle={{
+                fontSize: Size.xs,
+                fontFamily: Fonts.medium,
+                lineHeight: 9,
+                width: width * 1,
               }}
-              variant="primary"
-              style={{backgroundColor: Colors.transparent, padding: 0}}>
-              {isAsm && (
-                <Tab.Item
-                  title="Dashboard"
-                  titleStyle={{
-                    fontSize: Size.xs,
-                    fontFamily: Fonts.medium,
-                    lineHeight: 9,
-                    width: width * 1,
-                  }}
-                  containerStyle={active => ({
-                    backgroundColor: active ? Colors.Orangelight : undefined,
-                    borderRadius: active ? 10 : undefined,
-                    borderColor: active ? '#FFBF83' : undefined,
-                    borderTopWidth: active ? 1 : undefined,
-                    borderLeftWidth: active ? 1 : undefined,
-                    borderRightWidth: active ? 1 : undefined,
-                  })}
-                />
-              )}
-              <Tab.Item
-                title="Individual"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                  width: width * 1,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-              />
-              <Tab.Item
-                title=" Team"
-                titleStyle={{
-                  fontSize: Size.xs,
-                  fontFamily: Fonts.medium,
-                  lineHeight: 9,
-                  width: width * 1,
-                }}
-                containerStyle={active => ({
-                  backgroundColor: active ? Colors.Orangelight : undefined,
-                  borderRadius: active ? 10 : undefined,
-                  borderColor: active ? '#FFBF83' : undefined,
-                  borderTopWidth: active ? 1 : undefined,
-                  borderLeftWidth: active ? 1 : undefined,
-                  borderRightWidth: active ? 1 : undefined,
-                })}
-              />
-            </Tab>
-          </View>
-          {/* Conditionally rendered tab content */}
-          {(() => {
-            if (isAsm) {
-              switch (index) {
-                case 0:
-                  return <AsmDashboard navigation={navigation} />;
-                case 1:
-                  return (
-                    <RecentSaleScreen
-                      navigation={navigation}
-                      data={data?.message?.data || []}
-                      refetch={refetch}
-                      isFetching={isFetching}
-                    />
-                  );
-                case 2:
-                  return (
-                    <RecentTeamSaleScreen
-                      navigation={navigation}
-                      data={data?.message?.data || []}
-                      refetch={refetch}
-                      isFetching={isFetching}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            } else {
-              switch (index) {
-                case 0:
-                  return (
-                    <RecentSaleScreen
-                      navigation={navigation}
-                      data={data?.message?.data || []}
-                      refetch={refetch}
-                      isFetching={isFetching}
-                    />
-                  );
-                case 1:
-                  return (
-                    <RecentTeamSaleScreen
-                      navigation={navigation}
-                      data={data?.message?.data || []}
-                      refetch={refetch}
-                      isFetching={isFetching}
-                    />
-                  );
-                default:
-                  return null;
-              }
+              containerStyle={active => ({
+                backgroundColor: active ? Colors.Orangelight : undefined,
+                borderRadius: active ? 10 : undefined,
+                borderColor: active ? '#FFBF83' : undefined,
+                borderTopWidth: active ? 1 : undefined,
+                borderLeftWidth: active ? 1 : undefined,
+                borderRightWidth: active ? 1 : undefined,
+              })}
+            />
+            <Tab.Item
+              title=" Team"
+              titleStyle={{
+                fontSize: Size.xs,
+                fontFamily: Fonts.medium,
+                lineHeight: 9,
+                width: width * 1,
+              }}
+              containerStyle={active => ({
+                backgroundColor: active ? Colors.Orangelight : undefined,
+                borderRadius: active ? 10 : undefined,
+                borderColor: active ? '#FFBF83' : undefined,
+                borderTopWidth: active ? 1 : undefined,
+                borderLeftWidth: active ? 1 : undefined,
+                borderRightWidth: active ? 1 : undefined,
+              })}
+            />
+          </Tab>
+        </View>
+        {/* Conditionally rendered tab content */}
+        {(() => {
+          if (isAsm) {
+            switch (index) {
+              case 0:
+                return <AsmDashboard navigation={navigation} />;
+              case 1:
+                return (
+                  <RecentSaleScreen
+                    navigation={navigation}
+                    data={listData}
+                    isLoading={isListLoading}
+                  />
+                );
+              case 2:
+                return (
+                  <RecentTeamSaleScreen
+                    navigation={navigation}
+                    data={listData}
+                    isLoading={isListLoading}
+                  />
+                );
+              default:
+                return null;
             }
-          })()}
-        </Animated.ScrollView>
-      )}
+          } else {
+            switch (index) {
+              case 0:
+                return (
+                  <RecentSaleScreen
+                    navigation={navigation}
+                    data={listData}
+                    isLoading={isListLoading}
+                  />
+                );
+              case 1:
+                return (
+                  <RecentTeamSaleScreen
+                    navigation={navigation}
+                    data={listData}
+                    isLoading={isListLoading}
+                  />
+                );
+              default:
+                return null;
+            }
+          }
+        })()}
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 };

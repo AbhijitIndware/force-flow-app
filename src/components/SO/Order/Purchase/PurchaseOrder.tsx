@@ -8,59 +8,52 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Funnel, Search } from 'lucide-react-native';
-import { Colors } from '../../../../utils/colors';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import { useCallback, useEffect, useState } from 'react';
-import { useGetPurchaseOrderListQuery } from '../../../../features/base/base-api';
-import { PurchaseOrder } from '../../../../types/baseType';
+import {Funnel, Search} from 'lucide-react-native';
+import {Colors} from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {useCallback, useState} from 'react';
+import {usePagedList} from '../../../../hooks/usePagedList';
+import {useGetPurchaseOrderListQuery} from '../../../../features/base/base-api';
+import {PurchaseOrder} from '../../../../types/baseType';
 import PurchaseComponent from './PurchaseComponent';
-import { windowHeight } from '../../../../utils/utils';
+import {windowHeight} from '../../../../utils/utils';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
 
-const PurchaseOrderScreen = ({ navigation }: any) => {
+const PurchaseOrderScreen = ({navigation}: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
-  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data, isFetching, isLoading, refetch, isUninitialized } =
-    useGetPurchaseOrderListQuery({
+  const {data, currentData, isFetching, refetch} = useGetPurchaseOrderListQuery(
+    {
       page,
       page_size: PAGE_SIZE,
       status: '',
-    });
+    },
+    {refetchOnMountOrArgChange: true},
+  );
 
-  // append new data when API responds
-  useEffect(() => {
-    if (data?.message?.data?.purchase_orders) {
-      if (page === 1) {
-        // reset on first page
-        setOrders(data.message.data.purchase_orders);
-      } else {
-        // append & dedupe
-        setOrders(prev => {
-          const combined = [...prev, ...data.message.data.purchase_orders];
-          const map = new Map();
-          combined.forEach(item => {
-            map.set(item.order_id, item); // last occurrence wins
-          });
-          return Array.from(map.values());
-        });
-      }
-    }
-  }, [data, page]);
+  const orders = usePagedList(
+    currentData?.message?.data?.purchase_orders,
+    page,
+    item => item.order_id,
+  );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    } finally {
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
-  }, []);
+    }
+  }, [page, refetch]);
 
   const loadMore = () => {
     if (!isFetching && data?.message?.data?.has_more) {
@@ -75,12 +68,12 @@ const PurchaseOrderScreen = ({ navigation }: any) => {
         flex: 1,
         backgroundColor: Colors.lightBg,
         position: 'relative',
-        marginBottom: 20,
+        // paddingBottom: 20,
       }}>
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
+          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 0},
         ]}>
         {/* <View style={styles.bodyHeader}>
           <Text style={styles.bodyHeaderTitle}>Recent Purchase Orders</Text>
@@ -96,7 +89,7 @@ const PurchaseOrderScreen = ({ navigation }: any) => {
             flex: 1,
             backgroundColor: Colors.lightBg,
           }}>
-          {isLoading && page === 1 ? (
+          {orders.length === 0 && isFetching ? (
             <View
               style={{
                 height: windowHeight * 0.5,
@@ -114,19 +107,19 @@ const PurchaseOrderScreen = ({ navigation }: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{ fontSize: 16, color: 'gray' }}>
+              <Text style={{fontSize: 16, color: 'gray'}}>
                 No Purchase Order Found
               </Text>
             </View>
           ) : (
             <FlatList
               data={orders}
-              nestedScrollEnabled={true}
+              contentContainerStyle={{paddingBottom: 20}}
               keyExtractor={(item, index) => item.order_id + index}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <PurchaseComponent
                   item={item}
                   navigation={navigation}
@@ -138,11 +131,11 @@ const PurchaseOrderScreen = ({ navigation }: any) => {
               onEndReached={loadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
-                isFetching ? (
+                isFetching && page > 1 ? (
                   <ActivityIndicator
                     size="small"
                     color={Colors.darkButton}
-                    style={{ marginVertical: 15 }}
+                    style={{marginVertical: 15}}
                   />
                 ) : null
               }
@@ -176,7 +169,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     paddingBottom: 20,
@@ -212,7 +205,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -248,10 +241,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -431,7 +424,7 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 135,
     shadowColor: '#9F9D9D',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 15,
@@ -471,7 +464,7 @@ const styles = StyleSheet.create({
     padding: 8,
     shadowColor: '#000',
     shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowRadius: 4,
     elevation: 5,
     zIndex: 999,

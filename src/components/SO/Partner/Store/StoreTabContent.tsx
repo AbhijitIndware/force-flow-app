@@ -20,6 +20,7 @@ import { Store } from '../../../../types/baseType';
 import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 import { MapPin, Building2, CalendarDays, Search, X, ChevronRight } from 'lucide-react-native';
 import { windowHeight } from '../../../../utils/utils';
+import { usePagedList } from '../../../../hooks/usePagedList';
 
 const { width } = Dimensions.get('window');
 
@@ -39,20 +40,29 @@ function getInitials(name: string = ''): string {
 
 const StoreTabContent = ({ navigation, setTotalCount }: any) => {
   const [page, setPage] = useState(1);
-  const [orders, setOrders] = useState<Store[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
 
-  const { data, isFetching, isLoading, refetch } = useGetStoreListQuery({
-    page: String(page),
-    page_size: '20',
-    include_subordinates: '1',
-    include_direct_subordinates: '1',
-    ...(appliedSearch ? { search: appliedSearch } : {}),
-  });
+  const { data, currentData, isFetching, refetch } = useGetStoreListQuery(
+    {
+      page: String(page),
+      page_size: '20',
+      include_subordinates: '1',
+      include_direct_subordinates: '1',
+      ...(appliedSearch ? { search: appliedSearch } : {}),
+    },
+    { refetchOnMountOrArgChange: true },
+  );
+
+  const orders = usePagedList(
+    currentData?.message?.data?.stores,
+    page,
+    item => item.name,
+    appliedSearch,
+  );
 
   const stores = data?.message?.data?.stores ?? [];
   const pagination = data?.message?.data?.pagination;
@@ -72,26 +82,12 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchInput]);
 
+  const totalCount = pagination?.total_count;
   useEffect(() => {
-    if (data?.message?.data) {
-      const fetchedStores = data.message.data.stores ?? [];
-      const paginationData = data.message.data.pagination;
-
-      if (page === 1) {
-        setOrders(fetchedStores);
-      } else if (fetchedStores.length > 0) {
-        setOrders(prev => {
-          const existingIds = new Set(prev.map(s => s.name));
-          const uniqueNew = fetchedStores.filter(s => !existingIds.has(s.name));
-          return [...prev, ...uniqueNew];
-        });
-      }
-
-      if (paginationData) {
-        setTotalCount(paginationData.total_count);
-      }
+    if (totalCount !== undefined) {
+      setTotalCount(totalCount);
     }
-  }, [data, page]);
+  }, [totalCount, setTotalCount]);
 
   const toggleSearch = () => {
     if (isSearchVisible) {
@@ -118,15 +114,18 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
     setPage(1);
   };
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setPage(1);
-    setOrders([]);
-    setTimeout(() => {
-      refetch();
+    try {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    } finally {
       setRefreshing(false);
-    }, 300);
-  }, []);
+    }
+  }, [page, refetch]);
 
   const loadMore = () => {
     if (!isFetching && hasNextPage) {
@@ -254,7 +253,7 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
         </View>
 
         <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
-          {isLoading ? (
+          {orders.length === 0 && isFetching ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" />
             </View>
@@ -271,7 +270,7 @@ const StoreTabContent = ({ navigation, setTotalCount }: any) => {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
               ListFooterComponent={
-                isFetching ? (
+                isFetching && page > 1 ? (
                   <View style={{ paddingVertical: 20 }}>
                     <ActivityIndicator size="small" />
                   </View>

@@ -21,7 +21,8 @@ import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
 import {Colors} from '../../../../utils/colors';
 import {useGetDeliveryNotesListQuery} from '../../../../features/base/base-api';
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useState} from 'react';
+import {usePagedList} from '../../../../hooks/usePagedList';
 import {IDistributorDeliveryNote} from '../../../../types/baseType';
 import {windowHeight} from '../../../../utils/utils';
 
@@ -30,37 +31,34 @@ const PAGE_SIZE = 10;
 
 const DeliveryNoteComponent = ({navigation}: any) => {
   const [page, setPage] = useState<number>(1);
-  const [deliveryNotes, setDeliveryNotes] = useState<
-    IDistributorDeliveryNote[]
-  >([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const {data, isLoading, isFetching, refetch, isUninitialized} =
-    useGetDeliveryNotesListQuery({
+  const {data, currentData, isFetching, refetch} = useGetDeliveryNotesListQuery(
+    {
       page,
       page_size: PAGE_SIZE,
-    });
+    },
+    {refetchOnMountOrArgChange: true},
+  );
 
-  useEffect(() => {
-    if (data?.message?.data?.delivery_notes) {
-      const newList = data.message.data.delivery_notes;
+  const deliveryNotes = usePagedList(
+    currentData?.message?.data?.delivery_notes,
+    page,
+    item => item.delivery_note_id,
+  );
 
-      setDeliveryNotes(prev => {
-        const sourceData = page === 1 ? newList : [...prev, ...newList];
-        const map = new Map();
-        sourceData.forEach(item => map.set(item.delivery_note_id, item));
-        return Array.from(map.values());
-      });
-    }
-  }, [page, data]);
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    } finally {
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
-  }, [isUninitialized, refetch]);
+    }
+  }, [page, refetch]);
 
   const loadMore = () => {
     if (
@@ -83,7 +81,9 @@ const DeliveryNoteComponent = ({navigation}: any) => {
 
     const dateObj = new Date(item.posting_date);
     const day = dateObj.getDate();
-    const month = dateObj.toLocaleString('default', {month: 'short'}).toUpperCase();
+    const month = dateObj
+      .toLocaleString('default', {month: 'short'})
+      .toUpperCase();
     const year = dateObj.getFullYear();
 
     return (
@@ -132,14 +132,20 @@ const DeliveryNoteComponent = ({navigation}: any) => {
           <View style={styles.detailsContent}>
             <View style={styles.infoRow}>
               <Store size={13} color="#4B5563" />
-              <Text style={styles.storeNameText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.storeNameText}
+                numberOfLines={1}
+                ellipsizeMode="tail">
                 {item.store_name || 'N/A'}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
               <Building2 size={12} color="#9CA3AF" />
-              <Text style={styles.distributorText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.distributorText}
+                numberOfLines={1}
+                ellipsizeMode="tail">
                 {item.distributor_name || 'N/A'}
               </Text>
             </View>
@@ -153,12 +159,17 @@ const DeliveryNoteComponent = ({navigation}: any) => {
         <View style={styles.cardFooterRow}>
           <View style={styles.footerQtyWrap}>
             <Package size={11} color="#6B7280" />
-            <Text style={styles.footerQtyText}>Qty: {item.delivered_qty ?? 0}</Text>
+            <Text style={styles.footerQtyText}>
+              Qty: {item.delivered_qty ?? 0}
+            </Text>
           </View>
           <View style={styles.amountContainer}>
             <Text style={styles.amountLabel}>Amount: </Text>
             <Text style={styles.amountValue}>
-              ₹{Number(item.grand_total || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}
+              ₹
+              {Number(item.grand_total || 0).toLocaleString('en-IN', {
+                maximumFractionDigits: 2,
+              })}
             </Text>
             <ChevronRight size={14} color="#9CA3AF" style={{marginLeft: 2}} />
           </View>
@@ -174,19 +185,19 @@ const DeliveryNoteComponent = ({navigation}: any) => {
         flex: 1,
         backgroundColor: Colors.lightBg,
         position: 'relative',
-        marginBottom: 20,
+        // marginBottom: 20,
       }}>
       <View
         style={[
           styles.bodyContent,
-          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
+          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 0},
         ]}>
         <View
           style={{
             flex: 1,
             backgroundColor: Colors.lightBg,
           }}>
-          {isLoading && page === 1 ? (
+          {deliveryNotes.length === 0 && isFetching ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" />
             </View>
@@ -199,7 +210,7 @@ const DeliveryNoteComponent = ({navigation}: any) => {
           ) : (
             <FlatList
               data={deliveryNotes}
-              nestedScrollEnabled={true}
+              contentContainerStyle={{paddingBottom: 20}}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
@@ -209,7 +220,9 @@ const DeliveryNoteComponent = ({navigation}: any) => {
               onEndReached={loadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
-                isFetching ? <ActivityIndicator size="small" /> : null
+                isFetching && page > 1 ? (
+                  <ActivityIndicator size="small" />
+                ) : null
               }
             />
           )}

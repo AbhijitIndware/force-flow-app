@@ -16,74 +16,68 @@ import {
   Calendar,
   ChevronRight,
 } from 'lucide-react-native';
-import { Fonts } from '../../../../constants';
-import { Size } from '../../../../utils/fontSize';
-import { Colors } from '../../../../utils/colors';
-import { useGetSalesOrderListQuery } from '../../../../features/base/base-api';
-import { useCallback, useEffect, useState } from 'react';
-import { SalesOrderType } from '../../../../types/baseType';
-import { imageBaseUrl } from '../../../../features/apiBaseUrl';
-import { soStatusColors, windowHeight } from '../../../../utils/utils';
+import {Fonts} from '../../../../constants';
+import {Size} from '../../../../utils/fontSize';
+import {Colors} from '../../../../utils/colors';
+import {useGetSalesOrderListQuery} from '../../../../features/base/base-api';
+import {useCallback, useState} from 'react';
+import {usePagedList} from '../../../../hooks/usePagedList';
+import {SalesOrderType} from '../../../../types/baseType';
+import {imageBaseUrl} from '../../../../features/apiBaseUrl';
+import {soStatusColors, windowHeight} from '../../../../utils/utils';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
-const SalesOrder = ({ navigation }: any) => {
+const SalesOrder = ({navigation}: any) => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [page, setPage] = useState<number>(1);
-  const [orders, setOrders] = useState<SalesOrderType[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
-  const { data, isLoading, isFetching, refetch, isUninitialized } =
-    useGetSalesOrderListQuery({
+  const {data, currentData, isFetching, refetch} = useGetSalesOrderListQuery(
+    {
       page,
       page_size: PAGE_SIZE,
-    }, { refetchOnMountOrArgChange: true, refetchOnFocus: true });
+    },
+    {refetchOnMountOrArgChange: true, refetchOnFocus: true},
+  );
 
-  // append new data when page changes
-  useEffect(() => {
-    if (data?.message?.data?.sales_orders) {
-      const newList = data.message.data.sales_orders;
+  const orders = usePagedList(
+    currentData?.message?.data?.sales_orders,
+    page,
+    item => item.order_id,
+  );
 
-      setOrders(prev => {
-        // When page = 1 → replace completely
-        if (page === 1) {
-          const map = new Map();
-          newList.forEach(item => map.set(item.order_id, item));
-          return Array.from(map.values());
-        }
-
-        // When page > 1 → append & deduplicate
-        const map = new Map();
-        [...prev, ...newList].forEach(item => map.set(item.order_id, item));
-        return Array.from(map.values());
-      });
-    }
-  }, [page, data]);
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
+    try {
+      if (page === 1) {
+        await refetch();
+      } else {
+        setPage(1);
+      }
+    } finally {
       setRefreshing(false);
-      if (!isUninitialized) refetch();
-    }, 2000);
-  }, []);
+    }
+  }, [page, refetch]);
 
   const loadMore = () => {
     if (
       !isFetching &&
       data?.message?.data &&
       data?.message?.data?.pagination?.page <
-      data?.message?.data?.pagination?.total_pages
+        data?.message?.data?.pagination?.total_pages
     ) {
       setPage(prev => prev + 1);
     }
   };
 
-  const renderItem = ({ item }: { item: SalesOrderType }) => {
+  const renderItem = ({item}: {item: SalesOrderType}) => {
     const rawColor = soStatusColors[item.status] || '#6B7280';
     const dateObj = new Date(item.transaction_date);
     const day = dateObj.getDate();
-    const month = dateObj.toLocaleString('default', { month: 'short' }).toUpperCase();
+    const month = dateObj
+      .toLocaleString('default', {month: 'short'})
+      .toUpperCase();
     const year = dateObj.getFullYear();
 
     return (
@@ -109,8 +103,8 @@ const SalesOrder = ({ navigation }: any) => {
                 borderColor: `${rawColor}40`,
               },
             ]}>
-            <View style={[styles.statusDot, { backgroundColor: rawColor }]} />
-            <Text style={[styles.statusText, { color: rawColor }]}>
+            <View style={[styles.statusDot, {backgroundColor: rawColor}]} />
+            <Text style={[styles.statusText, {color: rawColor}]}>
               {item.status}
             </Text>
           </View>
@@ -132,14 +126,20 @@ const SalesOrder = ({ navigation }: any) => {
           <View style={styles.detailsContent}>
             <View style={styles.infoRow}>
               <Store size={13} color="#4B5563" />
-              <Text style={styles.storeNameText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.storeNameText}
+                numberOfLines={1}
+                ellipsizeMode="tail">
                 {item.store_name || 'N/A'}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
               <Building2 size={12} color="#9CA3AF" />
-              <Text style={styles.distributorText} numberOfLines={1} ellipsizeMode="tail">
+              <Text
+                style={styles.distributorText}
+                numberOfLines={1}
+                ellipsizeMode="tail">
                 {item.distributor || 'N/A'}
               </Text>
             </View>
@@ -153,14 +153,18 @@ const SalesOrder = ({ navigation }: any) => {
         <View style={styles.cardFooterRow}>
           <View style={styles.footerDateWrap}>
             <Calendar size={11} color="#9CA3AF" />
-            <Text style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
+            <Text
+              style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
           </View>
           <View style={styles.amountContainer}>
             <Text style={styles.amountLabel}>PO Amount: </Text>
             <Text style={styles.amountValue}>
-              ₹{Number(item.grand_total || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+              ₹
+              {Number(item.grand_total || 0).toLocaleString('en-IN', {
+                maximumFractionDigits: 2,
+              })}
             </Text>
-            <ChevronRight size={14} color="#9CA3AF" style={{ marginLeft: 2 }} />
+            <ChevronRight size={14} color="#9CA3AF" style={{marginLeft: 2}} />
           </View>
         </View>
       </TouchableOpacity>
@@ -174,12 +178,12 @@ const SalesOrder = ({ navigation }: any) => {
         flex: 1,
         backgroundColor: Colors.lightBg,
         position: 'relative',
-        marginBottom: 20,
+        // marginBottom: 20,
       }}>
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70 },
+          {paddingHorizontal: 20, paddingTop: 10, paddingBottom: 70},
         ]}>
         {/* <View style={styles.bodyHeader}>
           <Text style={styles.bodyHeaderTitle}>Recent Primary Sales</Text>
@@ -193,7 +197,7 @@ const SalesOrder = ({ navigation }: any) => {
             flex: 1,
             backgroundColor: Colors.lightBg,
           }}>
-          {isLoading && page === 1 ? (
+          {orders.length === 0 && isFetching ? (
             <View
               style={{
                 height: windowHeight * 0.5,
@@ -211,14 +215,13 @@ const SalesOrder = ({ navigation }: any) => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{ fontSize: 16, color: 'gray' }}>
+              <Text style={{fontSize: 16, color: 'gray'}}>
                 No Primary Sale Order Found
               </Text>
             </View>
           ) : (
             <FlatList
               data={orders}
-              nestedScrollEnabled={true}
               refreshControl={
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
@@ -228,7 +231,9 @@ const SalesOrder = ({ navigation }: any) => {
               onEndReached={loadMore}
               onEndReachedThreshold={0.5}
               ListFooterComponent={
-                isFetching ? <ActivityIndicator size="small" /> : null
+                isFetching && page > 1 ? (
+                  <ActivityIndicator size="small" />
+                ) : null
               }
             />
           )}
@@ -260,7 +265,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
     // iOS Shadow
     shadowColor: '#979797',
-    shadowOffset: { width: 0, height: 6 },
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     paddingBottom: 20,
@@ -292,7 +297,7 @@ const styles = StyleSheet.create({
     fontSize: Size.xsmd,
     textAlign: 'center',
   },
-  name: { fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white },
+  name: {fontFamily: Fonts.semiBold, fontSize: Size.md, color: Colors.white},
   welcomBox: {
     padding: 15,
     backgroundColor: Colors.darkButton,
@@ -328,10 +333,10 @@ const styles = StyleSheet.create({
     width: width * 0.76,
   },
 
-  paraText: { fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm },
+  paraText: {fontFamily: Fonts.light, color: Colors.white, fontSize: Size.sm},
 
   //bodyContent section css
-  bodyContent: { flex: 1 },
+  bodyContent: {flex: 1},
   bodyHeader: {
     display: 'flex',
     flexDirection: 'row',
@@ -365,7 +370,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F3F4F6',
     shadowColor: '#1F2937',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 1,
@@ -512,7 +517,7 @@ const styles = StyleSheet.create({
     padding: 8,
     shadowColor: '#000',
     shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowRadius: 4,
     elevation: 5,
     zIndex: 999,
