@@ -189,7 +189,15 @@ const AddVisibilityComponent = ({
   const handleOpenCamera = async () => {
     setShowOptions(false);
     if (!canAddMore) return;
-    const res = await launchCamera({ mediaType: 'photo', quality: 0.8 });
+    const res = await launchCamera({
+      mediaType: 'photo',
+      cameraType: 'back',
+      maxWidth: 1280,
+      maxHeight: 1280,
+      quality: 0.6,
+      includeBase64: false,
+      saveToPhotos: false,
+    });
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);

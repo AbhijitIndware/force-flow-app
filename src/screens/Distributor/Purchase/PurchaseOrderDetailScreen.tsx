@@ -164,7 +164,10 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         launchCamera({
             mediaType: 'photo',
             includeBase64: true,
+            maxWidth: 1280,
+            maxHeight: 1280,
             quality: 0.5,
+            saveToPhotos: false,
         }, (response) => {
             if (response.didCancel) return;
             if (response.errorCode) {

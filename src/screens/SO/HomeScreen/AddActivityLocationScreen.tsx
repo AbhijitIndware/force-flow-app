@@ -28,6 +28,7 @@ import { launchCamera } from 'react-native-image-picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { attendanceCameraOptions, getAttendanceImage } from '../../../utils/attendanceImage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -85,13 +86,7 @@ const AddActivityLocationScreen = ({
 
   const handleTakeLocationImage = async () => {
     launchCamera(
-      {
-        mediaType: 'photo',
-        cameraType: 'back',
-        quality: 0.8,
-        includeBase64: true,
-        saveToPhotos: false,
-      },
+      { ...attendanceCameraOptions, cameraType: 'back' },
       response => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -99,12 +94,11 @@ const AddActivityLocationScreen = ({
           return;
         }
         if (response.assets && response.assets.length > 0) {
-          const photo = response.assets[0];
-          if (photo.base64 && photo.type) {
-            setLocationImage({
-              mime: photo.type,
-              data: photo.base64,
-            });
+          const result = getAttendanceImage(response.assets[0]);
+          if (result.image) {
+            setLocationImage(result.image);
+          } else {
+            Toast.show({ type: 'error', text1: result.error || 'Unable to use photo' });
           }
         }
       },

@@ -12,6 +12,8 @@ import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { Camera, Store } from 'lucide-react-native';
+import { attendanceCameraOptions, getAttendanceImage } from '../../../utils/attendanceImage';
+import Toast from 'react-native-toast-message';
 
 interface FormValues {
   store: string;
@@ -48,13 +50,7 @@ const AddCheckInForm: React.FC<Props> = ({
 }) => {
   const handleOpenCamera = (fieldName: 'image' | 'store_image', cameraType: 'front' | 'back') => async () => {
     launchCamera(
-      {
-        mediaType: 'photo',
-        cameraType,
-        quality: 0.8,
-        includeBase64: true,
-        saveToPhotos: false,
-      },
+      { ...attendanceCameraOptions, cameraType },
       response => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -62,12 +58,11 @@ const AddCheckInForm: React.FC<Props> = ({
           return;
         }
         if (response.assets && response.assets.length > 0) {
-          const photo = response.assets[0];
-          if (photo.base64 && photo.type) {
-            setFieldValue(fieldName, {
-              data: photo.base64,
-              mime: photo.type,
-            });
+          const result = getAttendanceImage(response.assets[0]);
+          if (result.error) {
+            Toast.show({ type: 'error', text1: result.error });
+          } else {
+            setFieldValue(fieldName, result.image);
           }
         }
       },

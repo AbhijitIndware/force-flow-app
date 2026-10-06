@@ -132,13 +132,27 @@ const AddExpenseItemV2: React.FC<Props> = ({
   const handleOpenCamera = async () => {
     setShowAttachmentOptions(false);
 
-    const result = await launchCamera({
-      mediaType: 'photo',
-      cameraType: 'back',
-      quality: 0.8,
-    });
+    let result;
+    try {
+      result = await launchCamera({
+        mediaType: 'photo',
+        cameraType: 'back',
+        maxWidth: 1600,
+        maxHeight: 1600,
+        quality: 0.6,
+        includeBase64: false,
+        saveToPhotos: false,
+      });
+    } catch (error) {
+      console.warn('Expense camera error:', error);
+      Toast.show({ type: 'error', text1: 'Unable to open camera' });
+      return;
+    }
 
-    if (result.didCancel || !result.assets?.[0]) {
+    if (result.didCancel || result.errorCode || !result.assets?.[0]) {
+      if (result.errorCode) {
+        Toast.show({ type: 'error', text1: result.errorMessage || 'Unable to capture photo' });
+      }
       return;
     }
 

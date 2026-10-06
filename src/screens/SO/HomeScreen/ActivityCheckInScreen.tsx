@@ -37,6 +37,7 @@ import { SoAppStackParamList } from '../../../types/Navigation';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import { launchCamera } from 'react-native-image-picker';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { attendanceCameraOptions, getAttendanceImage } from '../../../utils/attendanceImage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -97,13 +98,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
 
   const handleTakeSelfie = async () => {
     launchCamera(
-      {
-        mediaType: 'photo',
-        cameraType: 'front',
-        quality: 0.8,
-        includeBase64: true,
-        saveToPhotos: false,
-      },
+      { ...attendanceCameraOptions, cameraType: 'front' },
       response => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -111,12 +106,11 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
           return;
         }
         if (response.assets && response.assets.length > 0) {
-          const photo = response.assets[0];
-          if (photo.base64 && photo.type) {
-            setImage({
-              mime: photo.type,
-              data: photo.base64,
-            });
+          const result = getAttendanceImage(response.assets[0]);
+          if (result.image) {
+            setImage(result.image);
+          } else {
+            Toast.show({ type: 'error', text1: result.error });
           }
         }
       },
@@ -125,13 +119,7 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
 
   const handleTakeLocationImage = async () => {
     launchCamera(
-      {
-        mediaType: 'photo',
-        cameraType: 'back',
-        quality: 0.8,
-        includeBase64: true,
-        saveToPhotos: false,
-      },
+      { ...attendanceCameraOptions, cameraType: 'back' },
       response => {
         if (response.didCancel) return;
         if (response.errorCode) {
@@ -139,12 +127,11 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
           return;
         }
         if (response.assets && response.assets.length > 0) {
-          const photo = response.assets[0];
-          if (photo.base64 && photo.type) {
-            setLocationImage({
-              mime: photo.type,
-              data: photo.base64,
-            });
+          const result = getAttendanceImage(response.assets[0]);
+          if (result.image) {
+            setLocationImage(result.image);
+          } else {
+            Toast.show({ type: 'error', text1: result.error });
           }
         }
       },

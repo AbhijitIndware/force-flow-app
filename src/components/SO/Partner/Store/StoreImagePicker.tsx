@@ -7,15 +7,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState } from 'react';
-import { Colors } from '../../../../utils/colors';
-import { Fonts } from '../../../../constants';
-import { Upload, X, Plus } from 'lucide-react-native';
-import { pick } from '@react-native-documents/picker';
-import { launchCamera } from 'react-native-image-picker';
+import React, {useState} from 'react';
+import {Colors} from '../../../../utils/colors';
+import {Fonts} from '../../../../constants';
+import {Upload, X, Plus} from 'lucide-react-native';
+import {pick} from '@react-native-documents/picker';
+import {launchCamera} from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import Toast from 'react-native-toast-message';
-import { validateFile } from '../../../../utils/uploadValidation';
+import {validateFile} from '../../../../utils/uploadValidation';
 
 interface StoreImageValue {
   mime: string;
@@ -28,7 +28,7 @@ interface Props {
   error?: string | false;
 }
 
-const StoreImagePicker = ({ value, onChange, error }: Props) => {
+const StoreImagePicker = ({value, onChange, error}: Props) => {
   const errorMessage = typeof error === 'string' ? error : undefined;
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [showOptions, setShowOptions] = useState(false);
@@ -39,13 +39,13 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
   const handlePickDocument = async () => {
     setShowOptions(false);
     try {
-      const docs = await pick({ allowMultiSelection: false });
+      const docs = await pick({allowMultiSelection: false});
       if (!docs?.length) return;
       const doc = docs[0];
       const base64 = await convertToBase64(doc.uri);
       const validation = validateFile(
-        { name: doc.name, type: doc.type, size: doc.size },
-        { allowPdf: false, base64Data: base64 },
+        {name: doc.name, type: doc.type, size: doc.size},
+        {allowPdf: false, base64Data: base64},
       );
       if (!validation.valid) {
         Toast.show({
@@ -56,7 +56,7 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
         return;
       }
       setPreviewUri(doc.uri);
-      onChange({ mime: doc.type || 'image/jpeg', data: base64 });
+      onChange({mime: doc.type || 'image/jpeg', data: base64});
     } catch (err) {
       console.warn(err);
     }
@@ -64,13 +64,37 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
 
   const handleOpenCamera = async () => {
     setShowOptions(false);
-    const res = await launchCamera({ mediaType: 'photo', quality: 0.8 });
+    let res;
+    try {
+      res = await launchCamera({
+        mediaType: 'photo',
+        cameraType: 'back',
+        maxWidth: 1280,
+        maxHeight: 1280,
+        quality: 0.6,
+        includeBase64: false,
+        saveToPhotos: false,
+      });
+    } catch (err) {
+      console.warn('Store camera error:', err);
+      Toast.show({type: 'error', text1: 'Unable to open camera'});
+      return;
+    }
+    if (res.didCancel || res.errorCode) {
+      if (res.errorCode) {
+        Toast.show({
+          type: 'error',
+          text1: res.errorMessage || 'Unable to capture photo',
+        });
+      }
+      return;
+    }
     if (!res.assets?.[0]) return;
     const asset = res.assets[0];
     const base64 = await convertToBase64(asset.uri!);
     const validation = validateFile(
-      { name: asset.fileName, type: asset.type, size: asset.fileSize },
-      { allowPdf: false, base64Data: base64 },
+      {name: asset.fileName, type: asset.type, size: asset.fileSize},
+      {allowPdf: false, base64Data: base64},
     );
     if (!validation.valid) {
       Toast.show({
@@ -81,7 +105,7 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
       return;
     }
     setPreviewUri(asset.uri!);
-    onChange({ mime: asset.type || 'image/jpeg', data: base64 });
+    onChange({mime: asset.type || 'image/jpeg', data: base64});
   };
 
   const handleRemove = () => {
@@ -102,7 +126,7 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
             onPress={() => setShowPreview(true)}
             activeOpacity={0.85}>
             <Image
-              source={{ uri: previewUri }}
+              source={{uri: previewUri}}
               style={styles.thumbImage}
               resizeMode="cover"
             />
@@ -148,7 +172,7 @@ const StoreImagePicker = ({ value, onChange, error }: Props) => {
           </TouchableOpacity>
           {previewUri && (
             <Image
-              source={{ uri: previewUri }}
+              source={{uri: previewUri}}
               style={styles.fullImage}
               resizeMode="contain"
             />
@@ -180,7 +204,7 @@ export default StoreImagePicker;
 const THUMB_SIZE = 100;
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 16 },
+  wrapper: {marginBottom: 16},
   label: {
     fontSize: 12,
     fontFamily: Fonts.medium,
@@ -263,9 +287,9 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     marginTop: 4,
   },
-  errorText: { color: 'red', fontSize: 11, marginTop: 4 },
+  errorText: {color: 'red', fontSize: 11, marginTop: 4},
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.4)'},
   bottomSheet: {
     backgroundColor: '#fff',
     paddingVertical: 10,
@@ -280,8 +304,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#e2e8f0',
     marginBottom: 8,
   },
-  optionBtn: { width: '100%', paddingVertical: 14, alignItems: 'center' },
-  optionText: { fontSize: 14, fontWeight: '600' },
+  optionBtn: {width: '100%', paddingVertical: 14, alignItems: 'center'},
+  optionText: {fontSize: 14, fontWeight: '600'},
 
   fullScreenOverlay: {
     flex: 1,

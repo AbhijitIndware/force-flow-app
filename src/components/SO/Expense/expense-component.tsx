@@ -60,6 +60,18 @@ const ExpenseComponent = ({ navigation }: any) => {
     await refetch();
     setRefreshing(false);
   };
+
+  // The expense screen stays mounted while AddExpenseScreen is on top of it.
+  // Refresh when it becomes visible again so a newly created/submitted claim
+  // is reflected even when the app's RTK Query focus listener is not enabled.
+  React.useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      setPage(1);
+      refetch();
+    });
+
+    return unsubscribe;
+  }, [navigation, refetch]);
   const { data: summaryData, isLoading: summaryLoading } =
     useGetMyTadaSummaryQuery({
       month: selectedMonth,
@@ -141,6 +153,7 @@ const ExpenseComponent = ({ navigation }: any) => {
         )}
       </View>
       <FlatList
+        style={styles.claimList}
         data={claims}
         keyExtractor={item => item.name}
         refreshControl={
@@ -157,7 +170,6 @@ const ExpenseComponent = ({ navigation }: any) => {
           </View>
         )
         }
-        stickyHeaderIndices={[0]}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
         ListFooterComponent={< View style={{ height: 90 }} />}
@@ -193,6 +205,9 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingHorizontal: 16,
     marginTop: 14,
+  },
+  claimList: {
+    flex: 1,
   },
   sectionHeader: {
     flexDirection: 'row',

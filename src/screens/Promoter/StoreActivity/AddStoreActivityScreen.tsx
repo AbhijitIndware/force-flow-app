@@ -85,8 +85,11 @@ const AddStoreActivityScreen = ({navigation}: Props) => {
       {
         mediaType: 'photo',
         cameraType: 'back',
-        quality: 0.7,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        quality: 0.6,
         includeBase64: true,
+        saveToPhotos: false,
       },
       response => {
         if (response.didCancel) return;
