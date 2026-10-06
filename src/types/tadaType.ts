@@ -125,6 +125,31 @@ export interface PendingApprovalClaim {
   approval_status: string;
   total_claimed_amount: number;
   total_sanctioned_amount: number;
+  employee_number?: string;
+  custom_travel_start_date?: string;
+  custom_travel_type?: string;
+  is_editable?: boolean;
+}
+
+export interface BulkClaimActionPayload {
+  claim_ids: string[] | string;
+  reason?: string;
+}
+
+export interface BulkClaimActionResult {
+  claim_id: string;
+  status: 'success' | 'error';
+  message: string;
+  error_code?: string;
+  workflow_state?: string;
+  total_sanctioned_amount?: number;
+}
+
+export interface BulkClaimActionData {
+  requested: number;
+  succeeded: number;
+  failed: number;
+  results: BulkClaimActionResult[];
 }
 
 export interface ApproverExpenseClaimResponse {
@@ -148,6 +173,7 @@ export interface ApproverExpenseClaimsData {
 export interface ApproverExpenseClaim {
   name: string;
   employee: string;
+  employee_number?: string;
   employee_name: string;
   posting_date: string;
   workflow_state: string;
@@ -398,6 +424,12 @@ export interface StandardQueryParams {
   page?: number;
   page_size?: number;
   status?: string;
+  employee?: string;
+  search?: string;
+  from_date?: string;
+  to_date?: string;
+  travel_type?: string;
+  order?: 'asc' | 'desc';
 }
 
 export interface GetVisibilityClaimsParams extends StandardQueryParams {

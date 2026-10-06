@@ -36,6 +36,8 @@ import {
   CreateExpenseClaim,
   ApproverEditClaimPayload,
   CollectionResponse,
+  BulkClaimActionPayload,
+  BulkClaimActionData,
 } from '../../types/tadaType';
 import { baseQueryForTadaWithAuthGuard } from '../utility';
 
@@ -142,15 +144,20 @@ export const tadaApiV2 = createApi({
     // 7. Get Pending Approvals
     getPendingApprovals: builder.query<
       TadaApiResponse<PendingApprovalClaim[]>,
-      { month?: number; year?: number }
+      {
+        employee?: string;
+        search?: string;
+        from_date?: string;
+        to_date?: string;
+        travel_type?: string;
+        month?: number;
+        year?: number;
+      }
     >({
-      query: ({ month, year } = {}) => ({
+      query: (params = {}) => ({
         url: `${EXPENSE_BASE}.get_pending_approvals`,
         method: 'GET',
-        params: {
-          ...(month !== undefined && { month }),
-          ...(year !== undefined && { year }),
-        },
+        params,
       }),
       providesTags: ['Approval'],
     }),
@@ -225,6 +232,30 @@ export const tadaApiV2 = createApi({
         url: `${EXPENSE_BASE}.reject_claim`,
         method: 'POST',
         body,
+      }),
+      invalidatesTags: ['Approval', 'Expense'],
+    }),
+
+    bulkApproveClaims: builder.mutation<
+      TadaApiResponse<BulkClaimActionData>,
+      BulkClaimActionPayload
+    >({
+      query: ({ claim_ids }) => ({
+        url: `${EXPENSE_BASE}.bulk_approve_claims`,
+        method: 'POST',
+        body: { claim_ids },
+      }),
+      invalidatesTags: ['Approval', 'Expense'],
+    }),
+
+    bulkRejectClaims: builder.mutation<
+      TadaApiResponse<BulkClaimActionData>,
+      BulkClaimActionPayload
+    >({
+      query: ({ claim_ids, reason }) => ({
+        url: `${EXPENSE_BASE}.bulk_reject_claims`,
+        method: 'POST',
+        body: { claim_ids, ...(reason !== undefined && { reason }) },
       }),
       invalidatesTags: ['Approval', 'Expense'],
     }),
@@ -473,6 +504,8 @@ export const {
   useGetClaimDetailQuery,
   useApproveClaimMutation,
   useRejectClaimMutation,
+  useBulkApproveClaimsMutation,
+  useBulkRejectClaimsMutation,
   useApproverEditClaimMutation,
   useGetApprovalListQuery,
 
