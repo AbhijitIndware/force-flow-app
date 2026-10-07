@@ -140,6 +140,8 @@ const AddPjpScreen = ({navigation, route}: Props) => {
 
   const initialActivityCount =
     (pjpDetails as any)?.message?.data?.planned_activities?.length ?? 0;
+  const initialStoreCount =
+    (pjpDetails as any)?.message?.data?.stores?.length ?? 0;
 
   const [addDailyPjp] = useAddDailyPjpMutation();
   const [updateDailyPjp] = useUpdateDailyPjpMutation();
@@ -363,6 +365,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         isEditMode={!!id}
         beatPlan={beatPlan}
         initialActivityCount={initialActivityCount}
+        initialStoreCount={initialStoreCount}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}

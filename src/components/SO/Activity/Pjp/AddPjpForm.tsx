@@ -61,6 +61,7 @@ interface Props {
   isEditMode?: boolean;
   beatPlan?: string | null;
   initialActivityCount?: number;
+  initialStoreCount?: number;
 }
 
 const ACTIVITY_TYPES = [
@@ -81,6 +82,7 @@ const AddPjpForm: React.FC<Props> = ({
   isEditMode = false,
   beatPlan = null,
   initialActivityCount = 0,
+  initialStoreCount = 0,
 }) => {
   const navigation = useNavigation<NavigationProp>();
 
@@ -316,6 +318,9 @@ const AddPjpForm: React.FC<Props> = ({
           Boolean(beatPlan) && storeItem.is_unplanned !== 1;
         const isExistingRunningStore =
           isPjpStarted && Boolean(storeItem.store);
+        // Stores already saved on the PJP can't be removed/changed in edit mode
+        const isSavedStore =
+          isEditMode && index < initialStoreCount && Boolean(storeItem.store);
 
         return (
           <View key={index} style={{}}>
@@ -333,7 +338,7 @@ const AddPjpForm: React.FC<Props> = ({
                 setFieldValue('stores', updatedStores);
               }}
               navigation={navigation}
-              disabled={isProtectedPlannedStore || isExistingRunningStore}
+              disabled={isProtectedPlannedStore || isExistingRunningStore || isSavedStore}
             />
 
             {isProtectedPlannedStore && (
@@ -343,7 +348,8 @@ const AddPjpForm: React.FC<Props> = ({
             )}
 
             {!isProtectedPlannedStore &&
-              !isExistingRunningStore && (
+              !isExistingRunningStore &&
+              !isSavedStore && (
                 <TouchableOpacity
                   onPress={() => {
                     const updated = [...values.stores];
