@@ -91,6 +91,9 @@ export const formatPeriodLabel = (
     .month(month - 1)
     .format('MMM')} ${year}`;
 };
+// Max claims per bulk approve/reject call
+const MAX_SELECTION = 50;
+
 // Dropdowns treat '' as "nothing selected", so 'All' needs a real value
 const ALL = 'All';
 const FILTER_OPTIONS = [
@@ -431,7 +434,7 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
     setSelectedClaims(current => {
       if (current.includes(claimId))
         return current.filter(id => id !== claimId);
-      if (current.length >= 50) {
+      if (current.length >= MAX_SELECTION) {
         Alert.alert(
           'Selection limit',
           'You can select up to 50 claims at a time.',
@@ -440,6 +443,30 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
       }
       return [...current, claimId];
     });
+  };
+
+  const selectableIds: string[] = claimList
+    .filter(
+      (c: ApproverExpenseClaim) => c.workflow_state === 'Pending Approval',
+    )
+    .map((c: ApproverExpenseClaim) => c.name);
+  const selectAllTarget = selectableIds.slice(0, MAX_SELECTION);
+  const allSelected =
+    selectAllTarget.length > 0 &&
+    selectAllTarget.every(id => selectedClaims.includes(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedClaims([]);
+      return;
+    }
+    if (selectableIds.length > MAX_SELECTION) {
+      Alert.alert(
+        'Selection limit',
+        `Only the first ${MAX_SELECTION} pending claims were selected.`,
+      );
+    }
+    setSelectedClaims(selectAllTarget);
   };
 
   const showBulkResult = (response: any) => {
@@ -648,6 +675,22 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
       </View>
 
       {/* ── Status Filter Strip ── */}
+
+      {!isLoading && selectableIds.length > 0 && (
+        <TouchableOpacity
+          style={styles.selectAllRow}
+          activeOpacity={0.7}
+          onPress={toggleSelectAll}>
+          <Ionicons
+            name={allSelected ? 'checkbox' : 'square-outline'}
+            size={20}
+            color={allSelected ? Colors.darkButton : '#94a3b8'}
+          />
+          <Text style={styles.selectAllText}>
+            Select all pending ({Math.min(selectableIds.length, MAX_SELECTION)})
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {isLoading ? (
         <View style={styles.loaderBox}>
@@ -1111,6 +1154,18 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: 12,
     fontFamily: Fonts.medium,
+  },
+  selectAllRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  selectAllText: {
+    color: '#334155',
+    fontSize: 12,
+    fontFamily: Fonts.semiBold,
   },
   bulkBar: {
     flexDirection: 'row',
