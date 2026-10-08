@@ -81,7 +81,11 @@ const StockRow: React.FC<StockRowProps> = ({
   const isFilled = entry.itemCode && entry.quantity !== '';
   const currentStock = matchItem?.current_stock ?? 0;
   const enteredQty = parseInt(entry.quantity, 10);
-  const showDeliveryReminder = !entry.isPrev && !isNaN(enteredQty) && enteredQty > currentStock && currentStock > 0;
+  const showDeliveryReminder =
+    !entry.isPrev &&
+    !isNaN(enteredQty) &&
+    enteredQty > currentStock &&
+    currentStock > 0;
 
   return (
     <View
@@ -91,77 +95,87 @@ const StockRow: React.FC<StockRowProps> = ({
         entry.isPrev && styles.prevRow,
         isFilled && !entry.isPrev && styles.filledRow,
       ]}>
-      {/* ── Item Name ── */}
-      <View style={styles.itemNameWrap}>
-        {entry.isPrev ? (
-          <Text style={styles.prevItemName} numberOfLines={2}>
-            {entry.itemName || entry.itemCode}
-          </Text>
-        ) : (
-          <SaleItemDropdown
-            field={`stock_item_${index}`}
-            value={entry.itemCode}
-            data={filteredDropdown}
-            placeholder="Select item..."
-            onChange={(val: string) => {
-              const found = allItemsDropdown.find(d => d.value === val);
-              onItemChange(index, val, found?.label ?? val);
-            }}
-            searchText={search}
-            setSearchText={setSearch}
-          />
-        )}
-      </View>
+      <View style={styles.rowContent}>
+        {/* ── Item Name ── */}
+        <View style={styles.itemNameWrap}>
+          {entry.isPrev ? (
+            <Text style={styles.prevItemName} numberOfLines={2}>
+              {entry.itemName || entry.itemCode}
+            </Text>
+          ) : (
+            <SaleItemDropdown
+              field={`stock_item_${index}`}
+              value={entry.itemCode}
+              data={filteredDropdown}
+              placeholder="Select item..."
+              onChange={(val: string) => {
+                const found = allItemsDropdown.find(d => d.value === val);
+                onItemChange(index, val, found?.label ?? val);
+              }}
+              searchText={search}
+              setSearchText={setSearch}
+            />
+          )}
+        </View>
 
-      {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
-      <View style={styles.stockDetailsWrap}>
-        <View style={styles.stockDetailItem}>
-          <Text style={styles.stockDetailLabel}>Opening</Text>
-          <Text style={styles.stockDetailValue}>
-            {matchItem?.opening_stock ?? 0}
-          </Text>
-        </View>
-        <View style={styles.stockDetailItem}>
-          <Text style={styles.stockDetailLabel}>Received</Text>
-          <Text style={styles.stockDetailValue}>
-            {matchItem?.received_this_month ?? 0}
-          </Text>
-        </View>
-        <View style={styles.stockDetailItem}>
-          <Text style={styles.stockDetailLabel}>Sold MTD</Text>
-          <Text style={styles.stockDetailValue}>
-            {matchItem?.mtd_territory ?? 0}
-          </Text>
-        </View>
-      </View>
-
-      {/* ── On Shelf Now Input ── */}
-      <View style={styles.qtyInputWrap}>
-        <TextInput
-          style={styles.qtyInput}
-          keyboardType="numeric"
-          placeholder=""
-          placeholderTextColor="#9ca3af"
-          value={entry.quantity}
-          onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
-        />
-        {showDeliveryReminder && (
-          <View style={styles.deliveryReminder}>
-            <Ionicons name="alert-circle-outline" size={12} color="#B45309" />
-            <Text style={styles.deliveryReminderText}>
-              More than your stock — did a delivery arrive? Record it in Receive Stock first.
+        {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
+        <View style={styles.stockDetailsWrap}>
+          <View style={styles.stockDetailItem}>
+            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+              Open
+            </Text>
+            <Text style={styles.stockDetailValue} numberOfLines={1}>
+              {matchItem?.opening_stock ?? 0}
             </Text>
           </View>
-        )}
+          <View style={styles.stockDetailItem}>
+            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+              Rcvd
+            </Text>
+            <Text style={styles.stockDetailValue} numberOfLines={1}>
+              {matchItem?.received_this_month ?? 0}
+            </Text>
+          </View>
+          <View style={styles.stockDetailItem}>
+            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+              Sold
+            </Text>
+            <Text style={styles.stockDetailValue} numberOfLines={1}>
+              {matchItem?.mtd_territory ?? 0}
+            </Text>
+          </View>
+        </View>
+
+        {/* ── On Shelf Now Input ── */}
+        <View style={styles.qtyInputWrap}>
+          <TextInput
+            style={styles.qtyInput}
+            keyboardType="numeric"
+            placeholder=""
+            placeholderTextColor="#9ca3af"
+            value={entry.quantity}
+            onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
+          />
+        </View>
+
+        {/* ── Delete ── */}
+        <TouchableOpacity
+          onPress={() => onRemove(index)}
+          style={styles.deleteBtn}
+          disabled={entry.isPrev}>
+          <Ionicons name="trash-outline" size={18} color="#dc2626" />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Delete ── */}
-      <TouchableOpacity
-        onPress={() => onRemove(index)}
-        style={styles.deleteBtn}
-        disabled={entry.isPrev}>
-        <Ionicons name="trash-outline" size={18} color="#dc2626" />
-      </TouchableOpacity>
+      {showDeliveryReminder && (
+        <View style={styles.deliveryReminder}>
+          <Ionicons name="alert-circle-outline" size={12} color="#B45309" />
+          <Text style={styles.deliveryReminderText}>
+            More than your stock — did a delivery arrive? Record it in Receive
+            Stock first.
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -290,9 +304,19 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
           <View style={styles.tableContainer}>
             {/* Header */}
             <View style={styles.headerRow}>
-              <Text style={styles.headerItem}>Item</Text>
-              <Text style={styles.headerStock}>Stock Details</Text>
-              <Text style={styles.headerQty}>On shelf now</Text>
+              <Text style={[styles.headerText, styles.headerItem]}>Item</Text>
+              <Text
+                style={[styles.headerText, styles.headerStock]}
+                numberOfLines={1}>
+                Stock Details
+              </Text>
+              <Text
+                style={[styles.headerText, styles.headerQty]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}>
+                On shelf now
+              </Text>
               <View style={styles.headerAction} />
             </View>
 
@@ -368,6 +392,10 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
 
 export default StockEntryFormScreen;
 
+const STOCK_DETAILS_WIDTH = 120;
+const QTY_COL_WIDTH = 78;
+const ACTION_COL_WIDTH = 30;
+
 const styles = StyleSheet.create({
   tableContainer: {
     backgroundColor: '#ffffff',
@@ -377,37 +405,36 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#f9fafb',
-    paddingVertical: 10,
+    paddingVertical: 8,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
     alignItems: 'center',
   },
-  headerItem: {
-    flex: 2,
+  headerText: {
     color: '#6b7280',
-    fontSize: 11,
-    fontFamily: Fonts.medium,
-    paddingHorizontal: 8,
+    fontSize: 10,
+    lineHeight: 13,
+    fontFamily: Fonts.semiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  headerItem: {
+    flex: 1,
+    paddingRight: 6,
   },
   headerStock: {
-    flex: 2,
-    color: '#6b7280',
-    fontSize: 11,
-    fontFamily: Fonts.medium,
+    width: STOCK_DETAILS_WIDTH,
     textAlign: 'center',
-    paddingHorizontal: 8,
   },
   headerQty: {
-    flex: 1,
-    color: '#6b7280',
-    fontSize: 11,
-    fontFamily: Fonts.medium,
+    width: QTY_COL_WIDTH,
     textAlign: 'center',
-    paddingHorizontal: 8,
+    letterSpacing: 0,
   },
   headerAction: {
-    width: 40,
+    width: ACTION_COL_WIDTH,
   },
   sectionDivider: {
     paddingHorizontal: 12,
@@ -428,20 +455,23 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
+  },
+  rowContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   evenRow: {backgroundColor: '#fff'},
   oddRow: {backgroundColor: '#f9fafb'},
   prevRow: {backgroundColor: '#fffbeb'},
   filledRow: {backgroundColor: '#f0fdf4'},
   itemNameWrap: {
-    flex: 2,
+    flex: 1,
     minWidth: 0,
+    paddingRight: 6,
   },
   prevItemName: {
     fontSize: 12,
@@ -449,41 +479,45 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   stockDetailsWrap: {
-    flex: 2,
+    width: STOCK_DETAILS_WIDTH,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 8,
   },
   stockDetailItem: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stockDetailLabel: {
-    fontSize: 8,
+    fontSize: 9,
     fontFamily: Fonts.regular,
     color: '#6b7280',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
   stockDetailValue: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: Fonts.semiBold,
     color: '#111827',
     marginTop: 2,
   },
   qtyInputWrap: {
-    flex: 1,
+    width: QTY_COL_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
   qtyInput: {
-    width: 70,
+    width: '100%',
     borderWidth: 1,
     borderColor: '#d1d5db',
+    backgroundColor: '#ffffff',
     height: 40,
+    paddingVertical: 0,
+    paddingHorizontal: 4,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
     textAlign: 'center',
     borderRadius: 6,
-    fontSize: Size.sm,
+    fontSize: 12,
     fontFamily: Fonts.medium,
     color: '#111827',
   },
@@ -492,17 +526,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginTop: 6,
-    paddingHorizontal: 8,
   },
   deliveryReminderText: {
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: Fonts.medium,
     color: '#B45309',
     flex: 1,
-    textAlign: 'center',
   },
   deleteBtn: {
-    width: 40,
+    width: ACTION_COL_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
