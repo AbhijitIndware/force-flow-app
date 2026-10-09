@@ -156,6 +156,14 @@ const MySalesScreen = ({navigation}: Props) => {
           <Text style={styles.cardSub} numberOfLines={1}>
             {item.store_name}
           </Text>
+          {item.last_counted ? (
+            <Text style={styles.lastCounted} numberOfLines={1}>
+              Last counted{' '}
+              <Text style={styles.lastCountedDate}>
+                {moment(item.last_counted).format('DD MMM YYYY')}
+              </Text>
+            </Text>
+          ) : null}
         </View>
         <View style={{alignItems: 'flex-end'}}>
           <Text style={styles.value}>{item.sold} sold</Text>
@@ -527,6 +535,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#F1F1F1',
   },
   metric: {fontFamily: Fonts.regular, color: Colors.gray, fontSize: 10},
+  lastCounted: {
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  lastCountedDate: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
   metricValue: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
   warningText: {color: '#B45309'},
   warning: {
