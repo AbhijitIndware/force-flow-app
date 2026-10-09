@@ -99,7 +99,9 @@ const StockRow: React.FC<StockRowProps> = ({
         {/* ── Item Name ── */}
         <View style={styles.itemNameWrap}>
           {entry.isPrev ? (
-            <Text style={styles.prevItemName} numberOfLines={2}>
+            <Text
+              style={styles.prevItemName}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {entry.itemName || entry.itemCode}
             </Text>
           ) : (
@@ -121,26 +123,44 @@ const StockRow: React.FC<StockRowProps> = ({
         {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
         <View style={styles.stockDetailsWrap}>
           <View style={styles.stockDetailItem}>
-            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailLabel}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               Open
             </Text>
-            <Text style={styles.stockDetailValue} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailValue}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {matchItem?.opening_stock ?? 0}
             </Text>
           </View>
           <View style={styles.stockDetailItem}>
-            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailLabel}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               Rcvd
             </Text>
-            <Text style={styles.stockDetailValue} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailValue}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {matchItem?.received_this_month ?? 0}
             </Text>
           </View>
           <View style={styles.stockDetailItem}>
-            <Text style={styles.stockDetailLabel} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailLabel}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               Sold
             </Text>
-            <Text style={styles.stockDetailValue} numberOfLines={1}>
+            <Text
+              style={styles.stockDetailValue}
+              numberOfLines={1}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
               {matchItem?.mtd_territory ?? 0}
             </Text>
           </View>
@@ -150,6 +170,7 @@ const StockRow: React.FC<StockRowProps> = ({
         <View style={styles.qtyInputWrap}>
           <TextInput
             style={styles.qtyInput}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             keyboardType="numeric"
             placeholder=""
             placeholderTextColor="#9ca3af"
@@ -304,17 +325,23 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
           <View style={styles.tableContainer}>
             {/* Header */}
             <View style={styles.headerRow}>
-              <Text style={[styles.headerText, styles.headerItem]}>Item</Text>
+              <Text
+                style={[styles.headerText, styles.headerItem]}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}>
+                Item
+              </Text>
               <Text
                 style={[styles.headerText, styles.headerStock]}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
                 numberOfLines={1}>
                 Stock Details
               </Text>
               <Text
                 style={[styles.headerText, styles.headerQty]}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
                 numberOfLines={1}
                 adjustsFontSizeToFit
-                minimumFontScale={0.8}>
+                minimumFontScale={0.7}>
                 On shelf now
               </Text>
               <View style={styles.headerAction} />
@@ -392,9 +419,12 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
 
 export default StockEntryFormScreen;
 
-const STOCK_DETAILS_WIDTH = 120;
-const QTY_COL_WIDTH = 78;
-const ACTION_COL_WIDTH = 30;
+const STOCK_DETAILS_WIDTH = 108;
+const QTY_COL_WIDTH = 64;
+const QTY_INPUT_WIDTH = 52;
+const ACTION_COL_WIDTH = 28;
+// Cap OS font scaling so large system fonts don't blow up the table.
+const MAX_FONT_SCALE = 1.15;
 
 const styles = StyleSheet.create({
   tableContainer: {
@@ -405,9 +435,9 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     backgroundColor: '#f9fafb',
-    paddingVertical: 8,
-    minHeight: 44,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minHeight: 36,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
     alignItems: 'center',
@@ -437,7 +467,7 @@ const styles = StyleSheet.create({
     width: ACTION_COL_WIDTH,
   },
   sectionDivider: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 5,
     backgroundColor: '#fffbeb',
     borderBottomWidth: 1,
@@ -455,8 +485,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   row: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
   },
@@ -474,7 +504,8 @@ const styles = StyleSheet.create({
     paddingRight: 6,
   },
   prevItemName: {
-    fontSize: 12,
+    fontSize: 11,
+    lineHeight: 14,
     fontFamily: Fonts.semiBold,
     color: '#111827',
   },
@@ -506,11 +537,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   qtyInput: {
-    width: '100%',
+    width: QTY_INPUT_WIDTH,
     borderWidth: 1,
     borderColor: '#d1d5db',
     backgroundColor: '#ffffff',
-    height: 40,
+    height: 34,
     paddingVertical: 0,
     paddingHorizontal: 4,
     includeFontPadding: false,

@@ -18,7 +18,8 @@ import { Colors } from '../../../utils/colors';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { flexCol } from '../../../utils/styles';
 import {
-  getCurrentLocation,
+  getCurrentPositionWithAccuracy,
+  LOW_LOCATION_ACCURACY,
   getStoreLabel,
   requestLocationPermission,
   windowHeight,
@@ -171,9 +172,11 @@ const CheckInForm = ({ navigation }: Props) => {
     }
     setLocationLoading(true)
     try {
-      const location = await getCurrentLocation();
+      const { latitude, longitude, accuracy } =
+        await getCurrentPositionWithAccuracy();
+      const location = `${latitude},${longitude}`;
       setFieldValue('current_location', location);
-      if (!location) return;
+      const isLowAccuracy = accuracy > LOW_LOCATION_ACCURACY;
 
       const res = await verifyLocation({
         store: selectedStore,
@@ -189,9 +192,10 @@ const CheckInForm = ({ navigation }: Props) => {
         Toast.show({
           type: 'error',
           text1: '❌ Location verification failed',
-          text2:
-            res?.message?.data?.location_validation?.message ??
-            'Please try again later.',
+          text2: isLowAccuracy
+            ? `Weak GPS signal (±${Math.round(accuracy)} m). Move near the store entrance and verify again.`
+            : res?.message?.data?.location_validation?.message ??
+              'Please try again later.',
         });
       }
     } catch (err: any) {
