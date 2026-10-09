@@ -19,6 +19,8 @@ interface SaleItemDropdownProps {
   setSearchText?: (val: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  menuWidth?: number;
+  wrapLabels?: boolean;
 }
 
 const SaleItemDropdown: React.FC<SaleItemDropdownProps> = ({
@@ -32,6 +34,8 @@ const SaleItemDropdown: React.FC<SaleItemDropdownProps> = ({
   setSearchText,
   placeholder = 'item...',
   disabled,
+  menuWidth,
+  wrapLabels,
 }) => {
   return (
     <View style={styles.dropdownWrapper}>
@@ -50,6 +54,8 @@ const SaleItemDropdown: React.FC<SaleItemDropdownProps> = ({
         clearTextAfterSearch={true}
         textSize={Size.xxs}
         height={30}
+        menuWidth={menuWidth}
+        wrapLabels={wrapLabels}
         // marginBottom={0}
       />
     </View>

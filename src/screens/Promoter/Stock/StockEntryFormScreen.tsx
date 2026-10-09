@@ -23,6 +23,7 @@ import {
 } from '../../../features/base/promoter-base-api';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import {windowWidth} from '../../../utils/utils';
 import {Save} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
@@ -116,6 +117,8 @@ const StockRow: React.FC<StockRowProps> = ({
               }}
               searchText={search}
               setSearchText={setSearch}
+              menuWidth={windowWidth - 32}
+              wrapLabels
             />
           )}
         </View>

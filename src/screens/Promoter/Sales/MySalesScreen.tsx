@@ -64,6 +64,7 @@ const MySalesScreen = ({navigation}: Props) => {
     to_date: toDate,
     ...(store ? {store} : {}),
   });
+  console.log('🚀 ~ MySalesScreen ~ response:', response);
   const data = response?.message?.data;
   const totals = data?.totals ?? {
     sold: 0,
@@ -290,7 +291,8 @@ const MySalesScreen = ({navigation}: Props) => {
         <View style={styles.notice}>
           <Ionicons name="warning-outline" color="#B45309" size={17} />
           <Text style={styles.noticeText}>
-            Stock appeared without a delivery entry — record deliveries in Receive Stock
+            Stock appeared without a delivery entry — record deliveries in
+            Receive Stock
           </Text>
         </View>
       ) : null}
@@ -364,7 +366,8 @@ const styles = StyleSheet.create({
   statsCard: {
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 14,
+    padding: 5,
+    paddingHorizontal: 0,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.08,
@@ -375,7 +378,7 @@ const styles = StyleSheet.create({
   },
   statRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   statItem: {
@@ -384,8 +387,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statIcon: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: 10,
     backgroundColor: '#FFF4E5',
     alignItems: 'center',

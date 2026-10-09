@@ -133,8 +133,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
       Toast.show({
         type: 'success',
         text1:
-          getSafeServerMessage(response.message.message) ??
-          'Delivery saved',
+          getSafeServerMessage(response.message.message) ?? 'Delivery saved',
       });
       setQuantities({});
       setRemarks('');
@@ -222,7 +221,10 @@ const StockReceivedScreen = ({navigation}: Props) => {
               <View style={{flex: 1}}>
                 <Text style={styles.itemName}>{item.item_name}</Text>
                 <Text style={styles.itemMeta} numberOfLines={1}>
-                  Current stock: {item.current_stock ?? 0}
+                  Current stock:{' '}
+                  <Text style={styles.stockCount}>
+                    {item.current_stock ?? 0}
+                  </Text>
                 </Text>
               </View>
               <TextInput
@@ -421,10 +423,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   itemMeta: {
-    fontFamily: Fonts.regular,
-    color: Colors.gray,
-    fontSize: 10,
-    marginTop: 3,
+    fontFamily: Fonts.medium,
+    color: '#111827',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  stockCount: {
+    fontFamily: Fonts.semiBold,
+    color: '#111827',
   },
   qtyInput: {
     width: 76,

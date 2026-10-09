@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   Platform,
   Image,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { Text, ActivityIndicator, Menu } from 'react-native-paper';
 import { Fonts } from '../../constants';
@@ -40,6 +41,10 @@ type Props = {
   clearTextAfterSearch: boolean;
   selectedLabelOverride?: string;
   textSize?: number;
+  // Fixed width for the open list (defaults to the anchor's width).
+  menuWidth?: number;
+  // Show full labels instead of truncating; the anchor grows to fit.
+  wrapLabels?: boolean;
 };
 
 const DropdownComponent = ({
@@ -61,10 +66,30 @@ const DropdownComponent = ({
   clearTextAfterSearch,
   selectedLabelOverride,
   textSize = Size.xs,
+  menuWidth,
+  wrapLabels = false,
 }: Props) => {
   const [visible, setVisible] = useState(false);
   const [anchorWidth, setAnchorWidth] = useState(0);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [fittedMenuWidth, setFittedMenuWidth] = useState<number | null>(null);
+  const anchorRef = useRef<View>(null);
+
+  const openMenu = () => {
+    onOpen?.();
+    if (!menuWidth || !anchorRef.current) {
+      setVisible(true);
+      return;
+    }
+    // Paper's Menu right-aligns to the anchor when the menu overflows the
+    // screen, pushing it off the left edge. Cap the width to the space
+    // available right of the anchor so it always opens left-aligned.
+    anchorRef.current.measureInWindow(x => {
+      const available = Dimensions.get('window').width - x - 16;
+      setFittedMenuWidth(Math.min(menuWidth, Math.max(available, 0)));
+      setVisible(true);
+    });
+  };
 
   const handleSelect = (item: DropDownItem) => {
     if (item.disabled) return;
@@ -87,23 +112,23 @@ const DropdownComponent = ({
           onDismiss={() => setVisible(false)}
           anchor={
             <TouchableOpacity
+              ref={anchorRef}
               onLayout={e => setAnchorWidth(e.nativeEvent.layout.width)}
-              onPress={() => {
-                setVisible(true);
-                onOpen?.();
-              }}
+              onPress={openMenu}
               disabled={disabled}
               style={[
                 styles.dropdown,
                 {
-                  height,
+                  ...(wrapLabels
+                    ? { minHeight: height, paddingVertical: 4 }
+                    : { height }),
                   backgroundColor: disabled ? '#F3F3F3' : '#FFFFFF',
                   borderColor: disabled ? '#D4D4D4' : Colors.inputBorder,
                   opacity: disabled ? 0.6 : 1,
                 },
               ]}>
               <Text
-                numberOfLines={1}
+                numberOfLines={wrapLabels ? undefined : 1}
                 ellipsizeMode="tail"
                 style={[
                   styles.selectedText,
@@ -118,7 +143,7 @@ const DropdownComponent = ({
           }
           contentStyle={{
             backgroundColor: Colors.white,
-            width: anchorWidth || '90%',
+            width: fittedMenuWidth ?? (anchorWidth || '90%'),
             alignSelf: 'center',
             zIndex: 9999,
           }}>
@@ -210,7 +235,7 @@ const DropdownComponent = ({
                         isSelected && styles.selectedItemText,
                         isDisabled && styles.disabledItemText,
                       ]}
-                      numberOfLines={2}>
+                      numberOfLines={wrapLabels ? undefined : 2}>
                       {item.label}
                     </Text>
                     {/* Visited badge */}
