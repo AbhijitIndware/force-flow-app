@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   FlatList,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -22,8 +23,9 @@ import {Fonts} from '../../../constants';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
   useGetEmployeeAssignedStoresQuery,
+  useGetStockReturnsQuery,
   useGetStoreStockStatusQuery,
-  useRecordStockReceivedMutation,
+  useRecordStockReturnMutation,
 } from '../../../features/base/promoter-base-api';
 import {
   getSafeServerMessage,
@@ -32,7 +34,7 @@ import {
 
 type NavigationProp = NativeStackScreenProps<
   PromoterAppStackParamList,
-  'StockReceivedScreen'
+  'StockReturnScreen'
 >;
 
 type Props = {
@@ -41,10 +43,11 @@ type Props = {
 };
 type Tab = 'record' | 'history';
 
-const StockReceivedScreen = ({navigation}: Props) => {
+const StockReturnScreen = ({navigation}: Props) => {
   const [tab, setTab] = useState<Tab>('record');
   const [store, setStore] = useState('');
   const [search, setSearch] = useState('');
+  const [reason, setReason] = useState('');
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
@@ -66,7 +69,11 @@ const StockReceivedScreen = ({navigation}: Props) => {
 
   const {data: stockResponse, isFetching: stockLoading} =
     useGetStoreStockStatusQuery({store}, {skip: !store});
-  const [recordStock, {isLoading: saving}] = useRecordStockReceivedMutation();
+  // Only needed here for the reason picker; history has its own list.
+  const {data: historyResponse} = useGetStockReturnsQuery({
+    store: store || undefined,
+  });
+  const [recordReturn, {isLoading: saving}] = useRecordStockReturnMutation();
 
   const items = useMemo(() => {
     const all = stockResponse?.message?.all_items ?? [];
@@ -81,9 +88,13 @@ const StockReceivedScreen = ({navigation}: Props) => {
     );
   }, [stockResponse, search]);
 
+  const reasons: string[] = historyResponse?.message?.data?.reasons ?? [];
+
   const setQty = (itemCode: string, value: string) => {
-    const clean = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-    setQuantities(prev => ({...prev, [itemCode]: clean}));
+    setQuantities(prev => ({
+      ...prev,
+      [itemCode]: value.replace(/[^0-9]/g, ''),
+    }));
   };
 
   const submit = async () => {
@@ -93,37 +104,50 @@ const StockReceivedScreen = ({navigation}: Props) => {
     if (!selected.length) {
       Toast.show({
         type: 'error',
-        text1: 'Enter the quantity received for at least one item.',
+        text1: 'Enter the quantity going back for at least one item.',
       });
       return;
     }
     try {
-      const response = await recordStock({
+      const response = await recordReturn({
         store: store || undefined,
         items: selected,
+        ...(reason ? {reason} : {}),
         ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
       }).unwrap();
-      if (!response?.message?.success) {
+      const result = response?.message;
+      if (!result?.success) {
+        // Store holds less than requested: prefill what is actually there.
+        if (
+          result?.error_code === 'NOT_ENOUGH_STOCK' &&
+          result?.data?.item_code &&
+          result?.data?.available != null
+        ) {
+          setQuantities(prev => ({
+            ...prev,
+            [result.data.item_code]: String(result.data.available),
+          }));
+        }
         Toast.show({
           type: 'error',
-          text1:
-            getSafeServerMessage(response?.message?.message) ??
-            'Could not record stock received',
+          text1: 'Could not record return',
+          text2:
+            getSafeServerMessage(result?.message) ?? 'Please try again later.',
         });
         return;
       }
       Toast.show({
         type: 'success',
-        text1:
-          getSafeServerMessage(response.message.message) ?? 'Delivery saved',
+        text1: getSafeServerMessage(result.message) ?? 'Return saved',
       });
       setQuantities({});
+      setReason('');
       setRemarks('');
       setTab('history');
     } catch (error: any) {
       Toast.show({
         type: 'error',
-        text1: getUserFacingError(error, 'Could not record stock received'),
+        text1: getUserFacingError(error, 'Could not record return'),
       });
     }
   };
@@ -164,7 +188,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
               </View>
               <TextInput
                 style={styles.qtyInput}
-                keyboardType="decimal-pad"
+                keyboardType="number-pad"
                 placeholder="Qty"
                 placeholderTextColor={Colors.gray}
                 value={quantities[item.item_code] ?? ''}
@@ -178,10 +202,37 @@ const StockReceivedScreen = ({navigation}: Props) => {
         />
       )}
       <View style={styles.footerForm}>
+        {reasons.length > 0 ? (
+          <>
+            <Text style={styles.fieldLabel}>Reason</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.reasonRow}>
+              {reasons.map(value => {
+                const active = reason === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[styles.reasonChip, active && styles.reasonActive]}
+                    onPress={() => setReason(active ? '' : value)}>
+                    <Text
+                      style={[
+                        styles.reasonText,
+                        active && styles.reasonTextActive,
+                      ]}>
+                      {value}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </>
+        ) : null}
         <Text style={styles.fieldLabel}>Remarks (optional)</Text>
         <TextInput
           style={styles.remarksInput}
-          placeholder="Challan or invoice number"
+          placeholder="Who picked it up, batch, etc."
           placeholderTextColor={Colors.gray}
           value={remarks}
           onChangeText={setRemarks}
@@ -193,7 +244,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
           {saving ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={styles.primaryButtonText}>Save Delivery</Text>
+            <Text style={styles.primaryButtonText}>Save Return</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -203,7 +254,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Receive Stock"
+        title="Return Stock"
         navigation={() => navigation.navigation.goBack()}
       />
       <View style={styles.storePicker}>
@@ -232,7 +283,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
             onPress={() => setTab(value)}>
             <Text
               style={[styles.tabText, tab === value && styles.activeTabText]}>
-              {value === 'record' ? 'New Delivery' : 'History'}
+              {value === 'record' ? 'New Return' : 'History'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -240,7 +291,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
       {tab === 'record' ? (
         renderRecord()
       ) : (
-        <StockMovementHistory store={store} defaultFilter="receipt" />
+        <StockMovementHistory store={store} defaultFilter="return" />
       )}
     </SafeAreaView>
   );
@@ -334,6 +385,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 6,
   },
+  reasonRow: {gap: 6, paddingBottom: 10},
+  reasonChip: {
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: Colors.white,
+  },
+  reasonActive: {
+    backgroundColor: Colors.darkButton,
+    borderColor: Colors.darkButton,
+  },
+  reasonText: {
+    fontFamily: Fonts.medium,
+    color: Colors.darkButton,
+    fontSize: 11,
+  },
+  reasonTextActive: {color: Colors.white},
   remarksInput: {
     borderWidth: 1,
     borderColor: Colors.lightGray,
@@ -365,4 +435,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StockReceivedScreen;
+export default StockReturnScreen;

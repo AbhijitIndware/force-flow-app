@@ -30,6 +30,7 @@ import {
   MessageSquareQuote,
   Network,
   Package,
+  Undo2,
   Store,
   UserRoundCog,
 } from 'lucide-react-native';
@@ -593,6 +594,30 @@ const HomeScreen = ({navigation, route}: Props) => {
                 <Package strokeWidth={2} color={Colors.white} size={20} />
               </View>
               <Text style={styles.linkTitle}>Receive Stock</Text>
+              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                <Ionicons
+                  name="chevron-forward-outline"
+                  size={12}
+                  color={Colors.darkButton}
+                />
+              </View>
+            </TouchableOpacity>
+            <Divider
+              width={1}
+              color={Colors.lightGray}
+              style={{marginBottom: 10, borderStyle: 'dashed'}}
+            />
+            <TouchableOpacity
+              style={styles.IconlinkBox}
+              onPress={() => navigation.navigate('StockReturnScreen')}>
+              <View
+                style={[
+                  styles.iconbox,
+                  {width: 35, height: 35, borderRadius: 10},
+                ]}>
+                <Undo2 strokeWidth={2} color={Colors.white} size={20} />
+              </View>
+              <Text style={styles.linkTitle}>Return Stock</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
                 <Ionicons
                   name="chevron-forward-outline"

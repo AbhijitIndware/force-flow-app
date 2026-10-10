@@ -8,6 +8,7 @@ import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import StockEntryFormScreen from '../Stock/StockEntryFormScreen';
 import StockReceivedScreen from '../Stock/StockReceivedScreen';
+import StockReturnScreen from '../Stock/StockReturnScreen';
 import MySalesScreen from '../Sales/MySalesScreen';
 import IncentiveScreen from '../Incentive/Incentive';
 import DownloadScreen from '../DownloadScreen/DownloadScreen';
@@ -63,6 +64,11 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="StockReceivedScreen"
         component={StockReceivedScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="StockReturnScreen"
+        component={StockReturnScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

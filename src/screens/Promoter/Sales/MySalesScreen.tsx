@@ -71,6 +71,8 @@ const MySalesScreen = ({navigation}: Props) => {
     sold_value: 0,
     received: 0,
     found: 0,
+    returned: 0,
+    returned_value: 0,
   };
   const errorMessage =
     response?.message?.success === false
@@ -136,6 +138,11 @@ const MySalesScreen = ({navigation}: Props) => {
         <Text style={styles.metric}>
           Received <Text style={styles.metricValue}>{item.received}</Text>
         </Text>
+        {Number(item.returned) > 0 ? (
+          <Text style={[styles.metric, styles.returnedText]}>
+            Returned <Text style={styles.returnedValue}>{item.returned}</Text>
+          </Text>
+        ) : null}
         <Text style={[styles.metric, item.found > 0 && styles.warningText]}>
           Unrecorded <Text style={styles.metricValue}>{item.found}</Text>
         </Text>
@@ -168,6 +175,9 @@ const MySalesScreen = ({navigation}: Props) => {
         <View style={{alignItems: 'flex-end'}}>
           <Text style={styles.value}>{item.sold} sold</Text>
           <Text style={styles.cardSub}>{money(item.sold_value)}</Text>
+          {Number(item.returned) > 0 ? (
+            <Text style={styles.returnedSub}>{item.returned} returned</Text>
+          ) : null}
         </View>
       </View>
       <View style={styles.metrics}>
@@ -177,6 +187,11 @@ const MySalesScreen = ({navigation}: Props) => {
         <Text style={styles.metric}>
           Received <Text style={styles.metricValue}>{item.received}</Text>
         </Text>
+        {Number(item.returned) > 0 ? (
+          <Text style={[styles.metric, styles.returnedText]}>
+            Returned <Text style={styles.returnedValue}>{item.returned}</Text>
+          </Text>
+        ) : null}
         <Text style={styles.metric}>
           Close <Text style={styles.metricValue}>{item.closing}</Text>
         </Text>
@@ -292,6 +307,12 @@ const MySalesScreen = ({navigation}: Props) => {
               </Text>
             </View>
           </View>
+          {Number(totals.returned) > 0 ? (
+            <Text style={styles.returnedTotal}>
+              Returned {totals.returned} · {money(totals.returned_value)} — not
+              counted as sales
+            </Text>
+          ) : null}
         </View>
       </View>
 
@@ -544,6 +565,25 @@ const styles = StyleSheet.create({
   lastCountedDate: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
   metricValue: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
   warningText: {color: '#B45309'},
+  // Returns are not sales: keep them muted so they don't read as revenue.
+  returnedText: {color: '#9CA3AF'},
+  returnedValue: {fontFamily: Fonts.semiBold, color: '#6B7280'},
+  returnedSub: {
+    fontFamily: Fonts.regular,
+    color: '#9CA3AF',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  returnedTotal: {
+    fontFamily: Fonts.regular,
+    color: '#6B7280',
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
+  },
   warning: {
     marginTop: 9,
     backgroundColor: '#FFF4E5',

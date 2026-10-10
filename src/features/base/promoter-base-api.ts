@@ -256,6 +256,45 @@ export const promoterBaseApi = createApi({
       }),
       invalidatesTags: ['Promoter'],
     }),
+
+    // ─── STOCK RETURNS ───────────────────────────────────────────────────────
+    recordStockReturn: builder.mutation<any, {
+      store?: string;
+      items: {item_code: string; qty: number}[];
+      reason?: string;
+      remarks?: string;
+    }>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_return_api.record_stock_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    getStockReturns: builder.query<any, {
+      from_date?: string;
+      to_date?: string;
+      store?: string;
+    }>({
+      query: ({from_date, to_date, store}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_return_api.get_stock_returns',
+        method: 'GET',
+        params: {
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+          ...(store ? {store} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+    cancelStockReturn: builder.mutation<any, {name: string}>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_return_api.cancel_stock_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
     getMySales: builder.query<any, {
       from_date?: string;
       to_date?: string;
@@ -749,6 +788,9 @@ export const {
   useGetStockReceivedQuery,
   useLazyGetStockReceivedQuery,
   useCancelStockReceivedMutation,
+  useRecordStockReturnMutation,
+  useGetStockReturnsQuery,
+  useCancelStockReturnMutation,
   useGetMySalesQuery,
   useLazyGetMySalesQuery,
 
