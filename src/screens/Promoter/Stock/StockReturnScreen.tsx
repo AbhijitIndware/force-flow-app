@@ -16,15 +16,19 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import PageHeader from '../../../components/ui/PageHeader';
-import StockMovementHistory from '../../../components/Promoter/Stock/StockMovementHistory';
+import StockMovementHistory, {
+  SHOW_DISTRIBUTOR_RETURNS,
+} from '../../../components/Promoter/Stock/StockMovementHistory';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
+  useGetCustomerReturnsQuery,
   useGetEmployeeAssignedStoresQuery,
   useGetStockReturnsQuery,
   useGetStoreStockStatusQuery,
+  useRecordCustomerReturnMutation,
   useRecordStockReturnMutation,
 } from '../../../features/base/promoter-base-api';
 import {
@@ -42,9 +46,22 @@ type Props = {
   route: any;
 };
 type Tab = 'record' | 'history';
+// customer: shopper brings stock back (+qty). distributor: store sends it away (−qty).
+type Mode = 'customer' | 'distributor';
+type Condition = 'resaleable' | 'not_resaleable';
+
+const CONDITIONS: {value: Condition; label: string}[] = [
+  {value: 'resaleable', label: 'Sellable'},
+  {value: 'not_resaleable', label: 'Unsellable'},
+];
+
+// Customer-return quantities are kept per item and condition.
+const qtyKey = (itemCode: string, condition?: Condition) =>
+  condition ? `${itemCode}|${condition}` : itemCode;
 
 const StockReturnScreen = ({navigation}: Props) => {
   const [tab, setTab] = useState<Tab>('record');
+  const [mode, setMode] = useState<Mode>('customer');
   const [store, setStore] = useState('');
   const [search, setSearch] = useState('');
   const [reason, setReason] = useState('');
@@ -69,11 +86,20 @@ const StockReturnScreen = ({navigation}: Props) => {
 
   const {data: stockResponse, isFetching: stockLoading} =
     useGetStoreStockStatusQuery({store}, {skip: !store});
-  // Only needed here for the reason picker; history has its own list.
-  const {data: historyResponse} = useGetStockReturnsQuery({
+  // Only needed here for the reason pickers; history has its own list.
+  const {data: distributorResponse} = useGetStockReturnsQuery(
+    {store: store || undefined},
+    {skip: !SHOW_DISTRIBUTOR_RETURNS},
+  );
+  const {data: customerResponse} = useGetCustomerReturnsQuery({
     store: store || undefined,
   });
-  const [recordReturn, {isLoading: saving}] = useRecordStockReturnMutation();
+  const [recordReturn, {isLoading: savingDistributor}] =
+    useRecordStockReturnMutation();
+  const [recordCustomerReturn, {isLoading: savingCustomer}] =
+    useRecordCustomerReturnMutation();
+  const saving = savingDistributor || savingCustomer;
+  const isCustomer = mode === 'customer';
 
   const items = useMemo(() => {
     const all = stockResponse?.message?.all_items ?? [];
@@ -88,16 +114,85 @@ const StockReturnScreen = ({navigation}: Props) => {
     );
   }, [stockResponse, search]);
 
-  const reasons: string[] = historyResponse?.message?.data?.reasons ?? [];
+  const reasons: string[] =
+    (isCustomer ? customerResponse : distributorResponse)?.message?.data
+      ?.reasons ?? [];
 
-  const setQty = (itemCode: string, value: string) => {
+  const setQty = (key: string, value: string) => {
     setQuantities(prev => ({
       ...prev,
-      [itemCode]: value.replace(/[^0-9]/g, ''),
+      [key]: value.replace(/[^0-9]/g, ''),
     }));
   };
 
-  const submit = async () => {
+  const switchMode = (next: Mode) => {
+    if (next === mode) {
+      return;
+    }
+    setMode(next);
+    setQuantities({});
+    setReason('');
+  };
+
+  const showSaveError = (result: any) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Could not record return',
+      text2: getSafeServerMessage(result?.message) ?? 'Please try again later.',
+    });
+  };
+
+  const onSaved = (result: any) => {
+    Toast.show({
+      type: 'success',
+      text1: getSafeServerMessage(result?.message) ?? 'Return saved',
+    });
+    setQuantities({});
+    setReason('');
+    setRemarks('');
+    setTab('history');
+  };
+
+  const extras = () => ({
+    store: store || undefined,
+    ...(reason ? {reason} : {}),
+    ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
+  });
+
+  const submitCustomer = async () => {
+    const selected = Object.entries(quantities)
+      .map(([key, qty]) => {
+        const [item_code, condition] = key.split('|');
+        return {item_code, qty: Number(qty), condition: condition as Condition};
+      })
+      .filter(row => Number.isFinite(row.qty) && row.qty > 0);
+    if (!selected.length) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter the quantity brought back for at least one item.',
+      });
+      return;
+    }
+    try {
+      const response = await recordCustomerReturn({
+        ...extras(),
+        items: selected,
+      }).unwrap();
+      const result = response?.message;
+      if (!result?.success) {
+        showSaveError(result);
+        return;
+      }
+      onSaved(result);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: getUserFacingError(error, 'Could not record return'),
+      });
+    }
+  };
+
+  const submitDistributor = async () => {
     const selected = Object.entries(quantities)
       .map(([item_code, qty]) => ({item_code, qty: Number(qty)}))
       .filter(row => Number.isFinite(row.qty) && row.qty > 0);
@@ -110,10 +205,8 @@ const StockReturnScreen = ({navigation}: Props) => {
     }
     try {
       const response = await recordReturn({
-        store: store || undefined,
+        ...extras(),
         items: selected,
-        ...(reason ? {reason} : {}),
-        ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
       }).unwrap();
       const result = response?.message;
       if (!result?.success) {
@@ -128,22 +221,10 @@ const StockReturnScreen = ({navigation}: Props) => {
             [result.data.item_code]: String(result.data.available),
           }));
         }
-        Toast.show({
-          type: 'error',
-          text1: 'Could not record return',
-          text2:
-            getSafeServerMessage(result?.message) ?? 'Please try again later.',
-        });
+        showSaveError(result);
         return;
       }
-      Toast.show({
-        type: 'success',
-        text1: getSafeServerMessage(result.message) ?? 'Return saved',
-      });
-      setQuantities({});
-      setReason('');
-      setRemarks('');
-      setTab('history');
+      onSaved(result);
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -152,8 +233,43 @@ const StockReturnScreen = ({navigation}: Props) => {
     }
   };
 
+  const submit = isCustomer ? submitCustomer : submitDistributor;
+
   const renderRecord = () => (
     <View style={{flex: 1}}>
+      {SHOW_DISTRIBUTOR_RETURNS ? (
+        <View style={styles.modeSwitch}>
+          {(
+            [
+              {value: 'customer', label: 'From customer', icon: 'arrow-down'},
+              {value: 'distributor', label: 'To distributor', icon: 'arrow-up'},
+            ] as const
+          ).map(option => {
+            const active = mode === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                style={[styles.modeOption, active && styles.modeActive]}
+                onPress={() => switchMode(option.value)}>
+                <Ionicons
+                  name={option.icon}
+                  size={14}
+                  color={active ? Colors.darkButton : Colors.gray}
+                />
+                <Text
+                  style={[styles.modeText, active && styles.modeTextActive]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : null}
+      <Text style={styles.modeHint}>
+        {isCustomer
+          ? 'A shopper brought it back. It is added to store stock.'
+          : 'The store sends it away. It is taken out of store stock.'}
+      </Text>
       <View style={styles.searchRow}>
         <Ionicons name="search" size={17} color={Colors.gray} />
         <TextInput
@@ -186,14 +302,40 @@ const StockReturnScreen = ({navigation}: Props) => {
                   </Text>
                 </Text>
               </View>
-              <TextInput
-                style={styles.qtyInput}
-                keyboardType="number-pad"
-                placeholder="Qty"
-                placeholderTextColor={Colors.gray}
-                value={quantities[item.item_code] ?? ''}
-                onChangeText={value => setQty(item.item_code, value)}
-              />
+              {isCustomer ? (
+                <View style={styles.conditionInputs}>
+                  {CONDITIONS.map(({value, label}) => (
+                    <View key={value} style={styles.conditionCol}>
+                      <Text
+                        style={[
+                          styles.conditionLabel,
+                          value === 'not_resaleable' && styles.unsellableLabel,
+                        ]}>
+                        {label}
+                      </Text>
+                      <TextInput
+                        style={[styles.qtyInput, styles.qtyInputSmall]}
+                        keyboardType="number-pad"
+                        placeholder="0"
+                        placeholderTextColor={Colors.gray}
+                        value={quantities[qtyKey(item.item_code, value)] ?? ''}
+                        onChangeText={text =>
+                          setQty(qtyKey(item.item_code, value), text)
+                        }
+                      />
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <TextInput
+                  style={styles.qtyInput}
+                  keyboardType="number-pad"
+                  placeholder="Qty"
+                  placeholderTextColor={Colors.gray}
+                  value={quantities[qtyKey(item.item_code)] ?? ''}
+                  onChangeText={value => setQty(qtyKey(item.item_code), value)}
+                />
+              )}
             </View>
           )}
           ListEmptyComponent={
@@ -232,7 +374,11 @@ const StockReturnScreen = ({navigation}: Props) => {
         <Text style={styles.fieldLabel}>Remarks (optional)</Text>
         <TextInput
           style={styles.remarksInput}
-          placeholder="Who picked it up, batch, etc."
+          placeholder={
+            isCustomer
+              ? 'What was wrong, bill number, etc.'
+              : 'Who picked it up, batch, etc.'
+          }
           placeholderTextColor={Colors.gray}
           value={remarks}
           onChangeText={setRemarks}
@@ -244,7 +390,9 @@ const StockReturnScreen = ({navigation}: Props) => {
           {saving ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={styles.primaryButtonText}>Save Return</Text>
+            <Text style={styles.primaryButtonText}>
+              {isCustomer ? 'Save Customer Return' : 'Save Return'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -291,7 +439,10 @@ const StockReturnScreen = ({navigation}: Props) => {
       {tab === 'record' ? (
         renderRecord()
       ) : (
-        <StockMovementHistory store={store} defaultFilter="return" />
+        <StockMovementHistory
+          store={store}
+          defaultFilter={isCustomer ? 'customer_return' : 'return'}
+        />
       )}
     </SafeAreaView>
   );
@@ -363,6 +514,43 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     color: '#111827',
   },
+  modeSwitch: {
+    flexDirection: 'row',
+    marginHorizontal: 12,
+    marginTop: 12,
+    padding: 3,
+    borderRadius: 10,
+    backgroundColor: '#E9ECEF',
+  },
+  modeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  modeActive: {backgroundColor: Colors.white},
+  modeText: {fontFamily: Fonts.medium, color: Colors.gray, fontSize: 12},
+  modeTextActive: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
+  modeHint: {
+    marginHorizontal: 14,
+    marginTop: 6,
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 11,
+  },
+  conditionInputs: {flexDirection: 'row', gap: 6},
+  conditionCol: {alignItems: 'center'},
+  conditionLabel: {
+    fontFamily: Fonts.medium,
+    color: '#15803D',
+    fontSize: 9,
+    marginBottom: 3,
+  },
+  unsellableLabel: {color: '#B45309'},
+  qtyInputSmall: {width: 58},
   qtyInput: {
     width: 76,
     borderWidth: 1,

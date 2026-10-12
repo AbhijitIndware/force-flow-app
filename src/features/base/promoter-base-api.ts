@@ -295,6 +295,49 @@ export const promoterBaseApi = createApi({
       }),
       invalidatesTags: ['Promoter'],
     }),
+
+    // ─── CUSTOMER RETURNS ────────────────────────────────────────────────────
+    recordCustomerReturn: builder.mutation<any, {
+      store?: string;
+      items: {
+        item_code: string;
+        qty: number;
+        condition?: 'resaleable' | 'not_resaleable';
+      }[];
+      reason?: string;
+      remarks?: string;
+    }>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.customer_return_api.record_customer_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    getCustomerReturns: builder.query<any, {
+      from_date?: string;
+      to_date?: string;
+      store?: string;
+    }>({
+      query: ({from_date, to_date, store}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.customer_return_api.get_customer_returns',
+        method: 'GET',
+        params: {
+          ...(from_date ? {from_date} : {}),
+          ...(to_date ? {to_date} : {}),
+          ...(store ? {store} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+    cancelCustomerReturn: builder.mutation<any, {name: string}>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.customer_return_api.cancel_customer_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
     getMySales: builder.query<any, {
       from_date?: string;
       to_date?: string;
@@ -791,6 +834,9 @@ export const {
   useRecordStockReturnMutation,
   useGetStockReturnsQuery,
   useCancelStockReturnMutation,
+  useRecordCustomerReturnMutation,
+  useGetCustomerReturnsQuery,
+  useCancelCustomerReturnMutation,
   useGetMySalesQuery,
   useLazyGetMySalesQuery,
 

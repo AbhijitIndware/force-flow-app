@@ -121,6 +121,13 @@ const StockRow: React.FC<StockRowProps> = ({
               wrapLabels
             />
           )}
+          {Number(matchItem?.unsellable_on_hand) > 0 ? (
+            <Text
+              style={styles.unsellableText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
+              {matchItem?.unsellable_on_hand} unsellable · send back
+            </Text>
+          ) : null}
         </View>
 
         {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
@@ -505,6 +512,12 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     paddingRight: 6,
+  },
+  unsellableText: {
+    fontSize: 9,
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    marginTop: 2,
   },
   prevItemName: {
     fontSize: 11,

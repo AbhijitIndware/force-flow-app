@@ -2294,6 +2294,8 @@ export interface StockDashboardItem {
   new_orders: number | null;
   /** Quantity treated as received during the current month. */
   received_this_month?: number;
+  /** Not-resaleable customer returns still in the store, awaiting return to distributor. */
+  unsellable_on_hand?: number;
   is_low_stock?: boolean | 0 | 1 | '0' | '1';
   low_stock?: boolean | 0 | 1 | '0' | '1';
   stock_status?: string | null;

@@ -31,6 +31,26 @@ type Tab = 'day' | 'item';
 const money = (value: number) =>
   `₹${Number(value || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
 
+// `sold` is gross (what left the shelf between counts). Net subtracts customer
+// returns; older responses without net_* fall back to sold.
+const netSold = (row: any) => Number(row?.net_sold ?? row?.sold ?? 0);
+const netSoldValue = (row: any) =>
+  Number(row?.net_sold_value ?? row?.sold_value ?? 0);
+const customerReturned = (row: any) => Number(row?.customer_returned ?? 0);
+
+// "Sold 7 · Customer returns 2 · Net 5" — only when a customer return exists.
+const SalesBreakdown = ({row}: {row: any}) =>
+  customerReturned(row) > 0 ? (
+    <Text style={styles.breakdown}>
+      Sold <Text style={styles.breakdownValue}>{row.sold}</Text> ·{' '}
+      <Text style={styles.customerText}>
+        Customer returns{' '}
+        <Text style={styles.breakdownValue}>{customerReturned(row)}</Text>
+      </Text>{' '}
+      · Net <Text style={styles.breakdownValue}>{netSold(row)}</Text>
+    </Text>
+  ) : null;
+
 const MySalesScreen = ({navigation}: Props) => {
   const [month, setMonth] = useState(moment().startOf('month'));
   const [store, setStore] = useState('');
@@ -73,7 +93,11 @@ const MySalesScreen = ({navigation}: Props) => {
     found: 0,
     returned: 0,
     returned_value: 0,
+    customer_returned: 0,
+    net_sold: 0,
+    net_sold_value: 0,
   };
+  const hasCustomerReturns = customerReturned(totals) > 0;
   const errorMessage =
     response?.message?.success === false
       ? getSafeServerMessage(response?.message?.message)
@@ -130,17 +154,19 @@ const MySalesScreen = ({navigation}: Props) => {
           <Text style={styles.cardSub}>{moment(item.date).format('dddd')}</Text>
         </View>
         <View style={{alignItems: 'flex-end'}}>
-          <Text style={styles.value}>{money(item.sold_value)}</Text>
-          <Text style={styles.cardSub}>{item.sold} sold</Text>
+          <Text style={styles.value}>{money(netSoldValue(item))}</Text>
+          <Text style={styles.cardSub}>{netSold(item)} sold</Text>
         </View>
       </View>
+      <SalesBreakdown row={item} />
       <View style={styles.metrics}>
         <Text style={styles.metric}>
           Received <Text style={styles.metricValue}>{item.received}</Text>
         </Text>
         {Number(item.returned) > 0 ? (
           <Text style={[styles.metric, styles.returnedText]}>
-            Returned <Text style={styles.returnedValue}>{item.returned}</Text>
+            To distributor{' '}
+            <Text style={styles.returnedValue}>{item.returned}</Text>
           </Text>
         ) : null}
         <Text style={[styles.metric, item.found > 0 && styles.warningText]}>
@@ -173,13 +199,16 @@ const MySalesScreen = ({navigation}: Props) => {
           ) : null}
         </View>
         <View style={{alignItems: 'flex-end'}}>
-          <Text style={styles.value}>{item.sold} sold</Text>
-          <Text style={styles.cardSub}>{money(item.sold_value)}</Text>
+          <Text style={styles.value}>{netSold(item)} sold</Text>
+          <Text style={styles.cardSub}>{money(netSoldValue(item))}</Text>
           {Number(item.returned) > 0 ? (
-            <Text style={styles.returnedSub}>{item.returned} returned</Text>
+            <Text style={styles.returnedSub}>
+              {item.returned} to distributor
+            </Text>
           ) : null}
         </View>
       </View>
+      <SalesBreakdown row={item} />
       <View style={styles.metrics}>
         <Text style={styles.metric}>
           Open <Text style={styles.metricValue}>{item.opening}</Text>
@@ -187,15 +216,30 @@ const MySalesScreen = ({navigation}: Props) => {
         <Text style={styles.metric}>
           Received <Text style={styles.metricValue}>{item.received}</Text>
         </Text>
+        {customerReturned(item) > 0 ? (
+          <Text style={[styles.metric, styles.customerText]}>
+            Cust. return{' '}
+            <Text style={styles.customerValue}>{customerReturned(item)}</Text>
+          </Text>
+        ) : null}
         {Number(item.returned) > 0 ? (
           <Text style={[styles.metric, styles.returnedText]}>
-            Returned <Text style={styles.returnedValue}>{item.returned}</Text>
+            To dist. <Text style={styles.returnedValue}>{item.returned}</Text>
           </Text>
         ) : null}
         <Text style={styles.metric}>
           Close <Text style={styles.metricValue}>{item.closing}</Text>
         </Text>
       </View>
+      {Number(item.unsellable_on_hand) > 0 ? (
+        <View style={styles.warning}>
+          <Ionicons name="alert-circle-outline" color="#B45309" size={14} />
+          <Text style={styles.warningCopy}>
+            {item.unsellable_on_hand} unsellable on the shelf — send it back to
+            the distributor
+          </Text>
+        </View>
+      ) : null}
       {item.found > 0 ? (
         <View style={styles.warning}>
           <Ionicons name="warning-outline" color="#B45309" size={14} />
@@ -257,16 +301,22 @@ const MySalesScreen = ({navigation}: Props) => {
               <View style={styles.statIcon}>
                 <Ionicons name="cube-outline" size={20} color={Colors.orange} />
               </View>
-              <Text style={styles.statLabel}>Sold</Text>
-              <Text style={styles.statValue}>{totals.sold}</Text>
+              <Text style={styles.statLabel}>
+                {hasCustomerReturns ? 'Net sold' : 'Sold'}
+              </Text>
+              <Text style={styles.statValue}>{netSold(totals)}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.statItem}>
               <View style={styles.statIcon}>
                 <Ionicons name="cash-outline" size={20} color={Colors.orange} />
               </View>
-              <Text style={styles.statLabel}>Sold Value (MRP)</Text>
-              <Text style={styles.statValue}>{money(totals.sold_value)}</Text>
+              <Text style={styles.statLabel}>
+                {hasCustomerReturns ? 'Net Value (MRP)' : 'Sold Value (MRP)'}
+              </Text>
+              <Text style={styles.statValue}>
+                {money(netSoldValue(totals))}
+              </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.statItem}>
@@ -307,10 +357,15 @@ const MySalesScreen = ({navigation}: Props) => {
               </Text>
             </View>
           </View>
+          {hasCustomerReturns ? (
+            <View style={styles.totalsFooter}>
+              <SalesBreakdown row={totals} />
+            </View>
+          ) : null}
           {Number(totals.returned) > 0 ? (
             <Text style={styles.returnedTotal}>
-              Returned {totals.returned} · {money(totals.returned_value)} — not
-              counted as sales
+              Sent to distributor {totals.returned} ·{' '}
+              {money(totals.returned_value)} — not counted as sales
             </Text>
           ) : null}
         </View>
@@ -573,6 +628,21 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 10,
     marginTop: 1,
+  },
+  breakdown: {
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 11,
+    marginTop: 8,
+  },
+  breakdownValue: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
+  customerText: {color: '#0F766E'},
+  customerValue: {fontFamily: Fonts.semiBold, color: '#0F766E'},
+  totalsFooter: {
+    alignItems: 'center',
+    marginTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F3F5',
   },
   returnedTotal: {
     fontFamily: Fonts.regular,

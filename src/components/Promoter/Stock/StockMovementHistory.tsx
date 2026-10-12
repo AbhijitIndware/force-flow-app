@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,8 +16,10 @@ import moment from 'moment';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
+  useCancelCustomerReturnMutation,
   useCancelStockReceivedMutation,
   useCancelStockReturnMutation,
+  useGetCustomerReturnsQuery,
   useGetStockReceivedQuery,
   useGetStockReturnsQuery,
 } from '../../../features/base/promoter-base-api';
@@ -25,14 +28,63 @@ import {
   getUserFacingError,
 } from '../../../utils/errorMessage';
 
-export type MovementType = 'receipt' | 'return';
+export type MovementType = 'receipt' | 'customer_return' | 'return';
 type Filter = 'all' | MovementType;
+
+// Returns to distributor are hidden for now; flip to bring back the
+// "To distributor" mode, filter and history rows.
+export const SHOW_DISTRIBUTOR_RETURNS = false;
 
 const FILTERS: {value: Filter; label: string}[] = [
   {value: 'all', label: 'All'},
   {value: 'receipt', label: 'Deliveries'},
-  {value: 'return', label: 'Returns'},
+  {value: 'customer_return', label: 'Customer returns'},
+  ...(SHOW_DISTRIBUTOR_RETURNS
+    ? [{value: 'return' as Filter, label: 'To distributor'}]
+    : []),
 ];
+
+// Per type: badge label, whether stock comes in (+) or goes out (−), and
+// the wording used when cancelling.
+const TYPE_INFO: Record<
+  MovementType,
+  {
+    label: string;
+    stockIn: boolean;
+    noun: string;
+    cancelTitle: string;
+    cancelBody: string;
+    empty: string;
+  }
+> = {
+  receipt: {
+    label: 'Delivery',
+    stockIn: true,
+    noun: 'delivery',
+    cancelTitle: 'Cancel delivery?',
+    cancelBody:
+      'The received stock will be removed. To correct a quantity, cancel and record it again.',
+    empty: 'No deliveries recorded for this store.',
+  },
+  customer_return: {
+    label: 'Customer return',
+    stockIn: true,
+    noun: 'customer return',
+    cancelTitle: 'Cancel customer return?',
+    cancelBody:
+      'The returned stock will be taken back out of the store. To correct a quantity, cancel and record it again.',
+    empty: 'No customer returns recorded for this store.',
+  },
+  return: {
+    label: 'To distributor',
+    stockIn: false,
+    noun: 'return',
+    cancelTitle: 'Cancel return?',
+    cancelBody:
+      'The returned stock will be added back to the store. To correct a quantity, cancel and record it again.',
+    empty: 'No returns to distributor recorded for this store.',
+  },
+};
 
 type Props = {
   store?: string;
@@ -47,12 +99,18 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
 
   const params = {store: store || undefined};
   const receivedQuery = useGetStockReceivedQuery(params);
-  const returnsQuery = useGetStockReturnsQuery(params);
+  const returnsQuery = useGetStockReturnsQuery(params, {
+    skip: !SHOW_DISTRIBUTOR_RETURNS,
+  });
+  const customerQuery = useGetCustomerReturnsQuery(params);
   const [cancelReceived, {isLoading: cancellingReceived}] =
     useCancelStockReceivedMutation();
   const [cancelReturn, {isLoading: cancellingReturn}] =
     useCancelStockReturnMutation();
-  const cancelling = cancellingReceived || cancellingReturn;
+  const [cancelCustomer, {isLoading: cancellingCustomer}] =
+    useCancelCustomerReturnMutation();
+  const cancelling =
+    cancellingReceived || cancellingReturn || cancellingCustomer;
 
   const entries = useMemo(() => {
     const tag = (list: any[] | undefined, type: MovementType) =>
@@ -60,46 +118,60 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     return [
       ...tag(receivedQuery.data?.message?.data?.entries, 'receipt'),
       ...tag(returnsQuery.data?.message?.data?.entries, 'return'),
+      ...tag(customerQuery.data?.message?.data?.entries, 'customer_return'),
     ].sort((a, b) =>
       `${b.posting_date} ${b.posting_time ?? ''}`.localeCompare(
         `${a.posting_date} ${a.posting_time ?? ''}`,
       ),
     );
-  }, [receivedQuery.data, returnsQuery.data]);
+  }, [receivedQuery.data, returnsQuery.data, customerQuery.data]);
 
   const visible =
     filter === 'all' ? entries : entries.filter(e => e.type === filter);
 
-  const businessError = [receivedQuery.data, returnsQuery.data]
+  const businessError = [
+    receivedQuery.data,
+    returnsQuery.data,
+    customerQuery.data,
+  ]
     .filter(res => res?.message?.success === false)
     .map(res => getSafeServerMessage(res?.message?.message))
     .filter(Boolean)
     .join('\n');
 
-  const loading = receivedQuery.isFetching || returnsQuery.isFetching;
+  const loading =
+    receivedQuery.isFetching ||
+    returnsQuery.isFetching ||
+    customerQuery.isFetching;
 
   const refresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([receivedQuery.refetch(), returnsQuery.refetch()]);
+      await Promise.all([
+        receivedQuery.refetch(),
+        ...(SHOW_DISTRIBUTOR_RETURNS ? [returnsQuery.refetch()] : []),
+        customerQuery.refetch(),
+      ]);
     } finally {
       setRefreshing(false);
     }
   };
 
   const doCancel = async (name: string, type: MovementType) => {
-    const label = type === 'return' ? 'return' : 'delivery';
+    const label = TYPE_INFO[type].noun;
+    const cancel =
+      type === 'return'
+        ? cancelReturn
+        : type === 'customer_return'
+        ? cancelCustomer
+        : cancelReceived;
     try {
-      const response =
-        type === 'return'
-          ? await cancelReturn({name}).unwrap()
-          : await cancelReceived({name}).unwrap();
+      const response = await cancel({name}).unwrap();
       if (!response?.message?.success) {
         Toast.show({
           type: 'error',
-          text1:
-            getSafeServerMessage(response?.message?.message) ??
-            `Could not cancel ${label}`,
+          text1: `Could not cancel ${label}`,
+          text2: getSafeServerMessage(response?.message?.message),
         });
         return;
       }
@@ -115,43 +187,30 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     }
   };
 
-  const confirmCancel = (name: string, type: MovementType) =>
-    type === 'return'
-      ? Alert.alert(
-          'Cancel return?',
-          'The returned stock will be added back to the store. To correct a quantity, cancel and record it again.',
-          [
-            {text: 'Keep', style: 'cancel'},
-            {
-              text: 'Cancel return',
-              style: 'destructive',
-              onPress: () => doCancel(name, type),
-            },
-          ],
-        )
-      : Alert.alert(
-          'Cancel delivery?',
-          'The received stock will be removed. To correct a quantity, cancel and record it again.',
-          [
-            {text: 'Keep', style: 'cancel'},
-            {
-              text: 'Cancel delivery',
-              style: 'destructive',
-              onPress: () => doCancel(name, type),
-            },
-          ],
-        );
+  const confirmCancel = (name: string, type: MovementType) => {
+    const info = TYPE_INFO[type];
+    Alert.alert(info.cancelTitle, info.cancelBody, [
+      {text: 'Keep', style: 'cancel'},
+      {
+        text: `Cancel ${info.noun}`,
+        style: 'destructive',
+        onPress: () => doCancel(name, type),
+      },
+    ]);
+  };
 
   const emptyText =
-    filter === 'receipt'
-      ? 'No deliveries recorded for this store.'
-      : filter === 'return'
-      ? 'No returns recorded for this store.'
-      : 'No deliveries or returns recorded for this store.';
+    filter === 'all'
+      ? 'No stock movements recorded for this store.'
+      : TYPE_INFO[filter].empty;
 
   return (
     <View style={{flex: 1}}>
-      <View style={styles.filterRow}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterRow}>
         {FILTERS.map(({value, label}) => {
           const active = filter === value;
           return (
@@ -166,7 +225,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
       <FlatList
         data={visible}
         keyExtractor={entry => `${entry.type}-${entry.name}`}
@@ -187,25 +246,19 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
           )
         }
         renderItem={({item: entry}) => {
-          const isReturn = entry.type === 'return';
+          const type: MovementType = TYPE_INFO[entry.type as MovementType]
+            ? entry.type
+            : 'receipt';
+          const info = TYPE_INFO[type];
           return (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.headerLeft}>
                   <View style={styles.titleRow}>
-                    <View
-                      style={[
-                        styles.typeBadge,
-                        isReturn ? styles.returnBadge : styles.receiptBadge,
-                      ]}>
+                    <View style={[styles.typeBadge, badgeStyles[type].box]}>
                       <Text
-                        style={[
-                          styles.typeBadgeText,
-                          isReturn
-                            ? styles.returnBadgeText
-                            : styles.receiptBadgeText,
-                        ]}>
-                        {isReturn ? 'Return' : 'Delivery'}
+                        style={[styles.typeBadgeText, badgeStyles[type].text]}>
+                        {info.label}
                       </Text>
                     </View>
                     <Text style={styles.storeName} numberOfLines={1}>
@@ -215,25 +268,34 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
                   <Text style={styles.meta}>
                     {moment(entry.posting_date).format('DD MMM YYYY')} ·{' '}
                     {entry.posting_time}
-                    {isReturn && entry.reason ? ` · ${entry.reason}` : ''}
+                    {type !== 'receipt' && entry.reason
+                      ? ` · ${entry.reason}`
+                      : ''}
                   </Text>
                 </View>
                 {entry.can_cancel ? (
                   <TouchableOpacity
                     disabled={cancelling}
-                    onPress={() => confirmCancel(entry.name, entry.type)}
+                    onPress={() => confirmCancel(entry.name, type)}
                     style={styles.cancelButton}>
                     <Text style={styles.cancelText}>Cancel</Text>
                   </TouchableOpacity>
                 ) : null}
               </View>
-              {entry.items?.map((item: any) => (
-                <View key={item.item_code} style={styles.itemRow}>
-                  <Text style={styles.itemName} numberOfLines={2}>
-                    {item.item_name || item.item_code}
-                  </Text>
-                  <Text style={isReturn ? styles.returnQty : styles.receiptQty}>
-                    {isReturn ? '−' : '+'}
+              {entry.items?.map((item: any, index: number) => (
+                <View
+                  key={`${item.item_code}-${item.condition ?? ''}-${index}`}
+                  style={styles.itemRow}>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.itemName} numberOfLines={2}>
+                      {item.item_name || item.item_code}
+                    </Text>
+                    {item.condition === 'not_resaleable' ? (
+                      <Text style={styles.unsellable}>Unsellable</Text>
+                    ) : null}
+                  </View>
+                  <Text style={badgeStyles[type].qty}>
+                    {info.stockIn ? '+' : '−'}
                     {item.qty}
                   </Text>
                 </View>
@@ -250,6 +312,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
 };
 
 const styles = StyleSheet.create({
+  filterScroll: {flexGrow: 0},
   filterRow: {
     flexDirection: 'row',
     gap: 6,
@@ -304,11 +367,13 @@ const styles = StyleSheet.create({
   headerLeft: {flex: 1},
   titleRow: {flexDirection: 'row', alignItems: 'center', gap: 6},
   typeBadge: {borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2},
-  receiptBadge: {backgroundColor: '#DCFCE7'},
-  returnBadge: {backgroundColor: '#F1F3F5'},
   typeBadgeText: {fontFamily: Fonts.semiBold, fontSize: 10},
-  receiptBadgeText: {color: '#15803D'},
-  returnBadgeText: {color: '#4B5563'},
+  unsellable: {
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    fontSize: 10,
+    marginTop: 2,
+  },
   storeName: {
     flex: 1,
     fontFamily: Fonts.semiBold,
@@ -341,8 +406,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: 11,
   },
-  receiptQty: {color: '#15803D', fontFamily: Fonts.semiBold},
-  returnQty: {color: Colors.gray, fontFamily: Fonts.semiBold},
   reference: {
     color: Colors.gray,
     fontFamily: Fonts.regular,
@@ -350,5 +413,23 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 });
+
+const badgeStyles = {
+  receipt: StyleSheet.create({
+    box: {backgroundColor: '#DCFCE7'},
+    text: {color: '#15803D'},
+    qty: {color: '#15803D', fontFamily: Fonts.semiBold},
+  }),
+  customer_return: StyleSheet.create({
+    box: {backgroundColor: '#CCFBF1'},
+    text: {color: '#0F766E'},
+    qty: {color: '#0F766E', fontFamily: Fonts.semiBold},
+  }),
+  return: StyleSheet.create({
+    box: {backgroundColor: '#F1F3F5'},
+    text: {color: '#4B5563'},
+    qty: {color: Colors.gray, fontFamily: Fonts.semiBold},
+  }),
+};
 
 export default StockMovementHistory;
