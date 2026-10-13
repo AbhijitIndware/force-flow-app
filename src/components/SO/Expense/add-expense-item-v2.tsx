@@ -22,7 +22,12 @@ import {Fonts} from '../../../constants';
 import {flexCol} from '../../../utils/styles';
 import {Switch} from 'react-native';
 import ReusableDatePicker from '../../ui-lib/reusable-date-picker';
-import {AUTO_TA_THRESHOLD} from '../../../types/schema';
+import {
+  AUTO_TA_THRESHOLD,
+  isBikeClaim,
+  isKmRequired,
+  isShareTaxiClaim,
+} from '../../../types/schema';
 import Toast from 'react-native-toast-message';
 import {validateFile} from '../../../utils/uploadValidation';
 
@@ -82,9 +87,13 @@ const AddExpenseItemV2: React.FC<Props> = ({
   // ── Attachment requirement logic ──
   const isAutoTA = values.claim_type === 'TA - Auto';
   const amountNum = parseFloat(values.amount) || 0;
+  const isShareTaxi = isShareTaxiClaim(values.claim_type);
+  const kmEntered = (parseFloat(values.ta_km) || 0) > 0;
+  const kmRequired = isKmRequired(values.claim_type, values.attachment);
   const isAttachmentOptional =
     (isAutoTA && amountNum < AUTO_TA_THRESHOLD) ||
-    values.claim_type === 'TA - Bike (Petrol)';
+    isBikeClaim(values.claim_type) ||
+    (isShareTaxi && kmEntered);
   const isAttachmentRequired = !isAttachmentOptional;
   const isImage = (type?: string) => {
     return !!type && type.startsWith('image/');
@@ -217,7 +226,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
         {isTA && (
           <View style={{marginTop: 10}}>
             <ReusableInput
-              label="Distance (KM)"
+              label={kmRequired ? 'Distance (KM) *' : 'Distance (KM)'}
               placeholder="0.00"
               value={values.ta_km}
               onChangeText={handleChange('ta_km')}
@@ -390,6 +399,11 @@ const AddExpenseItemV2: React.FC<Props> = ({
               : `Attachment required for TA - Auto amounts ₹${AUTO_TA_THRESHOLD.toLocaleString(
                   'en-IN',
                 )} and above.`}
+          </Text>
+        )}
+        {isShareTaxi && (
+          <Text style={styles.attachmentHint}>
+            Attach the share taxi bill, or enter the km you travelled.
           </Text>
         )}
         <TouchableOpacity

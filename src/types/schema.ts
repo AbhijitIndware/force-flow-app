@@ -133,6 +133,18 @@ export const addSalesOrderSchema = Yup.object().shape({
 
 export const AUTO_TA_THRESHOLD = 100; // change this value as needed
 
+// Claim type labels mix "-" and "–", so compare with dashes normalised
+const normaliseClaimType = (claim_type?: string) =>
+  (claim_type || '').replace(/[–—]/g, '-').trim();
+export const isBikeClaim = (claim_type?: string) =>
+  normaliseClaimType(claim_type) === 'TA - Bike (Petrol)';
+export const isShareTaxiClaim = (claim_type?: string) =>
+  normaliseClaimType(claim_type) === 'TA - Share Taxi';
+
+// Day's measured distance covers every mode, so bike / un-billed share taxi km must be entered
+export const isKmRequired = (claim_type?: string, attachment?: unknown) =>
+  isBikeClaim(claim_type) || (isShareTaxiClaim(claim_type) && !attachment);
+
 export const expenseItemSchema = Yup.object().shape({
   claim_type: Yup.string().required('Claim type is required'),
   amount: Yup.number()
@@ -159,16 +171,30 @@ export const expenseItemSchema = Yup.object().shape({
     is: 'Incidental',
     then: schema => schema.required('Bill month is required'),
   }),
+  ta_km: Yup.string().test('ta-km-required', function (value) {
+    const {claim_type, attachment} = this.parent;
+    if (!isKmRequired(claim_type, attachment)) {
+      return true;
+    }
+    if ((parseFloat(value || '') || 0) > 0) {
+      return true;
+    }
+    return this.createError({
+      message: isBikeClaim(claim_type)
+        ? 'Enter the km you travelled by bike.'
+        : 'Enter the km you travelled by share taxi, or attach the bill.',
+    });
+  }),
   attachment: Yup.mixed()
     .nullable()
     .test('attachment-required', 'Attachment is required', function (value) {
       const {claim_type, amount} = this.parent;
-      const isBike = claim_type === 'TA - Bike (Petrol)';
       const isAuto = claim_type === 'TA - Auto';
       const amountNum = parseFloat(amount) || 0;
 
       // TA - Bike (Petrol) → always optional
-      if (isBike) {
+      // TA - Share Taxi → bill OR km; enforced by the ta_km rule
+      if (isBikeClaim(claim_type) || isShareTaxiClaim(claim_type)) {
         return true;
       }
 
