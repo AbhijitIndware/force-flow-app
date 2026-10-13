@@ -77,8 +77,6 @@ type FilterMode = 'month' | 'month_range' | 'date_range';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const TODAY = new Date().toISOString().split('T')[0];
-
 function extractServerMessage(resp: any): string | null {
   try {
     if (!resp?._server_messages) return null;
@@ -110,6 +108,8 @@ async function getParsedLocation() {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const HomeScreen = ({ navigation }: Props) => {
+  // Worked out each render (local time) so it rolls over at midnight.
+  const TODAY = moment().format('YYYY-MM-DD');
   const dispatch = useAppDispatch();
   const isFocused = useIsFocused();
 

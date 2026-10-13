@@ -1,4 +1,5 @@
 // screens/AllOrdersScreen.tsx
+import moment from 'moment';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { SafeAreaView, TouchableOpacity, View, Text, ScrollView, FlatList, ActivityIndicator } from 'react-native';
@@ -31,7 +32,7 @@ export const AllOrdersScreen: React.FC<Props> = ({ route, navigation }) => {
 
     const pageTitle = isRange
         ? `Orders · ${from_date} – ${to_date}`
-        : date === new Date().toISOString().split('T')[0]
+        : date === moment().format('YYYY-MM-DD')
             ? "Today's Orders"
             : `Orders · ${date}`;
 

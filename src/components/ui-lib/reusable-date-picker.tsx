@@ -1,4 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
+import moment from 'moment';
 import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, Platform} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -36,7 +37,8 @@ const ReusableDatePicker: React.FC<Props> = ({
   const handleDateChange = (_: any, selectedDate?: Date) => {
     setShowPicker(false);
     if (selectedDate) {
-      onChange(selectedDate.toISOString().split('T')[0]);
+      // Local date: toISOString() is UTC, a day early before 5:30 AM IST.
+      onChange(moment(selectedDate).format('YYYY-MM-DD'));
     }
   };
 
@@ -68,7 +70,7 @@ const ReusableDatePicker: React.FC<Props> = ({
       {error && <Text style={{color: 'red', marginTop: 4}}>{error}</Text>}
       {showPicker && (
         <DateTimePicker
-          value={value ? new Date(value) : new Date()}
+          value={value ? moment(value, 'YYYY-MM-DD').toDate() : new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={handleDateChange}

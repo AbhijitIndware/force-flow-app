@@ -16,7 +16,7 @@ import {
   BottomTabHeaderProps,
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
-import HomeScreen from './HomeScreen';
+import HomeScreen, {SHOW_PRODUCT_FEEDBACK} from './HomeScreen';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -109,9 +109,10 @@ function MyTabBar({state, descriptors, navigation}: any) {
               padding: 2,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              // Top-aligned so a two-line label doesn't push its icon up.
+              justifyContent: 'flex-start',
+              paddingTop: 14,
               gap: 2,
-              // paddingBottom: 15,
             }}>
             <View style={[styles.tabButton]}>
               {options.tabBarIcon &&
@@ -127,7 +128,11 @@ function MyTabBar({state, descriptors, navigation}: any) {
                 fontSize: 10,
                 fontFamily: Fonts.regular,
                 textAlign: 'center',
-              }}>
+                lineHeight: 12,
+                // Room for two lines on every tab, so all labels line up.
+                minHeight: 24,
+              }}
+              numberOfLines={2}>
               {label}
             </Text>
           </Pressable>
@@ -206,11 +211,15 @@ const Home = ({navigation, route}: Props) => {
   };
 
   const menuItems = [
-    {
-      id: '1',
-      title: 'Product feedback',
-      onPress: () => navigation.navigate('ProductFeedbackScreen'),
-    },
+    ...(SHOW_PRODUCT_FEEDBACK
+      ? [
+          {
+            id: '1',
+            title: 'Product feedback',
+            onPress: () => navigation.navigate('ProductFeedbackScreen'),
+          },
+        ]
+      : []),
     {
       id: '2',
       title: 'Downloads',

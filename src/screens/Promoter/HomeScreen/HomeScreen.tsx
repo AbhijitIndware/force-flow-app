@@ -38,6 +38,10 @@ import {
   STOCK_SCREENS,
 } from '../../../components/Promoter/Stock/stockScreens';
 
+// Product feedback is hidden for now; flip to bring back its Quick link and
+// menu entry.
+export const SHOW_PRODUCT_FEEDBACK = false;
+
 // Stock screens in Quick links, in the order promoters use them.
 const STOCK_QUICK_LINKS: {
   key: keyof typeof STOCK_SCREENS;
@@ -722,34 +726,38 @@ const HomeScreen = ({navigation, route}: Props) => {
                 />
               </View>
             </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
-            />
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('ProductFeedbackScreen')}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
-                ]}>
-                <MessageSquareQuote
-                  strokeWidth={2}
-                  color={Colors.white}
-                  size={20}
+            {SHOW_PRODUCT_FEEDBACK ? (
+              <>
+                <Divider
+                  width={1}
+                  color={Colors.lightGray}
+                  style={{marginBottom: 10, borderStyle: 'dashed'}}
                 />
-              </View>
-              <Text style={styles.linkTitle}>Feedback</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.IconlinkBox}
+                  onPress={() => navigation.navigate('ProductFeedbackScreen')}>
+                  <View
+                    style={[
+                      styles.iconbox,
+                      {width: 35, height: 35, borderRadius: 10},
+                    ]}>
+                    <MessageSquareQuote
+                      strokeWidth={2}
+                      color={Colors.white}
+                      size={20}
+                    />
+                  </View>
+                  <Text style={styles.linkTitle}>Feedback</Text>
+                  <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                    <Ionicons
+                      name="chevron-forward-outline"
+                      size={12}
+                      color={Colors.darkButton}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </>
+            ) : null}
           </View>
         </ScrollView>
       )}

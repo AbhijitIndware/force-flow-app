@@ -1,4 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
+import moment from 'moment';
 import React, { useCallback, useState } from 'react';
 import {
   View,
@@ -77,7 +78,8 @@ const C = {
 
 // ─── Date Helpers ─────────────────────────────────────────────────────────────
 /** Date → 'YYYY-MM-DD' for API */
-const toApiDate = (d: Date): string => d.toISOString().split('T')[0];
+// Local date: toISOString() is UTC, a day early before 5:30 AM IST.
+const toApiDate = (d: Date): string => moment(d).format('YYYY-MM-DD');
 
 /** Date → '19 Mar 2026' for display */
 const toDisplayDate = (d: Date): string =>

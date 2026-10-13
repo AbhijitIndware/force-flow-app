@@ -1,4 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
+import moment from 'moment';
 import {
   Dimensions,
   SafeAreaView,
@@ -37,9 +38,9 @@ type Props = {
   route: any;
 };
 
-const today = new Date().toISOString().split('T')[0];
-
 const ActivityScreen = ({navigation, route}: Props) => {
+  // Worked out each render (local time) so it rolls over at midnight.
+  const today = moment().format('YYYY-MM-DD');
   const {data: prodData, refetch} = useGetProdCountQuery(
     {date: today},
     {refetchOnMountOrArgChange: true},

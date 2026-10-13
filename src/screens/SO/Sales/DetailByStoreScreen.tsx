@@ -1,3 +1,4 @@
+import moment from 'moment';
 import {
   SafeAreaView,
   StyleSheet,
@@ -90,10 +91,10 @@ const DetailByStoreScreen = ({ navigation, route }: Props) => {
   const rawDate = route?.params?.date;
   const date: string =
     rawDate instanceof Date
-      ? rawDate.toISOString().split('T')[0]
+      ? moment(rawDate).format('YYYY-MM-DD')
       : typeof rawDate === 'string'
         ? rawDate
-        : new Date().toISOString().split('T')[0];
+        : moment().format('YYYY-MM-DD');
 
   const { data, isFetching, isError, refetch } = useGetAsmStoreDetailQuery(
     { store_id, date, employee: employee_id },
