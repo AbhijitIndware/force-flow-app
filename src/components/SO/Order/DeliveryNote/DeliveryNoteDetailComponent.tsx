@@ -23,6 +23,14 @@ type Props = {
 const DeliveryNoteDetailComponent = ({ detail, navigation, refetch }: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      refetch();
+    }, 2000);
+  }, [refetch]);
+
   if (!detail) {
     return (
       <View style={styles.centered}>
@@ -33,14 +41,6 @@ const DeliveryNoteDetailComponent = ({ detail, navigation, refetch }: Props) => 
   }
 
   const { order_details, items, totals } = detail;
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-      refetch();
-    }, 2000);
-  }, [refetch]);
 
   const InfoRow = ({ label, value }: { label: string; value: any }) => (
     <View style={styles.infoRow}>

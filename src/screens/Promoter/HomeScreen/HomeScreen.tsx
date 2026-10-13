@@ -33,7 +33,10 @@ import {
   ClipboardCheck,
   Store,
 } from 'lucide-react-native';
-import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
+import {
+  SHOW_DISTRIBUTOR_RETURNS,
+  STOCK_SCREENS,
+} from '../../../components/Promoter/Stock/stockScreens';
 
 // Stock screens in Quick links, in the order promoters use them.
 const STOCK_QUICK_LINKS: {
@@ -47,7 +50,14 @@ const STOCK_QUICK_LINKS: {
   {key: 'count', route: 'StockScreen'},
   {key: 'receive', route: 'StockReceivedScreen'},
   {key: 'customerReturn', route: 'CustomerReturnScreen'},
-  {key: 'distributorReturn', route: 'DistributorReturnScreen'},
+  ...(SHOW_DISTRIBUTOR_RETURNS
+    ? [
+        {
+          key: 'distributorReturn' as const,
+          route: 'DistributorReturnScreen' as const,
+        },
+      ]
+    : []),
 ];
 import {
   useGetPromoterHomeQuery,

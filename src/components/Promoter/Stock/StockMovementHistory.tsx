@@ -27,6 +27,7 @@ import {
   getSafeServerMessage,
   getUserFacingError,
 } from '../../../utils/errorMessage';
+import {SHOW_DISTRIBUTOR_RETURNS} from './stockScreens';
 
 export type MovementType = 'receipt' | 'customer_return' | 'return';
 type Filter = 'all' | MovementType;
@@ -35,7 +36,9 @@ const FILTERS: {value: Filter; label: string}[] = [
   {value: 'all', label: 'All'},
   {value: 'receipt', label: 'Deliveries'},
   {value: 'customer_return', label: 'Customer returns'},
-  {value: 'return', label: 'To distributor'},
+  ...(SHOW_DISTRIBUTOR_RETURNS
+    ? [{value: 'return' as Filter, label: 'To distributor'}]
+    : []),
 ];
 
 // Per type: badge label, whether stock comes in (+) or goes out (−), and
@@ -93,7 +96,9 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
 
   const params = {store: store || undefined};
   const receivedQuery = useGetStockReceivedQuery(params);
-  const returnsQuery = useGetStockReturnsQuery(params);
+  const returnsQuery = useGetStockReturnsQuery(params, {
+    skip: !SHOW_DISTRIBUTOR_RETURNS,
+  });
   const customerQuery = useGetCustomerReturnsQuery(params);
   const [cancelReceived, {isLoading: cancellingReceived}] =
     useCancelStockReceivedMutation();
@@ -141,7 +146,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     try {
       await Promise.all([
         receivedQuery.refetch(),
-        returnsQuery.refetch(),
+        ...(SHOW_DISTRIBUTOR_RETURNS ? [returnsQuery.refetch()] : []),
         customerQuery.refetch(),
       ]);
     } finally {

@@ -131,28 +131,28 @@ export const getCurrentLatLongWithAddress = async (): Promise<{
   return {latitude, longitude};
 };
 
-export const getAddressFromCoordinates = async (
-  latitude: number,
-  longitude: number,
-): Promise<string> => {
-  try {
-    const apiKey = 'YOUR_GOOGLE_MAP_API_KEY';
+// export const getAddressFromCoordinates = async (
+//   latitude: number,
+//   longitude: number,
+// ): Promise<string> => {
+//   try {
+//     const apiKey = 'YOUR_GOOGLE_MAP_API_KEY';
 
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`,
-    );
+//     const response = await fetch(
+//       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`,
+//     );
 
-    const json = await response.json();
+//     const json = await response.json();
 
-    if (json.status === 'OK' && json.results.length > 0) {
-      return json.results[0].formatted_address;
-    }
+//     if (json.status === 'OK' && json.results.length > 0) {
+//       return json.results[0].formatted_address;
+//     }
 
-    return '';
-  } catch {
-    return '';
-  }
-};
+//     return '';
+//   } catch {
+//     return '';
+//   }
+// };
 
 export const uniqueByValue = <T extends {value: string}>(arr: T[]) => {
   const seen = new Set<string>();
