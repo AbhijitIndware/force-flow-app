@@ -25,7 +25,7 @@ const CustomerReturnIcon = ({color, size, strokeWidth = 2}: IconProps) => (
 
 // Returns to distributor are hidden for now; flip to bring back the Quick
 // link, the history filter and the history rows.
-export const SHOW_DISTRIBUTOR_RETURNS = false;
+export const SHOW_DISTRIBUTOR_RETURNS = true;
 
 // One name, icon and colour per stock screen, shared by Quick links, the
 // bottom bar and the screen headers so they never drift apart.
