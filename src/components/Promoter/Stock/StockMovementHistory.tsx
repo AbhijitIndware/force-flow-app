@@ -31,17 +31,11 @@ import {
 export type MovementType = 'receipt' | 'customer_return' | 'return';
 type Filter = 'all' | MovementType;
 
-// Returns to distributor are hidden for now; flip to bring back the
-// "To distributor" mode, filter and history rows.
-export const SHOW_DISTRIBUTOR_RETURNS = false;
-
 const FILTERS: {value: Filter; label: string}[] = [
   {value: 'all', label: 'All'},
   {value: 'receipt', label: 'Deliveries'},
   {value: 'customer_return', label: 'Customer returns'},
-  ...(SHOW_DISTRIBUTOR_RETURNS
-    ? [{value: 'return' as Filter, label: 'To distributor'}]
-    : []),
+  {value: 'return', label: 'To distributor'},
 ];
 
 // Per type: badge label, whether stock comes in (+) or goes out (−), and
@@ -76,7 +70,7 @@ const TYPE_INFO: Record<
     empty: 'No customer returns recorded for this store.',
   },
   return: {
-    label: 'To distributor',
+    label: 'Return to distributor',
     stockIn: false,
     noun: 'return',
     cancelTitle: 'Cancel return?',
@@ -99,9 +93,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
 
   const params = {store: store || undefined};
   const receivedQuery = useGetStockReceivedQuery(params);
-  const returnsQuery = useGetStockReturnsQuery(params, {
-    skip: !SHOW_DISTRIBUTOR_RETURNS,
-  });
+  const returnsQuery = useGetStockReturnsQuery(params);
   const customerQuery = useGetCustomerReturnsQuery(params);
   const [cancelReceived, {isLoading: cancellingReceived}] =
     useCancelStockReceivedMutation();
@@ -149,7 +141,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     try {
       await Promise.all([
         receivedQuery.refetch(),
-        ...(SHOW_DISTRIBUTOR_RETURNS ? [returnsQuery.refetch()] : []),
+        returnsQuery.refetch(),
         customerQuery.refetch(),
       ]);
     } finally {
@@ -287,7 +279,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
                   key={`${item.item_code}-${item.condition ?? ''}-${index}`}
                   style={styles.itemRow}>
                   <View style={{flex: 1}}>
-                    <Text style={styles.itemName} numberOfLines={2}>
+                    <Text style={styles.itemName}>
                       {item.item_name || item.item_code}
                     </Text>
                     {item.condition === 'not_resaleable' ? (

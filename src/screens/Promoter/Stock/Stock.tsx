@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
 import PageHeader from '../../../components/ui/PageHeader';
+import {StockScreenIcon} from '../../../components/Promoter/Stock/stockScreens';
 import {flexCol, flexRow, itemsCenter, justifyBetween} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -78,7 +79,7 @@ const StockCard = memo(({item}: {item: StockDashboardItem}) => {
             <Package size={16} color={Colors.white} />
           </View>
           <View style={{flex: 1, marginLeft: 10}}>
-            <Text style={styles.itemName} numberOfLines={1}>
+            <Text style={styles.itemName}>
               {item.item_name}
             </Text>
             <Text style={styles.itemCode}>{item.item_code}</Text>
@@ -248,6 +249,7 @@ const StockScreen = ({navigation}: Props) => {
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
         title="My Stock"
+        icon={<StockScreenIcon screen="count" />}
         navigation={() => navigation.goBack()}
       />
 

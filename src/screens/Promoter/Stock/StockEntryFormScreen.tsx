@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
+import {StockScreenIcon} from '../../../components/Promoter/Stock/stockScreens';
 import {flexCol, flexRow} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -325,6 +326,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: '#ffffff'}]}>
       <PageHeader
         title={`Count Stock Update`}
+        icon={<StockScreenIcon screen="count" />}
         navigation={() => navigation.goBack()}
       />
 

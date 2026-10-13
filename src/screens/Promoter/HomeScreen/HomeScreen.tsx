@@ -29,11 +29,26 @@ import {
   FilePenLine,
   MessageSquareQuote,
   Network,
-  Package,
-  Undo2,
+  ChartNoAxesColumn,
+  ClipboardCheck,
   Store,
-  UserRoundCog,
 } from 'lucide-react-native';
+import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
+
+// Stock screens in Quick links, in the order promoters use them.
+const STOCK_QUICK_LINKS: {
+  key: keyof typeof STOCK_SCREENS;
+  route:
+    | 'StockScreen'
+    | 'StockReceivedScreen'
+    | 'CustomerReturnScreen'
+    | 'DistributorReturnScreen';
+}[] = [
+  {key: 'count', route: 'StockScreen'},
+  {key: 'receive', route: 'StockReceivedScreen'},
+  {key: 'customerReturn', route: 'CustomerReturnScreen'},
+  {key: 'distributorReturn', route: 'DistributorReturnScreen'},
+];
 import {
   useGetPromoterHomeQuery,
   usePromoterStatusQuery,
@@ -519,7 +534,11 @@ const HomeScreen = ({navigation, route}: Props) => {
                 style={styles.listLink}
                 onPress={() => navigation.navigate('StockScreen')}>
                 <View style={styles.linkIconBox}>
-                  <Package strokeWidth={1.8} color={Colors.white} size={18} />
+                  <ClipboardCheck
+                    strokeWidth={1.8}
+                    color={Colors.white}
+                    size={18}
+                  />
                 </View>
                 <Text style={styles.listLinkText}>
                   Count stock — your first count becomes the store's opening
@@ -559,78 +578,44 @@ const HomeScreen = ({navigation, route}: Props) => {
               ]}>
               Quick links
             </Text>
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockScreen')}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
-                ]}>
-                <Package strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Count Stock</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
-            />
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockReceivedScreen')}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
-                ]}>
-                <Package strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Receive Stock</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
-            />
-            <TouchableOpacity
-              style={styles.IconlinkBox}
-              onPress={() => navigation.navigate('StockReturnScreen')}>
-              <View
-                style={[
-                  styles.iconbox,
-                  {width: 35, height: 35, borderRadius: 10},
-                ]}>
-                <Undo2 strokeWidth={2} color={Colors.white} size={20} />
-              </View>
-              <Text style={styles.linkTitle}>Return Stock</Text>
-              <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={12}
-                  color={Colors.darkButton}
-                />
-              </View>
-            </TouchableOpacity>
-            <Divider
-              width={1}
-              color={Colors.lightGray}
-              style={{marginBottom: 10, borderStyle: 'dashed'}}
-            />
+            {STOCK_QUICK_LINKS.map(({key, route}) => {
+              const {title, Icon, color} = STOCK_SCREENS[key];
+              return (
+                <React.Fragment key={key}>
+                  <TouchableOpacity
+                    style={styles.IconlinkBox}
+                    onPress={() => navigation.navigate(route)}>
+                    <View
+                      style={[
+                        styles.iconbox,
+                        {
+                          width: 35,
+                          height: 35,
+                          borderRadius: 10,
+                          backgroundColor: color,
+                        },
+                      ]}>
+                      <Icon strokeWidth={2} color={Colors.white} size={20} />
+                    </View>
+                    <Text style={[styles.linkTitle, {flexShrink: 1}]}>
+                      {title}
+                    </Text>
+                    <View style={[styles.arrobox, {marginLeft: 'auto'}]}>
+                      <Ionicons
+                        name="chevron-forward-outline"
+                        size={12}
+                        color={Colors.darkButton}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                  <Divider
+                    width={1}
+                    color={Colors.lightGray}
+                    style={{marginBottom: 10, borderStyle: 'dashed'}}
+                  />
+                </React.Fragment>
+              );
+            })}
             <TouchableOpacity
               style={styles.IconlinkBox}
               onPress={() => navigation.navigate('MySalesScreen')}>
@@ -639,7 +624,11 @@ const HomeScreen = ({navigation, route}: Props) => {
                   styles.iconbox,
                   {width: 35, height: 35, borderRadius: 10},
                 ]}>
-                <UserRoundCog strokeWidth={2} color={Colors.white} size={20} />
+                <ChartNoAxesColumn
+                  strokeWidth={2}
+                  color={Colors.white}
+                  size={20}
+                />
               </View>
               <Text style={[styles.linkTitle]}>My Sales</Text>
               <View style={[styles.arrobox, {marginLeft: 'auto'}]}>

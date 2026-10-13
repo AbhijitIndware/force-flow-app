@@ -16,9 +16,11 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import PageHeader from '../../../components/ui/PageHeader';
-import StockMovementHistory, {
-  SHOW_DISTRIBUTOR_RETURNS,
-} from '../../../components/Promoter/Stock/StockMovementHistory';
+import StockMovementHistory from '../../../components/Promoter/Stock/StockMovementHistory';
+import {
+  STOCK_SCREENS,
+  StockScreenIcon,
+} from '../../../components/Promoter/Stock/stockScreens';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
@@ -36,32 +38,45 @@ import {
   getUserFacingError,
 } from '../../../utils/errorMessage';
 
-type NavigationProp = NativeStackScreenProps<
+type Props = NativeStackScreenProps<
   PromoterAppStackParamList,
-  'StockReturnScreen'
+  'CustomerReturnScreen' | 'DistributorReturnScreen'
 >;
-
-type Props = {
-  navigation: NavigationProp;
-  route: any;
-};
 type Tab = 'record' | 'history';
 // customer: shopper brings stock back (+qty). distributor: store sends it away (−qty).
 type Mode = 'customer' | 'distributor';
 type Condition = 'resaleable' | 'not_resaleable';
 
 const CONDITIONS: {value: Condition; label: string}[] = [
-  {value: 'resaleable', label: 'Sellable'},
-  {value: 'not_resaleable', label: 'Unsellable'},
+  {value: 'resaleable', label: 'Can sell'},
+  {value: 'not_resaleable', label: "Can't sell"},
 ];
+
+// Used only if the API sends no reasons list.
+const FALLBACK_REASONS: Record<Mode, string[]> = {
+  customer: [
+    'Damaged or defective',
+    'Expired',
+    'Wrong item bought',
+    'Customer changed mind',
+    'Other',
+  ],
+  distributor: [
+    'Expired',
+    'Near expiry',
+    'Damaged',
+    'Not selling',
+    'Wrong item',
+    'Other',
+  ],
+};
 
 // Customer-return quantities are kept per item and condition.
 const qtyKey = (itemCode: string, condition?: Condition) =>
   condition ? `${itemCode}|${condition}` : itemCode;
 
-const StockReturnScreen = ({navigation}: Props) => {
+const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
   const [tab, setTab] = useState<Tab>('record');
-  const [mode, setMode] = useState<Mode>('customer');
   const [store, setStore] = useState('');
   const [search, setSearch] = useState('');
   const [reason, setReason] = useState('');
@@ -86,20 +101,21 @@ const StockReturnScreen = ({navigation}: Props) => {
 
   const {data: stockResponse, isFetching: stockLoading} =
     useGetStoreStockStatusQuery({store}, {skip: !store});
-  // Only needed here for the reason pickers; history has its own list.
+  const isCustomer = mode === 'customer';
+  // Only needed here for the reason picker; history has its own list.
   const {data: distributorResponse} = useGetStockReturnsQuery(
     {store: store || undefined},
-    {skip: !SHOW_DISTRIBUTOR_RETURNS},
+    {skip: isCustomer},
   );
-  const {data: customerResponse} = useGetCustomerReturnsQuery({
-    store: store || undefined,
-  });
+  const {data: customerResponse} = useGetCustomerReturnsQuery(
+    {store: store || undefined},
+    {skip: !isCustomer},
+  );
   const [recordReturn, {isLoading: savingDistributor}] =
     useRecordStockReturnMutation();
   const [recordCustomerReturn, {isLoading: savingCustomer}] =
     useRecordCustomerReturnMutation();
   const saving = savingDistributor || savingCustomer;
-  const isCustomer = mode === 'customer';
 
   const items = useMemo(() => {
     const all = stockResponse?.message?.all_items ?? [];
@@ -114,24 +130,23 @@ const StockReturnScreen = ({navigation}: Props) => {
     );
   }, [stockResponse, search]);
 
-  const reasons: string[] =
-    (isCustomer ? customerResponse : distributorResponse)?.message?.data
-      ?.reasons ?? [];
+  const apiReasons: string[] | undefined = (
+    isCustomer ? customerResponse : distributorResponse
+  )?.message?.data?.reasons;
+  const reasons = apiReasons?.length ? apiReasons : FALLBACK_REASONS[mode];
 
-  const setQty = (key: string, value: string) => {
-    setQuantities(prev => ({
-      ...prev,
-      [key]: value.replace(/[^0-9]/g, ''),
-    }));
-  };
-
-  const switchMode = (next: Mode) => {
-    if (next === mode) {
-      return;
+  const setQty = (key: string, value: string, maxQty?: number) => {
+    let clean = value.replace(/[^0-9]/g, '');
+    // Can't send back more than the store holds.
+    if (maxQty != null && clean !== '' && Number(clean) > maxQty) {
+      clean = String(Math.max(maxQty, 0));
+      Toast.show({
+        type: 'error',
+        text1: `Only ${Math.max(maxQty, 0)} in stock`,
+        text2: 'Count the item first if this figure is out of date.',
+      });
     }
-    setMode(next);
-    setQuantities({});
-    setReason('');
+    setQuantities(prev => ({...prev, [key]: clean}));
   };
 
   const showSaveError = (result: any) => {
@@ -237,34 +252,6 @@ const StockReturnScreen = ({navigation}: Props) => {
 
   const renderRecord = () => (
     <View style={{flex: 1}}>
-      {SHOW_DISTRIBUTOR_RETURNS ? (
-        <View style={styles.modeSwitch}>
-          {(
-            [
-              {value: 'customer', label: 'From customer', icon: 'arrow-down'},
-              {value: 'distributor', label: 'To distributor', icon: 'arrow-up'},
-            ] as const
-          ).map(option => {
-            const active = mode === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                style={[styles.modeOption, active && styles.modeActive]}
-                onPress={() => switchMode(option.value)}>
-                <Ionicons
-                  name={option.icon}
-                  size={14}
-                  color={active ? Colors.darkButton : Colors.gray}
-                />
-                <Text
-                  style={[styles.modeText, active && styles.modeTextActive]}>
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      ) : null}
       <Text style={styles.modeHint}>
         {isCustomer
           ? 'A shopper brought it back. It is added to store stock.'
@@ -333,7 +320,13 @@ const StockReturnScreen = ({navigation}: Props) => {
                   placeholder="Qty"
                   placeholderTextColor={Colors.gray}
                   value={quantities[qtyKey(item.item_code)] ?? ''}
-                  onChangeText={value => setQty(qtyKey(item.item_code), value)}
+                  onChangeText={value =>
+                    setQty(
+                      qtyKey(item.item_code),
+                      value,
+                      Number(item.current_stock ?? 0),
+                    )
+                  }
                 />
               )}
             </View>
@@ -346,7 +339,7 @@ const StockReturnScreen = ({navigation}: Props) => {
       <View style={styles.footerForm}>
         {reasons.length > 0 ? (
           <>
-            <Text style={styles.fieldLabel}>Reason</Text>
+            <Text style={styles.fieldLabel}>Reason (optional)</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -376,8 +369,8 @@ const StockReturnScreen = ({navigation}: Props) => {
           style={styles.remarksInput}
           placeholder={
             isCustomer
-              ? 'What was wrong, bill number, etc.'
-              : 'Who picked it up, batch, etc.'
+              ? 'Bill number, etc.'
+              : 'Who collected it, challan number'
           }
           placeholderTextColor={Colors.gray}
           value={remarks}
@@ -391,7 +384,9 @@ const StockReturnScreen = ({navigation}: Props) => {
             <ActivityIndicator color={Colors.white} />
           ) : (
             <Text style={styles.primaryButtonText}>
-              {isCustomer ? 'Save Customer Return' : 'Save Return'}
+              {isCustomer
+                ? 'Save Customer Return'
+                : 'Save Return to Distributor'}
             </Text>
           )}
         </TouchableOpacity>
@@ -399,11 +394,15 @@ const StockReturnScreen = ({navigation}: Props) => {
     </View>
   );
 
+  const screenKey = isCustomer ? 'customerReturn' : 'distributorReturn';
+  const screen = STOCK_SCREENS[screenKey];
+
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Return Stock"
-        navigation={() => navigation.navigation.goBack()}
+        title={screen.title}
+        icon={<StockScreenIcon screen={screenKey} />}
+        navigation={() => navigation.goBack()}
       />
       <View style={styles.storePicker}>
         <ReusableDropdown
@@ -431,7 +430,11 @@ const StockReturnScreen = ({navigation}: Props) => {
             onPress={() => setTab(value)}>
             <Text
               style={[styles.tabText, tab === value && styles.activeTabText]}>
-              {value === 'record' ? 'New Return' : 'History'}
+              {value === 'record'
+                ? isCustomer
+                  ? 'New Customer Return'
+                  : 'New Return'
+                : 'History'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -514,26 +517,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     color: '#111827',
   },
-  modeSwitch: {
-    flexDirection: 'row',
-    marginHorizontal: 12,
-    marginTop: 12,
-    padding: 3,
-    borderRadius: 10,
-    backgroundColor: '#E9ECEF',
-  },
-  modeOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  modeActive: {backgroundColor: Colors.white},
-  modeText: {fontFamily: Fonts.medium, color: Colors.gray, fontSize: 12},
-  modeTextActive: {fontFamily: Fonts.semiBold, color: Colors.darkButton},
   modeHint: {
     marginHorizontal: 14,
     marginTop: 6,
@@ -623,4 +606,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StockReturnScreen;
+export const CustomerReturnScreen = (props: Props) => (
+  <StockReturnScreen {...props} mode="customer" />
+);
+
+export const DistributorReturnScreen = (props: Props) => (
+  <StockReturnScreen {...props} mode="distributor" />
+);

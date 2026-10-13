@@ -11,15 +11,17 @@ import {
   View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import PageHeader from '../../../components/ui/PageHeader';
+import {
+  STOCK_SCREENS,
+  StockScreenIcon,
+} from '../../../components/Promoter/Stock/stockScreens';
 import StockMovementHistory from '../../../components/Promoter/Stock/StockMovementHistory';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
-import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
   useGetEmployeeAssignedStoresQuery,
   useGetStoreStockStatusQuery,
@@ -30,14 +32,10 @@ import {
   getUserFacingError,
 } from '../../../utils/errorMessage';
 
-type NavigationProp = NativeStackScreenProps<
-  PromoterAppStackParamList,
-  'StockReceivedScreen'
->;
-
+// Rendered both as a stack screen and as a bottom-bar tab, so only the
+// navigation calls it uses are typed.
 type Props = {
-  navigation: NavigationProp;
-  route: any;
+  navigation: {goBack: () => void};
 };
 type Tab = 'record' | 'history';
 
@@ -203,8 +201,9 @@ const StockReceivedScreen = ({navigation}: Props) => {
   return (
     <SafeAreaView style={styles.screen}>
       <PageHeader
-        title="Receive Stock"
-        navigation={() => navigation.navigation.goBack()}
+        title={STOCK_SCREENS.receive.title}
+        icon={<StockScreenIcon screen="receive" />}
+        navigation={() => navigation.goBack()}
       />
       <View style={styles.storePicker}>
         <ReusableDropdown

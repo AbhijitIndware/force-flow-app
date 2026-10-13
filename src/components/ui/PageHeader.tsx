@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import {
   Dimensions,
   Image,
@@ -21,9 +22,11 @@ type Props = {
   title: string;
   navigation: () => void;
   type?: string;
+  // Optional screen icon shown before the title.
+  icon?: ReactNode;
 };
 
-const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
+const PageHeader = ({ title, navigation, type = 'so', icon }: Props) => {
   const navigations = useNavigation<any>();
   const handleClick = () => {
     if (type === 'so') {
@@ -67,6 +70,7 @@ const PageHeader = ({ title, navigation, type = 'so' }: Props) => {
           <Feather name="arrow-left" size={24} color={Colors.greyDark} />
         </TouchableOpacity>
 
+        {icon}
         <Text style={styles.headerTitle} numberOfLines={2}>
           {title}
         </Text>
@@ -133,6 +137,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     fontSize: Size.xs,
     marginTop: 5,
+    flexShrink: 1,
     // width: '60%',
   },
   BackIconContainer: {

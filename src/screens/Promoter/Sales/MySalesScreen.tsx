@@ -14,6 +14,7 @@ import moment from 'moment';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import PageHeader from '../../../components/ui/PageHeader';
+import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
@@ -28,14 +29,27 @@ type Props = {
 };
 type Tab = 'day' | 'item';
 
-const money = (value: number) =>
-  `₹${Number(value || 0).toLocaleString('en-IN', {maximumFractionDigits: 2})}`;
+// Sign goes before the rupee symbol: -₹40, not ₹-40.
+const money = (value: number) => {
+  const amount = Number(value || 0);
+  const formatted = Math.abs(amount).toLocaleString('en-IN', {
+    maximumFractionDigits: 2,
+  });
+  return `${amount < 0 ? '-' : ''}₹${formatted}`;
+};
 
 // `sold` is gross (what left the shelf between counts). Net subtracts customer
 // returns; older responses without net_* fall back to sold.
 const netSold = (row: any) => Number(row?.net_sold ?? row?.sold ?? 0);
-const netSoldValue = (row: any) =>
-  Number(row?.net_sold_value ?? row?.sold_value ?? 0);
+const netSoldValue = (row: any) => {
+  if (row?.net_sold_value != null) {
+    return Number(row.net_sold_value);
+  }
+  // Never pair a net quantity with a gross value.
+  return (
+    Number(row?.sold_value ?? 0) - Number(row?.customer_returned_value ?? 0)
+  );
+};
 const customerReturned = (row: any) => Number(row?.customer_returned ?? 0);
 
 // "Sold 7 · Customer returns 2 · Net 5" — only when a customer return exists.
@@ -183,9 +197,7 @@ const MySalesScreen = ({navigation}: Props) => {
           <Ionicons name="cube-outline" size={18} color={Colors.white} />
         </View>
         <View style={{flex: 1}}>
-          <Text style={styles.cardTitle} numberOfLines={2}>
-            {item.item_name}
-          </Text>
+          <Text style={styles.cardTitle}>{item.item_name}</Text>
           <Text style={styles.cardSub} numberOfLines={1}>
             {item.store_name}
           </Text>
@@ -364,7 +376,7 @@ const MySalesScreen = ({navigation}: Props) => {
           ) : null}
           {Number(totals.returned) > 0 ? (
             <Text style={styles.returnedTotal}>
-              Sent to distributor {totals.returned} ·{' '}
+              Returned to distributor {totals.returned} ·{' '}
               {money(totals.returned_value)} — not counted as sales
             </Text>
           ) : null}
@@ -375,8 +387,8 @@ const MySalesScreen = ({navigation}: Props) => {
         <View style={styles.notice}>
           <Ionicons name="warning-outline" color="#B45309" size={17} />
           <Text style={styles.noticeText}>
-            Stock appeared without a delivery entry — record deliveries in
-            Receive Stock
+            Stock appeared without a delivery entry — record it in{' '}
+            {STOCK_SCREENS.receive.title}
           </Text>
         </View>
       ) : null}

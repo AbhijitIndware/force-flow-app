@@ -24,7 +24,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Feather from 'react-native-vector-icons/Feather';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {House, UserCircle2, Package} from 'lucide-react-native';
+import {House, UserCircle2} from 'lucide-react-native';
+import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
 import MySalesScreen from '../Sales/MySalesScreen';
 import StockScreen from '../Stock/Stock';
 import IncentiveScreen from '../Incentive/Incentive';
@@ -263,17 +264,15 @@ const Home = ({navigation, route}: Props) => {
           name="StockScreen"
           component={StockScreen}
           options={{
-            tabBarLabel: 'Count Stock',
+            tabBarLabel: STOCK_SCREENS.count.title,
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
-              return (
-                <Package
-                  strokeWidth={2}
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}
-                />
-              );
-            },
+            tabBarIcon: () => (
+              <STOCK_SCREENS.count.Icon
+                strokeWidth={2}
+                color={Colors.white}
+                size={25}
+              />
+            ),
           }}
         />
 
@@ -281,17 +280,16 @@ const Home = ({navigation, route}: Props) => {
           name="StockReceivedScreen"
           component={StockReceivedScreen}
           options={{
-            tabBarLabel: 'Receive Stock',
+            // Too long for one line in the bar.
+            tabBarLabel: 'Receive Stock\nfrom Distributor',
             headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
-              return (
-                <Feather
-                  name="box"
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}
-                />
-              );
-            },
+            tabBarIcon: () => (
+              <STOCK_SCREENS.receive.Icon
+                strokeWidth={2}
+                color={Colors.white}
+                size={25}
+              />
+            ),
           }}
         />
         {/* <Tab.Screen
