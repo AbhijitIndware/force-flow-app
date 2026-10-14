@@ -67,6 +67,7 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
   // ── Form state ──────────────────────────────────────────────────────────────
   const [employee, setEmployee] = useState('');
   const [store, setStore] = useState('');
+  const [storeLabel, setStoreLabel] = useState('');
   const [shiftType, setShiftType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -375,7 +376,13 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
                   field="store"
                   value={store}
                   data={storeList}
-                  onChange={setStore}
+                  onChange={val => {
+                    setStore(val);
+                    setStoreLabel(
+                      storeList.find(o => o.value === val)?.label ?? '',
+                    );
+                  }}
+                  selectedLabel={store ? storeLabel : undefined}
                   searchText={storeSearch}
                   setSearchText={handleStoreSearch}
                   onLoadMore={handleLoadMoreStores}

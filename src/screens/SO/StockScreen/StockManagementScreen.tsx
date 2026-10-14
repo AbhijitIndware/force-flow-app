@@ -67,7 +67,7 @@ const StockCard = memo(({ item }: { item: StockDashboardItem }) => {
             <Package size={16} color={Colors.white} />
           </View>
           <View style={{ flex: 1, marginLeft: 10 }}>
-            <Text style={styles.itemName} numberOfLines={1}>
+            <Text style={styles.itemName}>
               {item.item_name}
             </Text>
             <Text style={styles.itemCode}>{item.item_code}</Text>

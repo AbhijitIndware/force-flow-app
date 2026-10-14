@@ -46,6 +46,7 @@ type Props = {
 };
 
 interface StockItemEntry {
+  id: string;
   itemCode: string;
   itemName: string;
   quantity: string;
@@ -193,8 +194,7 @@ const StockRow: React.FC<StockRowProps> = ({
         {/* ── Delete ── */}
         <TouchableOpacity
           onPress={() => onRemove(index)}
-          style={styles.deleteBtn}
-          disabled={entry.isPrev}>
+          style={styles.deleteBtn}>
           <Ionicons name="trash-outline" size={18} color="#dc2626" />
         </TouchableOpacity>
       </View>
@@ -236,6 +236,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
     const prev: StockItemEntry[] = (
       stockStatusData?.message?.previous_items ?? []
     ).map((it: any) => ({
+      id: `prev_${it.item_code}`,
       itemCode: it.item_code,
       itemName: it.item_name ?? it.item_code,
       quantity: '',
@@ -248,7 +249,13 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
   const handleAddItem = () => {
     setEntries(prev => [
       ...prev,
-      {itemCode: '', itemName: '', quantity: '', isPrev: false},
+      {
+        id: `new_${Date.now()}_${Math.random()}`,
+        itemCode: '',
+        itemName: '',
+        quantity: '',
+        isPrev: false,
+      },
     ]);
   };
 
@@ -375,7 +382,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
               );
 
               return (
-                <React.Fragment key={index}>
+                <React.Fragment key={entry.id}>
                   {showNewLabel && newCount > 0 && (
                     <View
                       style={[styles.sectionDivider, styles.sectionDividerNew]}>

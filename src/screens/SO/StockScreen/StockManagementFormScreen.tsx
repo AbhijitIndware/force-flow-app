@@ -23,6 +23,7 @@ import {
 } from '../../../features/base/base-api';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import { windowWidth } from '../../../utils/utils';
 import { Save } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
@@ -99,7 +100,7 @@ const StockRow: React.FC<StockRowProps> = ({
         {entry.isPrev ? (
           // Locked previous item — mirrors SaleItemField locked text display
           <View style={styles.prevItemWrap}>
-            <Text style={styles.prevItemName} numberOfLines={2}>
+            <Text style={styles.prevItemName}>
               {entry.itemName || entry.itemCode}
             </Text>
           </View>
@@ -116,6 +117,8 @@ const StockRow: React.FC<StockRowProps> = ({
             }}
             searchText={search}
             setSearchText={setSearch}
+            menuWidth={windowWidth - 32}
+            wrapLabels
           />
         )}
       </View>
