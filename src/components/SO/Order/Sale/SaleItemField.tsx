@@ -12,6 +12,7 @@ import {StockDashboardItem} from '../../../../types/baseType';
 import {flexRow} from '../../../../utils/styles';
 import SaleItemDropdown from '../../../ui-lib/sale-item-dropdown';
 import {Size} from '../../../../utils/fontSize';
+import {windowWidth} from '../../../../utils/utils';
 
 const COLUMN_WIDTHS = {
   item: 170,
@@ -113,6 +114,8 @@ export const SaleItemField: React.FC<Props> = ({
             }}
             searchText={search}
             setSearchText={setSearch}
+            menuWidth={windowWidth - 32}
+            wrapLabels
           />
         )}
         <View style={[flexRow]}>
