@@ -2,13 +2,24 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
+  CalendarCheck,
   CalendarPlus,
   CalendarRange,
+  FileBarChart,
+  Target,
 } from 'lucide-react-native';
 import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+
+const LINKS = [
+  { screen: 'CreatePromoterShiftScreen', title: 'Create Promoter Shift', Icon: CalendarPlus },
+  { screen: 'PromoterShiftsScreen', title: 'Promoter Shifts', Icon: CalendarRange },
+  { screen: 'TeamAttendanceScreen', title: 'Team Attendance', Icon: CalendarCheck },
+  { screen: 'TeamTargetsScreen', title: 'Team Targets', Icon: Target },
+  { screen: 'TeamReportsScreen', title: 'Team Reports', Icon: FileBarChart },
+];
 
 interface PromotorShiftProps {
   navigation: any;
@@ -23,66 +34,41 @@ export const PromotorShift: React.FC<PromotorShiftProps> = ({ navigation }) => {
           styles.SectionHeading,
           { marginBottom: 10, paddingHorizontal: 20 },
         ]}>
-        Promotor Shift
+        Promoter Team
       </Text>
-      <TouchableOpacity
-        onPress={() => navigation.navigate('CreatePromoterShiftScreen')}
-        style={styles.IconlinkBox}>
-        <View
-          style={[
-            styles.iconbox,
-            {
-              width: 35,
-              height: 35,
-              borderRadius: 10,
-              backgroundColor: Colors.darkButton,
-            },
-          ]}>
-          <CalendarPlus strokeWidth={2} color={Colors.white} size={20} />
-        </View>
-        <Text style={styles.linkTitle}>Create Promoter Shift</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={12}
-            color={Colors.darkButton}
+      {LINKS.map(({ screen, title, Icon }) => (
+        <React.Fragment key={screen}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate(screen)}
+            style={styles.IconlinkBox}>
+            <View
+              style={[
+                styles.iconbox,
+                {
+                  width: 35,
+                  height: 35,
+                  borderRadius: 10,
+                  backgroundColor: Colors.darkButton,
+                },
+              ]}>
+              <Icon strokeWidth={2} color={Colors.white} size={20} />
+            </View>
+            <Text style={styles.linkTitle}>{title}</Text>
+            <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={12}
+                color={Colors.darkButton}
+              />
+            </View>
+          </TouchableOpacity>
+          <Divider
+            width={1}
+            color={Colors.lightGray}
+            style={{ marginBottom: 10, borderStyle: 'dashed' }}
           />
-        </View>
-      </TouchableOpacity>
-      <Divider
-        width={1}
-        color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
-      />
-      <TouchableOpacity
-        onPress={() => navigation.navigate('PromoterShiftsScreen')}
-        style={styles.IconlinkBox}>
-        <View
-          style={[
-            styles.iconbox,
-            {
-              width: 35,
-              height: 35,
-              borderRadius: 10,
-              backgroundColor: Colors.darkButton,
-            },
-          ]}>
-          <CalendarRange strokeWidth={2} color={Colors.white} size={20} />
-        </View>
-        <Text style={styles.linkTitle}>Promoter Shifts</Text>
-        <View style={[styles.arrobox, { marginLeft: 'auto' }]}>
-          <Ionicons
-            name="chevron-forward-outline"
-            size={12}
-            color={Colors.darkButton}
-          />
-        </View>
-      </TouchableOpacity>
-      <Divider
-        width={1}
-        color={Colors.lightGray}
-        style={{ marginBottom: 10, borderStyle: 'dashed' }}
-      />
+        </React.Fragment>
+      ))}
     </View>
   );
 };

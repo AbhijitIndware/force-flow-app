@@ -53,10 +53,22 @@ import {
   RRequestLateCheckin,
   IRequestLateCheckin,
   RPromoterOrderCount,
+  RTeamAttendance,
+  RTeamFilterOptions,
+  RTeamReport,
+  RTeamTargets,
+  TeamReportView,
+  TeamTargetsShow,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
 
 // Base api calling ---
+// Drop empty filters so the server applies its defaults
+const compactParams = (args: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(args).filter(([, v]) => v !== undefined && v !== ''),
+  );
+
 export const promoterBaseApi = createApi({
   reducerPath: 'promoterBaseApi',
   baseQuery: baseQueryWithAuthGuard,
@@ -705,9 +717,7 @@ export const promoterBaseApi = createApi({
       query: (args) => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.supervisor_api.get_my_promoters',
         method: 'GET',
-        params: Object.fromEntries(
-          Object.entries(args ?? {}).filter(([, v]) => v !== undefined && v !== ''),
-        ),
+        params: compactParams(args ?? {}),
       }),
       providesTags: ['Promoter'],
     }),
@@ -803,6 +813,67 @@ export const promoterBaseApi = createApi({
         body,
       }),
       invalidatesTags: ['Promoter'],
+    }),
+
+    // ─── TEAM SCREENS (same figures as the website) ───────────────────────────
+    getTeamTargets: builder.query<
+      RTeamTargets,
+      {
+        month?: string;
+        search?: string;
+        show?: TeamTargetsShow;
+        page?: number;
+        page_size?: number;
+      }
+    >({
+      query: args => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.supervisor_api.get_team_targets',
+        method: 'GET',
+        params: compactParams(args),
+      }),
+      providesTags: ['Promoter'],
+    }),
+    getTeamAttendance: builder.query<
+      RTeamAttendance,
+      {from_date: string; to_date: string; zone?: string; promoter?: string}
+    >({
+      query: args => ({
+        url: '/method/salesforce_management.api.promoter_attendance.get_attendance',
+        method: 'GET',
+        params: compactParams(args),
+      }),
+      providesTags: ['Promoter'],
+    }),
+    getTeamAttendanceOptions: builder.query<RTeamFilterOptions, void>({
+      query: () => ({
+        url: '/method/salesforce_management.api.promoter_attendance.get_options',
+        method: 'GET',
+      }),
+    }),
+    getTeamReport: builder.query<
+      RTeamReport,
+      {
+        view: TeamReportView;
+        from_date: string;
+        to_date: string;
+        zone?: string;
+        promoter?: string;
+        store?: string;
+        mode?: string;
+      }
+    >({
+      query: args => ({
+        url: '/method/salesforce_management.api.promoter_reports.get_report',
+        method: 'GET',
+        params: compactParams(args),
+      }),
+      providesTags: ['Promoter'],
+    }),
+    getTeamReportOptions: builder.query<RTeamFilterOptions, void>({
+      query: () => ({
+        url: '/method/salesforce_management.api.promoter_reports.get_options',
+        method: 'GET',
+      }),
     }),
   }),
 });
@@ -927,6 +998,11 @@ export const {
   useLazyGetAssignmentOptionsQuery,
   useCreateShiftAssignmentMutation,
   useCancelShiftAssignmentMutation,
+  useGetTeamTargetsQuery,
+  useGetTeamAttendanceQuery,
+  useGetTeamAttendanceOptionsQuery,
+  useGetTeamReportQuery,
+  useGetTeamReportOptionsQuery,
 } = promoterBaseApi;
 
 interface PromoterState {

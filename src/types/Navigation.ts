@@ -128,6 +128,9 @@ export type SoAppStackParamList = {
   CreatePromoterShiftScreen: undefined;
   PromoterShiftsScreen: undefined;
   PromoterDayDetailScreen: {employee?: string; date?: string} | undefined;
+  TeamTargetsScreen: undefined;
+  TeamAttendanceScreen: undefined;
+  TeamReportsScreen: undefined;
   UserManualScreen: undefined;
   UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
 };

@@ -3583,3 +3583,119 @@ export interface RPjpList {
     };
   };
 }
+
+// ─── Supervisor — Team Targets (supervisor_api.get_team_targets) ─────────────
+export type TeamTargetsShow = 'behind' | 'done' | 'missing';
+
+export interface TeamTargetRow {
+  employee: string;
+  employee_number: string;
+  employee_name: string;
+  store_name?: string;
+  state?: string;
+  target_qty?: number;
+  net_sold?: number;
+  achieved_pct?: number;
+  focus_target_qty?: number;
+  focus_net_sold?: number;
+  focus_pct?: number;
+  // Set on rows returned with show=missing (no target)
+  missing?: number;
+}
+
+export interface RTeamTargets {
+  message: {
+    success: boolean;
+    data: {
+      totals: {
+        promoters: number;
+        target: number;
+        net_sold: number;
+        achieved_pct: number;
+        focus_target: number;
+        focus_net_sold: number;
+        focus_pct: number;
+        behind: number;
+        done: number;
+        missing: number;
+      };
+      rows: TeamTargetRow[];
+      // state set: counts as focus only in that state
+      focus_items: {item: string; item_name: string; state: string | null}[];
+      total: number;
+      page: number;
+      page_size: number;
+    };
+  };
+}
+
+// ─── Team Attendance (api.promoter_attendance) — not wrapped in data ─────────
+export interface TeamAttendancePromoter {
+  employee: string;
+  employee_number: string;
+  employee_name: string;
+  zone: string;
+  reports_to: string;
+  joined: string;
+}
+
+export interface RTeamAttendance {
+  message: {
+    from_date: string;
+    to_date: string;
+    today: string;
+    promoters: TeamAttendancePromoter[];
+    // employee -> date -> day; a past date missing here is Not Marked
+    days: Record<string, Record<string, SupervisorAttendanceDay>>;
+  };
+}
+
+export interface RTeamFilterOptions {
+  message: {
+    promoters: {name: string; label: string; zone: string}[];
+    zones: string[];
+    // Only from promoter_reports.get_options
+    stores?: {name: string; label: string}[];
+  };
+}
+
+// ─── Team Reports (api.promoter_reports.get_report) — rendered generically ──
+export type TeamReportView =
+  | 'sales'
+  | 'counts'
+  | 'deliveries'
+  | 'stock'
+  | 'compliance'
+  | 'orders';
+
+export type TeamReportColumnType =
+  | 'text'
+  | 'date'
+  | 'qty'
+  | 'money'
+  | 'pct'
+  | 'badge';
+
+export interface TeamReportColumn {
+  key: string;
+  label: string;
+  type: TeamReportColumnType;
+  // badge only: value -> tone, e.g. {"Delivery": "blue"}
+  tones?: Record<string, string>;
+}
+
+export interface TeamReportKpi {
+  label: string;
+  value: number | string;
+  type?: TeamReportColumnType;
+  tone?: string;
+}
+
+export interface RTeamReport {
+  message: {
+    columns: TeamReportColumn[];
+    rows: Record<string, any>[];
+    kpis: TeamReportKpi[];
+    note?: string;
+  };
+}
