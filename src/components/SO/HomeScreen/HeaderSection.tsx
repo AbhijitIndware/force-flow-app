@@ -75,6 +75,9 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
   isOvernightOutstationJourney
 }) => {
   const can = (action: PjpAllowedAction) => pjpActions.includes(action);
+  // Refetch with a known state: keep the buttons (disabled) so the card
+  // doesn't collapse; the full loader is only for the very first load.
+  const isRefreshingNextAction = !!isFetchingNextAction && !!pjpState;
   const [showWorkingHoursModal, setShowWorkingHoursModal] = React.useState(false);
   const [isOvernight, setIsOvernight] = React.useState(false);
 
@@ -125,8 +128,8 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             </View>
           )}
 
-          {/* ── Loading state for next action ── */}
-          {isFetchingNextAction && (
+          {/* ── First load for next action (nothing to show yet) ── */}
+          {isFetchingNextAction && !pjpState && (
             <View style={{ alignItems: 'center', marginTop: 16, gap: 8 }}>
               <ActivityIndicator size="small" color="#fff" />
               <Text style={{ fontSize: 13, color: '#ffeaea', fontFamily: Fonts.medium }}>
@@ -135,8 +138,9 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
             </View>
           )}
 
-          {!isFetchingNextAction && (
-            <>
+          {(!isFetchingNextAction || !!pjpState) && (
+            <View pointerEvents={isRefreshingNextAction ? 'none' : 'auto'}>
+            <View style={isRefreshingNextAction && styles.actionsRefreshing}>
               {/* ═══════════════════════════════════════════════════════════════
               WORKFLOW-DRIVEN BUTTONS — same design, driven by pjpState
           ═══════════════════════════════════════════════════════════════ */}
@@ -557,7 +561,13 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   Your PJP for today is completed. Great work! ✅
                 </Text>
               )}
-            </>
+            </View>
+            {isRefreshingNextAction && (
+              <View style={styles.actionsLoader}>
+                <ActivityIndicator size="small" color={Colors.white} />
+              </View>
+            )}
+            </View>
           )}
         </View>
 
@@ -792,6 +802,14 @@ const styles = StyleSheet.create({
     fontSize: Size.xs,
     color: Colors.white,
     lineHeight: 18,
+  },
+  actionsRefreshing: {
+    opacity: 0.55,
+  },
+  actionsLoader: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checkinButtonDisabled: {
     backgroundColor: Colors.black,
