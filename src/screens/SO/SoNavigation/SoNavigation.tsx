@@ -52,6 +52,7 @@ import NotificationListScreen from '../../NotificationListScreen';
 import CreatePromoterShiftScreen from '../HomeScreen/CreatePromoterShiftScreen';
 import PromoterShiftsScreen from '../HomeScreen/PromoterShiftsScreen';
 import PromoterDayDetailScreen from '../HomeScreen/PromoterDayDetailScreen';
+import TeamPromotersScreen from '../Team/TeamPromotersScreen';
 import TeamTargetsScreen from '../Team/TeamTargetsScreen';
 import TeamAttendanceScreen from '../Team/TeamAttendanceScreen';
 import TeamReportsScreen from '../Team/TeamReportsScreen';
@@ -328,6 +329,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="PromoterDayDetailScreen"
         component={PromoterDayDetailScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="TeamPromotersScreen"
+        component={TeamPromotersScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

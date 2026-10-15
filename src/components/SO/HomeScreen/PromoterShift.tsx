@@ -7,6 +7,7 @@ import {
   CalendarRange,
   FileBarChart,
   Target,
+  Users,
 } from 'lucide-react-native';
 import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
@@ -14,6 +15,7 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 
 const LINKS = [
+  { screen: 'TeamPromotersScreen', title: 'My Promoters', Icon: Users },
   { screen: 'CreatePromoterShiftScreen', title: 'Create Promoter Shift', Icon: CalendarPlus },
   { screen: 'PromoterShiftsScreen', title: 'Promoter Shifts', Icon: CalendarRange },
   { screen: 'TeamAttendanceScreen', title: 'Team Attendance', Icon: CalendarCheck },
