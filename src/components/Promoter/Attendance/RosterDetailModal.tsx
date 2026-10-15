@@ -24,9 +24,8 @@ const RosterDetailModal = ({day, onClose}: RosterDetailModalProps) => {
     return null;
   }
 
-  const isSplit = day.is_split;
-  const shiftColor = isSplit ? rosterColors.splitAccent : '#16a34a';
-  const shiftBg = isSplit ? '#FFF7ED' : '#E6F7EE';
+  const shiftColor = '#16a34a';
+  const shiftBg = '#E6F7EE';
 
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
@@ -65,7 +64,7 @@ const RosterDetailModal = ({day, onClose}: RosterDetailModalProps) => {
                       styles.shiftBadgeText,
                       {color: shiftColor},
                     ]}>
-                    {day.shift_label || (isSplit ? 'Split Shift' : 'Shift')}
+                    {day.shift_label || 'Shift'}
                   </Text>
                 </View>
                 <Text style={styles.slotCount}>
@@ -87,9 +86,7 @@ const RosterDetailModal = ({day, onClose}: RosterDetailModalProps) => {
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}>
             {(day.slots ?? []).map((slot, i) => {
-              const secondary = slot.is_secondary;
-              const accent = secondary ? rosterColors.splitAccent : '#16a34a';
-              const accentBg = secondary ? '#FFF7ED' : '#E6F7EE';
+              const accent = '#16a34a';
 
               return (
                 <View key={i} style={styles.slotCard}>
@@ -102,19 +99,6 @@ const RosterDetailModal = ({day, onClose}: RosterDetailModalProps) => {
                   <View style={styles.slotContent}>
                     <View style={styles.slotHeader}>
                       <Text style={styles.slotIndex}>Slot {i + 1}</Text>
-                      <View
-                        style={[
-                          styles.primaryPill,
-                          {backgroundColor: accentBg},
-                        ]}>
-                        <Text
-                          style={[
-                            styles.primaryPillText,
-                            {color: accent},
-                          ]}>
-                          {secondary ? 'Secondary' : 'Primary'}
-                        </Text>
-                      </View>
                     </View>
 
                     <Text style={styles.slotType} numberOfLines={1}>
@@ -268,14 +252,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  primaryPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  primaryPillText: {fontFamily: Fonts.medium, fontSize: 10},
   slotType: {
     fontFamily: Fonts.semiBold,
     fontSize: 16,

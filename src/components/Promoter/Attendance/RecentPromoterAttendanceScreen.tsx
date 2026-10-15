@@ -127,7 +127,6 @@ const RecentPromoterAttendanceScreen = ({navigation}: any) => {
         {/* ── Remaining Summary Grid ── */}
         {/* <View style={styles.summaryGrid}>
           <MiniStatCard value={summary?.missed ?? 0} label="Missed" />
-          <MiniStatCard value={summary?.split ?? 0} label="Split" />
           <MiniStatCard value={summary?.scheduled ?? 0} label="Scheduled" />
           <MiniStatCard value={summary?.worked ?? 0} label="Worked" />
           <MiniStatCard value={summary?.late ?? 0} label="Late" />

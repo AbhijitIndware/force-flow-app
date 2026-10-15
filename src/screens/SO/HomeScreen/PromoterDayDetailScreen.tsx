@@ -28,8 +28,10 @@ import {
   SupervisorActivityRow,
   SupervisorAttendanceByStore,
   SupervisorOrderRow,
+  SupervisorStockMovementRow,
   SupervisorStockTakeRow,
 } from '../../../types/baseType';
+import { ATTENDANCE_STATUS_CONFIG } from '../../../components/SO/HomeScreen/PromoterAttendanceMonth';
 import { getInitials } from '../../../utils/utils';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import {
@@ -57,10 +59,17 @@ const PURPLE_SOFT = '#EDE7FE';
 const SECTION_COLORS = {
   attendance: { icon: 'time-outline', color: '#2563EB', bg: BLUE_SOFT },
   stock: { icon: 'file-tray-outline', color: '#15803D', bg: GREEN_SOFT },
+  deliveries: { icon: 'swap-vertical-outline', color: '#2563EB', bg: BLUE_SOFT },
   sales: { icon: 'trending-up-outline', color: '#15803D', bg: GREEN_SOFT },
   orders: { icon: 'cart-outline', color: '#C2410C', bg: ORANGE_SOFT },
   activities: { icon: 'sparkles-outline', color: '#7C3AED', bg: PURPLE_SOFT },
 } as const;
+
+const MOVEMENT_STYLE: Record<string, { icon: string; color: string; bg: string }> = {
+  Delivery: { icon: 'arrow-down-circle-outline', color: '#2563EB', bg: BLUE_SOFT },
+  'Customer return': { icon: 'return-down-back-outline', color: '#7C3AED', bg: PURPLE_SOFT },
+  Return: { icon: 'arrow-up-circle-outline', color: '#C2410C', bg: ORANGE_SOFT },
+};
 
 const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
   const today = moment().format('YYYY-MM-DD');
@@ -107,17 +116,27 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
 
   const data = dayData?.message?.data;
   const employeeName = data?.employee_name ?? '';
+  const employeeNumber = data?.employee_number ?? '';
+  const officialStatus = data?.attendance_status;
   const totalHours = Number(data?.total_working_hours ?? 0);
   const attendance = data?.attendance;
   const attendanceByStore = data?.attendance_by_store ?? [];
   const stockRows = data?.stock_take?.rows ?? [];
   const stockCount = data?.stock_take?.items_counted ?? 0;
+  const stockArrivedUnrecorded = stockRows.some(r => r.change > 0);
+  const movementRows = data?.deliveries_and_returns?.rows ?? [];
   const orderRows = data?.orders?.rows ?? [];
   const orderTotal = data?.orders?.total_value ?? 0;
   const sales = data?.sales ?? {sold: 0, sold_value: 0, received: 0, found: 0};
   const activityRows = data?.activities?.rows ?? [];
-  const monthSales = monthSalesResponse?.message?.data?.totals ??
-    {sold: 0, sold_value: 0, received: 0, found: 0};
+  const monthTotals = monthSalesResponse?.message?.data?.totals;
+  // "Sold" is net of customer returns, same as the promoter's My Sales screen
+  const monthSales = {
+    sold: monthTotals?.net_sold ?? monthTotals?.sold ?? 0,
+    sold_value: monthTotals?.net_sold_value ?? monthTotals?.sold_value ?? 0,
+    received: monthTotals?.received ?? 0,
+    found: monthTotals?.found ?? 0,
+  };
   // const todayShifts = data?.today_shifts ?? [];
 
   const onRefresh = async () => {
@@ -161,6 +180,19 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
     );
   };
 
+  const renderOfficialStatus = (status?: string) => {
+    const cfg =
+      ATTENDANCE_STATUS_CONFIG[status as keyof typeof ATTENDANCE_STATUS_CONFIG];
+    if (!cfg) {
+      return null;
+    }
+    return (
+      <View style={[styles.statusPill, { backgroundColor: cfg.bg }]}>
+        <Text style={[styles.statusPillText, { color: cfg.color }]}>{status}</Text>
+      </View>
+    );
+  };
+
   const renderWorkflowPill = (state: string) => {
     const approved = state?.toLowerCase() === 'approved';
     return (
@@ -180,34 +212,82 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
     );
   };
 
-  const renderMismatch = (qty: number) => {
-    if (qty === 0) {
+  // change = counted - before: below zero sold off the shelf,
+  // above zero arrived without a delivery entry
+  const renderChange = (change: number) => {
+    if (change === 0) {
       return (
-        <View style={[styles.mismatchBadge, styles.mismatchOk]}>
-          <Ionicons name="checkmark" size={11} color="#15803D" />
-          <Text style={[styles.mismatchText, styles.mismatchTextOk]}>0</Text>
+        <View style={[styles.mismatchBadge, styles.changeNone]}>
+          <Text style={[styles.mismatchText, styles.changeNoneText]}>0</Text>
+        </View>
+      );
+    }
+    if (change < 0) {
+      return (
+        <View style={[styles.mismatchBadge, styles.changeSold]}>
+          <Text style={[styles.mismatchText, styles.changeSoldText]}>
+            {change}
+          </Text>
         </View>
       );
     }
     return (
-      <View style={[styles.mismatchBadge, styles.mismatchBad]}>
-        <Ionicons name="warning" size={11} color="#B91C1C" />
-        <Text style={[styles.mismatchText, styles.mismatchTextBad]}>{qty}</Text>
+      <View style={[styles.mismatchBadge, styles.changeArrived]}>
+        <Ionicons name="warning" size={11} color="#B45309" />
+        <Text style={[styles.mismatchText, styles.changeArrivedText]}>
+          +{change}
+        </Text>
       </View>
     );
   };
 
-  const renderStockRow = (row: SupervisorStockTakeRow) => {
-    const bad = row.mismatched_qty !== 0;
+  const renderStockRow = (row: SupervisorStockTakeRow, idx: number) => {
     return (
-      <View key={row.item} style={[styles.tableRow, bad && styles.tableRowBad]}>
-        <Text style={styles.colItem} numberOfLines={2}>
-          {row.item}
+      <View
+        key={`${row.store}-${row.item_name}-${row.time}-${idx}`}
+        style={[styles.tableRow, row.change > 0 && styles.tableRowWarn]}>
+        <Text style={styles.colItem} numberOfLines={3}>
+          {row.item_name}
+          {'\n'}
+          <Text style={styles.colItemSub}>
+            {row.store_name} · {row.time}
+          </Text>
         </Text>
-        <Text style={styles.colNum}>{row.warehouse_balance}</Text>
-        <Text style={styles.colNum}>{row.manual_balance_entry}</Text>
-        <View style={styles.colMismatch}>
-          {renderMismatch(row.mismatched_qty)}
+        <Text style={styles.colNum}>{row.before}</Text>
+        <Text style={styles.colNum}>{row.counted}</Text>
+        <View style={styles.colMismatch}>{renderChange(row.change)}</View>
+      </View>
+    );
+  };
+
+  const renderMovementRow = (row: SupervisorStockMovementRow, idx: number) => {
+    const meta = MOVEMENT_STYLE[row.movement] ?? MOVEMENT_STYLE.Delivery;
+    const extra = [row.condition, row.reason].filter(Boolean).join(' · ');
+    return (
+      <View key={`${row.entry}-${row.item_name}-${idx}`} style={styles.orderRow}>
+        <View style={[styles.iconBox, { backgroundColor: meta.bg }]}>
+          <Ionicons name={meta.icon} size={14} color={meta.color} />
+        </View>
+        <View style={styles.orderMeta}>
+          <Text style={styles.orderName} numberOfLines={2}>
+            {row.item_name}
+          </Text>
+          <Text style={styles.orderQty} numberOfLines={1}>
+            <Text style={{ color: meta.color }}>{row.movement}</Text> ·{' '}
+            {row.store_name}
+          </Text>
+          {extra ? (
+            <Text style={styles.orderQty} numberOfLines={2}>
+              {extra}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.orderRight}>
+          <Text style={styles.orderTotal}>{row.qty} pcs</Text>
+          <Text style={styles.orderQty}>
+            ₹{Number(row.value || 0).toLocaleString('en-IN')}
+          </Text>
+          {row.status ? renderWorkflowPill(row.status) : null}
         </View>
       </View>
     );
@@ -386,6 +466,9 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
               <Text style={styles.heroName} numberOfLines={1}>
                 {employeeName}
               </Text>
+              {employeeNumber ? (
+                <Text style={styles.heroDate}>Emp No. {employeeNumber}</Text>
+              ) : null}
               <View style={styles.heroDateRow}>
                 <Ionicons
                   name="calendar-outline"
@@ -397,7 +480,9 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
                 </Text>
               </View>
             </View>
-            {renderAttendanceStatus(attendance?.status)}
+            {officialStatus
+              ? renderOfficialStatus(officialStatus)
+              : renderAttendanceStatus(attendance?.status)}
           </View>
 
           {/* {todayShifts.length > 0 ? (
@@ -566,14 +651,36 @@ const PromoterDayDetailScreen = ({ navigation, route }: Props) => {
             <>
               <View style={styles.tableHeaderRow}>
                 <Text style={styles.colItem}>Item</Text>
-                <Text style={styles.colNum}>System</Text>
+                <Text style={styles.colNum}>Before</Text>
                 <Text style={styles.colNum}>Counted</Text>
-                <Text style={styles.colMismatch}>Δ</Text>
+                <Text style={styles.colMismatch}>Change</Text>
               </View>
               {stockRows.map(renderStockRow)}
+              {stockArrivedUnrecorded ? (
+                <Text style={[styles.inlineEmptyText, {color: '#B45309'}]}>
+                  + means stock arrived without a delivery entry.
+                </Text>
+              ) : null}
             </>
           ) : (
             <Text style={styles.inlineEmptyText}>No stock take recorded.</Text>
+          )}
+        </View>
+
+        <View style={[styles.card, boxShadow]}>
+          {renderSectionHeader(
+            'deliveries',
+            'Deliveries & Returns',
+            <View style={styles.countChip}>
+              <Text style={styles.countChipText}>{movementRows.length}</Text>
+            </View>,
+          )}
+          {movementRows.length > 0 ? (
+            movementRows.map(renderMovementRow)
+          ) : (
+            <Text style={styles.inlineEmptyText}>
+              No deliveries or returns recorded.
+            </Text>
           )}
         </View>
 
@@ -1085,8 +1192,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 4,
   },
-  tableRowBad: {
-    backgroundColor: '#FDF2F2',
+  tableRowWarn: {
+    backgroundColor: '#FFF7ED',
   },
   colItem: {
     flex: 2,
@@ -1114,14 +1221,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
-  mismatchOk: { backgroundColor: GREEN_SOFT },
-  mismatchBad: { backgroundColor: RED_SOFT },
   mismatchText: {
     fontFamily: Fonts.semiBold,
     fontSize: 11,
   },
-  mismatchTextOk: { color: '#15803D' },
-  mismatchTextBad: { color: '#B91C1C' },
+  changeNone: { backgroundColor: '#F0F0F0' },
+  changeNoneText: { color: '#555555' },
+  changeSold: { backgroundColor: GREEN_SOFT },
+  changeSoldText: { color: '#15803D' },
+  changeArrived: { backgroundColor: ORANGE_SOFT },
+  changeArrivedText: { color: '#B45309' },
+  colItemSub: {
+    fontFamily: Fonts.regular,
+    fontSize: 9,
+    color: Colors.gray,
+  },
 
   orderRow: {
     flexDirection: 'row',

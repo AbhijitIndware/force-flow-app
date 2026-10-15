@@ -29,6 +29,7 @@ import { Size } from '../../../utils/fontSize';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { SupervisorRosterAssignment } from '../../../types/baseType';
 import { getInitials } from '../../../utils/utils';
+import PromoterAttendanceMonth from '../../../components/SO/HomeScreen/PromoterAttendanceMonth';
 import {
   useGetMyPromotersQuery,
   useGetPromoterRosterQuery,
@@ -50,7 +51,6 @@ type Props = {
 };
 
 const ORANGE_SOFT = '#FFF1E0';
-const BLUE_SOFT = '#E3ECFF';
 const RED_SOFT = '#FBE8E8';
 
 const assignmentDays = (a: SupervisorRosterAssignment) =>
@@ -104,6 +104,9 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
   );
 
   const employeeName = rosterData?.message?.data?.employee_name ?? '';
+  const employeeNumber = rosterData?.message?.data?.employee_number ?? '';
+  const attendanceDays = rosterData?.message?.data?.attendance_days ?? [];
+  const attendanceTotals = rosterData?.message?.data?.attendance_totals ?? {};
   const aonDays = rosterData?.message?.data?.aon_days ?? 0;
   const periodStart = rosterData?.message?.data?.period_start ?? '';
   const periodEnd = rosterData?.message?.data?.period_end ?? '';
@@ -261,7 +264,6 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
 
   const renderStatusPill = (assignment: SupervisorRosterAssignment) => {
     const cancelled = assignment.docstatus === 2;
-    const isSecondary = assignment.custom_secondary_shift === 1;
     const isFloater = assignment.floater === 1;
 
     if (cancelled) {
@@ -270,16 +272,6 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
           <Ionicons name="close-circle" size={11} color="#B91C1C" />
           <Text style={[styles.statusPillText, styles.statusTextCancelled]}>
             Cancelled
-          </Text>
-        </View>
-      );
-    }
-    if (isSecondary) {
-      return (
-        <View style={[styles.statusPill, styles.statusPillSecondary]}>
-          <Ionicons name="time" size={11} color="#2563EB" />
-          <Text style={[styles.statusPillText, styles.statusTextSecondary]}>
-            Secondary
           </Text>
         </View>
       );
@@ -521,20 +513,6 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
               Pick a promoter above to see their shifts for the month.
             </Text>
           </View>
-        ) : assignments.length === 0 ? (
-          <View style={[styles.emptyState, boxShadow]}>
-            <View style={styles.emptyIconBox}>
-              <Ionicons
-                name="file-tray-outline"
-                size={28}
-                color={Colors.gray}
-              />
-            </View>
-            <Text style={styles.emptyTitle}>No shifts this month</Text>
-            <Text style={styles.emptySub}>
-              {employeeName} has no assignments for {monthLabel} {year}.
-            </Text>
-          </View>
         ) : (
           <>
             {/* ── Summary / hero ── */}
@@ -549,6 +527,11 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
                   <Text style={styles.summaryName} numberOfLines={1}>
                     {employeeName}
                   </Text>
+                  {employeeNumber ? (
+                    <Text style={styles.summaryPeriod}>
+                      Emp No. {employeeNumber}
+                    </Text>
+                  ) : null}
                   <Text style={styles.summaryPeriod}>
                     {periodStart
                       ? `${moment(periodStart).format('DD MMM YYYY')} - ${moment(
@@ -576,6 +559,31 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
               </View>
             </View>
 
+            {attendanceDays.length > 0 && (
+              <PromoterAttendanceMonth
+                month={month}
+                year={year}
+                days={attendanceDays}
+                totals={attendanceTotals}
+              />
+            )}
+
+            {assignments.length === 0 ? (
+              <View style={[styles.emptyState, boxShadow]}>
+                <View style={styles.emptyIconBox}>
+                  <Ionicons
+                    name="file-tray-outline"
+                    size={28}
+                    color={Colors.gray}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>No shifts this month</Text>
+                <Text style={styles.emptySub}>
+                  {employeeName} has no assignments for {monthLabel} {year}.
+                </Text>
+              </View>
+            ) : (
+              <>
             <View style={styles.listHeaderRow}>
               <Text style={styles.listHeaderText}>
                 {assignments.length} assignment
@@ -613,6 +621,8 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
                 {group.items.map(renderAssignment)}
               </View>
             ))}
+              </>
+            )}
           </>
         )}
       </ScrollView>
@@ -1142,7 +1152,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   statusPillActive: { backgroundColor: '#E7F8EA' },
-  statusPillSecondary: { backgroundColor: BLUE_SOFT },
   statusPillFloater: { backgroundColor: ORANGE_SOFT },
   statusPillCancelled: { backgroundColor: RED_SOFT },
   statusPillText: {
@@ -1150,7 +1159,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   statusTextActive: { color: '#15803D' },
-  statusTextSecondary: { color: '#2563EB' },
   statusTextFloater: { color: '#C2410C' },
   statusTextCancelled: { color: '#B91C1C' },
   cardTitle: {

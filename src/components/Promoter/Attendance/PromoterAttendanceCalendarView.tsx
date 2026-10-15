@@ -123,12 +123,6 @@ const DetailModal = ({
                     {day.missed ? 'Missed' : day.status}
                   </Text>
                 </View>
-                {day.is_split && (
-                  <View style={modalStyles.flagChip}>
-                    <View style={[modalStyles.flagDot, {backgroundColor: '#d97706'}]} />
-                    <Text style={modalStyles.flagChipText}>Split</Text>
-                  </View>
-                )}
                 {day.late_checkin && (
                   <View style={modalStyles.flagChip}>
                     <View style={[modalStyles.flagDot, {backgroundColor: '#d97706'}]} />

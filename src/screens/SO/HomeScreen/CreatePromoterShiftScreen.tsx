@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -71,7 +72,6 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
   const [shiftType, setShiftType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [isSecondary, setIsSecondary] = useState(false);
   const [floater, setFloater] = useState(false);
   const [floaterStores, setFloaterStores] = useState<FloaterStore[]>([]);
 
@@ -260,7 +260,6 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
       ...(shiftType ? { shift_type: shiftType } : {}),
       start_date: startDate,
       end_date: endDate,
-      is_secondary: isSecondary ? 1 : 0,
       floater: floater ? 1 : 0,
       ...(floater && floaterStores.length
         ? { floater_stores: floaterStores.map(s => s.id) }
@@ -279,12 +278,13 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
         });
         navigation.goBack();
       } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Could not create shift',
-          text2: getSafeServerMessage((res?.message as any)?.message) ?? 'Please try again',
-          position: 'top',
-        });
+        // Server explains the fix (end old posting / change store / add as
+        // floater store) — show it in full.
+        Alert.alert(
+          'Could not create shift',
+          getSafeServerMessage((res?.message as any)?.message) ??
+            'Please try again',
+        );
       }
     } catch (error: any) {
       const messageText = getUserFacingError(
@@ -438,13 +438,6 @@ const CreatePromoterShiftScreen = ({ navigation }: Props) => {
             <View style={styles.fieldDivider} />
 
             <View style={styles.toggleCard}>
-              {renderToggleRow(
-                'Secondary shift',
-                'Afternoon half of a split day',
-                isSecondary,
-                setIsSecondary,
-              )}
-              <View style={styles.toggleDivider} />
               {renderToggleRow(
                 'Floater',
                 'Covers extra stores',
@@ -687,10 +680,6 @@ const styles = StyleSheet.create({
     fontSize: Size.xxs,
     color: Colors.gray,
     marginTop: 2,
-  },
-  toggleDivider: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
   },
   floaterSection: { marginTop: 12 },
   floaterHeader: {

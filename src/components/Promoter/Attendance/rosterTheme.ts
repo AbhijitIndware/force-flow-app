@@ -12,7 +12,6 @@ export const rosterColors = {
   tabInactiveBg: '#FFFFFF',
   cancelledBg: '#F3F4F6',
   cancelledText: '#9CA3AF',
-  splitAccent: '#F59E0B',
 };
 
 export const getDayStatus = (
@@ -33,9 +32,6 @@ export const getDayStatus = (
 const shiftLabelPriority = ['aon', 'regular'];
 
 export const getRightLabel = (day: RosterDay): string => {
-  if (day.is_split) {
-    return 'Split';
-  }
   const rawLabel = day.shift_label?.trim();
   if (
     rawLabel &&

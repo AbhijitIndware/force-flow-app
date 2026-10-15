@@ -690,10 +690,24 @@ export const promoterBaseApi = createApi({
     }),
 
     // ─── SUPERVISOR ───────────────────────────────────────────────────────────
-    getMyPromoters: builder.query<RSupervisorMyPromoters, void>({
-      query: () => ({
+    getMyPromoters: builder.query<
+      RSupervisorMyPromoters,
+      | {
+          search?: string;
+          zone?: string;
+          show?: 'posted' | 'not_posted' | 'checked_in' | 'not_checked_in';
+          // Without page every promoter is returned
+          page?: number;
+          page_size?: number;
+        }
+      | void
+    >({
+      query: (args) => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.supervisor_api.get_my_promoters',
         method: 'GET',
+        params: Object.fromEntries(
+          Object.entries(args ?? {}).filter(([, v]) => v !== undefined && v !== ''),
+        ),
       }),
       providesTags: ['Promoter'],
     }),

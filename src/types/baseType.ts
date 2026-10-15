@@ -2775,7 +2775,6 @@ export interface StoreTodayEntry {
   store_name: string;
   start_time: string;
   end_time: string;
-  is_secondary: boolean;
   is_floater: boolean;
   log_id: string | null;
   checked_in: boolean;
@@ -2840,7 +2839,6 @@ export interface IAttendanceStatusData {
     check_in: { name: string; time: string } | null;
     check_out: { name: string; time: string } | null;
   };
-  is_split_today: boolean;
   total_working_hours: number;
   stores_today: StoreTodayEntry[];
 }
@@ -2881,14 +2879,12 @@ export interface RosterSlot {
   end_time: string;
   shift_type: string;
   status: string;
-  is_secondary: boolean;
   is_floater: boolean;
 }
 
 export interface RosterDay {
   date: string;
   shift_label: string;
-  is_split: boolean;
   slots: RosterSlot[];
 }
 
@@ -2928,7 +2924,6 @@ export interface MonthlyAttendanceDay {
   is_future: boolean;
   was_scheduled: boolean;
   missed: boolean;
-  is_split: boolean;
   late_checkin: boolean;
   working_hours: number;
   attendance_id: string;
@@ -2963,7 +2958,6 @@ export interface RMonthlyAttendance {
         worked: number;
         missed: number;
         late: number;
-        split: number;
         total_working_hours: number;
         average_working_hours: number;
         attendance_percentage: number;
@@ -3256,7 +3250,22 @@ export interface SupervisorPromoterShift {
   shift_type: string;
   start_time: string;
   end_time: string;
+  floater_stores?: SupervisorFloaterStore[];
 }
+
+export interface SupervisorFloaterStore {
+  store: string;
+  store_name: string;
+  store_image?: string;
+}
+
+// Official attendance for the day; 'Not Marked' until marked at night
+export type PromoterAttendanceStatus =
+  | 'Present'
+  | 'Half Day'
+  | 'Absent'
+  | 'On Leave'
+  | 'Not Marked';
 
 export interface SupervisorPromoterAttendance {
   checked_in: boolean;
@@ -3284,7 +3293,7 @@ export interface SupervisorPromoter {
   user_id: string;
   mobile: string;
   is_posted_today: boolean;
-  is_split_today: boolean;
+  attendance_status?: PromoterAttendanceStatus;
   today_shifts: SupervisorPromoterShift[];
   attendance: SupervisorPromoterAttendance;
   attendance_by_store: SupervisorAttendanceByStore[];
@@ -3299,6 +3308,11 @@ export interface RSupervisorMyPromoters {
       posted_today: number;
       checked_in: number;
       not_checked_in: number;
+      zones?: string[];
+      matching?: number;
+      page?: number;
+      page_size?: number;
+      total_pages?: number;
       promoters: SupervisorPromoter[];
     };
   };
@@ -3306,10 +3320,32 @@ export interface RSupervisorMyPromoters {
 
 // Supervisor — Promoter Day Detail
 export interface SupervisorStockTakeRow {
-  item: string;
-  warehouse_balance: string;
-  manual_balance_entry: string;
-  mismatched_qty: number;
+  date: string;
+  time: string;
+  emp_no: string;
+  promoter: string;
+  zone: string;
+  store: string;
+  store_name: string;
+  item_name: string;
+  counted: number;
+  before: number;
+  // counted - before: < 0 sold off the shelf, > 0 arrived without a delivery
+  change: number;
+}
+
+export interface SupervisorStockMovementRow {
+  date: string;
+  store: string;
+  store_name: string;
+  movement: 'Delivery' | 'Customer return' | 'Return' | string;
+  item_name: string;
+  qty: number;
+  value: number;
+  condition: 'Resaleable' | 'Not Resaleable' | null;
+  reason: string | null;
+  status: string;
+  entry: string;
 }
 
 export interface SupervisorOrderRow {
@@ -3328,6 +3364,8 @@ export interface SupervisorActivityRow {
 
 export interface IPromoterDayData {
   employee_name: string;
+  employee_number?: string;
+  attendance_status?: PromoterAttendanceStatus;
   date: string;
   attendance_by_store: SupervisorAttendanceByStore[];
   total_working_hours: number;
@@ -3353,6 +3391,10 @@ export interface IPromoterDayData {
     count: number;
     rows: SupervisorActivityRow[];
   };
+  deliveries_and_returns?: {
+    count: number;
+    rows: SupervisorStockMovementRow[];
+  };
   sales?: {
     sold: number;
     sold_value: number;
@@ -3369,6 +3411,18 @@ export interface RSupervisorPromoterDay {
 }
 
 // Supervisor — Promoter Roster
+export interface SupervisorAttendanceDay {
+  date: string;
+  status: PromoterAttendanceStatus;
+  code: 'P' | 'HD' | 'A' | 'L' | '';
+  // Present only on days with a check-in
+  first_in?: string;
+  last_out?: string;
+  hours?: number;
+  stores?: string;
+  open?: boolean; // a store visit is still checked in
+}
+
 export interface SupervisorRosterAssignment {
   name: string;
   store: string;
@@ -3381,7 +3435,6 @@ export interface SupervisorRosterAssignment {
   end_time: string;
   docstatus: number;
   floater: number;
-  custom_secondary_shift: number;
   floater_stores: {
     store: string;
     store_name: string;
@@ -3393,12 +3446,15 @@ export interface RSupervisorPromoterRoster {
     success: boolean;
     data: {
       employee_name: string;
+      employee_number?: string;
       aon_days: number;
       month: number;
       year: number;
       period_start: string;
       period_end: string;
       assignments: SupervisorRosterAssignment[];
+      attendance_days?: SupervisorAttendanceDay[];
+      attendance_totals?: Partial<Record<PromoterAttendanceStatus, number>>;
     };
   };
 }
@@ -3439,7 +3495,6 @@ export interface ICreateShiftAssignment {
   shift_type?: string;
   start_date: string;
   end_date: string;
-  is_secondary?: number;
   floater?: number;
   floater_stores?: string[];
 }

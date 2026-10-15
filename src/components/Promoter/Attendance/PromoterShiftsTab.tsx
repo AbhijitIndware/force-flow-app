@@ -8,7 +8,6 @@ import {Fonts} from '../../../constants';
 import MonthlyRosterHeader from './MonthlyRosterHeader';
 import RosterCard from './RosterCard';
 import RosterDetailModal from './RosterDetailModal';
-import SplitShiftCard from './SplitShiftCard';
 import {rosterColors} from './rosterTheme';
 
 const PromoterShiftsTab = () => {
@@ -35,12 +34,9 @@ const PromoterShiftsTab = () => {
     }, 2000);
   }, [refetchRoster]);
 
-  const renderItem = ({item}: {item: RosterDay}) =>
-    item.is_split || (item.slots?.length ?? 0) > 1 ? (
-      <SplitShiftCard day={item} onPress={() => setSelectedDay(item)} />
-    ) : (
-      <RosterCard day={item} onPress={() => setSelectedDay(item)} />
-    );
+  const renderItem = ({item}: {item: RosterDay}) => (
+    <RosterCard day={item} onPress={() => setSelectedDay(item)} />
+  );
 
   return (
     <View style={styles.container}>
