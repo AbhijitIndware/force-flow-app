@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Animated,
   Text,
@@ -7,13 +7,12 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { launchCamera } from 'react-native-image-picker';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { Camera, Store } from 'lucide-react-native';
-import { attendanceCameraOptions, getAttendanceImage } from '../../../utils/attendanceImage';
 import Toast from 'react-native-toast-message';
+import InAppCamera from '../../ui-lib/in-app-camera';
 
 interface FormValues {
   store: string;
@@ -48,25 +47,13 @@ const AddCheckInForm: React.FC<Props> = ({
   scrollY,
   needsStoreImage,
 }) => {
-  const handleOpenCamera = (fieldName: 'image' | 'store_image', cameraType: 'front' | 'back') => async () => {
-    launchCamera(
-      { ...attendanceCameraOptions, cameraType },
-      response => {
-        if (response.didCancel) return;
-        if (response.errorCode) {
-          console.warn('Camera error: ', response.errorMessage);
-          return;
-        }
-        if (response.assets && response.assets.length > 0) {
-          const result = getAttendanceImage(response.assets[0]);
-          if (result.error) {
-            Toast.show({ type: 'error', text1: result.error });
-          } else {
-            setFieldValue(fieldName, result.image);
-          }
-        }
-      },
-    );
+  const [cameraTarget, setCameraTarget] = useState<{
+    fieldName: 'image' | 'store_image';
+    cameraType: 'front' | 'back';
+  } | null>(null);
+
+  const handleOpenCamera = (fieldName: 'image' | 'store_image', cameraType: 'front' | 'back') => () => {
+    setCameraTarget({ fieldName, cameraType });
   };
 
   return (
@@ -120,6 +107,14 @@ const AddCheckInForm: React.FC<Props> = ({
           </TouchableOpacity>
         </View>
       )}
+
+      <InAppCamera
+        visible={!!cameraTarget}
+        cameraType={cameraTarget?.cameraType ?? 'front'}
+        onClose={() => setCameraTarget(null)}
+        onCapture={image => cameraTarget && setFieldValue(cameraTarget.fieldName, image)}
+        onError={message => Toast.show({ type: 'error', text1: message })}
+      />
     </Animated.ScrollView>
   );
 };

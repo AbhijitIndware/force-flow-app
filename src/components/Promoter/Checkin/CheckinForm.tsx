@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import {launchCamera} from 'react-native-image-picker';
 import ReusableDropdown from '../../ui-lib/resusable-dropdown';
 import {Upload} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
@@ -16,11 +15,7 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import MapReusableLocationInput from './MapReusableLocationInput';
 import Toast from 'react-native-toast-message';
-import {
-  attendanceCameraOptions,
-  getAttendanceImage,
-  getCameraErrorMessage,
-} from '../../../utils/attendanceImage';
+import InAppCamera from '../../ui-lib/in-app-camera';
 
 interface ICheckInRequest {
   store: string;
@@ -67,36 +62,10 @@ const AddCheckInForm: React.FC<Props> = ({
         : errors.image.data || errors.image.mime
       : undefined;
 
+  const [cameraVisible, setCameraVisible] = useState(false);
+
   // 📌 CAMERA HANDLER
-  const handleOpenCamera = async () => {
-    launchCamera(attendanceCameraOptions, response => {
-      if (response.didCancel) {
-        return;
-      }
-      if (response.errorCode) {
-        Toast.show({
-          type: 'error',
-          text1: 'Unable to take photo',
-          text2: getCameraErrorMessage(response),
-          position: 'top',
-        });
-        return;
-      }
-
-      const result = getAttendanceImage(response.assets?.[0]);
-      if (result.error) {
-        Toast.show({
-          type: 'error',
-          text1: 'Unable to use photo',
-          text2: result.error,
-          position: 'top',
-        });
-        return;
-      }
-
-      setFieldValue('image', result.image);
-    });
-  };
+  const handleOpenCamera = () => setCameraVisible(true);
 
   return (
     <View>
@@ -211,6 +180,21 @@ const AddCheckInForm: React.FC<Props> = ({
           </TouchableOpacity>
         </View>
       </Modal>
+
+      <InAppCamera
+        visible={cameraVisible}
+        cameraType="back"
+        onClose={() => setCameraVisible(false)}
+        onCapture={image => setFieldValue('image', image)}
+        onError={message =>
+          Toast.show({
+            type: 'error',
+            text1: 'Unable to use photo',
+            text2: message,
+            position: 'top',
+          })
+        }
+      />
     </View>
   );
 };
