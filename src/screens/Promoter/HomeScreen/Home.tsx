@@ -289,7 +289,8 @@ const Home = ({navigation, route}: Props) => {
           name="StockReceivedScreen"
           component={StockReceivedScreen}
           options={{
-            tabBarLabel: STOCK_SCREENS.receive.title,
+            // Too long for one line in the bar.
+            tabBarLabel: 'Receive Stock\nfrom Distributor',
             headerShown: false,
             tabBarIcon: () => (
               <STOCK_SCREENS.receive.Icon

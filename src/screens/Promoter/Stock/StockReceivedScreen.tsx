@@ -133,7 +133,7 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
       : rows.filter(row => repeatCodes.has(row.item_code));
     const earlier = already.map(a => {
       const source =
-        a.kind === 'ddn' ? 'distributor delivery note' : 'Receive Stock';
+        a.kind === 'ddn' ? 'distributor delivery note' : STOCK_SCREENS.receive.title;
       const by = a.by ? ` by ${a.by}` : '';
       return `• ${itemName(a.item_code)}: ${a.qty}${by} on ${moment(
         a.date,
