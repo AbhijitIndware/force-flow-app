@@ -1,4 +1,8 @@
-import type {Asset, CameraOptions} from 'react-native-image-picker';
+import type {
+  Asset,
+  CameraOptions,
+  ImagePickerResponse,
+} from 'react-native-image-picker';
 
 // Keeping attendance photos below this size prevents the Base64 image, its
 // preview URI, and the JSON request body from exhausting memory on Android.
@@ -49,4 +53,17 @@ export const getAttendanceImage = (
       mime: asset.type,
     },
   };
+};
+
+// launchCamera opens the phone's own Camera app. When that app is disabled
+// (or blocked by device policy) Android has nothing to handle the request and
+// returns a raw "No Activity found to handle Intent" error.
+export const getCameraErrorMessage = (
+  response: ImagePickerResponse,
+): string => {
+  const message = response.errorMessage ?? '';
+  if (/No Activity found|IMAGE_CAPTURE/i.test(message)) {
+    return "Your phone's Camera app is turned off. Enable it in Settings → Apps → Camera.";
+  }
+  return message || 'Please try again.';
 };

@@ -387,8 +387,8 @@ const MySalesScreen = ({navigation}: Props) => {
         <View style={styles.notice}>
           <Ionicons name="warning-outline" color="#B45309" size={17} />
           <Text style={styles.noticeText}>
-            Stock appeared without a delivery entry — record it in{' '}
-            {STOCK_SCREENS.receive.title}
+            Stock appeared without a delivery entry — record deliveries in{' '}
+            {STOCK_SCREENS.receive.title}.
           </Text>
         </View>
       ) : null}

@@ -21,7 +21,7 @@ export type PromoterAppStackParamList = {
   AddSalesScreen: undefined;
   StockScreen: undefined;
   StockEntryFormScreen: {store: string; storeName: string};
-  StockReceivedScreen: undefined;
+  StockReceivedScreen: {store?: string} | undefined;
   CustomerReturnScreen: undefined;
   DistributorReturnScreen: undefined;
   MySalesScreen: undefined;

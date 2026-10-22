@@ -18,6 +18,7 @@ import Toast from 'react-native-toast-message';
 import {
   attendanceCameraOptions,
   getAttendanceImage,
+  getCameraErrorMessage,
 } from '../../../utils/attendanceImage';
 
 interface Props {
@@ -51,7 +52,7 @@ const AddCheckOutForm: React.FC<Props> = ({
         Toast.show({
           type: 'error',
           text1: 'Unable to take photo',
-          text2: response.errorMessage || 'Please try again.',
+          text2: getCameraErrorMessage(response),
           position: 'top',
         });
         return;

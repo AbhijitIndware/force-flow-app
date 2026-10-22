@@ -2,6 +2,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import moment from 'moment';
 
 import PageHeader from '../../../components/ui/PageHeader';
 import {
@@ -36,12 +38,24 @@ import {
 // navigation calls it uses are typed.
 type Props = {
   navigation: {goBack: () => void};
+  route?: {params?: {store?: string}};
 };
 type Tab = 'record' | 'history';
+type ReceivedRow = {item_code: string; qty: number};
 
-const StockReceivedScreen = ({navigation}: Props) => {
+// An earlier delivery the server matched within its 3-day repeat check.
+type AlreadyRecorded = {
+  kind: 'ddn' | 'store_receipt';
+  name: string;
+  date: string;
+  item_code: string;
+  qty: number;
+  by?: string;
+};
+
+const StockReceivedScreen = ({navigation, route}: Props) => {
   const [tab, setTab] = useState<Tab>('record');
-  const [store, setStore] = useState('');
+  const [store, setStore] = useState(route?.params?.store ?? '');
   const [search, setSearch] = useState('');
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
@@ -55,6 +69,14 @@ const StockReceivedScreen = ({navigation}: Props) => {
     () => stores.map(s => ({label: s.store_name, value: s.store_id})),
     [stores],
   );
+
+  // Opened from Count Stock for a specific store.
+  const routeStore = route?.params?.store;
+  useEffect(() => {
+    if (routeStore) {
+      setStore(routeStore);
+    }
+  }, [routeStore]);
 
   useEffect(() => {
     if (!store && stores.length > 0) {
@@ -84,7 +106,99 @@ const StockReceivedScreen = ({navigation}: Props) => {
     setQuantities(prev => ({...prev, [itemCode]: clean}));
   };
 
-  const submit = async () => {
+  const finish = (savedSomething: boolean) => {
+    setQuantities({});
+    setRemarks('');
+    if (savedSomething) {
+      setTab('history');
+    }
+  };
+
+  const itemName = (itemCode: string) =>
+    stockResponse?.message?.all_items?.find(i => i.item_code === itemCode)
+      ?.item_name ?? itemCode;
+
+  // The server skips items matching a delivery recorded for this store in
+  // the last 3 days. Let the promoter say whether this is a second delivery.
+  const askAboutRepeat = (
+    rows: ReceivedRow[],
+    result: any,
+    already: AlreadyRecorded[],
+  ) => {
+    const savedSome = !!result?.success;
+    const repeatCodes = new Set(already.map(a => a.item_code));
+    // Resend only what was left out, so nothing already saved is added twice.
+    const leftOut = result?.duplicate
+      ? rows
+      : rows.filter(row => repeatCodes.has(row.item_code));
+    const earlier = already.map(a => {
+      const source =
+        a.kind === 'ddn' ? 'distributor delivery note' : 'Receive Stock';
+      const by = a.by ? ` by ${a.by}` : '';
+      return `• ${itemName(a.item_code)}: ${a.qty}${by} on ${moment(
+        a.date,
+      ).format('DD MMM')} (${source})`;
+    });
+    Alert.alert(
+      'Already recorded?',
+      [
+        getSafeServerMessage(result?.message) ??
+          'This delivery looks like one already recorded.',
+        ...(earlier.length ? ['', ...earlier] : []),
+      ].join('\n'),
+      [
+        {
+          text: "It's the same delivery",
+          style: 'cancel',
+          onPress: () => finish(savedSome),
+        },
+        {
+          text: 'This is another delivery',
+          onPress: () =>
+            leftOut.length ? save(leftOut, true) : finish(savedSome),
+        },
+      ],
+      {cancelable: false},
+    );
+  };
+
+  const save = async (rows: ReceivedRow[], confirmDuplicate = false) => {
+    try {
+      const response = await recordStock({
+        store: store || undefined,
+        items: rows,
+        ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
+        ...(confirmDuplicate ? {confirm_duplicate: 1 as const} : {}),
+      }).unwrap();
+      const result = response?.message;
+      const already: AlreadyRecorded[] = result?.data?.already ?? [];
+      if (!confirmDuplicate && (result?.duplicate || already.length > 0)) {
+        askAboutRepeat(rows, result, already);
+        return;
+      }
+      if (!result?.success) {
+        Toast.show({
+          type: 'error',
+          text1:
+            getSafeServerMessage(result?.message) ??
+            'Could not record stock received',
+        });
+        return;
+      }
+      Toast.show({
+        type: 'success',
+        text1: getSafeServerMessage(result.message) ?? 'Delivery saved',
+      });
+      finish(true);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: getUserFacingError(error, 'Could not record stock received'),
+      });
+    }
+  };
+
+  const submit = () => {
     const selected = Object.entries(quantities)
       .map(([item_code, qty]) => ({item_code, qty: Number(qty)}))
       .filter(row => Number.isFinite(row.qty) && row.qty > 0);
@@ -95,35 +209,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
       });
       return;
     }
-    try {
-      const response = await recordStock({
-        store: store || undefined,
-        items: selected,
-        ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
-      }).unwrap();
-      if (!response?.message?.success) {
-        Toast.show({
-          type: 'error',
-          text1:
-            getSafeServerMessage(response?.message?.message) ??
-            'Could not record stock received',
-        });
-        return;
-      }
-      Toast.show({
-        type: 'success',
-        text1:
-          getSafeServerMessage(response.message.message) ?? 'Delivery saved',
-      });
-      setQuantities({});
-      setRemarks('');
-      setTab('history');
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: getUserFacingError(error, 'Could not record stock received'),
-      });
-    }
+    save(selected);
   };
 
   const renderRecord = () => (
@@ -205,9 +291,11 @@ const StockReceivedScreen = ({navigation}: Props) => {
         icon={<StockScreenIcon screen="receive" />}
         navigation={() => navigation.goBack()}
       />
+      <Text style={styles.screenHint}>Enter goods delivered to your store.</Text>
       <View style={styles.storePicker}>
         <ReusableDropdown
-          placeholder="Select store"
+          // The dropdown prefixes "Select ", so this reads "Select store".
+          placeholder="store"
           data={storeOptions}
           value={store}
           onChange={value => {
@@ -216,7 +304,7 @@ const StockReceivedScreen = ({navigation}: Props) => {
           }}
           error={false}
           field="label"
-          label=""
+          label="Store"
           selectedLabel={
             storeOptions.find(option => option.value === store)?.label ?? ''
           }
@@ -247,6 +335,14 @@ const StockReceivedScreen = ({navigation}: Props) => {
 
 const styles = StyleSheet.create({
   screen: {flex: 1, backgroundColor: Colors.lightBg},
+  screenHint: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    fontFamily: Fonts.medium,
+    color: Colors.darkButton,
+    fontSize: 12,
+  },
   storePicker: {
     backgroundColor: Colors.white,
     paddingHorizontal: 16,

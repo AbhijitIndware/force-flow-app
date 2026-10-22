@@ -406,7 +406,7 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
       />
       <View style={styles.storePicker}>
         <ReusableDropdown
-          placeholder="Select store"
+          placeholder="store"
           data={storeOptions}
           value={store}
           onChange={value => {
@@ -415,7 +415,7 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
           }}
           error={false}
           field="label"
-          label=""
+          label="Store"
           selectedLabel={
             storeOptions.find(option => option.value === store)?.label ?? ''
           }

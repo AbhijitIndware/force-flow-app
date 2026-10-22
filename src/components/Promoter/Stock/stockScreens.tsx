@@ -36,7 +36,7 @@ export const STOCK_SCREENS = {
     Icon: ClipboardCheck as React.ComponentType<IconProps>,
   },
   receive: {
-    title: 'Receive Stock from Distributor',
+    title: 'Receive Stock',
     color: '#15803D',
     Icon: Import as React.ComponentType<IconProps>,
   },

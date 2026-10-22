@@ -256,13 +256,13 @@ const StockScreen = ({navigation}: Props) => {
       {/* Store picker */}
       <View style={styles.filterContainer}>
         <ReusableDropdown
-          placeholder="Select Store"
+          placeholder="store"
           data={storesList}
           value={selectedStoreId}
           onChange={handleStoreSelect}
           error={false}
           field="label"
-          label=""
+          label="Store"
           selectedLabel={selectedStoreName || undefined}
           marginBottom={0}
         />

@@ -236,6 +236,8 @@ export const promoterBaseApi = createApi({
       store?: string;
       items: {item_code: string; qty: number}[];
       remarks?: string;
+      // 1 skips the server's 3-day repeat-delivery check.
+      confirm_duplicate?: 0 | 1;
     }>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_receipt_api.record_stock_received',

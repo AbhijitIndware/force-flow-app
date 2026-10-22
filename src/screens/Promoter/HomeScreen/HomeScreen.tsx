@@ -30,7 +30,6 @@ import {
   MessageSquareQuote,
   Network,
   ChartNoAxesColumn,
-  ClipboardCheck,
   Store,
 } from 'lucide-react-native';
 import {
@@ -543,32 +542,9 @@ const HomeScreen = ({navigation, route}: Props) => {
 
           <View style={[styles.container, {paddingTop: 20}]}>
             <Text style={styles.SectionHeading}>Are you in a new store?</Text>
+            {/* No opening-stock step: a promoter's first count in a store
+                becomes its opening stock on the server. */}
             <View style={styles.newStoreCard}>
-              <TouchableOpacity
-                style={styles.listLink}
-                onPress={() => navigation.navigate('StockScreen')}>
-                <View style={styles.linkIconBox}>
-                  <ClipboardCheck
-                    strokeWidth={1.8}
-                    color={Colors.white}
-                    size={18}
-                  />
-                </View>
-                <Text style={styles.listLinkText}>
-                  Count stock — your first count becomes the store's opening
-                  stock
-                </Text>
-                <Ionicons
-                  name="chevron-forward-outline"
-                  size={16}
-                  color={Colors.gray}
-                />
-              </TouchableOpacity>
-              <Divider
-                width={1}
-                color={Colors.lightGray}
-                style={{borderStyle: 'dashed'}}
-              />
               <TouchableOpacity
                 style={styles.listLink}
                 onPress={() => navigation.navigate('UserManualScreen')}>

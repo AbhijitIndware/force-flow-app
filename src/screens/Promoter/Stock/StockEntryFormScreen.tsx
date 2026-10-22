@@ -13,7 +13,10 @@ import {
   ScrollView,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
-import {StockScreenIcon} from '../../../components/Promoter/Stock/stockScreens';
+import {
+  STOCK_SCREENS,
+  StockScreenIcon,
+} from '../../../components/Promoter/Stock/stockScreens';
 import {flexCol, flexRow} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -61,6 +64,7 @@ interface StockRowProps {
   onQtyChange: (index: number, val: string) => void;
   onItemChange: (index: number, itemCode: string, itemName: string) => void;
   onRemove: (index: number) => void;
+  onReceive: () => void;
   matchItem: StockDashboardItem;
 }
 
@@ -71,6 +75,7 @@ const StockRow: React.FC<StockRowProps> = ({
   onQtyChange,
   onItemChange,
   onRemove,
+  onReceive,
   matchItem,
 }) => {
   const [search, setSearch] = useState('');
@@ -82,13 +87,12 @@ const StockRow: React.FC<StockRowProps> = ({
 
   const isEven = index % 2 === 0;
   const isFilled = entry.itemCode && entry.quantity !== '';
-  const currentStock = matchItem?.current_stock ?? 0;
+  // current_stock is only used for this hint; it is never shown here, so
+  // promoters count the shelf instead of copying the system number.
+  const currentStock = Number(matchItem?.current_stock ?? 0);
   const enteredQty = parseInt(entry.quantity, 10);
   const showDeliveryReminder =
-    !entry.isPrev &&
-    !isNaN(enteredQty) &&
-    enteredQty > currentStock &&
-    currentStock > 0;
+    !!matchItem && !isNaN(enteredQty) && enteredQty > currentStock;
 
   return (
     <View
@@ -123,6 +127,16 @@ const StockRow: React.FC<StockRowProps> = ({
               wrapLabels
             />
           )}
+          {/* ── Opening · Received · Sold MTD, stacked under the name ── */}
+          {matchItem ? (
+            <Text
+              style={styles.stockDetailsText}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}>
+              Opening {matchItem.opening_stock ?? 0} · Received{' '}
+              {matchItem.received_this_month ?? 0} · Sold MTD{' '}
+              {matchItem.mtd_territory ?? 0}
+            </Text>
+          ) : null}
           {Number(matchItem?.unsellable_on_hand) > 0 ? (
             <Text
               style={styles.unsellableText}
@@ -132,59 +146,14 @@ const StockRow: React.FC<StockRowProps> = ({
           ) : null}
         </View>
 
-        {/* ── Stock Details (Opening / Received / Sold MTD) ── */}
-        <View style={styles.stockDetailsWrap}>
-          <View style={styles.stockDetailItem}>
-            <Text
-              style={styles.stockDetailLabel}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              Open
-            </Text>
-            <Text
-              style={styles.stockDetailValue}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              {matchItem?.opening_stock ?? 0}
-            </Text>
-          </View>
-          <View style={styles.stockDetailItem}>
-            <Text
-              style={styles.stockDetailLabel}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              Rcvd
-            </Text>
-            <Text
-              style={styles.stockDetailValue}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              {matchItem?.received_this_month ?? 0}
-            </Text>
-          </View>
-          <View style={styles.stockDetailItem}>
-            <Text
-              style={styles.stockDetailLabel}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              Sold
-            </Text>
-            <Text
-              style={styles.stockDetailValue}
-              numberOfLines={1}
-              maxFontSizeMultiplier={MAX_FONT_SCALE}>
-              {matchItem?.mtd_territory ?? 0}
-            </Text>
-          </View>
-        </View>
-
         {/* ── On Shelf Now Input ── */}
         <View style={styles.qtyInputWrap}>
           <TextInput
             style={styles.qtyInput}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             keyboardType="numeric"
-            placeholder=""
+            // Placeholder only: an untouched box stays '' and is not sent.
+            placeholder="0"
             placeholderTextColor="#9ca3af"
             value={entry.quantity}
             onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
@@ -203,8 +172,11 @@ const StockRow: React.FC<StockRowProps> = ({
         <View style={styles.deliveryReminder}>
           <Ionicons name="alert-circle-outline" size={12} color="#B45309" />
           <Text style={styles.deliveryReminderText}>
-            More than your stock — did a delivery arrive? Record it in Receive
-            Stock first.
+            More than your stock — did a delivery arrive? Record it in{' '}
+            <Text style={styles.deliveryReminderLink} onPress={onReceive}>
+              {STOCK_SCREENS.receive.title}
+            </Text>{' '}
+            first.
           </Text>
         </View>
       )}
@@ -279,7 +251,13 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
     );
   };
 
+  const handleReceive = () => {
+    navigation.navigate('StockReceivedScreen', {store});
+  };
+
   const handleSubmit = async () => {
+    // Only boxes the promoter typed in are sent. A blank box is never a 0:
+    // the server would treat that whole stock as sold.
     const itemsToSubmit = entries
       .filter(e => e.itemCode && e.quantity !== '')
       .map(e => ({
@@ -291,8 +269,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
     if (itemsToSubmit.length === 0) {
       Toast.show({
         type: 'error',
-        text1: 'No items filled',
-        text2: 'Please enter a stock count for at least one item',
+        text1: 'Enter the count for at least one item.',
       });
       return;
     }
@@ -332,10 +309,17 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: '#ffffff'}]}>
       <PageHeader
-        title={`Count Stock Update`}
+        title={
+          storeName
+            ? `${STOCK_SCREENS.count.title} · ${storeName}`
+            : STOCK_SCREENS.count.title
+        }
         icon={<StockScreenIcon screen="count" />}
         navigation={() => navigation.goBack()}
       />
+      <Text style={styles.screenHint}>
+        Count what is on the shelf right now.
+      </Text>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -348,12 +332,6 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
                 style={[styles.headerText, styles.headerItem]}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}>
                 Item
-              </Text>
-              <Text
-                style={[styles.headerText, styles.headerStock]}
-                maxFontSizeMultiplier={MAX_FONT_SCALE}
-                numberOfLines={1}>
-                Stock Details
               </Text>
               <Text
                 style={[styles.headerText, styles.headerQty]}
@@ -402,6 +380,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
                     onQtyChange={handleQtyChange}
                     onItemChange={handleItemChange}
                     onRemove={handleRemoveItem}
+                    onReceive={handleReceive}
                     matchItem={matchItem as StockDashboardItem}
                   />
                 </React.Fragment>
@@ -438,7 +417,6 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
 
 export default StockEntryFormScreen;
 
-const STOCK_DETAILS_WIDTH = 108;
 const QTY_COL_WIDTH = 64;
 const QTY_INPUT_WIDTH = 52;
 const ACTION_COL_WIDTH = 28;
@@ -446,6 +424,14 @@ const ACTION_COL_WIDTH = 28;
 const MAX_FONT_SCALE = 1.15;
 
 const styles = StyleSheet.create({
+  screenHint: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 12,
+    fontFamily: Fonts.medium,
+    color: '#374151',
+    backgroundColor: '#f9fafb',
+  },
   tableContainer: {
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
@@ -472,10 +458,6 @@ const styles = StyleSheet.create({
   headerItem: {
     flex: 1,
     paddingRight: 6,
-  },
-  headerStock: {
-    width: STOCK_DETAILS_WIDTH,
-    textAlign: 'center',
   },
   headerQty: {
     width: QTY_COL_WIDTH,
@@ -534,27 +516,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.semiBold,
     color: '#111827',
   },
-  stockDetailsWrap: {
-    width: STOCK_DETAILS_WIDTH,
-    flexDirection: 'row',
-  },
-  stockDetailItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stockDetailLabel: {
-    fontSize: 9,
+  stockDetailsText: {
+    fontSize: 10,
+    lineHeight: 13,
     fontFamily: Fonts.regular,
     color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  stockDetailValue: {
-    fontSize: 12,
-    fontFamily: Fonts.semiBold,
-    color: '#111827',
-    marginTop: 2,
+    marginTop: 3,
   },
   qtyInputWrap: {
     width: QTY_COL_WIDTH,
@@ -588,6 +555,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     color: '#B45309',
     flex: 1,
+  },
+  deliveryReminderLink: {
+    fontFamily: Fonts.semiBold,
+    textDecorationLine: 'underline',
   },
   deleteBtn: {
     width: ACTION_COL_WIDTH,
