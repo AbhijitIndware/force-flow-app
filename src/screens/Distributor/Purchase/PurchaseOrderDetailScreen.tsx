@@ -1,6 +1,7 @@
 import {
     View, Text, StyleSheet, SafeAreaView, ScrollView,
     TouchableOpacity, ActivityIndicator, TextInput, Modal, Image,
+    useWindowDimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
@@ -100,6 +101,12 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
         refetchOnMountOrArgChange: true,
     });
     const [approveDDN, { isLoading: isApproving }] = useApproveAndCreateDDNMutation();
+
+    // Invoice · Date · Remarks share one row only on wide screens. Below
+    // ~400dp (or with large system text) the date gets clipped, so Remarks
+    // moves to its own row and Invoice/Date take half the width each.
+    const { width: screenWidth, fontScale } = useWindowDimensions();
+    const compactFields = screenWidth / fontScale < 400;
 
     const [modalVisible, setModalVisible] = useState(false);
     const [invoiceNo, setInvoiceNo] = useState('');
@@ -340,7 +347,7 @@ const PurchaseOrderDetailScreen = ({ route, navigation }: Props) => {
                                 disabled={details?.workflow_state === 'Delivered'}
                             />
                         </View>
-                        <View style={{ flex: 1.5 }}>
+                        <View style={compactFields ? { width: '100%' } : { flex: 1.5 }}>
                             <ReusableDropdown
                                 label="Remarks"
                                 field="value"
@@ -711,7 +718,7 @@ const styles = StyleSheet.create({
     section: { backgroundColor: C.white, borderRadius: 10, padding: 10 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
     sectionTitle: { fontSize: 13, fontWeight: '600', color: C.text },
-    fieldRow: { flexDirection: 'row', gap: 8 },
+    fieldRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     inputLabel: { fontSize: 11, fontWeight: '600', color: C.text, marginBottom: 0 },
     input: {
         backgroundColor: C.background,

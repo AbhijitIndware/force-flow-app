@@ -57,7 +57,13 @@ const ExpenseComponent = ({ navigation }: any) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    // Pages accumulate in one cache entry, so start over from page 1;
+    // changing the page arg triggers that fetch by itself.
+    if (page === 1) {
+      await refetch();
+    } else {
+      setPage(1);
+    }
     setRefreshing(false);
   };
 

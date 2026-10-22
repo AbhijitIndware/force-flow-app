@@ -23,6 +23,9 @@ const MONTHS = moment.months().map((label, i) => ({
 }));
 const CURRENT_YEAR = new Date().getFullYear();
 export const YEARS = Array.from({length: 5}, (_, i) => CURRENT_YEAR - i);
+// The dropdown treats an empty value as "nothing selected" and shows
+// "Select Status", so "All" uses this stand-in and maps back to ''.
+const ALL = 'All';
 
 interface ConsumedData {
   DA?: number;
@@ -107,9 +110,9 @@ const ExpenseHeader: React.FC<Props> = ({
             <ReusableDropdownv2
               label="Status"
               field="status"
-              value={selectedStatus}
+              value={selectedStatus || ALL}
               data={[
-                {label: 'All', value: ''},
+                {label: 'All', value: ALL},
                 {label: 'Draft', value: 'Draft'},
                 {label: 'Pending Approval', value: 'Pending Approval'},
                 {label: 'Approved', value: 'Approved'},
@@ -119,7 +122,9 @@ const ExpenseHeader: React.FC<Props> = ({
                 {label: 'HR Approved', value: 'HR Approved'},
                 {label: 'HR Rejected', value: 'HR Rejected'},
               ]}
-              onChange={(val: string) => onStatusChange(val)}
+              onChange={(val: string) =>
+                onStatusChange(val === ALL ? '' : val)
+              }
               height={32}
               marginBottom={0}
               textSize={12}

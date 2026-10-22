@@ -65,6 +65,41 @@ export const tadaApiV2 = createApi({
         method: 'GET',
         params,
       }),
+      // One cache entry per month/year/status so later pages append to the
+      // claims already loaded instead of replacing them.
+      serializeQueryArgs: ({ endpointName, queryArgs }) => {
+        const { page, ...rest } = queryArgs ?? {};
+        return { endpointName, ...rest };
+      },
+      merge: (currentCache, newItems) => {
+        const newData = newItems.message?.data;
+        if (!newData || newData.pagination?.page === 1) {
+          return newItems;
+        }
+        // refetch() reloads the current page, so a claim can arrive twice:
+        // replace it in place rather than adding a duplicate.
+        const incoming = newData.expense_claims ?? [];
+        const byName = new Map(incoming.map(claim => [claim.name, claim]));
+        const existing = currentCache.message?.data?.expense_claims ?? [];
+        const merged = existing.map(claim => byName.get(claim.name) ?? claim);
+        const seen = new Set(existing.map(claim => claim.name));
+        return {
+          ...newItems,
+          message: {
+            ...newItems.message,
+            data: {
+              ...newData,
+              expense_claims: [
+                ...merged,
+                ...incoming.filter(claim => !seen.has(claim.name)),
+              ],
+            },
+          },
+        };
+      },
+      forceRefetch({ currentArg, previousArg }) {
+        return currentArg !== previousArg;
+      },
       providesTags: ['Expense'],
     }),
 

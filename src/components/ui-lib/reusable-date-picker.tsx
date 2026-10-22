@@ -1,7 +1,13 @@
 /* eslint-disable react-native/no-inline-styles */
 import moment from 'moment';
 import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, Platform} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {Colors} from '../../utils/colors';
 import {Size} from '../../utils/fontSize';
@@ -34,6 +40,17 @@ const ReusableDatePicker: React.FC<Props> = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
+  // inputStyle styles the box. Only its text properties go on the date text:
+  // the box's padding, border and height applied a second time inside it
+  // squeezed the date until it wrapped and was clipped.
+  const {color, fontSize, fontFamily, fontWeight, textAlign} =
+    StyleSheet.flatten(inputStyle) ?? {};
+  const textStyle = Object.fromEntries(
+    Object.entries({color, fontSize, fontFamily, fontWeight, textAlign}).filter(
+      ([, v]) => v !== undefined,
+    ),
+  );
+
   const handleDateChange = (_: any, selectedDate?: Date) => {
     setShowPicker(false);
     if (selectedDate) {
@@ -63,7 +80,10 @@ const ReusableDatePicker: React.FC<Props> = ({
         ]}
         disabled={disabled}>
         <Text
-          style={[{fontSize: textSize, fontFamily: Fonts.regular}, inputStyle]}>
+          style={[{fontSize: textSize, fontFamily: Fonts.regular}, textStyle]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}>
           {value || 'Select date'}
         </Text>
       </TouchableOpacity>
