@@ -211,7 +211,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
         contentContainerStyle={{flexGrow: 1}}>
         <View style={styles.header}>
           <Image
-            source={require('../../assets/images/softsence-logo-login.png')}
+            source={require('../../assets/images/brand.png')}
             resizeMode="contain"
             style={styles.logoImage}
           />
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   },
   logoImage: {
     width: width * 0.8,
-    height: 150,
+    height: 80,
     marginBottom: 10,
   },
   footer: {

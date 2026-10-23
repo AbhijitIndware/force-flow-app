@@ -1,5 +1,5 @@
-export const apiBaseUrl = 'https://sfa.softsensbaby.in/api';
-export const imageBaseUrl = 'https://sfa.softsensbaby.in';
+export const apiBaseUrl = 'https://sfa.idpl.cloud/api';
+export const imageBaseUrl = 'https://sfa.idpl.cloud';
 
 // export const apiBaseUrl =
 //   'https://supplier-arrogance-gumball.ngrok-free.dev/api';

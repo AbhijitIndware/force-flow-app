@@ -247,7 +247,7 @@ const FullScreenLoader = () => {
           transform: [{scale: scaleAnim}],
         }}>
         <Image
-          source={require('../../assets/images/softsence-logo-login.png')}
+          source={require('../../assets/images/brand.png')}
           resizeMode="contain"
           style={styles.logoImage}
         />

@@ -161,8 +161,8 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
     <View style={styles.headerTitleContainer}>
       <View>
         <Image
-          source={require('../../../assets/images/softsence-logo-dashboard.png')}
-          resizeMode="cover"
+          source={require('../../../assets/images/brand.png')}
+          resizeMode="contain"
           style={styles.logoImage}
         />
       </View>
@@ -384,8 +384,8 @@ const styles = StyleSheet.create({
   },
 
   logoImage: {
-    width: width * 0.2,
-    height: 50,
+    width: width * 0.4,
+    height: 36,
   },
 
   notification: {position: 'relative', top: 6},
