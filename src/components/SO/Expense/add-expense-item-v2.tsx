@@ -15,7 +15,7 @@ import {FormikTouched} from 'formik';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 import {Upload} from 'lucide-react-native';
 import {pick} from '@react-native-documents/picker';
-import {launchCamera} from 'react-native-image-picker';
+import {launchCamera} from '../../../utils/launchCamera';
 import {Colors} from '../../../utils/colors';
 import moment from 'moment';
 import {Fonts} from '../../../constants';

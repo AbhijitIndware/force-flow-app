@@ -24,7 +24,7 @@ import {
 } from '../../../utils/utils';
 import Toast from 'react-native-toast-message';
 import { Camera, MapPin, Navigation, Save } from 'lucide-react-native';
-import { launchCamera } from 'react-native-image-picker';
+import { launchCamera } from '../../../utils/launchCamera';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';

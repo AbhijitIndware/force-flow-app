@@ -4,7 +4,8 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { launchCamera } from '../../../utils/launchCamera';
 import { Package, Info, CheckCircle2, FileText, Calendar, MessageSquare, TrendingDown } from 'lucide-react-native';
 import moment from 'moment';
 import { useApproveAndCreateDDNMutation } from '../../../features/base/distributor-api';

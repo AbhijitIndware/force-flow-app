@@ -21,7 +21,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 import { pick } from '@react-native-documents/picker';
-import { launchCamera } from 'react-native-image-picker';
+import { launchCamera } from '../../../utils/launchCamera';
 import RNFS from 'react-native-fs';
 import moment from 'moment';
 import DateTimePicker from '@react-native-community/datetimepicker';

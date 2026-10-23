@@ -20,7 +20,7 @@ import PageHeader from '../../../components/ui/PageHeader';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
-import {launchCamera} from 'react-native-image-picker';
+import {launchCamera} from '../../../utils/launchCamera';
 import {
   useCreateProductFeedbackMutation,
   useGetEmployeeAssignedStoresQuery,

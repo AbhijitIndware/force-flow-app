@@ -35,7 +35,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
-import { launchCamera } from 'react-native-image-picker';
+import { launchCamera } from '../../../utils/launchCamera';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 import { attendanceCameraOptions, getAttendanceImage } from '../../../utils/attendanceImage';
 

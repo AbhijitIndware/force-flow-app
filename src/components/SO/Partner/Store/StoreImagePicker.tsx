@@ -12,7 +12,7 @@ import {Colors} from '../../../../utils/colors';
 import {Fonts} from '../../../../constants';
 import {Upload, X, Plus} from 'lucide-react-native';
 import {pick} from '@react-native-documents/picker';
-import {launchCamera} from 'react-native-image-picker';
+import {launchCamera} from '../../../../utils/launchCamera';
 import RNFS from 'react-native-fs';
 import Toast from 'react-native-toast-message';
 import {validateFile} from '../../../../utils/uploadValidation';

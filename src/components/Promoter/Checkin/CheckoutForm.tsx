@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import {launchCamera} from 'react-native-image-picker';
+import {launchCamera} from '../../../utils/launchCamera';
 import {Upload} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
