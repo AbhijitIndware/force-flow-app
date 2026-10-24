@@ -17,7 +17,7 @@ import {
   useCameraPermission,
 } from 'react-native-vision-camera';
 import RNFS from 'react-native-fs';
-import { X } from 'lucide-react-native';
+import { SwitchCamera, X } from 'lucide-react-native';
 import { Colors } from '../../utils/colors';
 import { Fonts } from '../../constants';
 import { Size } from '../../utils/fontSize';
@@ -46,8 +46,11 @@ const InAppCamera: React.FC<Props> = ({
   const [capturing, setCapturing] = useState(false);
   const [appActive, setAppActive] = useState(AppState.currentState === 'active');
 
+  // cameraType is the starting side; the user can flip it while capturing.
+  const [facing, setFacing] = useState<'front' | 'back'>(cameraType);
+
   const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice(cameraType);
+  const device = useCameraDevice(facing);
   // Matches the old image-picker maxWidth/maxHeight so photos stay well under
   // MAX_ATTENDANCE_IMAGE_BYTES.
   const format = useCameraFormat(device, [
@@ -59,6 +62,12 @@ const InAppCamera: React.FC<Props> = ({
       requestPermission();
     }
   }, [visible, hasPermission, requestPermission]);
+
+  useEffect(() => {
+    if (visible) {
+      setFacing(cameraType);
+    }
+  }, [visible, cameraType]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', state =>
@@ -101,6 +110,9 @@ const InAppCamera: React.FC<Props> = ({
     }
   };
 
+  const toggleFacing = () =>
+    setFacing(prev => (prev === 'front' ? 'back' : 'front'));
+
   const renderBody = () => {
     if (!hasPermission) {
       return (
@@ -115,7 +127,12 @@ const InAppCamera: React.FC<Props> = ({
     if (!device) {
       return (
         <View style={styles.centered}>
-          <Text style={styles.message}>No {cameraType} camera found on this device.</Text>
+          <Text style={styles.message}>No {facing} camera found on this device.</Text>
+          <TouchableOpacity style={styles.settingsBtn} onPress={toggleFacing}>
+            <Text style={styles.settingsText}>
+              Use {facing === 'front' ? 'back' : 'front'} camera
+            </Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -140,6 +157,12 @@ const InAppCamera: React.FC<Props> = ({
             ) : (
               <View style={styles.shutterInner} />
             )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.flipBtn}
+            onPress={toggleFacing}
+            disabled={capturing}>
+            <SwitchCamera size={28} color={Colors.white} />
           </TouchableOpacity>
         </View>
       </>
@@ -212,6 +235,15 @@ const styles = StyleSheet.create({
     borderColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  flipBtn: {
+    position: 'absolute',
+    // Vertically centred on the 76px shutter: (76 - (28 + 2 * 12)) / 2
+    top: 12,
+    right: 40,
+    padding: 12,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   shutterInner: {
     width: 60,
