@@ -27,11 +27,21 @@ import { AttendanceImage, getAttendanceImage } from '../../utils/attendanceImage
 // react-native-image-picker) keeps our Activity in the foreground, so Android
 // can't kill the process mid-capture and restart the app on the Home screen.
 
+export interface CapturedPhotoFile {
+  uri: string;
+  width: number;
+  height: number;
+  fileSize: number;
+}
+
 interface Props {
   visible: boolean;
   cameraType: 'front' | 'back';
   onClose: () => void;
-  onCapture: (image: AttendanceImage) => void;
+  onCapture?: (image: AttendanceImage) => void;
+  // When set, the photo is kept on disk and handed over as a file instead of
+  // being converted to an AttendanceImage. Used by utils/launchCamera.
+  onCaptureFile?: (file: CapturedPhotoFile) => void;
   onError: (message: string) => void;
 }
 
@@ -40,6 +50,7 @@ const InAppCamera: React.FC<Props> = ({
   cameraType,
   onClose,
   onCapture,
+  onCaptureFile,
   onError,
 }) => {
   const cameraRef = useRef<Camera>(null);
@@ -92,12 +103,20 @@ const InAppCamera: React.FC<Props> = ({
           ? await cameraRef.current.takeSnapshot({ quality: 70 })
           : await cameraRef.current.takePhoto({ flash: 'off' });
       const path = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
+
+      if (onCaptureFile) {
+        const { size } = await RNFS.stat(path);
+        onCaptureFile({ uri: path, width: photo.width, height: photo.height, fileSize: size });
+        onClose();
+        return;
+      }
+
       const base64 = await RNFS.readFile(path, 'base64');
       RNFS.unlink(path).catch(() => {});
 
       const result = getAttendanceImage({ base64, type: 'image/jpeg' });
       if (result.image) {
-        onCapture(result.image);
+        onCapture?.(result.image);
       } else {
         onError(result.error);
       }

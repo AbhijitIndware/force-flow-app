@@ -14,6 +14,7 @@ import {PaperProvider} from 'react-native-paper';
 import DisclaimerModal from './DisclaimerModal';
 import {useNetworkStatus} from './src/hooks/useNetworkStatus';
 import {SlowNetworkBanner} from './src/components/ui-lib/slow-network-banner';
+import InAppCameraHost from './src/components/ui-lib/in-app-camera-host';
 import BootSplash from 'react-native-bootsplash';
 import {AppErrorBoundary} from './src/components/ui/AppErrorBoundary';
 import {
@@ -178,6 +179,7 @@ function App(): React.JSX.Element {
                 </NavigationContainer>
               </SafeAreaView>
             </PaperProvider>
+            <InAppCameraHost />
             <Toast config={toastConfig} />
           </SafeAreaProvider>
         </PersistGate>
