@@ -145,6 +145,9 @@ const LateCheckinApprovalListComponent = () => {
     if (isLoading) return null;
     return (
       <View style={styles.emptyState}>
+        <View style={styles.emptyIconWrap}>
+          <Ionicons name="checkmark-done-circle-outline" size={44} color={Colors.orange} />
+        </View>
         <Text style={styles.emptyTitle}>No Pending Approvals</Text>
         <Text style={styles.emptySubtitle}>
           All late check-in requests have been reviewed.
@@ -240,10 +243,10 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   emptyContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 24,
+    paddingBottom: 60,
   },
 
   card: {
@@ -362,13 +365,29 @@ const styles = StyleSheet.create({
   },
 
   emptyState: {
+    width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    borderWidth: 1,
+    borderColor: '#eef2f7',
+  },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FFF3E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   emptyTitle: {
     fontSize: Size.md,
     fontFamily: Fonts.semiBold,
     color: Colors.darkButton,
+    textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
@@ -376,6 +395,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: '#64748b',
     textAlign: 'center',
+    lineHeight: 18,
   },
 
   modalOverlay: {

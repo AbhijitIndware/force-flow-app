@@ -1484,7 +1484,7 @@ export const baseApi = createApi({
     // Call this first to show the item list before employee enters physical count.
     getStockItems: builder.query<RGetStockItems, { store: string }>({
       query: ({ store }) => ({
-        url: '/method/salesforce_management.salesforce_management.doctype.update_daily_stock.update_daily_stock.get_items',
+        url: '/method/salesforce_management.mobile_app_apis.pjp_apis.stock_api.get_items',
         method: 'GET',
         params: { store },
       }),
