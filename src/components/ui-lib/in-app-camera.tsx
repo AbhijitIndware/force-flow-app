@@ -4,6 +4,7 @@ import {
   AppState,
   Linking,
   Modal,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -72,7 +73,15 @@ const InAppCamera: React.FC<Props> = ({
     }
     setCapturing(true);
     try {
-      const photo = await cameraRef.current.takePhoto({ flash: 'off' });
+      // useCameraFormat is only a preference: on devices without a small photo
+      // format takePhoto returns a full-resolution JPEG (often > 2 MB) with no
+      // way to compress it. On Android, snapshot the preview instead, which is
+      // screen-sized and JPEG-compressed. iOS snapshots need video, so keep
+      // takePhoto there.
+      const photo =
+        Platform.OS === 'android'
+          ? await cameraRef.current.takeSnapshot({ quality: 70 })
+          : await cameraRef.current.takePhoto({ flash: 'off' });
       const path = photo.path.startsWith('file://') ? photo.path : `file://${photo.path}`;
       const base64 = await RNFS.readFile(path, 'base64');
       RNFS.unlink(path).catch(() => {});
