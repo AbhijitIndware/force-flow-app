@@ -55,7 +55,10 @@ const InAppCamera: React.FC<Props> = ({
 }) => {
   const cameraRef = useRef<Camera>(null);
   const [capturing, setCapturing] = useState(false);
-  const [appActive, setAppActive] = useState(AppState.currentState === 'active');
+  // Only 'background' pauses the camera. At app start currentState can still be
+  // 'unknown' / null, and the root-mounted InAppCameraHost would otherwise keep
+  // the camera inactive (black preview) until the app changed state once.
+  const [appActive, setAppActive] = useState(AppState.currentState !== 'background');
 
   // cameraType is the starting side; the user can flip it while capturing.
   const [facing, setFacing] = useState<'front' | 'back'>(cameraType);
@@ -77,12 +80,13 @@ const InAppCamera: React.FC<Props> = ({
   useEffect(() => {
     if (visible) {
       setFacing(cameraType);
+      setAppActive(AppState.currentState !== 'background');
     }
   }, [visible, cameraType]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', state =>
-      setAppActive(state === 'active'),
+      setAppActive(state !== 'background'),
     );
     return () => sub.remove();
   }, []);
