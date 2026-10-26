@@ -35,6 +35,9 @@ export const launchCamera = async (
       };
       if (options.includeBase64) {
         asset.base64 = await RNFS.readFile(file.uri, 'base64');
+        // Callers that ask for base64 only use that, so don't leave the
+        // capture behind in the cache.
+        RNFS.unlink(file.uri).catch(() => {});
       }
       response = { assets: [asset] };
     }

@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 import {useFormik} from 'formik';
 import {expenseItemSchema} from '../../../types/schema';
 import AddExpenseItemV2 from './add-expense-item-v2';
+import InAppCameraHost from '../../ui-lib/in-app-camera-host';
 
 const initialValues = {
   date: '',
@@ -107,6 +108,9 @@ const AddExpenseModal = ({
           </TouchableOpacity>
         </View>
       </View>
+      {/* iOS: the root host can't present over this Modal, so the attachment
+          camera needs a host inside it. */}
+      <InAppCameraHost />
     </Modal>
   );
 };

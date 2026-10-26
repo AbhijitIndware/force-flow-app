@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   AppState,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {
   Camera,
+  CameraDevice,
   useCameraDevice,
   useCameraFormat,
   useCameraPermission,
@@ -34,6 +35,15 @@ export interface CapturedPhotoFile {
   fileSize: number;
 }
 
+// vision-camera 4.x on Android (new arch) reads the device list before CameraX
+// has initialised, caches that empty list, and never re-sends it, so
+// useCameraDevice can stay undefined for the whole session. The native view
+// only needs `id` (it opens the camera with CameraSelector.byId), so fall back
+// to the standard Camera2 ids: "0" is the main back camera and "1" the main
+// front camera on practically every Android phone.
+const androidFallbackDevice = (facing: 'front' | 'back'): CameraDevice =>
+  ({ id: facing === 'back' ? '0' : '1', position: facing } as CameraDevice);
+
 interface Props {
   visible: boolean;
   cameraType: 'front' | 'back';
@@ -55,6 +65,9 @@ const InAppCamera: React.FC<Props> = ({
 }) => {
   const cameraRef = useRef<Camera>(null);
   const [capturing, setCapturing] = useState(false);
+  // Shown inside the camera: a Toast would render behind this Modal.
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [permissionAsked, setPermissionAsked] = useState(false);
   // Only 'background' pauses the camera. At app start currentState can still be
   // 'unknown' / null, and the root-mounted InAppCameraHost would otherwise keep
   // the camera inactive (black preview) until the app changed state once.
@@ -64,16 +77,22 @@ const InAppCamera: React.FC<Props> = ({
   const [facing, setFacing] = useState<'front' | 'back'>(cameraType);
 
   const { hasPermission, requestPermission } = useCameraPermission();
-  const device = useCameraDevice(facing);
+  const listedDevice = useCameraDevice(facing);
+  const device = useMemo(
+    () =>
+      listedDevice ?? (Platform.OS === 'android' ? androidFallbackDevice(facing) : undefined),
+    [listedDevice, facing],
+  );
   // Matches the old image-picker maxWidth/maxHeight so photos stay well under
   // MAX_ATTENDANCE_IMAGE_BYTES.
-  const format = useCameraFormat(device, [
+  // Formats only exist on a listed device; the fallback runs with the default.
+  const format = useCameraFormat(listedDevice, [
     { photoResolution: { width: 1280, height: 960 } },
   ]);
 
   useEffect(() => {
     if (visible && !hasPermission) {
-      requestPermission();
+      requestPermission().finally(() => setPermissionAsked(true));
     }
   }, [visible, hasPermission, requestPermission]);
 
@@ -81,6 +100,7 @@ const InAppCamera: React.FC<Props> = ({
     if (visible) {
       setFacing(cameraType);
       setAppActive(AppState.currentState !== 'background');
+      setCameraError(null);
     }
   }, [visible, cameraType]);
 
@@ -96,6 +116,7 @@ const InAppCamera: React.FC<Props> = ({
       return;
     }
     setCapturing(true);
+    setCameraError(null);
     try {
       // useCameraFormat is only a preference: on devices without a small photo
       // format takePhoto returns a full-resolution JPEG (often > 2 MB) with no
@@ -127,16 +148,33 @@ const InAppCamera: React.FC<Props> = ({
       onClose();
     } catch (err: any) {
       console.warn('Camera capture error: ', err?.message);
-      onError('The photo could not be taken. Please try again.');
+      setCameraError('The photo could not be taken. Please try again.');
     } finally {
       setCapturing(false);
     }
   };
 
-  const toggleFacing = () =>
+  const toggleFacing = () => {
+    setCameraError(null);
     setFacing(prev => (prev === 'front' ? 'back' : 'front'));
+  };
+
+  // A capture in progress would otherwise finish after the camera closed.
+  const handleClose = () => {
+    if (!capturing) {
+      onClose();
+    }
+  };
 
   const renderBody = () => {
+    if (!hasPermission && !permissionAsked) {
+      // The system permission dialog is still open.
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator color={Colors.white} />
+        </View>
+      );
+    }
     if (!hasPermission) {
       return (
         <View style={styles.centered}>
@@ -169,8 +207,13 @@ const InAppCamera: React.FC<Props> = ({
           isActive={visible && appActive}
           photo
           photoQualityBalance="speed"
+          onError={error => {
+            console.warn('Camera error: ', error.code, error.message);
+            setCameraError('The camera could not start. Please close it and try again.');
+          }}
         />
         <View style={styles.footer}>
+          {cameraError && <Text style={styles.errorBanner}>{cameraError}</Text>}
           <TouchableOpacity
             style={styles.shutterOuter}
             onPress={handleCapture}
@@ -193,10 +236,10 @@ const InAppCamera: React.FC<Props> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={visible} animationType="slide" onRequestClose={handleClose} statusBarTranslucent>
       <View style={styles.container}>
         {renderBody()}
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose} disabled={capturing}>
+        <TouchableOpacity style={styles.closeBtn} onPress={handleClose} disabled={capturing}>
           <X size={28} color={Colors.white} />
         </TouchableOpacity>
       </View>
@@ -249,6 +292,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+  },
+  errorBanner: {
+    marginBottom: 16,
+    marginHorizontal: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(220,38,38,0.9)',
+    color: Colors.white,
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    textAlign: 'center',
   },
   shutterOuter: {
     width: 76,
