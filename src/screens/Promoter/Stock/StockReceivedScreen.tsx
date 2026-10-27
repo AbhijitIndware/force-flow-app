@@ -33,12 +33,13 @@ import {
   getSafeServerMessage,
   getUserFacingError,
 } from '../../../utils/errorMessage';
+import {useIsTeamLeader} from '../../../utils/roles';
 
 // Rendered both as a stack screen and as a bottom-bar tab, so only the
 // navigation calls it uses are typed.
 type Props = {
   navigation: {goBack: () => void};
-  route?: {params?: {store?: string}};
+  route?: {params?: {store?: string; storeName?: string}};
 };
 type Tab = 'record' | 'history';
 type ReceivedRow = {item_code: string; qty: number};
@@ -60,14 +61,25 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
-  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery();
+  // A Team Leader opens this inside a store visit and must always send
+  // that store, so the picker holds only it.
+  const isTL = useIsTeamLeader();
+  const visitStore = isTL ? route?.params?.store : undefined;
+  const visitStoreName = route?.params?.storeName;
+
+  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery(undefined, {
+    skip: isTL,
+  });
   const stores = useMemo(
     () => storesResponse?.message?.data?.stores ?? [],
     [storesResponse],
   );
   const storeOptions = useMemo(
-    () => stores.map(s => ({label: s.store_name, value: s.store_id})),
-    [stores],
+    () =>
+      visitStore
+        ? [{label: visitStoreName || visitStore, value: visitStore}]
+        : stores.map(s => ({label: s.store_name, value: s.store_id})),
+    [stores, visitStore, visitStoreName],
   );
 
   // Opened from Count Stock for a specific store.

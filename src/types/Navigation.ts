@@ -134,6 +134,10 @@ export type SoAppStackParamList = {
   TeamReportsScreen: undefined;
   UserManualScreen: undefined;
   UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
+  // Promoter stock screens, opened by a Team Leader inside a store visit.
+  StockReceivedScreen: {store: string; storeName?: string};
+  CustomerReturnScreen: {store: string; storeName?: string};
+  DistributorReturnScreen: {store: string; storeName?: string};
 };
 
 export type menuType = {
