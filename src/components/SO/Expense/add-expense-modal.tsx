@@ -13,6 +13,7 @@ import {useFormik} from 'formik';
 import {expenseItemSchema} from '../../../types/schema';
 import AddExpenseItemV2 from './add-expense-item-v2';
 import InAppCameraHost from '../../ui-lib/in-app-camera-host';
+import {X} from 'lucide-react-native';
 
 const initialValues = {
   date: '',
@@ -85,6 +86,18 @@ const AddExpenseModal = ({
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalWrapper}>
         <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Add Expense</Text>
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.headerCloseBtn}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+              accessibilityRole="button"
+              accessibilityLabel="Close">
+              <X size={18} color={Colors.black} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
+
           <AddExpenseItemV2
             {...{
               values,
@@ -101,10 +114,6 @@ const AddExpenseModal = ({
             style={styles.submitBtn}
             onPress={() => handleSubmit()}>
             <Text style={styles.submitText}>+ Add Expense</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -130,6 +139,21 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: '85%',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+  },
+  headerTitle: {fontSize: 16, fontWeight: 'bold', color: Colors.black},
+  headerCloseBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F0F2F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   submitBtn: {
     backgroundColor: Colors.orange,
     padding: 12,
@@ -138,6 +162,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   submitText: {color: Colors.white, fontSize: 16, fontWeight: 'bold'},
-  closeBtn: {padding: 10, alignItems: 'center'},
-  closeText: {fontSize: 14, color: Colors.black},
 });
