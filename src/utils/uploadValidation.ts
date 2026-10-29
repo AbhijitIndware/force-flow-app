@@ -69,7 +69,9 @@ export function validateFile(
   const allowedTypes = options.allowPdf
     ? ALLOWED_DOC_TYPES
     : ALLOWED_IMAGE_TYPES;
-  const type = (file.type || '').toLowerCase();
+  // Some pickers report "image/jpg"; the server accepts it as JPEG.
+  const rawType = (file.type || '').toLowerCase();
+  const type = rawType === 'image/jpg' ? 'image/jpeg' : rawType;
   const name = file.name || '';
 
   if (file.size != null && file.size > MAX_FILE_SIZE_BYTES) {

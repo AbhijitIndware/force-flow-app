@@ -27,12 +27,12 @@ import {Fonts} from '../../../constants';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
   useGetCustomerReturnsQuery,
-  useGetEmployeeAssignedStoresQuery,
   useGetStockReturnsQuery,
   useGetStoreStockStatusQuery,
   useRecordCustomerReturnMutation,
   useRecordStockReturnMutation,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {
   getSafeServerMessage,
   getUserFacingError,
@@ -83,7 +83,7 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
-  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery();
+  const {data: storesResponse} = useStockStores();
   const stores = useMemo(
     () => storesResponse?.message?.data?.stores ?? [],
     [storesResponse],

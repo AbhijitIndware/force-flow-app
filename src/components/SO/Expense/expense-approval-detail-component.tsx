@@ -27,6 +27,7 @@ import {
 import {Expense} from '../../../types/tadaType';
 import Toast from 'react-native-toast-message';
 import {
+  assertServerSuccess,
   getUserFacingError,
   getSafeServerMessage,
 } from '../../../utils/errorMessage';
@@ -565,10 +566,11 @@ const ExpenseApprovalDetailComponent = ({
           style: 'destructive',
           onPress: async () => {
             try {
-              await rejectClaim({
+              const res = await rejectClaim({
                 claim_id: claimId,
                 reason: rejectReason,
               }).unwrap();
+              assertServerSuccess(res);
               setRejectModalVisible(false);
               setRejectReason('');
               Toast.show({

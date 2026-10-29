@@ -27,6 +27,7 @@ import DistributorNavigation from '../Distributor/DistributorNavigation/Distribu
 import NetInfo from '@react-native-community/netinfo';
 import {Colors} from '../../utils/colors';
 import {windowWidth} from '../../utils/utils';
+import {isTeamLeader} from '../../utils/roles';
 
 const AuthStack = createStackNavigator<MainNavigationStackParamList>();
 const AppStack = createStackNavigator<MainNavigationStackParamList>();
@@ -48,10 +49,17 @@ const MainNavigation = () => {
     state => state?.persistedReducer?.authSlice?.employee,
   );
   const designation = employee?.designation;
+  const roles = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.user?.roles,
+  );
 
   let userType: 'PROMOTER' | 'SALES_OFFICER' | 'DISTRIBUTOR' | null = null;
 
-  if (designation === 'Promoter') {
+  // Team Leaders run the promoter app, with a few SO screens added
+  // (see utils/roles).
+  if (isTeamLeader(designation, roles)) {
+    userType = 'PROMOTER';
+  } else if (designation === 'Promoter') {
     userType = 'PROMOTER';
   } else if (
     ['ASM', 'ASE', 'Area Sales Executive', 'Sales Officer'].includes(

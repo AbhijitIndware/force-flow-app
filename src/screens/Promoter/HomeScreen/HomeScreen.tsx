@@ -74,6 +74,8 @@ import {
 } from '../../../types/baseType';
 import {TargetMetricBox} from '../../../components/SO/HomeScreen/Common';
 import moment from 'moment';
+import {PromotorShift} from '../../../components/SO/HomeScreen/PromoterShift';
+import {useIsTeamLeader} from '../../../utils/roles';
 
 const {width} = Dimensions.get('window');
 
@@ -172,6 +174,19 @@ const HomeScreen = ({navigation, route}: Props) => {
   const attendanceStatus = statusData?.message?.data;
   const storesToday = attendanceStatus?.stores_today ?? [];
 
+  // A Team Leader can check into several stores a day; the status call says
+  // when they can check in again and which store is open.
+  const isTL = useIsTeamLeader();
+  const canCheckIn = isTL
+    ? attendanceStatus?.actions?.can_check_in
+    : attendance?.can_check_in;
+  const canCheckOut = isTL
+    ? attendanceStatus?.actions?.can_check_out
+    : attendance?.can_check_out;
+  const currentStoreName = isTL
+    ? attendanceStatus?.actions?.open_store?.store_name
+    : attendanceStatus?.shift_info?.store_name;
+
   const salesPct =
     target && target.sales_target > 0
       ? parseFloat(
@@ -234,13 +249,13 @@ const HomeScreen = ({navigation, route}: Props) => {
                   <View style={styles.attendanceLoader}>
                     <ActivityIndicator size="small" color={Colors.white} />
                   </View>
-                ) : attendanceStatus?.shift_info?.store_name &&
-                  !attendance?.can_check_in ? (
+                ) : currentStoreName && !canCheckIn ? (
                   <View style={styles.storeInfoCard}>
                     <Text style={styles.storeInfoName}>
-                      Store — {attendanceStatus.shift_info.store_name}
+                      Store — {currentStoreName}
                     </Text>
-                    {attendanceStatus.shift_info.start_time &&
+                    {!isTL &&
+                      attendanceStatus?.shift_info?.start_time &&
                       attendanceStatus.shift_info.end_time && (
                         <Text style={styles.storeInfoText}>
                           Shift:{' '}
@@ -258,7 +273,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                 ) : null}
 
                 {/* ── Check-in / Check-out ── */}
-                {attendance?.can_check_in && (
+                {canCheckIn && (
                   <TouchableOpacity
                     style={styles.checkinButton}
                     onPress={() => navigation.navigate('CheckingScreen')}>
@@ -270,7 +285,7 @@ const HomeScreen = ({navigation, route}: Props) => {
                     />
                   </TouchableOpacity>
                 )}
-                {attendance?.can_check_out && (
+                {canCheckOut && (
                   <TouchableOpacity
                     style={styles.checkinButton}
                     onPress={() => navigation.navigate('CheckOutScreen')}>
@@ -735,6 +750,8 @@ const HomeScreen = ({navigation, route}: Props) => {
               </>
             ) : null}
           </View>
+
+          {isTL && <PromotorShift navigation={navigation} readOnly />}
         </ScrollView>
       )}
     </SafeAreaView>

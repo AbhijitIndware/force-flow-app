@@ -25,6 +25,7 @@ import MultiSelectDropdown, {
   MultiSelectOption,
 } from '../../ui-lib/multiselect-dropdown';
 import {
+  assertServerSuccess,
   getUserFacingError,
   getSafeServerMessage,
 } from '../../../utils/errorMessage';
@@ -279,6 +280,7 @@ export const SetTargetsModal: React.FC<SetTargetsModalProps> = ({
         year: selectedYear,
         employee: selectedEmployee,
       }).unwrap();
+      assertServerSuccess(result);
 
       const updatedCount =
         'updated' in result.message ? result.message.updated : 1;

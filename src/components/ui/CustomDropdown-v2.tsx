@@ -146,6 +146,9 @@ const DropdownComponentV2 = ({
             data={filteredData}
             keyExtractor={item => `${item.value}-${item.label}`}
             keyboardShouldPersistTaps="handled"
+            // Android: lets the list scroll when the dropdown sits inside a
+            // ScrollView that can itself scroll (e.g. the add-expense form).
+            nestedScrollEnabled
             onEndReached={onLoadMore}
             onEndReachedThreshold={0.5}
             ListFooterComponent={

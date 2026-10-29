@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { memo, useDeferredValue, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -67,7 +67,8 @@ const MODES: Partial<Record<TeamReportView, { label: string; value: string }[]>>
 // Day modes give one column per day; the server allows at most 31
 const DAY_MODES = ['day', 'day_sku'];
 const MAX_DAY_MODE_DAYS = 31;
-const ROW_STEP = 100;
+// Rows rendered at a time; day modes can have 30+ columns per row.
+const ROW_STEP = 50;
 
 const COL_WIDTH: Record<TeamReportColumnType, number> = {
   text: 150,
@@ -81,21 +82,23 @@ const COL_WIDTH: Record<TeamReportColumnType, number> = {
 const isNumeric = (t: TeamReportColumnType) =>
   t === 'qty' || t === 'money' || t === 'pct';
 
+// Built once: toLocaleString with options builds a new formatter on every
+// call, which is slow across thousands of table cells.
+const QTY_FORMAT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+const MONEY_FORMAT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
+const PCT_FORMAT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 });
+
 const formatValue = (value: any, type?: TeamReportColumnType): string => {
   if (value === null || value === undefined || value === '') {
     return '–';
   }
   switch (type) {
     case 'qty':
-      return Math.round(Number(value)).toLocaleString('en-IN');
+      return QTY_FORMAT.format(Math.round(Number(value)));
     case 'money':
-      return `₹${Number(value).toLocaleString('en-IN', {
-        maximumFractionDigits: 2,
-      })}`;
+      return `₹${MONEY_FORMAT.format(Number(value))}`;
     case 'pct':
-      return `${Number(value).toLocaleString('en-IN', {
-        maximumFractionDigits: 1,
-      })}%`;
+      return `${PCT_FORMAT.format(Number(value))}%`;
     case 'date': {
       const m = moment(value);
       return m.isValid() ? m.format('DD MMM YY') : String(value);
@@ -104,6 +107,101 @@ const formatValue = (value: any, type?: TeamReportColumnType): string => {
       return String(value);
   }
 };
+
+const renderCell = (col: TeamReportColumn, value: any) => {
+  const width = COL_WIDTH[col.type] ?? COL_WIDTH.text;
+  if (col.type === 'badge' && value) {
+    const tone = getTone(col.tones?.[value]);
+    return (
+      <View key={col.key} style={[styles.cell, { width }]}>
+        <View style={[styles.badge, { backgroundColor: tone.bg }]}>
+          <Text style={[styles.badgeText, { color: tone.color }]} numberOfLines={1}>
+            {String(value)}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  // One Text per plain cell (not View > Text): a day-mode report has
+  // thousands of cells.
+  return (
+    <Text
+      key={col.key}
+      style={[
+        styles.cell,
+        styles.cellText,
+        { width },
+        isNumeric(col.type) && styles.cellNum,
+      ]}
+      numberOfLines={2}>
+      {formatValue(value, col.type)}
+    </Text>
+  );
+};
+
+const ReportRow = memo(
+  ({
+    row,
+    columns,
+    alt,
+  }: {
+    row: Record<string, any>;
+    columns: TeamReportColumn[];
+    alt: boolean;
+  }) => (
+    <View style={[styles.tableRow, alt && styles.tableRowAlt]}>
+      {columns.map(col => renderCell(col, row[col.key]))}
+    </View>
+  ),
+);
+
+// Re-renders only when the report or the row count changes, not on every
+// screen update (refresh spinner, filters opening).
+const ReportTable = memo(
+  ({
+    columns,
+    rows,
+    visibleRows,
+    onShowMore,
+  }: {
+    columns: TeamReportColumn[];
+    rows: Record<string, any>[];
+    visibleRows: number;
+    onShowMore: () => void;
+  }) => (
+    <View style={[styles.card, boxShadow, styles.tableCard]}>
+      <ScrollView horizontal showsHorizontalScrollIndicator>
+        <View>
+          <View style={[styles.tableRow, styles.tableHeader]}>
+            {columns.map(col => (
+              <View
+                key={col.key}
+                style={[styles.cell, { width: COL_WIDTH[col.type] ?? COL_WIDTH.text }]}>
+                <Text
+                  style={[styles.headerText, isNumeric(col.type) && styles.cellNum]}
+                  numberOfLines={2}>
+                  {col.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+          {rows.slice(0, visibleRows).map((row, i) => (
+            <ReportRow key={i} row={row} columns={columns} alt={i % 2 === 1} />
+          ))}
+        </View>
+      </ScrollView>
+      {rows.length > visibleRows && (
+        <TouchableOpacity style={styles.moreBtn} onPress={onShowMore}>
+          <Text style={styles.moreText}>
+            Show more ({rows.length - visibleRows} left)
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  ),
+);
+
+const showMoreRows = (v: number) => v + ROW_STEP;
 
 const TeamReportsScreen = ({ navigation }: Props) => {
   const [view, setView] = useState<TeamReportView>('sales');
@@ -162,76 +260,18 @@ const TeamReportsScreen = ({ navigation }: Props) => {
   );
 
   const report = currentData?.message;
-  const columns = report?.columns ?? [];
-  const rows = report?.rows ?? [];
+  const columns = useMemo(() => report?.columns ?? [], [report]);
+  const rows = useMemo(() => report?.rows ?? [], [report]);
   const kpis = report?.kpis ?? [];
+  // "Show more" responds at once; the extra rows render after it.
+  const deferredVisibleRows = useDeferredValue(visibleRows);
+  const onShowMore = useMemo(() => () => setVisibleRows(showMoreRows), []);
 
   const changeView = (v: TeamReportView) => {
     setView(v);
     setMode(MODES[v]?.[0]?.value ?? '');
     setVisibleRows(ROW_STEP);
   };
-
-  const renderCell = (col: TeamReportColumn, value: any, key: string) => {
-    const width = COL_WIDTH[col.type] ?? COL_WIDTH.text;
-    if (col.type === 'badge' && value) {
-      const tone = getTone(col.tones?.[value]);
-      return (
-        <View key={key} style={[styles.cell, { width }]}>
-          <View style={[styles.badge, { backgroundColor: tone.bg }]}>
-            <Text style={[styles.badgeText, { color: tone.color }]} numberOfLines={1}>
-              {String(value)}
-            </Text>
-          </View>
-        </View>
-      );
-    }
-    return (
-      <View key={key} style={[styles.cell, { width }]}>
-        <Text
-          style={[styles.cellText, isNumeric(col.type) && styles.cellNum]}
-          numberOfLines={2}>
-          {formatValue(value, col.type)}
-        </Text>
-      </View>
-    );
-  };
-
-  const renderTable = () => (
-    <View style={[styles.card, boxShadow, styles.tableCard]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator>
-        <View>
-          <View style={[styles.tableRow, styles.tableHeader]}>
-            {columns.map(col => (
-              <View
-                key={col.key}
-                style={[styles.cell, { width: COL_WIDTH[col.type] ?? COL_WIDTH.text }]}>
-                <Text
-                  style={[styles.headerText, isNumeric(col.type) && styles.cellNum]}
-                  numberOfLines={2}>
-                  {col.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-          {rows.slice(0, visibleRows).map((row, i) => (
-            <View key={i} style={[styles.tableRow, i % 2 === 1 && styles.tableRowAlt]}>
-              {columns.map(col => renderCell(col, row[col.key], `${i}-${col.key}`))}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
-      {rows.length > visibleRows && (
-        <TouchableOpacity
-          style={styles.moreBtn}
-          onPress={() => setVisibleRows(v => v + ROW_STEP)}>
-          <Text style={styles.moreText}>
-            Show more ({rows.length - visibleRows} left)
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
 
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
@@ -345,7 +385,12 @@ const TeamReportsScreen = ({ navigation }: Props) => {
             )}
 
             {rows.length > 0 ? (
-              renderTable()
+              <ReportTable
+                columns={columns}
+                rows={rows}
+                visibleRows={deferredVisibleRows}
+                onShowMore={onShowMore}
+              />
             ) : (
               <View style={styles.empty}>
                 <Text style={styles.muted}>No data for these filters.</Text>
@@ -402,6 +447,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 8,
     justifyContent: 'center',
+    // For cells that are a single Text: fill the row height, text centred.
+    alignSelf: 'stretch',
+    textAlignVertical: 'center',
   },
   headerText: {
     fontFamily: Fonts.semiBold,

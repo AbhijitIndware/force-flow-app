@@ -25,10 +25,10 @@ import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
-  useGetEmployeeAssignedStoresQuery,
   useGetStoreStockStatusQuery,
   useRecordStockReceivedMutation,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {
   getSafeServerMessage,
   getUserFacingError,
@@ -60,7 +60,7 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
-  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery();
+  const {data: storesResponse} = useStockStores();
   const stores = useMemo(
     () => storesResponse?.message?.data?.stores ?? [],
     [storesResponse],

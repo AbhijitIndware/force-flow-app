@@ -28,10 +28,47 @@ import PromoterSaleDetailScreen from '../Sales/SaleDetailScreen';
 import NotificationListScreen from '../../NotificationListScreen';
 import UserManualScreen from '../../UserManualScreen/UserManualScreen';
 import UserManualVideoScreen from '../../UserManualScreen/UserManualVideoScreen';
+import {useIsTeamLeader} from '../../../utils/roles';
+// SO / ASM screens a Team Leader also gets.
+import PartnersScreen from '../../SO/PartnersScreen/PartnersScreen';
+import OrdersScreen from '../../SO/OrdersScreen/OrdersScreen';
+import AddStoreScreen from '../../SO/PartnersScreen/AddStoreScreen';
+import AddDistributorScreen from '../../SO/PartnersScreen/AddDistributorScreen';
+import StoreDetailScreen from '../../SO/PartnersScreen/StoreDetailScreen';
+import AddSaleScreen from '../../SO/OrdersScreen/AddSaleScreen';
+import SaleDetailScreen from '../../SO/OrdersScreen/SaleDetailScreen';
+import PurchaseDetailScreen from '../../SO/OrdersScreen/PurchaseDetailScreen';
+import DeliveryNoteDetailScreen from '../../SO/OrdersScreen/DeliveryNoteDetailScreen';
+import PromoterShiftsScreen from '../../SO/HomeScreen/PromoterShiftsScreen';
+import PromoterDayDetailScreen from '../../SO/HomeScreen/PromoterDayDetailScreen';
+import TeamPromotersScreen from '../../SO/Team/TeamPromotersScreen';
+import TeamTargetsScreen from '../../SO/Team/TeamTargetsScreen';
+import TeamAttendanceScreen from '../../SO/Team/TeamAttendanceScreen';
+import TeamReportsScreen from '../../SO/Team/TeamReportsScreen';
 
 const Stack = createNativeStackNavigator<PromoterAppStackParamList>();
 
+// Typed against the SO stack; the routes they use exist here too.
+const TEAM_LEADER_SCREENS: {name: string; component: any}[] = [
+  {name: 'PartnersScreen', component: PartnersScreen},
+  {name: 'OrdersScreen', component: OrdersScreen},
+  {name: 'AddStoreScreen', component: AddStoreScreen},
+  {name: 'AddDistributorScreen', component: AddDistributorScreen},
+  {name: 'StoreDetailScreen', component: StoreDetailScreen},
+  {name: 'AddSaleScreen', component: AddSaleScreen},
+  {name: 'SaleDetailScreen', component: SaleDetailScreen},
+  {name: 'PurchaseDetailScreen', component: PurchaseDetailScreen},
+  {name: 'DeliveryNoteDetailScreen', component: DeliveryNoteDetailScreen},
+  {name: 'PromoterShiftsScreen', component: PromoterShiftsScreen},
+  {name: 'PromoterDayDetailScreen', component: PromoterDayDetailScreen},
+  {name: 'TeamPromotersScreen', component: TeamPromotersScreen},
+  {name: 'TeamTargetsScreen', component: TeamTargetsScreen},
+  {name: 'TeamAttendanceScreen', component: TeamAttendanceScreen},
+  {name: 'TeamReportsScreen', component: TeamReportsScreen},
+];
+
 const PromoterNavigation = () => {
+  const isTL = useIsTeamLeader();
   return (
     <Stack.Navigator initialRouteName="Home">
       <Stack.Screen
@@ -159,6 +196,15 @@ const PromoterNavigation = () => {
         component={UserManualVideoScreen}
         options={{headerShown: false}}
       />
+      {isTL &&
+        TEAM_LEADER_SCREENS.map(({name, component}) => (
+          <Stack.Screen
+            key={name}
+            name={name as keyof PromoterAppStackParamList}
+            component={component}
+            options={{headerShown: false}}
+          />
+        ))}
     </Stack.Navigator>
   );
 };

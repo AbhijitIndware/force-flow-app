@@ -24,7 +24,7 @@ import {SoAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import CalendarView from '../../../components/weeklyoff/CalendarView';
 import Toast from 'react-native-toast-message';
-import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { assertServerSuccess, getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -55,6 +55,7 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
   const handleMark = async () => {
     try {
       const res = await markDayOff({date: selectedDate}).unwrap();
+      assertServerSuccess(res);
       Toast.show({
         type: 'success',
         text1: 'Weekly Off Marked',
@@ -83,6 +84,7 @@ const WeeklyOffScreen = ({navigation, route}: Props) => {
           onPress: async () => {
             try {
               const res = await cancelDayOff({date: selectedDate}).unwrap();
+              assertServerSuccess(res);
               Toast.show({
                 type: 'success',
                 text1: 'Weekly Off Removed',

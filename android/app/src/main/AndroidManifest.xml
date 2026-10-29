@@ -1,12 +1,33 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Only what a screen uses: network, location (check-in, geofence),
+         camera (selfie, bills), notifications. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Kept: background push runs in a HeadlessJsTaskService, which
+         always takes a wake lock; without it a background message crashes. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Lets MainActivity hide other apps' overlays (tapjacking). -->
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+
+    <!-- Added by libraries, not used by the app (security review:
+         excessive permissions). -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" tools:node="remove" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" tools:node="remove" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" tools:node="remove" />
+    <uses-permission android:name="android.permission.VIBRATE" tools:node="remove" />
 
 
     <application
@@ -39,5 +60,31 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- Library components that declare exported="true" but need no
+           other app to start them (security review: android:exported).
+           Still exported, on purpose: the FCM receivers (Google Play
+           services delivers pushes, guarded by c2dm SEND) and WorkManager's
+           SystemJobService (guarded by BIND_JOB_SERVICE). -->
+      <activity
+        android:name="app.notifee.core.NotificationReceiverActivity"
+        android:exported="false"
+        tools:replace="android:exported" />
+      <receiver
+        android:name="app.notifee.core.AlarmPermissionBroadcastReceiver"
+        android:exported="false"
+        tools:replace="android:exported" />
+      <receiver
+        android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+        android:exported="false"
+        tools:replace="android:exported" />
+      <receiver
+        android:name="androidx.profileinstaller.ProfileInstallReceiver"
+        android:exported="false"
+        tools:replace="android:exported" />
+      <service
+        android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+        android:exported="false"
+        tools:replace="android:exported" />
     </application>
 </manifest>

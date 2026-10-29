@@ -1595,6 +1595,8 @@ export interface AvailableStore {
   map_location: string; // "lat,long" as string
   is_primary: boolean;
   store_image: string;
+  // Team Leader only: metres from the phone, for the nearest stores.
+  distance_m?: number | null;
 }
 
 export interface ShiftAssignment {
@@ -1614,6 +1616,9 @@ export interface AttendanceShiftData {
   shift_assignment: ShiftAssignment | null;
   primary_store: string;
   available_stores: AvailableStore[];
+  is_team_leader?: boolean;
+  // False when a Team Leader has exactly one shift store (no picker needed).
+  requires_store_parameter?: boolean;
 }
 
 export interface RAttendanceShift {

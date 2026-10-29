@@ -65,7 +65,7 @@ export const authApi = createApi({
       { reset_token: string; new_password: string }
     >({
       query: body => ({
-        url: '/method/salesforce_management.mobile_app_apis.authentications.login.reset_pwd',
+        url: '/method/salesforce_management.mobile_app_apis.authentications.reset_pwd.reset_pwd',
         method: 'POST',
         body,
       }),

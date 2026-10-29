@@ -39,6 +39,7 @@ import {
 } from '../../../features/base/promoter-base-api';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
+import { useIsTeamLeader } from '../../../utils/roles';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -57,6 +58,8 @@ const assignmentDays = (a: SupervisorRosterAssignment) =>
   Math.max(1, moment(a.end_date).diff(moment(a.start_date), 'days') + 1);
 
 const PromoterShiftsScreen = ({ navigation }: Props) => {
+  // Team Leaders can see shifts but not change them.
+  const canEdit = !useIsTeamLeader();
   const now = moment();
   const [employee, setEmployee] = useState('');
   const [month, setMonth] = useState(now.month() + 1);
@@ -389,7 +392,7 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
           <Text style={styles.assignmentRef} numberOfLines={1}>
             {assignment.name}
           </Text>
-          {!cancelled && (
+          {canEdit && !cancelled && (
             <TouchableOpacity
               style={styles.editStoresBtn}
               activeOpacity={0.8}
@@ -398,7 +401,7 @@ const PromoterShiftsScreen = ({ navigation }: Props) => {
               <Text style={styles.editStoresText}>Extra stores</Text>
             </TouchableOpacity>
           )}
-          {!cancelled && (
+          {canEdit && !cancelled && (
             <TouchableOpacity
               style={styles.cancelBtn}
               activeOpacity={0.8}

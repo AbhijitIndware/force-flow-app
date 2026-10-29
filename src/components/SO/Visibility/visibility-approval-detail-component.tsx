@@ -25,6 +25,7 @@ import {
 } from '../../../features/tada/tadaApiv2';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import {
+  assertServerSuccess,
   getUserFacingError,
   getSafeServerMessage,
 } from '../../../utils/errorMessage';
@@ -147,27 +148,31 @@ const VisibilityApprovalDetailComponent = ({
 
   const claim = data?.message?.data;
 
-  const handleApprove = async () => {
-    try {
-      Alert.alert(
-        'Confirm Approval',
-        'Are you sure you want to approve this visibility claim?',
-        [
-          { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-          {
-            text: 'Approve',
-            onPress: async () => {
-              await approveClaim({ claim_id: claimId }).unwrap();
+  const handleApprove = () => {
+    Alert.alert(
+      'Confirm Approval',
+      'Are you sure you want to approve this visibility claim?',
+      [
+        { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+        {
+          text: 'Approve',
+          onPress: async () => {
+            try {
+              const res = await approveClaim({ claim_id: claimId }).unwrap();
+              assertServerSuccess(res);
               Alert.alert('Success', 'Visibility claim approved successfully', [
                 { text: 'OK', onPress: () => navigation.goBack() },
               ]);
-            },
+            } catch (error: any) {
+              Alert.alert(
+                'Error',
+                getUserFacingError(error, 'Failed to approve claim'),
+              );
+            }
           },
-        ],
-      );
-    } catch (error: any) {
-      Alert.alert('Error', getUserFacingError(error, 'Failed to approve claim'));
-    }
+        },
+      ],
+    );
   };
 
   const handleReject = async () => {
@@ -175,19 +180,20 @@ const VisibilityApprovalDetailComponent = ({
       Alert.alert('Required', 'Please enter a reason for rejection');
       return;
     }
-    try {
-      Alert.alert(
-        'Confirm Rejection',
-        'Are you sure you want to reject this visibility claim?',
-        [
-          { text: 'Cancel', onPress: () => { }, style: 'cancel' },
-          {
-            text: 'Reject',
-            onPress: async () => {
-              await rejectClaim({
+    Alert.alert(
+      'Confirm Rejection',
+      'Are you sure you want to reject this visibility claim?',
+      [
+        { text: 'Cancel', onPress: () => { }, style: 'cancel' },
+        {
+          text: 'Reject',
+          onPress: async () => {
+            try {
+              const res = await rejectClaim({
                 claim_id: claimId,
                 reason: rejectReason,
               }).unwrap();
+              assertServerSuccess(res);
               Alert.alert('Success', 'Visibility claim rejected successfully', [
                 {
                   text: 'OK',
@@ -198,13 +204,16 @@ const VisibilityApprovalDetailComponent = ({
                   },
                 },
               ]);
-            },
+            } catch (error: any) {
+              Alert.alert(
+                'Error',
+                getUserFacingError(error, 'Failed to reject claim'),
+              );
+            }
           },
-        ],
-      );
-    } catch (error: any) {
-      Alert.alert('Error', getUserFacingError(error, 'Failed to reject claim'));
-    }
+        },
+      ],
+    );
   };
 
   if (isLoading) {

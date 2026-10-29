@@ -24,7 +24,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Feather from 'react-native-vector-icons/Feather';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {House, UserCircle2} from 'lucide-react-native';
+import {Handshake, House, ShoppingCart, UserCircle2} from 'lucide-react-native';
 import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
 import MySalesScreen from '../Sales/MySalesScreen';
 import StockScreen from '../Stock/Stock';
@@ -36,6 +36,9 @@ import {getInitials} from '../../../utils/utils';
 import {useGetUnreadNotificationCountQuery} from '../../../features/fcm/fccm-api';
 import ProfileScreen from '../ProfileScreen/ProfileScreen';
 import StockReceivedScreen from '../Stock/StockReceivedScreen';
+import PartnersScreen from '../../SO/PartnersScreen/PartnersScreen';
+import OrdersScreen from '../../SO/OrdersScreen/OrdersScreen';
+import {useIsTeamLeader} from '../../../utils/roles';
 
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
@@ -201,6 +204,9 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
 const Home = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
+  // A Team Leader's bar: Home, Count Stock, Partners, Orders, Profile.
+  // Receive Stock and My Sales stay in Home's Quick links.
+  const isTL = useIsTeamLeader();
 
   const handleMorePress = () => {
     setModalVisible(true);
@@ -285,56 +291,85 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
 
-        <Tab.Screen
-          name="StockReceivedScreen"
-          component={StockReceivedScreen}
-          options={{
-            // Too long for one line in the bar.
-            tabBarLabel: 'Receive Stock\nfrom Distributor',
-            headerShown: false,
-            tabBarIcon: () => (
-              <STOCK_SCREENS.receive.Icon
-                strokeWidth={2}
-                color={Colors.white}
-                size={25}
-              />
-            ),
-          }}
-        />
-        {/* <Tab.Screen
-          name="Incentives"
-          component={IncentiveScreen}
-          options={{
-            tabBarLabel: 'Incentives',
-            headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
-              return (
-                <Ionicons
-                  name="server-outline"
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}
-                />
-              );
-            },
-          }}
-        /> */}
-        <Tab.Screen
-          name="Sales"
-          component={MySalesScreen}
-          options={{
-            tabBarLabel: 'My Sales',
-            headerShown: false,
-            tabBarIcon: ({color, size, focused}) => {
-              return (
-                <Ionicons
-                  name="stats-chart-outline"
-                  color={focused ? Colors.white : Colors.white}
-                  size={25}
-                />
-              );
-            },
-          }}
-        />
+        {isTL ? (
+          <>
+            <Tab.Screen
+              name="Partners"
+              component={PartnersScreen}
+              options={{
+                tabBarLabel: 'Partners',
+                headerShown: false,
+                tabBarIcon: () => (
+                  <Handshake strokeWidth={2} color={Colors.white} size={25} />
+                ),
+              }}
+            />
+            <Tab.Screen
+              name="Orders"
+              component={OrdersScreen}
+              options={{
+                tabBarLabel: 'Orders',
+                headerShown: false,
+                tabBarIcon: () => (
+                  <ShoppingCart strokeWidth={2} color={Colors.white} size={25} />
+                ),
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Tab.Screen
+              name="StockReceivedScreen"
+              component={StockReceivedScreen}
+              options={{
+                // Too long for one line in the bar.
+                tabBarLabel: 'Receive Stock\nfrom Distributor',
+                headerShown: false,
+                tabBarIcon: () => (
+                  <STOCK_SCREENS.receive.Icon
+                    strokeWidth={2}
+                    color={Colors.white}
+                    size={25}
+                  />
+                ),
+              }}
+            />
+            {/* <Tab.Screen
+              name="Incentives"
+              component={IncentiveScreen}
+              options={{
+                tabBarLabel: 'Incentives',
+                headerShown: false,
+                tabBarIcon: ({color, size, focused}) => {
+                  return (
+                    <Ionicons
+                      name="server-outline"
+                      color={focused ? Colors.white : Colors.white}
+                      size={25}
+                    />
+                  );
+                },
+              }}
+            /> */}
+            <Tab.Screen
+              name="Sales"
+              component={MySalesScreen}
+              options={{
+                tabBarLabel: 'My Sales',
+                headerShown: false,
+                tabBarIcon: ({color, size, focused}) => {
+                  return (
+                    <Ionicons
+                      name="stats-chart-outline"
+                      color={focused ? Colors.white : Colors.white}
+                      size={25}
+                    />
+                  );
+                },
+              }}
+            />
+          </>
+        )}
         <Tab.Screen
           name="More"
           component={ProfileScreen}

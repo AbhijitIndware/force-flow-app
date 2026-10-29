@@ -24,11 +24,11 @@ import {launchCamera} from '../../../utils/launchCamera';
 import {
   useGetActivityCategoriesQuery,
   useUploadStoreActivityMutation,
-  useGetEmployeeAssignedStoresQuery,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {Camera, Trash2, Upload, X} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {assertServerSuccess, getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -59,7 +59,7 @@ const AddStoreActivityScreen = ({navigation}: Props) => {
   }>({});
 
   const {data: categoriesData} = useGetActivityCategoriesQuery();
-  const {data: assignedStoresData} = useGetEmployeeAssignedStoresQuery();
+  const {data: assignedStoresData} = useStockStores();
   const [uploadStoreActivity, {isLoading}] = useUploadStoreActivityMutation();
 
   const activityTypes =
@@ -132,6 +132,7 @@ const AddStoreActivityScreen = ({navigation}: Props) => {
         ...(remark.trim() ? {remark: remark.trim()} : {}),
         images,
       }).unwrap();
+      assertServerSuccess(res);
       Toast.show({
         type: 'success',
         text1: 'Activity uploaded',

@@ -29,7 +29,7 @@ import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import { StockDashboardItem } from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { assertServerSuccess, getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -258,6 +258,7 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
         store,
         items: JSON.stringify(itemsToSubmit),
       }).unwrap();
+      assertServerSuccess(response);
 
       if (response.message) {
         Toast.show({ type: 'success', text1: 'Stock updated successfully' });

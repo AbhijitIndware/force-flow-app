@@ -91,10 +91,16 @@ export const promoterBaseApi = createApi({
       }),
       providesTags: ['Promoter'],
     }),
-    getAvailableStore: builder.query<RAttendanceShift, void>({
-      query: () => ({
+    // A Team Leader sends their location (nearest stores of their zone come
+    // back after their shift stores) or a search text instead.
+    getAvailableStore: builder.query<
+      RAttendanceShift,
+      {current_location?: string; search?: string} | void
+    >({
+      query: args => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.mark_attendance_mobile.mobile_get_employee_shift',
         method: 'GET',
+        params: compactParams(args ?? {}),
       }),
       providesTags: ['Promoter'],
     }),

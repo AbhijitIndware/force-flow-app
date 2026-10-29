@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Clipboard,
 } from 'react-native';
 import Input from '@rneui/themed/dist/Input';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -35,6 +36,16 @@ import { MainNavigationStackParamList } from '../../types/Navigation';
 
 const { width } = Dimensions.get('window');
 
+// OTP and password fields: no copy / paste menu, no autocorrect or
+// autofill, masked (security review: clipboard and keyboard caching).
+const SENSITIVE_INPUT_PROPS = {
+  secureTextEntry: true,
+  contextMenuHidden: true,
+  autoCorrect: false,
+  autoComplete: 'off',
+  importantForAutofill: 'no',
+} as const;
+
 type NavigationProp = NativeStackNavigationProp<
   MainNavigationStackParamList,
   'LoginScreen'
@@ -48,6 +59,14 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  // More than one new character at once is a paste (e.g. from the keyboard's
+  // clipboard strip); don't leave the OTP sitting in the clipboard.
+  const handleOtpChange = (text: string) => {
+    if (text.length - otp.length > 1) {
+      Clipboard.setString('');
+    }
+    setOtp(text);
+  };
   const [resetToken, setResetTokenState] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -305,9 +324,10 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
               <Input
                 placeholder="Enter 6-Digit OTP"
                 value={otp}
-                onChangeText={setOtp}
+                onChangeText={handleOtpChange}
                 keyboardType="number-pad"
                 maxLength={6}
+                {...SENSITIVE_INPUT_PROPS}
                 leftIcon={<KeyRound color={Colors.white} size={18} />}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.inputText}
@@ -341,7 +361,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="New Password"
                 value={newPassword}
                 onChangeText={setNewPassword}
-                secureTextEntry
+                {...SENSITIVE_INPUT_PROPS}
                 leftIcon={<Lock color={Colors.white} size={18} />}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.inputText}
@@ -351,7 +371,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
                 placeholder="Confirm New Password"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
-                secureTextEntry
+                {...SENSITIVE_INPUT_PROPS}
                 leftIcon={<Lock color={Colors.white} size={18} />}
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.inputText}

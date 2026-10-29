@@ -182,12 +182,13 @@ const SignupScreen = ({navigation, route}: Props) => {
             <Input
               secureTextEntry={secureText}
               contextMenuHidden={true}
+              autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
               style={styles.inputBox}
               inputStyle={{paddingTop: 15}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
-              autoComplete="password-new"
-              textContentType="newPassword"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,
