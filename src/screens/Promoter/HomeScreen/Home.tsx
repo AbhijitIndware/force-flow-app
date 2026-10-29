@@ -204,8 +204,8 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
 const Home = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
-  // A Team Leader's bar: Home, Count Stock, Partners, Orders, Profile.
-  // Receive Stock and My Sales stay in Home's Quick links.
+  // A Team Leader's bar: Home, Count Stock, Receive Stock, Orders, Partners.
+  // My Sales stays in Home's Quick links, Profile on the header avatar.
   const isTL = useIsTeamLeader();
 
   const handleMorePress = () => {
@@ -291,19 +291,44 @@ const Home = ({navigation, route}: Props) => {
           }}
         />
 
+        <Tab.Screen
+          name="StockReceivedScreen"
+          component={StockReceivedScreen}
+          options={{
+            // Too long for one line in the bar.
+            tabBarLabel: 'Receive Stock\nfrom Distributor',
+            headerShown: false,
+            tabBarIcon: () => (
+              <STOCK_SCREENS.receive.Icon
+                strokeWidth={2}
+                color={Colors.white}
+                size={25}
+              />
+            ),
+          }}
+        />
+        {/* <Tab.Screen
+          name="Incentives"
+          component={IncentiveScreen}
+          options={{
+            tabBarLabel: 'Incentives',
+            headerShown: false,
+            tabBarIcon: ({color, size, focused}) => {
+              return (
+                <Ionicons
+                  name="server-outline"
+                  color={focused ? Colors.white : Colors.white}
+                  size={25}
+                />
+              );
+            },
+          }}
+        /> */}
+
         {isTL ? (
+          // Team Leader: Orders and Partners in place of My Sales and
+          // Profile. Profile stays on the header avatar.
           <>
-            <Tab.Screen
-              name="Partners"
-              component={PartnersScreen}
-              options={{
-                tabBarLabel: 'Partners',
-                headerShown: false,
-                tabBarIcon: () => (
-                  <Handshake strokeWidth={2} color={Colors.white} size={25} />
-                ),
-              }}
-            />
             <Tab.Screen
               name="Orders"
               component={OrdersScreen}
@@ -315,42 +340,20 @@ const Home = ({navigation, route}: Props) => {
                 ),
               }}
             />
-          </>
-        ) : (
-          <>
             <Tab.Screen
-              name="StockReceivedScreen"
-              component={StockReceivedScreen}
+              name="Partners"
+              component={PartnersScreen}
               options={{
-                // Too long for one line in the bar.
-                tabBarLabel: 'Receive Stock\nfrom Distributor',
+                tabBarLabel: 'Partners',
                 headerShown: false,
                 tabBarIcon: () => (
-                  <STOCK_SCREENS.receive.Icon
-                    strokeWidth={2}
-                    color={Colors.white}
-                    size={25}
-                  />
+                  <Handshake strokeWidth={2} color={Colors.white} size={25} />
                 ),
               }}
             />
-            {/* <Tab.Screen
-              name="Incentives"
-              component={IncentiveScreen}
-              options={{
-                tabBarLabel: 'Incentives',
-                headerShown: false,
-                tabBarIcon: ({color, size, focused}) => {
-                  return (
-                    <Ionicons
-                      name="server-outline"
-                      color={focused ? Colors.white : Colors.white}
-                      size={25}
-                    />
-                  );
-                },
-              }}
-            /> */}
+          </>
+        ) : (
+          <>
             <Tab.Screen
               name="Sales"
               component={MySalesScreen}
@@ -368,25 +371,25 @@ const Home = ({navigation, route}: Props) => {
                 },
               }}
             />
+            <Tab.Screen
+              name="More"
+              component={ProfileScreen}
+              // listeners={{
+              //   tabPress: e => {
+              //     // e.preventDefault(); // Prevent default navigation
+              //     handleMorePress(); // Open modal
+              //   },
+              // }}
+              options={{
+                tabBarLabel: 'Profile',
+                headerShown: false,
+                tabBarIcon: ({focused}) => (
+                  <UserCircle2 strokeWidth={2} color={Colors.white} size={24} />
+                ),
+              }}
+            />
           </>
         )}
-        <Tab.Screen
-          name="More"
-          component={ProfileScreen}
-          // listeners={{
-          //   tabPress: e => {
-          //     // e.preventDefault(); // Prevent default navigation
-          //     handleMorePress(); // Open modal
-          //   },
-          // }}
-          options={{
-            tabBarLabel: 'Profile',
-            headerShown: false,
-            tabBarIcon: ({focused}) => (
-              <UserCircle2 strokeWidth={2} color={Colors.white} size={24} />
-            ),
-          }}
-        />
       </Tab.Navigator>
       <MoreOptionsModal
         visible={isModalVisible}

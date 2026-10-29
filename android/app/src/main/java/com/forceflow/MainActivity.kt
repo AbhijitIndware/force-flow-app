@@ -3,6 +3,7 @@ package com.forceflow
 import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.OnBackPressedCallback
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -24,10 +25,33 @@ class MainActivity : ReactActivity() {
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
 
+  /**
+   * targetSdk 36 (Android 16) no longer calls onBackPressed(), which is the
+   * only path React Native 0.79 listens on — so React Navigation never saw
+   * the press and the app closed. Route back through the dispatcher instead;
+   * JS calls invokeDefaultOnBackPressed() when nothing on its side handles it.
+   */
+  private val backCallback = object : OnBackPressedCallback(true) {
+    override fun handleOnBackPressed() {
+      if (!reactActivityDelegate.onBackPressed()) {
+        invokeDefaultOnBackPressed()
+      }
+    }
+  }
+
+  override fun invokeDefaultOnBackPressed() {
+    // Step aside so the dispatcher falls through to the system default
+    // (leave the app) instead of looping back into backCallback.
+    backCallback.isEnabled = false
+    onBackPressedDispatcher.onBackPressed()
+    backCallback.isEnabled = true
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     RNBootSplash.init(this, R.style.BootTheme)
     // react-native-screens < 4.16 must not restore Fragment state on activity recreation.
     super.onCreate(null)
+    onBackPressedDispatcher.addCallback(this, backCallback)
 
     // Tapjacking/overlay protection. `filterTouchesWhenObscured` is a
     // View property — applying it to the root decor view covers all
