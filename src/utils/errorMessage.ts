@@ -63,6 +63,18 @@ export function getUserFacingError(
   return fallback;
 }
 
+// The server reports many failures as HTTP 200 with `message.status: "error"`
+// or `message.success: false`, so unwrap() doesn't throw. Call this after
+// unwrap() to send those to the catch block; getUserFacingError reads the
+// server's message from the thrown value.
+export function assertServerSuccess<T>(res: T): T {
+  const body = (res as any)?.message;
+  if (body?.status === 'error' || body?.success === false) {
+    throw {data: res};
+  }
+  return res;
+}
+
 export function getPermissionErrorMessage(error: any): string {
   const data = error?.data ?? error;
   const message =

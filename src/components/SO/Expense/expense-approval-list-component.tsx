@@ -28,6 +28,10 @@ import {
 } from '../../../features/tada/tadaApiv2';
 import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 import {ApproverExpenseClaim} from '../../../types/tadaType';
+import {
+  assertServerSuccess,
+  getUserFacingError,
+} from '../../../utils/errorMessage';
 
 const {width} = Dimensions.get('window');
 
@@ -494,11 +498,12 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
   const handleBulkApprove = async () => {
     try {
       const response = await bulkApprove({claim_ids: selectedClaims}).unwrap();
+      assertServerSuccess(response);
       showBulkResult(response);
     } catch (error: any) {
       Alert.alert(
         'Approval failed',
-        error?.data?.message || 'Unable to approve selected claims.',
+        getUserFacingError(error, 'Unable to approve selected claims.'),
       );
     }
   };
@@ -509,13 +514,14 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
         claim_ids: selectedClaims,
         reason: rejectReason.trim(),
       }).unwrap();
+      assertServerSuccess(response);
       setRejectModalVisible(false);
       setRejectReason('');
       showBulkResult(response);
     } catch (error: any) {
       Alert.alert(
         'Rejection failed',
-        error?.data?.message || 'Unable to reject selected claims.',
+        getUserFacingError(error, 'Unable to reject selected claims.'),
       );
     }
   };

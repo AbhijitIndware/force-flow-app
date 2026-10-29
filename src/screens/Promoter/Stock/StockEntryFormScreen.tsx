@@ -34,6 +34,7 @@ import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import {StockDashboardItem} from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
+  assertServerSuccess,
   getUserFacingError,
   getSafeServerMessage,
 } from '../../../utils/errorMessage';
@@ -279,6 +280,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
         store,
         items: JSON.stringify(itemsToSubmit),
       }).unwrap();
+      assertServerSuccess(response);
 
       if (response.message) {
         Toast.show({type: 'success', text1: 'Stock count saved'});

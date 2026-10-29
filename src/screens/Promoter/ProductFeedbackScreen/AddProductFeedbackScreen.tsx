@@ -27,7 +27,7 @@ import {
 } from '../../../features/base/promoter-base-api';
 import {Camera, Trash2, Upload} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {assertServerSuccess, getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   PromoterAppStackParamList,
@@ -114,12 +114,13 @@ const AddProductFeedbackScreen = ({navigation}: Props) => {
     if (Object.keys(newErrors).length > 0) return;
 
     try {
-      await createProductFeedback({
+      const res = await createProductFeedback({
         type,
         ...(store ? {store} : {}),
         ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
         ...(image ? {image} : {}),
       }).unwrap();
+      assertServerSuccess(res);
       Toast.show({
         type: 'success',
         text1: 'Feedback submitted',
