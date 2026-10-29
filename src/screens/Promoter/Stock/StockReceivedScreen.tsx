@@ -25,21 +25,20 @@ import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
-  useGetEmployeeAssignedStoresQuery,
   useGetStoreStockStatusQuery,
   useRecordStockReceivedMutation,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {
   getSafeServerMessage,
   getUserFacingError,
 } from '../../../utils/errorMessage';
-import {useIsTeamLeader} from '../../../utils/roles';
 
 // Rendered both as a stack screen and as a bottom-bar tab, so only the
 // navigation calls it uses are typed.
 type Props = {
   navigation: {goBack: () => void};
-  route?: {params?: {store?: string; storeName?: string}};
+  route?: {params?: {store?: string}};
 };
 type Tab = 'record' | 'history';
 type ReceivedRow = {item_code: string; qty: number};
@@ -61,25 +60,14 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
-  // A Team Leader opens this inside a store visit and must always send
-  // that store, so the picker holds only it.
-  const isTL = useIsTeamLeader();
-  const visitStore = isTL ? route?.params?.store : undefined;
-  const visitStoreName = route?.params?.storeName;
-
-  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery(undefined, {
-    skip: isTL,
-  });
+  const {data: storesResponse} = useStockStores();
   const stores = useMemo(
     () => storesResponse?.message?.data?.stores ?? [],
     [storesResponse],
   );
   const storeOptions = useMemo(
-    () =>
-      visitStore
-        ? [{label: visitStoreName || visitStore, value: visitStore}]
-        : stores.map(s => ({label: s.store_name, value: s.store_id})),
-    [stores, visitStore, visitStoreName],
+    () => stores.map(s => ({label: s.store_name, value: s.store_id})),
+    [stores],
   );
 
   // Opened from Count Stock for a specific store.

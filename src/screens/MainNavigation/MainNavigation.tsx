@@ -55,9 +55,10 @@ const MainNavigation = () => {
 
   let userType: 'PROMOTER' | 'SALES_OFFICER' | 'DISTRIBUTOR' | null = null;
 
-  // Team Leaders run the Sales Officer app (see utils/roles).
+  // Team Leaders run the promoter app, with a few SO screens added
+  // (see utils/roles).
   if (isTeamLeader(designation, roles)) {
-    userType = 'SALES_OFFICER';
+    userType = 'PROMOTER';
   } else if (designation === 'Promoter') {
     userType = 'PROMOTER';
   } else if (

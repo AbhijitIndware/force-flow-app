@@ -38,7 +38,27 @@ export type PromoterAppStackParamList = {
   NotificationListScreen: undefined;
   UserManualScreen: undefined;
   UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
-};
+} & TeamLeaderSoScreens;
+
+// SO / ASM screens a Team Leader also gets in the promoter app.
+type TeamLeaderSoScreens = Pick<
+  SoAppStackParamList,
+  | 'PartnersScreen'
+  | 'OrdersScreen'
+  | 'AddStoreScreen'
+  | 'AddDistributorScreen'
+  | 'StoreDetailScreen'
+  | 'AddSaleScreen'
+  | 'SaleDetailScreen'
+  | 'PurchaseDetailScreen'
+  | 'DeliveryNoteDetailScreen'
+  | 'PromoterShiftsScreen'
+  | 'PromoterDayDetailScreen'
+  | 'TeamPromotersScreen'
+  | 'TeamTargetsScreen'
+  | 'TeamAttendanceScreen'
+  | 'TeamReportsScreen'
+>;
 export type DistributorAppStackParamList = {
   DistributorHome: undefined;
   DistributorHomeScreen: undefined;
@@ -134,10 +154,6 @@ export type SoAppStackParamList = {
   TeamReportsScreen: undefined;
   UserManualScreen: undefined;
   UserManualVideoScreen: {video?: UserManualVideo; video_id?: string};
-  // Promoter stock screens, opened by a Team Leader inside a store visit.
-  StockReceivedScreen: {store: string; storeName?: string};
-  CustomerReturnScreen: {store: string; storeName?: string};
-  DistributorReturnScreen: {store: string; storeName?: string};
 };
 
 export type menuType = {

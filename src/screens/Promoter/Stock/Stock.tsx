@@ -18,8 +18,8 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
   useGetStoreStockStatusQuery,
-  useGetEmployeeAssignedStoresQuery,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
@@ -134,7 +134,7 @@ const StockScreen = ({navigation}: Props) => {
   >([]);
   const [itemSearch, setItemSearch] = useState('');
 
-  const {data: assignedStoresData} = useGetEmployeeAssignedStoresQuery();
+  const {data: assignedStoresData} = useStockStores();
 
   useEffect(() => {
     const stores =

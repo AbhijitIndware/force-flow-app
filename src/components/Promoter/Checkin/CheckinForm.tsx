@@ -37,6 +37,9 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
   storeList: {label: string; value: string}[];
+  // Server-side store search (Team Leaders pick from their whole zone).
+  storeSearch?: string;
+  setStoreSearch?: (text: string) => void;
   shift?: {
     startTime: string;
     endTime: string;
@@ -52,6 +55,8 @@ const AddCheckInForm: React.FC<Props> = ({
   touched,
   setFieldValue,
   storeList,
+  storeSearch,
+  setStoreSearch,
   shift,
 }) => {
   const [reviewVisible, setReviewVisible] = useState(false);
@@ -77,6 +82,8 @@ const AddCheckInForm: React.FC<Props> = ({
         data={storeList}
         error={touched.store && errors.store}
         onChange={(val: string) => setFieldValue('store', val)}
+        searchText={storeSearch}
+        setSearchText={setStoreSearch}
       />
 
       {/* 📌 SHIFT INFO (small card) */}

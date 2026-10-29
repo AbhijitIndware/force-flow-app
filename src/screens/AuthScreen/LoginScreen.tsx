@@ -273,12 +273,13 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
             <Input
               secureTextEntry={secureText}
               contextMenuHidden={true}
+              autoCorrect={false}
+              autoComplete="off"
+              importantForAutofill="no"
               style={styles.inputBox}
               inputStyle={{paddingTop: 15}}
               labelStyle={{color: Colors.white}}
               placeholderTextColor="#FFC691"
-              autoComplete="password"
-              textContentType="password"
               inputContainerStyle={{
                 borderBottomWidth: 0,
                 backgroundColor: Colors.Orangelight,

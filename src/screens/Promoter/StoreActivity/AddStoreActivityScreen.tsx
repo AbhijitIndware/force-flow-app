@@ -24,8 +24,8 @@ import {launchCamera} from '../../../utils/launchCamera';
 import {
   useGetActivityCategoriesQuery,
   useUploadStoreActivityMutation,
-  useGetEmployeeAssignedStoresQuery,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {Camera, Trash2, Upload, X} from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import {assertServerSuccess, getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
@@ -59,7 +59,7 @@ const AddStoreActivityScreen = ({navigation}: Props) => {
   }>({});
 
   const {data: categoriesData} = useGetActivityCategoriesQuery();
-  const {data: assignedStoresData} = useGetEmployeeAssignedStoresQuery();
+  const {data: assignedStoresData} = useStockStores();
   const [uploadStoreActivity, {isLoading}] = useUploadStoreActivityMutation();
 
   const activityTypes =

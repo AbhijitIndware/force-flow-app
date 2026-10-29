@@ -20,8 +20,8 @@ import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {
   useGetStoreActivitiesQuery,
-  useGetEmployeeAssignedStoresQuery,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {imageBaseUrl} from '../../../features/apiBaseUrl';
 import {StoreActivity} from '../../../types/baseType';
 import FilterModal from '../../../components/ui/filterModal';
@@ -76,7 +76,7 @@ const StoreActivityScreen = ({navigation}: Props) => {
     setReviewImage(reviewList[next]);
   };
 
-  const {data: assignedStoresData} = useGetEmployeeAssignedStoresQuery();
+  const {data: assignedStoresData} = useStockStores();
 
   const stores =
     assignedStoresData?.message?.data?.stores?.map(s => ({

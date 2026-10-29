@@ -27,17 +27,16 @@ import {Fonts} from '../../../constants';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
   useGetCustomerReturnsQuery,
-  useGetEmployeeAssignedStoresQuery,
   useGetStockReturnsQuery,
   useGetStoreStockStatusQuery,
   useRecordCustomerReturnMutation,
   useRecordStockReturnMutation,
 } from '../../../features/base/promoter-base-api';
+import {useStockStores} from '../../../hooks/useStockStores';
 import {
   getSafeServerMessage,
   getUserFacingError,
 } from '../../../utils/errorMessage';
-import {useIsTeamLeader} from '../../../utils/roles';
 
 type Props = NativeStackScreenProps<
   PromoterAppStackParamList,
@@ -76,36 +75,22 @@ const FALLBACK_REASONS: Record<Mode, string[]> = {
 const qtyKey = (itemCode: string, condition?: Condition) =>
   condition ? `${itemCode}|${condition}` : itemCode;
 
-const StockReturnScreen = ({navigation, route, mode}: Props & {mode: Mode}) => {
-  // A Team Leader opens this inside a store visit and must always send
-  // that store, so the picker holds only it.
-  const isTL = useIsTeamLeader();
-  const params = route?.params as
-    | {store?: string; storeName?: string}
-    | undefined;
-  const visitStore = isTL ? params?.store : undefined;
-  const visitStoreName = params?.storeName;
-
+const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
   const [tab, setTab] = useState<Tab>('record');
-  const [store, setStore] = useState(visitStore ?? '');
+  const [store, setStore] = useState('');
   const [search, setSearch] = useState('');
   const [reason, setReason] = useState('');
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
 
-  const {data: storesResponse} = useGetEmployeeAssignedStoresQuery(undefined, {
-    skip: isTL,
-  });
+  const {data: storesResponse} = useStockStores();
   const stores = useMemo(
     () => storesResponse?.message?.data?.stores ?? [],
     [storesResponse],
   );
   const storeOptions = useMemo(
-    () =>
-      visitStore
-        ? [{label: visitStoreName || visitStore, value: visitStore}]
-        : stores.map(s => ({label: s.store_name, value: s.store_id})),
-    [stores, visitStore, visitStoreName],
+    () => stores.map(s => ({label: s.store_name, value: s.store_id})),
+    [stores],
   );
 
   useEffect(() => {

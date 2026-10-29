@@ -65,8 +65,6 @@ import { Size } from '../../../utils/fontSize';
 import { useGetProfileDataQuery } from '../../../features/auth/auth';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 import { PromotorShift } from '../../../components/SO/HomeScreen/PromoterShift';
-import { TeamLeaderStoreStockLinks } from '../../../components/SO/HomeScreen/TeamLeaderStoreStockLinks';
-import { useIsTeamLeader } from '../../../utils/roles';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,9 +121,8 @@ const HomeScreen = ({ navigation }: Props) => {
   const isSoOrIsr =
     employee?.designation === 'Sales Officer' ||
     employee?.designation === 'ISR';
-  // Team Leader: the SO app without claims or the ASM dashboard (the server
-  // refuses api.asm_dashboard.* for them), plus promoter screens.
-  const isTL = useIsTeamLeader();
+
+
 
   // Fetch the full employee profile by id so the header greeting and stats
   // show the latest details even after a cold start (authSlice.employee is
@@ -239,28 +236,28 @@ const HomeScreen = ({ navigation }: Props) => {
     });
 
   const { data: attendanceData, refetch: refetchAttendance } =
-    useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id || isTL });
+    useGetAsmAttendanceTabQuery(apiParams, { skip: !employee?.id });
 
   const { data: pjpTargetData, refetch: refetchPjpTarget } =
-    useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id || isTL });
+    useGetAsmPjpTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
 
   const { data: valueTargetData, refetch: refetchValueTarget } =
-    useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id || isTL });
+    useGetAsmTargetVsAchievementQuery(apiParams, { skip: !employee?.id });
 
   const { data: soStatsData, refetch: refetchSoStats } = useGetSoStatsQuery(
     dateRangeParams,
-    { skip: !employee?.id || isTL },
+    { skip: !employee?.id },
   );
 
   const { data: ddnData, refetch: refetchDdnStats } = useGetDdnStatsQuery(
     dateRangeParams,
-    { skip: !employee?.id || isTL },
+    { skip: !employee?.id },
   );
 
   const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
     useGetEmployeeTargetsQuery(
       { month: selectedMonth, year: selectedYear },
-      { skip: !employee?.id || isTL },
+      { skip: !employee?.id },
     );
 
   // ── Mutations ────────────────────────────────────────────────────────────────
@@ -308,17 +305,14 @@ const HomeScreen = ({ navigation }: Props) => {
       setRefreshing(false);
       pjpInitialize();
       refetchProdCount();
+      refetchAttendance();
+      refetchPjpTarget();
+      refetchValueTarget();
       refetchLocationTracker();
+      refetchDdnStats();
+      refetchSoStats();
+      refetchEmployeeTargets();
       refetchActivityStatus();
-      // Skipped for a Team Leader; refetching a skipped query throws.
-      if (!isTL) {
-        refetchAttendance();
-        refetchPjpTarget();
-        refetchValueTarget();
-        refetchDdnStats();
-        refetchSoStats();
-        refetchEmployeeTargets();
-      }
       refetchPjpWorkflow();
     }, 2000);
   }, [
@@ -333,7 +327,6 @@ const HomeScreen = ({ navigation }: Props) => {
     refetchEmployeeTargets,
     refetchActivityStatus,
     refetchPjpWorkflow,
-    isTL,
   ]);
 
   // ── Check-out flow ───────────────────────────────────────────────────────────
@@ -529,23 +522,21 @@ const HomeScreen = ({ navigation }: Props) => {
 
           <StatsOverview prodData={prodData} />
 
-          {!isTL && (
-            <FilterSection
-              filterMode={filterMode}
-              setFilterMode={setFilterMode}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              fromMonth={fromMonth}
-              toMonth={toMonth}
-              startDate={startDate}
-              endDate={endDate}
-              setMonthPickerTarget={setMonthPickerTarget}
-              setShowMonthModal={setShowMonthModal}
-              setShowYearModal={setShowYearModal}
-              setPickingType={setPickingType}
-              setShowDatePicker={setShowDatePicker}
-            />
-          )}
+          <FilterSection
+            filterMode={filterMode}
+            setFilterMode={setFilterMode}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            fromMonth={fromMonth}
+            toMonth={toMonth}
+            startDate={startDate}
+            endDate={endDate}
+            setMonthPickerTarget={setMonthPickerTarget}
+            setShowMonthModal={setShowMonthModal}
+            setShowYearModal={setShowYearModal}
+            setPickingType={setPickingType}
+            setShowDatePicker={setShowDatePicker}
+          />
 
           {showDatePicker && (
             <DateTimePicker
@@ -590,37 +581,33 @@ const HomeScreen = ({ navigation }: Props) => {
             onConfirm={confirmCheckOut}
           />
 
-          {!isTL && (
-            <TeamAttendance
-              attendanceData={attendanceData}
-              filterMode={filterMode}
-              selectedMonth={selectedMonth}
-              startDate={startDate}
-              endDate={endDate}
-              today={TODAY}
-              navigation={navigation}
-            />
-          )}
+          <TeamAttendance
+            attendanceData={attendanceData}
+            filterMode={filterMode}
+            selectedMonth={selectedMonth}
+            startDate={startDate}
+            endDate={endDate}
+            today={TODAY}
+            navigation={navigation}
+          />
 
-          {!isTL && (
-            <TeamPerformance
-              filterMode={filterMode}
-              selectedMonth={selectedMonth}
-              startDate={startDate}
-              endDate={endDate}
-              handleOpenTargetModal={() => setTargetModalVisible(true)}
-              pjpSummary={pjpSummary}
-              apiParams={apiParams}
-              today={TODAY}
-              soAchievement={soAchievement}
-              salesTarget={salesTarget}
-              soPct={soPct}
-              ddnStats={ddnStats}
-              ddnTarget={ddnTarget}
-              ddnPct={ddnPct}
-              navigation={navigation}
-            />
-          )}
+          <TeamPerformance
+            filterMode={filterMode}
+            selectedMonth={selectedMonth}
+            startDate={startDate}
+            endDate={endDate}
+            handleOpenTargetModal={() => setTargetModalVisible(true)}
+            pjpSummary={pjpSummary}
+            apiParams={apiParams}
+            today={TODAY}
+            soAchievement={soAchievement}
+            salesTarget={salesTarget}
+            soPct={soPct}
+            ddnStats={ddnStats}
+            ddnTarget={ddnTarget}
+            ddnPct={ddnPct}
+            navigation={navigation}
+          />
 
           <SetTargetsModal
             visible={targetModalVisible}
@@ -655,23 +642,13 @@ const HomeScreen = ({ navigation }: Props) => {
             </View>
           </View>
 
-          {!isSoOrIsr && !isTL && (
-            <LateCheckinApprovalLink navigation={navigation} />
-          )}
-
-          {isTL && pjpState === 'STORE_CHECKED_IN' && !!selectedStore && (
-            <TeamLeaderStoreStockLinks
-              navigation={navigation}
-              store={selectedStore}
-              storeName={selectedStoreValue?.store_name}
-            />
-          )}
+          {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
 
           <QuickLinks navigation={navigation} />
 
           {!isSoOrIsr && <PromotorShift navigation={navigation} />}
 
-          {!isTL && <ClaimsSection navigation={navigation} />}
+          <ClaimsSection navigation={navigation} />
 
           <StockAndActivityLinks navigation={navigation} />
         </ScrollView>

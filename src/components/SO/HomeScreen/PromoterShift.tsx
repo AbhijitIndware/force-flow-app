@@ -25,9 +25,17 @@ const LINKS = [
 
 interface PromotorShiftProps {
   navigation: any;
+  // Team Leaders can look at shifts but not create or change them.
+  readOnly?: boolean;
 }
 
-export const PromotorShift: React.FC<PromotorShiftProps> = ({ navigation }) => {
+export const PromotorShift: React.FC<PromotorShiftProps> = ({
+  navigation,
+  readOnly,
+}) => {
+  const links = readOnly
+    ? LINKS.filter(l => l.screen !== 'CreatePromoterShiftScreen')
+    : LINKS;
 
   return (
     <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
@@ -38,7 +46,7 @@ export const PromotorShift: React.FC<PromotorShiftProps> = ({ navigation }) => {
         ]}>
         Promoter Team
       </Text>
-      {LINKS.map(({ screen, title, Icon }) => (
+      {links.map(({ screen, title, Icon }) => (
         <React.Fragment key={screen}>
           <TouchableOpacity
             onPress={() => navigation.navigate(screen)}

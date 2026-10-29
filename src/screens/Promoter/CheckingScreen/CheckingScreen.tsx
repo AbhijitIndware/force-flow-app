@@ -13,7 +13,7 @@ import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PromoterAppStackParamList } from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import { Size } from '../../../utils/fontSize';
@@ -35,6 +35,9 @@ import { Animated } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
+import { useIsTeamLeader } from '../../../utils/roles';
+import { getCurrentLocation } from '../../../utils/utils';
+import { AvailableStore } from '../../../types/baseType';
 
 const { width } = Dimensions.get('window');
 
@@ -61,8 +64,44 @@ const initial: ICheckInRequest = {
   address: '',
 };
 
+const formatDistance = (metres?: number | null) =>
+  metres == null
+    ? ''
+    : metres < 1000
+      ? ` · ${Math.round(metres)} m`
+      : ` · ${(metres / 1000).toFixed(1)} km`;
+
+const toStoreOption = (row: AvailableStore) => ({
+  label: `${row.store_name}${formatDistance(row.distance_m)}`,
+  value: row.store_id,
+  imageUrl: `${imageBaseUrl}${row.store_image}`,
+});
+
 const CheckingScreen = ({ navigation }: Props) => {
-  const { data, isFetching: isDataLoading } = useGetAvailableStoreQuery();
+  // A Team Leader picks any store of their zone: their shift stores, then
+  // the nearest ones to the phone, or a store found by search.
+  const isTL = useIsTeamLeader();
+  const [here, setHere] = useState<string | undefined>();
+  const [locating, setLocating] = useState(isTL);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [pickedStore, setPickedStore] = useState<AvailableStore | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(storeSearch.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [storeSearch]);
+
+  const { data, isFetching } = useGetAvailableStoreQuery(
+    isTL
+      ? debouncedSearch
+        ? { search: debouncedSearch }
+        : { current_location: here }
+      : undefined,
+    { skip: locating },
+  );
+  // Only the first load blocks the screen; a search refetch keeps the form.
+  const isDataLoading = locating || (isFetching && !data);
   const [promoterCheckin, { isLoading }] = usePromoterCheckinMutation();
 
   const formattedStartTime = data?.message?.data?.shift_assignment?.start_time
@@ -90,6 +129,20 @@ const CheckingScreen = ({ navigation }: Props) => {
       'DD MMM YYYY',
     )
     : 'N/A';
+
+  const availableStores = useMemo(
+    () => data?.message?.data?.available_stores ?? [],
+    [data],
+  );
+  // Keep the chosen store in the list after the search text changes.
+  const storeList = useMemo(() => {
+    const rows =
+      pickedStore &&
+      !availableStores.some(s => s.store_id === pickedStore.store_id)
+        ? [pickedStore, ...availableStores]
+        : availableStores;
+    return rows.map(toStoreOption);
+  }, [availableStores, pickedStore]);
 
   const {
     values,
@@ -140,6 +193,31 @@ const CheckingScreen = ({ navigation }: Props) => {
     },
   });
 
+  useEffect(() => {
+    if (!isTL) return;
+    getCurrentLocation()
+      .then(location => {
+        setHere(location);
+        const [lat, lng] = location.split(',').map(Number);
+        setFieldValue('latitude', lat);
+        setFieldValue('longitude', lng);
+      })
+      // Without a location the server still lists the shift stores, and
+      // search works.
+      .catch(() => {})
+      .finally(() => setLocating(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTL]);
+
+  const onSelectStore = (field: string, value: any) => {
+    if (field === 'store') {
+      setPickedStore(
+        availableStores.find(s => s.store_id === value) ?? pickedStore,
+      );
+    }
+    setFieldValue(field, value);
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -162,17 +240,11 @@ const CheckingScreen = ({ navigation }: Props) => {
             touched={touched}
             handleChange={handleChange}
             handleBlur={handleBlur}
-            setFieldValue={setFieldValue}
+            setFieldValue={onSelectStore}
             scrollY={new Animated.Value(0)}
-            storeList={
-              (data?.message?.data?.available_stores || [])?.map(
-                (row: any) => ({
-                  label: row.store_name,
-                  value: row.store_id,
-                  imageUrl: `${imageBaseUrl}${row.store_image}`,
-                }),
-              ) || []
-            }
+            storeList={storeList}
+            storeSearch={isTL ? storeSearch : undefined}
+            setStoreSearch={isTL ? setStoreSearch : undefined}
             shift={{
               startTime: formattedStartTime,
               endTime: formattedEndTime,

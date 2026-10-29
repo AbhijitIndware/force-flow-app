@@ -58,11 +58,6 @@ import TeamAttendanceScreen from '../Team/TeamAttendanceScreen';
 import TeamReportsScreen from '../Team/TeamReportsScreen';
 import UserManualScreen from '../../UserManualScreen/UserManualScreen';
 import UserManualVideoScreen from '../../UserManualScreen/UserManualVideoScreen';
-import StockReceivedScreen from '../../Promoter/Stock/StockReceivedScreen';
-import {
-  CustomerReturnScreen,
-  DistributorReturnScreen,
-} from '../../Promoter/Stock/StockReturnScreen';
 
 const Stack = createNativeStackNavigator<SoAppStackParamList>();
 
@@ -364,22 +359,6 @@ const SoNavigation = () => {
       <Stack.Screen
         name="UserManualVideoScreen"
         component={UserManualVideoScreen}
-        options={{headerShown: false}}
-      />
-      {/* Promoter stock screens, for a Team Leader inside a store visit */}
-      <Stack.Screen
-        name="StockReceivedScreen"
-        component={StockReceivedScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="CustomerReturnScreen"
-        component={CustomerReturnScreen as any}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name="DistributorReturnScreen"
-        component={DistributorReturnScreen as any}
         options={{headerShown: false}}
       />
     </Stack.Navigator>
