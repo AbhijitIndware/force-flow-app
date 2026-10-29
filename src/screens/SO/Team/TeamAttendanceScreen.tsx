@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { memo, useDeferredValue, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -91,6 +91,39 @@ const attendancePct = (days: (SupervisorAttendanceDay | null)[]) => {
 
 const fmtPct = (pct: number | null) => (pct == null ? '–' : `${Math.round(pct)}%`);
 
+// One month row of the grid. A month is ~30 cells per promoter, so each cell
+// is a single Text (not View > View > Text) and rows only re-render when
+// their data changes.
+const GridDayRow = memo(
+  ({
+    cells,
+    pct,
+    dates,
+  }: {
+    cells: (SupervisorAttendanceDay | null)[];
+    pct: number | null;
+    dates: string[];
+  }) => (
+    <View style={[styles.gridRow, styles.gridHeaderRow]}>
+      <View style={[styles.gridCell, { width: PCT_COL }]}>
+        <Text style={styles.gridPct}>{fmtPct(pct)}</Text>
+      </View>
+      {cells.map((c, i) => {
+        const cfg = c ? ATTENDANCE_STATUS_CONFIG[c.status] : undefined;
+        return c && cfg ? (
+          <Text
+            key={dates[i]}
+            style={[styles.codeCell, { backgroundColor: cfg.bg, color: cfg.color }]}>
+            {c.code || '–'}
+          </Text>
+        ) : (
+          <View key={dates[i]} style={styles.emptyCell} />
+        );
+      })}
+    </View>
+  ),
+);
+
 const TeamAttendanceScreen = ({ navigation }: Props) => {
   const [mode, setMode] = useState<ViewMode>('day');
   const [date, setDate] = useState(moment().format('YYYY-MM-DD'));
@@ -103,12 +136,17 @@ const TeamAttendanceScreen = ({ navigation }: Props) => {
     mode === 'day' ? date : month.clone().endOf('month').format('YYYY-MM-DD');
 
   const { data: optionsData } = useGetTeamAttendanceOptionsQuery();
-  const { data, isFetching, isLoading, error, refetch } = useGetTeamAttendanceQuery({
+  // currentData is only for these filters, so switching day <-> month never
+  // renders the grid from the other view's data first.
+  const { currentData: data, isFetching, error, refetch } = useGetTeamAttendanceQuery({
     from_date: fromDate,
     to_date: toDate,
     zone: zone || undefined,
     promoter: promoter || undefined,
   });
+  const isLoading = isFetching && !data;
+  // The chip switches at once; the (heavy) view below renders after it.
+  const viewMode = useDeferredValue(mode);
 
   const zoneOptions = useMemo(
     () => (optionsData?.message?.zones ?? []).map(z => ({ label: z, value: z })),
@@ -155,19 +193,21 @@ const TeamAttendanceScreen = ({ navigation }: Props) => {
 
   const gridRows = useMemo(
     () =>
-      promoters.map(p => {
+      viewMode !== 'month'
+        ? []
+        : promoters.map(p => {
         const cells = monthDates.map(d => resolveDay(days[p.employee], d, today));
         return { promoter: p, cells, pct: attendancePct(cells) };
       }),
-    [promoters, days, monthDates, today],
+    [viewMode, promoters, days, monthDates, today],
   );
 
   const teamPct = useMemo(
     () =>
-      mode === 'day'
+      viewMode === 'day'
         ? attendancePct(dayRows.map(r => r.day))
         : attendancePct(gridRows.flatMap(r => r.cells)),
-    [mode, dayRows, gridRows],
+    [viewMode, dayRows, gridRows],
   );
 
   const renderStatusChip = (status: PromoterAttendanceStatus) => {
@@ -259,25 +299,12 @@ const TeamAttendanceScreen = ({ navigation }: Props) => {
               ))}
             </View>
             {gridRows.map(r => (
-              <View key={r.promoter.employee} style={[styles.gridRow, styles.gridHeaderRow]}>
-                <View style={[styles.gridCell, { width: PCT_COL }]}>
-                  <Text style={styles.gridPct}>{fmtPct(r.pct)}</Text>
-                </View>
-                {r.cells.map((c, i) => {
-                  const cfg = c ? ATTENDANCE_STATUS_CONFIG[c.status] : undefined;
-                  return (
-                    <View key={monthDates[i]} style={[styles.gridCell, { width: DAY_COL }]}>
-                      {c && cfg ? (
-                        <View style={[styles.codeBox, { backgroundColor: cfg.bg }]}>
-                          <Text style={[styles.codeText, { color: cfg.color }]}>
-                            {c.code || '–'}
-                          </Text>
-                        </View>
-                      ) : null}
-                    </View>
-                  );
-                })}
-              </View>
+              <GridDayRow
+                key={r.promoter.employee}
+                cells={r.cells}
+                pct={r.pct}
+                dates={monthDates}
+              />
             ))}
           </View>
         </ScrollView>
@@ -358,7 +385,7 @@ const TeamAttendanceScreen = ({ navigation }: Props) => {
           <View style={styles.empty}>
             <Text style={styles.muted}>No promoters found.</Text>
           </View>
-        ) : mode === 'day' ? (
+        ) : viewMode === 'day' ? (
           renderDayView()
         ) : (
           renderGridView()
@@ -467,14 +494,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.orange,
   },
-  codeBox: {
+  // A 26×22 code chip centred in a DAY_COL × 42 cell, as one Text.
+  codeCell: {
     width: 26,
     height: 22,
+    lineHeight: 22,
+    marginHorizontal: (DAY_COL - 26) / 2,
+    marginVertical: 10,
     borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
+    textAlign: 'center',
+    fontFamily: Fonts.semiBold,
+    fontSize: 9,
   },
-  codeText: { fontFamily: Fonts.semiBold, fontSize: 9 },
+  emptyCell: { width: DAY_COL, height: 42 },
   empty: { alignItems: 'center', paddingVertical: 40, gap: 8 },
   retry: {
     fontFamily: Fonts.semiBold,
