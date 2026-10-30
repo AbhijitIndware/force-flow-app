@@ -14,7 +14,7 @@ type Props = {
 
 /* ---------- Info Row ---------- */
 
-const InfoRow = ({label, value}: {label: string; value?: any}) => (
+export const InfoRow = ({label, value}: {label: string; value?: any}) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
     <Text style={styles.value} numberOfLines={2}>
@@ -25,7 +25,7 @@ const InfoRow = ({label, value}: {label: string; value?: any}) => (
 
 /* ---------- Section Card ---------- */
 
-const Section = ({title, icon, children}: any) => (
+export const Section = ({title, icon, children}: any) => (
   <View style={styles.section}>
     <View style={styles.sectionHeader}>
       <Icon name={icon} size={18} color={Colors.primary} />

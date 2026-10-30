@@ -10,6 +10,25 @@ export function getForbiddenNameMessage(fieldLabel: string): string {
   return `${fieldLabel} cannot contain <, >, -, {, }, [, ], or control characters.`;
 }
 
+// True when more than one character arrived in one change, which means a paste
+// (the long-press menu or the keyboard's clipboard button). Compares around the
+// unchanged start and end, so a paste over a selection is caught as well.
+export function isPastedInput(previous: string, next: string): boolean {
+  const shortest = Math.min(previous.length, next.length);
+  let start = 0;
+  while (start < shortest && previous[start] === next[start]) {
+    start++;
+  }
+  let end = 0;
+  while (
+    end < shortest - start &&
+    previous[previous.length - 1 - end] === next[next.length - 1 - end]
+  ) {
+    end++;
+  }
+  return next.length - start - end > 1;
+}
+
 export function normalizeMediaUrl(uri?: string | null): string {
   if (!uri) return '';
   if (/^https?:\/\//i.test(uri)) return uri;

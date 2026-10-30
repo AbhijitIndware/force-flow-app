@@ -17,6 +17,22 @@ export interface IAddDistributorPayload {
   };
 }
 
+export interface IUpdateDistributorPayload {
+  data: {
+    name: string;
+    distributor_name: string;
+    distributor_group: string;
+    distributor_code: string;
+    mobile: string;
+    email: string;
+    zone: string;
+    state: string;
+    city: string;
+    reports_to: string;
+    designation: string;
+  };
+}
+
 export interface IAddStorePayload {
   data: {
     store_name: string;
@@ -1065,6 +1081,30 @@ export interface RDistributorList {
   message: {
     success: boolean;
     data: DistributorData;
+  };
+}
+
+export interface DistributorDetails {
+  name: string;
+  distributor_name: string;
+  distributor_sap_code: string;
+  distributor_code: string;
+  distributor_group: string;
+  mobile: string;
+  email: string;
+  zone: string;
+  state: string;
+  city: string;
+  reports_to: string;
+  designation: string;
+  store_count: number;
+  can_edit: boolean;
+}
+
+export interface RDistributorDetails {
+  message: {
+    status: string;
+    data: DistributorDetails;
   };
 }
 

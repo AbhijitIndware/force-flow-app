@@ -15,6 +15,7 @@ import {flexCol} from '../../utils/styles';
 import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
 import {Size} from '../../utils/fontSize';
+import {isPastedInput} from '../../utils/security';
 import Input from '@rneui/themed/dist/Input';
 import {
   Eye,
@@ -198,7 +199,11 @@ const SignupScreen = ({navigation, route}: Props) => {
                 justifyContent: 'center',
               }}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={text => {
+                if (!isPastedInput(password, text)) {
+                  setPassword(text);
+                }
+              }}
               errorMessage={errors.password}
               errorStyle={{color: '#FFEFE0', marginBottom: 10}}
               placeholder="Password"

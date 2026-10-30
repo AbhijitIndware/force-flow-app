@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Default for Release: Block all HTTP cleartext traffic -->
+    <!-- Release: block all HTTP cleartext traffic. Debug builds use the copy
+         in src/debug/res/xml, which allows the Metro dev server. -->
     <base-config cleartextTrafficPermitted="false" />
-
-    <!-- Domain override for local development / testing if needed -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">10.0.2.2</domain>
-    </domain-config>
 </network-security-config>

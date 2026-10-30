@@ -23,6 +23,7 @@ interface Props {
   };
   setFieldValue: (field: string, value: any) => void;
   scrollY: Animated.Value;
+  isEdit?: boolean;
   distributorGroupList: {label: string; value: string}[];
   employeeList: {label: string; value: string}[];
   zoneList: {label: string; value: string}[];
@@ -66,6 +67,7 @@ const AddDistributorForm: React.FC<Props> = ({
   handleBlur,
   setFieldValue,
   scrollY,
+  isEdit = false,
   distributorGroupList,
   employeeList,
   zoneList,
@@ -109,6 +111,10 @@ const AddDistributorForm: React.FC<Props> = ({
     }
   };
 
+  // Lists are paged, so a prefilled value may not be loaded yet: show it as is.
+  const labelFor = (list: {label: string; value: string}[], value: string) =>
+    list.find(item => item.value === value)?.label || value;
+
   return (
     <Animated.ScrollView
       onScroll={Animated.event([{nativeEvent: {contentOffset: {y: scrollY}}}], {
@@ -130,6 +136,7 @@ const AddDistributorForm: React.FC<Props> = ({
         label="Group"
         field="distributor_group"
         value={values.distributor_group}
+        selectedLabel={labelFor(distributorGroupList, values.distributor_group)}
         data={distributorGroupList}
         error={touched.distributor_group && errors.distributor_group}
         onChange={(val: string) => onSelect('distributor_group', val)}
@@ -139,19 +146,21 @@ const AddDistributorForm: React.FC<Props> = ({
         setSearchText={setDistributorGroupSearchText}
       />
 
-      {/* Employee (Full Width) */}
-      <ReusableDropdown
-        label="Employee"
-        field="employee"
-        value={values.employee}
-        data={employeeList}
-        error={touched.employee && errors.employee}
-        onChange={(val: string) => onSelect('employee', val)}
-        onLoadMore={onLoadMoreEmployee}
-        loadingMore={loadingMoreEmployee}
-        searchText={employeeSearchText}
-        setSearchText={setEmployeeSearchText}
-      />
+      {/* Employee (Full Width) - not part of the modify API */}
+      {!isEdit && (
+        <ReusableDropdown
+          label="Employee"
+          field="employee"
+          value={values.employee}
+          data={employeeList}
+          error={touched.employee && errors.employee}
+          onChange={(val: string) => onSelect('employee', val)}
+          onLoadMore={onLoadMoreEmployee}
+          loadingMore={loadingMoreEmployee}
+          searchText={employeeSearchText}
+          setSearchText={setEmployeeSearchText}
+        />
+      )}
 
       {/* Zone, State, City (3 Columns) */}
       <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
@@ -160,6 +169,7 @@ const AddDistributorForm: React.FC<Props> = ({
             label="Zone"
             field="zone"
             value={values.zone}
+            selectedLabel={labelFor(zoneList, values.zone)}
             data={zoneList}
             error={touched.zone && errors.zone}
             onChange={(val: string) => onSelect('zone', val)}
@@ -174,6 +184,7 @@ const AddDistributorForm: React.FC<Props> = ({
             label="State"
             field="state"
             value={values.state}
+            selectedLabel={labelFor(stateList, values.state)}
             data={stateList}
             error={touched.state && errors.state}
             onChange={(val: string) => onSelect('state', val)}
@@ -188,6 +199,7 @@ const AddDistributorForm: React.FC<Props> = ({
             label="City"
             field="city"
             value={values.city}
+            selectedLabel={labelFor(cityList, values.city)}
             data={cityList}
             error={touched.city && errors.city}
             onChange={(val: string) => onSelect('city', val)}
@@ -225,18 +237,21 @@ const AddDistributorForm: React.FC<Props> = ({
 
       {/* SAP Code and Distributor Code (2 Columns) */}
       <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
-        <View style={{flex: 1}}>
+        <View style={{flex: 1, opacity: isEdit ? 0.6 : 1}}>
           <ReusableInput
             label="SAP Code"
+            placeholder="Enter SAP code"
             value={values.distributor_sap_code}
             onChangeText={handleChange('distributor_sap_code')}
             onBlur={() => handleBlur('distributor_sap_code')}
             error={touched.distributor_sap_code && errors.distributor_sap_code}
+            disabled={isEdit}
           />
         </View>
         <View style={{flex: 1}}>
           <ReusableInput
             label="Distributor Code"
+            placeholder="Enter distributor code"
             value={values.distributor_code}
             onChangeText={handleChange('distributor_code')}
             onBlur={() => handleBlur('distributor_code')}
@@ -252,9 +267,14 @@ const AddDistributorForm: React.FC<Props> = ({
             label="Reports To"
             field="reports_to"
             value={values.reports_to}
+            selectedLabel={labelFor(employeeList, values.reports_to)}
             data={employeeList}
             error={touched.reports_to && errors.reports_to}
             onChange={(val: string) => onSelect('reports_to', val)}
+            onLoadMore={onLoadMoreEmployee}
+            loadingMore={loadingMoreEmployee}
+            searchText={employeeSearchText}
+            setSearchText={setEmployeeSearchText}
           />
         </View>
         <View style={{flex: 1}}>
@@ -262,6 +282,7 @@ const AddDistributorForm: React.FC<Props> = ({
             label="Designation"
             field="designation"
             value={values.designation}
+            selectedLabel={labelFor(designationList, values.designation)}
             data={designationList}
             error={touched.designation && errors.designation}
             onChange={(val: string) => onSelect('designation', val)}

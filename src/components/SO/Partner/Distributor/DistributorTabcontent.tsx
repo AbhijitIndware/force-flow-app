@@ -5,6 +5,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   ActivityIndicator,
@@ -14,14 +15,18 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { usePagedList } from '../../../../hooks/usePagedList';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
-import { Building2, MapPin, Tag, CalendarDays, ChevronRight } from 'lucide-react-native';
-import { useGetDistributorListQuery } from '../../../../features/base/base-api';
+import { Building2, MapPin, Tag, CalendarDays, ChevronRight, Search, X } from 'lucide-react-native';
+import {
+  UPDATE_DISTRIBUTOR_CACHE_KEY,
+  useGetDistributorListQuery,
+  useUpdateDistributorMutation,
+} from '../../../../features/base/base-api';
 import { Distributor } from '../../../../types/baseType';
 import { windowHeight } from '../../../../utils/utils';
 import moment from 'moment';
 
 const { width } = Dimensions.get('window');
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const AVATAR_COLORS = [
   { bg: '#FFF7ED', border: '#FED7AA', text: '#C2410C' },
@@ -41,12 +46,17 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
   const [page, setPage] = useState<number>(1);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
+
   const { data, currentData, isFetching, refetch } =
     useGetDistributorListQuery(
       {
         page,
         page_size: PAGE_SIZE,
         status: '',
+        ...(appliedSearch ? { search: appliedSearch } : {}),
       },
       { refetchOnMountOrArgChange: true },
     );
@@ -55,7 +65,30 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
     currentData?.message?.data?.distributors,
     page,
     item => item.name,
+    appliedSearch,
   );
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      const trimmed = searchInput.trim();
+      if (trimmed !== appliedSearch) {
+        setPage(1);
+        setAppliedSearch(trimmed);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  // An edit only refetches the page in view, so earlier pages would keep the
+  // old values. Back on page 1 the list is rebuilt from fresh data.
+  const [, { fulfilledTimeStamp: updatedAt }] = useUpdateDistributorMutation({
+    fixedCacheKey: UPDATE_DISTRIBUTOR_CACHE_KEY,
+  });
+  useEffect(() => {
+    if (updatedAt) {
+      setPage(1);
+    }
+  }, [updatedAt]);
 
   const totalCount = data?.message?.data?.pagination?.total_count;
   useEffect(() => {
@@ -63,6 +96,31 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
       setTotalCount(totalCount);
     }
   }, [totalCount, setTotalCount]);
+
+  const toggleSearch = () => {
+    if (isSearchVisible) {
+      setSearchInput('');
+      setAppliedSearch('');
+      setPage(1);
+      setIsSearchVisible(false);
+    } else {
+      setIsSearchVisible(true);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    const trimmed = searchInput.trim();
+    if (trimmed !== appliedSearch) {
+      setPage(1);
+      setAppliedSearch(trimmed);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput('');
+    setAppliedSearch('');
+    setPage(1);
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -97,6 +155,9 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
 
     return (
       <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('DistributorDetailScreen', { distributorId: item.name })
+        }
         activeOpacity={0.85}
         style={styles.card}>
         {/* Top row: avatar + name + ID badge */}
@@ -151,8 +212,44 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
       <View
         style={[
           styles.bodyContent,
-          { paddingHorizontal: 14, paddingTop: 8, paddingBottom: 70 },
+          { paddingHorizontal: 14, paddingTop: 5, paddingBottom: 70 },
         ]}>
+        <View style={styles.bodyHeader}>
+          {isSearchVisible ? (
+            <View style={styles.headerSearchContainer}>
+              <View style={styles.searchIconWrapper}>
+                <Search size={18} color="#64748B" strokeWidth={2} />
+              </View>
+              <TextInput
+                style={styles.headerSearchInput}
+                placeholder="Search by name, mobile, city, code..."
+                placeholderTextColor="#94A3B8"
+                value={searchInput}
+                onChangeText={setSearchInput}
+                onSubmitEditing={handleSearchSubmit}
+                returnKeyType="search"
+                autoFocus
+              />
+              {searchInput.length > 0 && (
+                <TouchableOpacity onPress={handleClearSearch} style={styles.clearIconWrapper}>
+                  <X size={16} color="#94A3B8" />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={toggleSearch} style={styles.closeSearchBtn}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.bodyHeaderTitle}>All Distributors</Text>
+              <TouchableOpacity onPress={toggleSearch} style={styles.bodyHeaderIcon}>
+                <Search size={22} color="#4A4A4A" strokeWidth={1.7} />
+                {appliedSearch ? <View style={styles.filterActiveDot} /> : null}
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         <View style={{ flex: 1, backgroundColor: Colors.lightBg }}>
           {orders.length === 0 && isFetching ? (
             <View style={styles.centered}>
@@ -169,6 +266,7 @@ const DistributorTabcontent = ({ navigation, setTotalCount }: any) => {
               ) : (
                 <FlatList
                   data={orders}
+                  keyboardShouldPersistTaps="handled"
                   refreshControl={
                     <RefreshControl
                       refreshing={refreshing}
@@ -197,6 +295,66 @@ export default DistributorTabcontent;
 
 const styles = StyleSheet.create({
   bodyContent: { flex: 1 },
+  bodyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  bodyHeaderTitle: {
+    color: Colors.darkButton,
+    fontFamily: Fonts.semiBold,
+    fontSize: Size.xsmd,
+    lineHeight: 20,
+  },
+  bodyHeaderIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 0,
+  },
+  filterActiveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.sucess ?? '#22C55E',
+    position: 'absolute',
+    top: -2,
+    right: -2,
+  },
+  headerSearchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    height: 36,
+  },
+  searchIconWrapper: {
+    marginRight: 8,
+  },
+  headerSearchInput: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: Size.xs,
+    color: Colors.darkButton,
+    padding: 0,
+  },
+  clearIconWrapper: {
+    padding: 4,
+  },
+  closeSearchBtn: {
+    marginLeft: 10,
+    paddingVertical: 4,
+  },
+  cancelText: {
+    fontFamily: Fonts.medium,
+    fontSize: Size.xs,
+    color: '#64748B',
+  },
   centered: {
     height: windowHeight * 0.5,
     justifyContent: 'center',

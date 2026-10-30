@@ -28,6 +28,12 @@ export const distributorSchema = Yup.object().shape({
   designation: Yup.string().required('Please select a designation'),
 });
 
+// Edit: employee isn't part of the modify API, and the SAP code is read-only.
+export const distributorEditSchema = distributorSchema.omit([
+  'employee',
+  'distributor_sap_code',
+]);
+
 export const storeSchema = Yup.object().shape({
   store_name: Yup.string()
     .required('Store name is required')

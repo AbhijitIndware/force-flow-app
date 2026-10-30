@@ -39,7 +39,11 @@ import {
   getUserFacingError,
   getSafeServerMessage,
 } from '../../utils/errorMessage';
-import {isLockedOutPayload, getRetryAfterSeconds} from '../../utils/security';
+import {
+  isLockedOutPayload,
+  getRetryAfterSeconds,
+  isPastedInput,
+} from '../../utils/security';
 import {useEffect} from 'react';
 import {MainNavigationStackParamList} from '../../types/Navigation';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -289,7 +293,11 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
                 justifyContent: 'center',
               }}
               value={values.pwd}
-              onChangeText={handleChange('pwd')}
+              onChangeText={text => {
+                if (!isPastedInput(values.pwd, text)) {
+                  handleChange('pwd')(text);
+                }
+              }}
               onBlur={handleBlur('pwd')}
               errorMessage={touched.pwd && errors.pwd ? errors.pwd : ''}
               errorStyle={{

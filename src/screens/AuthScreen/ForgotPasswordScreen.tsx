@@ -29,6 +29,7 @@ import {
   isExpiredTokenError,
   isLockedOutPayload,
   getRetryAfterSeconds,
+  isPastedInput,
 } from '../../utils/security';
 import { getUserFacingError } from '../../utils/errorMessage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -60,16 +61,23 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   // More than one new character at once is a paste (e.g. from the keyboard's
-  // clipboard strip); don't leave the OTP sitting in the clipboard.
+  // clipboard strip): ignore it, and don't leave the OTP in the clipboard.
   const handleOtpChange = (text: string) => {
-    if (text.length - otp.length > 1) {
+    if (isPastedInput(otp, text)) {
       Clipboard.setString('');
+      return;
     }
     setOtp(text);
   };
   const [resetToken, setResetTokenState] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const handlePasswordChange =
+    (current: string, setValue: (text: string) => void) => (text: string) => {
+      if (!isPastedInput(current, text)) {
+        setValue(text);
+      }
+    };
 
   const [lockoutSeconds, setLockoutSeconds] = useState<number | null>(null);
 
@@ -360,7 +368,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
               <Input
                 placeholder="New Password"
                 value={newPassword}
-                onChangeText={setNewPassword}
+                onChangeText={handlePasswordChange(newPassword, setNewPassword)}
                 {...SENSITIVE_INPUT_PROPS}
                 leftIcon={<Lock color={Colors.white} size={18} />}
                 inputContainerStyle={styles.inputContainer}
@@ -370,7 +378,10 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
               <Input
                 placeholder="Confirm New Password"
                 value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                onChangeText={handlePasswordChange(
+                  confirmPassword,
+                  setConfirmPassword,
+                )}
                 {...SENSITIVE_INPUT_PROPS}
                 leftIcon={<Lock color={Colors.white} size={18} />}
                 inputContainerStyle={styles.inputContainer}

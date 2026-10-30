@@ -35,6 +35,7 @@ import OrdersScreen from '../../SO/OrdersScreen/OrdersScreen';
 import AddStoreScreen from '../../SO/PartnersScreen/AddStoreScreen';
 import AddDistributorScreen from '../../SO/PartnersScreen/AddDistributorScreen';
 import StoreDetailScreen from '../../SO/PartnersScreen/StoreDetailScreen';
+import DistributorDetailScreen from '../../SO/PartnersScreen/DistributorDetailScreen';
 import AddSaleScreen from '../../SO/OrdersScreen/AddSaleScreen';
 import SaleDetailScreen from '../../SO/OrdersScreen/SaleDetailScreen';
 import PurchaseDetailScreen from '../../SO/OrdersScreen/PurchaseDetailScreen';
@@ -55,6 +56,7 @@ const TEAM_LEADER_SCREENS: {name: string; component: any}[] = [
   {name: 'AddStoreScreen', component: AddStoreScreen},
   {name: 'AddDistributorScreen', component: AddDistributorScreen},
   {name: 'StoreDetailScreen', component: StoreDetailScreen},
+  {name: 'DistributorDetailScreen', component: DistributorDetailScreen},
   {name: 'AddSaleScreen', component: AddSaleScreen},
   {name: 'SaleDetailScreen', component: SaleDetailScreen},
   {name: 'PurchaseDetailScreen', component: PurchaseDetailScreen},
