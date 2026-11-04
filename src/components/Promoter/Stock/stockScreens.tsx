@@ -3,6 +3,7 @@ import {View} from 'react-native';
 import {
   ClipboardCheck,
   Import,
+  ReceiptText,
   Undo2,
   Upload,
   UserRound,
@@ -30,6 +31,12 @@ export const SHOW_DISTRIBUTOR_RETURNS = true;
 // One name, icon and colour per stock screen, shared by Quick links, the
 // bottom bar and the screen headers so they never drift apart.
 export const STOCK_SCREENS = {
+  // Replaces Count Stock for promoters and Team Leaders.
+  dailySales: {
+    title: 'Daily Sales',
+    color: Colors.darkButton,
+    Icon: ReceiptText as React.ComponentType<IconProps>,
+  },
   count: {
     title: 'Count Stock',
     color: Colors.darkButton,

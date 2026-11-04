@@ -226,7 +226,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
         {isTA && (
           <View style={{marginTop: 10}}>
             <ReusableInput
-              label={kmRequired ? 'Distance (KM) *' : 'Distance (KM)'}
+              label={kmRequired ? 'KM Travelled *' : 'KM Travelled'}
               placeholder="0.00"
               value={values.ta_km}
               onChangeText={handleChange('ta_km')}
@@ -234,6 +234,7 @@ const AddExpenseItemV2: React.FC<Props> = ({
               error={touched.ta_km && errors.ta_km}
               keyboardType="numeric"
             />
+            <Text style={kmHintStyle}>Going and return together</Text>
             {isRail && (
               <ReusableDropdownv2
                 label="Rail Class"
@@ -805,3 +806,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+const kmHintStyle = {
+  fontSize: 11,
+  color: '#64748B',
+  marginTop: -4,
+  marginBottom: 6,
+};

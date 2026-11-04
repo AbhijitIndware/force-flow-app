@@ -327,13 +327,12 @@ const StockScreen = ({navigation}: Props) => {
             style={styles.fab}
             activeOpacity={0.8}
             onPress={() =>
-              navigation.navigate('StockEntryFormScreen', {
+              navigation.navigate('DailySalesScreen', {
                 store: selectedStoreId,
-                storeName: selectedStoreName,
               })
             }>
             <History size={24} color={Colors.white} />
-            <Text style={styles.fabText}>Count Stock</Text>
+            <Text style={styles.fabText}>Daily Sales</Text>
           </TouchableOpacity>
         </View>
       )}

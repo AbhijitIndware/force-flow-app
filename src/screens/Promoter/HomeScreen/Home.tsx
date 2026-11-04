@@ -27,7 +27,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Handshake, House, ShoppingCart, UserCircle2} from 'lucide-react-native';
 import {STOCK_SCREENS} from '../../../components/Promoter/Stock/stockScreens';
 import MySalesScreen from '../Sales/MySalesScreen';
-import StockScreen from '../Stock/Stock';
+import DailySalesScreen from '../Stock/DailySalesScreen';
 import IncentiveScreen from '../Incentive/Incentive';
 import {useState} from 'react';
 import MoreOptionsModal from '../../../components/home/MoreOption';
@@ -204,7 +204,7 @@ const CustomHeader = (props: BottomTabHeaderProps) => {
 
 const Home = ({navigation, route}: Props) => {
   const [isModalVisible, setModalVisible] = useState(false);
-  // A Team Leader's bar: Home, Count Stock, Receive Stock, Orders, Partners.
+  // A Team Leader's bar: Home, Daily Sales, Receive Stock, Orders, Partners.
   // My Sales stays in Home's Quick links, Profile on the header avatar.
   const isTL = useIsTeamLeader();
 
@@ -276,13 +276,13 @@ const Home = ({navigation, route}: Props) => {
         />
 
         <Tab.Screen
-          name="StockScreen"
-          component={StockScreen}
+          name="DailySalesScreen"
+          component={DailySalesScreen}
           options={{
-            tabBarLabel: STOCK_SCREENS.count.title,
+            tabBarLabel: STOCK_SCREENS.dailySales.title,
             headerShown: false,
             tabBarIcon: () => (
-              <STOCK_SCREENS.count.Icon
+              <STOCK_SCREENS.dailySales.Icon
                 strokeWidth={2}
                 color={Colors.white}
                 size={25}

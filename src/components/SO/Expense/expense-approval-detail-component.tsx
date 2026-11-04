@@ -24,7 +24,8 @@ import {
   useRejectClaimMutation,
   useApproverEditClaimMutation,
 } from '../../../features/tada/tadaApiv2';
-import {Expense} from '../../../types/tadaType';
+import {ApprovalOption, Expense} from '../../../types/tadaType';
+import {parseExpenseNote} from '../../../utils/expenseNote';
 import Toast from 'react-native-toast-message';
 import {
   assertServerSuccess,
@@ -99,6 +100,31 @@ const getStatusCfg = (s: string) =>
     dot: '#94a3b8',
     border: '#e2e8f0',
   };
+
+// Icons for the approve sheet's ticks; the ticks themselves (which ones,
+// their wording and current value) come from the server.
+const APPROVAL_OPTION_ICONS: Record<
+  string,
+  {icon: string; iconColor: string; iconBg: string}
+> = {
+  bike_over_100: {icon: 'bicycle-outline', iconColor: '#0ea5e9', iconBg: '#e0f2fe'},
+  extra: {icon: 'bed-outline', iconColor: '#f97316', iconBg: '#fff7ed'},
+  promotional: {icon: 'megaphone-outline', iconColor: '#8b5cf6', iconBg: '#f5f3ff'},
+};
+const DEFAULT_OPTION_ICON = {
+  icon: 'shield-checkmark-outline',
+  iconColor: '#6366f1',
+  iconBg: '#eef2ff',
+};
+
+const CHECK_LEVEL: Record<string, {color: string; icon: string}> = {
+  ok: {color: '#16a34a', icon: 'checkmark-circle'},
+  look: {color: '#d97706', icon: 'alert-circle'},
+  info: {color: '#64748b', icon: 'information-circle'},
+};
+
+const formatKm = (km?: number | null) =>
+  `${Number(km || 0).toLocaleString('en-IN', {maximumFractionDigits: 1})} km`;
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
@@ -179,6 +205,7 @@ const ExpenseRowCard = ({
   const iconColor = EXPENSE_ICON_COLORS[item.expense_type] ?? '#64748B';
   const isReduced = item.sanctioned_amount < item.amount;
   const isEqual = item.sanctioned_amount === item.amount;
+  const note = parseExpenseNote(item.description);
 
   const handleReceiptPress = () => {
     if (item.receipt_url) {
@@ -221,11 +248,23 @@ const ExpenseRowCard = ({
             </>
           ) : null}
         </View>
-        {item.description ? (
-          <Text style={styles.expenseDesc} numberOfLines={1}>
-            {item.description}
+        {note.employee.length ? (
+          <Text style={styles.expenseDesc} numberOfLines={2}>
+            {note.employee.join(' | ')}
           </Text>
         ) : null}
+        {note.approver.map((text, i) => (
+          <Text
+            key={`a${i}`}
+            style={[styles.expenseDesc, {color: '#b45309'}]}>
+            {text}
+          </Text>
+        ))}
+        {note.system.map((text, i) => (
+          <Text key={`s${i}`} style={styles.expenseWhy}>
+            Why: {text}
+          </Text>
+        ))}
         {item.approver_note ? (
           <Text
             style={[
@@ -313,11 +352,11 @@ const ExpenseApprovalDetailComponent = ({
     : {uri: previewUrl};
   // ─── State additions (add to existing useState block) ────────────────────
   const [approveModalVisible, setApproveModalVisible] = useState(false);
-  const [approvalFlags, setApprovalFlags] = useState({
-    bike_over_100: false,
-    extra: false,
-    promotional: false,
-  });
+  // Keyed by approval_options[].key; only the options the server sends are
+  // shown and sent.
+  const [approvalFlags, setApprovalFlags] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const [editRowModalVisible, setEditRowModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -495,27 +534,31 @@ const ExpenseApprovalDetailComponent = ({
   // };
 
   // ─── Replace handleApprove ────────────────────────────────────────────────
+  const approvalOptions: ApprovalOption[] =
+    data?.message?.data?.approval_options || [];
+
   const handleApprove = () => {
+    // Start each tick from the claim's current value.
+    setApprovalFlags(
+      Object.fromEntries(
+        approvalOptions.map(opt => [opt.key, Number(opt.value) === 1]),
+      ),
+    );
     setApproveModalVisible(true);
   };
 
   const handleConfirmApprove = async () => {
     try {
-      let payload = {
-        claim_id: claimId,
-        bike_over_100: approvalFlags.bike_over_100 ? 1 : 0,
-        extra: approvalFlags.extra ? 1 : 0,
-        promotional: approvalFlags.promotional ? 1 : 0,
-      };
-      const res = await approveClaim(payload).unwrap();
+      const payload: Record<string, any> = {claim_id: claimId};
+      // Send each shown tick under its key; leave out keys not shown.
+      approvalOptions.forEach(opt => {
+        payload[opt.key] = approvalFlags[opt.key] ? 1 : 0;
+      });
+      const res = await approveClaim(payload as any).unwrap();
 
       if (res?.message?.status === 'success') {
         setApproveModalVisible(false);
-        setApprovalFlags({
-          bike_over_100: false,
-          extra: false,
-          promotional: false,
-        });
+        setApprovalFlags({});
         Toast.show({
           type: 'success',
           text1: 'Claim Approved',
@@ -697,6 +740,20 @@ const ExpenseApprovalDetailComponent = ({
           </View>
         </View>
 
+        {canAct && claim.needs_review?.length ? (
+          <View style={styles.reviewBanner}>
+            <View style={styles.reviewBannerHead}>
+              <Ionicons name="alert-circle" size={15} color="#b45309" />
+              <Text style={styles.reviewBannerTitle}>Approve on its own</Text>
+            </View>
+            {claim.needs_review.map((text, i) => (
+              <Text key={i} style={styles.reviewBannerText}>
+                {text}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
         {/* ── Employee Information ─────────────────────────────── */}
         <SectionCard
           title="Employee Information"
@@ -720,8 +777,54 @@ const ExpenseApprovalDetailComponent = ({
           <InfoRow label="Travel Type" value={claim.travel_type || 'N/A'} />
           <InfoRow label="From" value={claim.from_city || 'N/A'} />
           <InfoRow label="To" value={claim.to_city || 'N/A'} />
-          {claim.distance_km ? (
-            <InfoRow label="Distance" value={`${claim.distance_km} km`} />
+          <InfoRow
+            label="KM Travelled on PJP"
+            value={formatKm(claim.distance_km)}
+          />
+          {claim.hq_distance_km != null ? (
+            <InfoRow
+              label="KM Gone From HQ"
+              value={formatKm(claim.hq_distance_km)}
+            />
+          ) : null}
+          {Number(claim.home_to_start_km) > 0 ? (
+            <InfoRow
+              label="KM Home to PJP Start"
+              value={formatKm(claim.home_to_start_km)}
+            />
+          ) : null}
+          {Number(claim.end_to_home_km) > 0 ? (
+            <InfoRow
+              label="KM PJP End to Home"
+              value={formatKm(claim.end_to_home_km)}
+            />
+          ) : null}
+          {claim.journey_km != null ? (
+            <InfoRow
+              label="KM Paid On"
+              value={formatKm(claim.journey_km)}
+              bold
+            />
+          ) : null}
+          {claim.distance_check?.lines?.length ? (
+            <View style={styles.checkList}>
+              {claim.distance_check.lines.map((line, i) => {
+                const lvl = CHECK_LEVEL[line.level] || CHECK_LEVEL.info;
+                return (
+                  <View key={i} style={styles.checkLine}>
+                    <Ionicons
+                      name={lvl.icon}
+                      size={13}
+                      color={lvl.color}
+                      style={{marginTop: 1}}
+                    />
+                    <Text style={[styles.checkLineText, {color: lvl.color}]}>
+                      {line.text}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           ) : null}
           <InfoRow
             label="Start Date"
@@ -1108,90 +1211,66 @@ const ExpenseApprovalDetailComponent = ({
               </TouchableOpacity>
             </View>
 
-            {/* Section Label */}
-            <View style={approveStyles.sectionLabelRow}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={14}
-                color="#6366f1"
-              />
-              <Text style={approveStyles.sectionLabel}>
-                Approvals & Exceptions
-              </Text>
-            </View>
+            {approvalOptions.length > 0 && (
+              <View style={approveStyles.sectionLabelRow}>
+                <Ionicons
+                  name="shield-checkmark-outline"
+                  size={14}
+                  color="#6366f1"
+                />
+                <Text style={approveStyles.sectionLabel}>
+                  Your approval
+                </Text>
+              </View>
+            )}
 
-            {/* Checkbox Items */}
-            {[
-              {
-                key: 'bike_over_100' as const,
-                icon: 'bicycle-outline',
-                iconColor: '#0ea5e9',
-                iconBg: '#e0f2fe',
-                title: 'Approve Long Distance Bike Travel',
-                sub: 'Allows full payment for bike travel > 100km',
-              },
-              {
-                key: 'extra' as const,
-                icon: 'bed-outline',
-                iconColor: '#f97316',
-                iconBg: '#fff7ed',
-                title: 'Approve Policy Exception',
-                sub: 'Allows extra hotel costs or self-arranged stays',
-              },
-              {
-                key: 'promotional' as const,
-                icon: 'megaphone-outline',
-                iconColor: '#8b5cf6',
-                iconBg: '#f5f3ff',
-                title: 'Approve Promotional/BTL Expense',
-                sub: 'Allows reimbursement for marketing materials',
-              },
-            ].map((item, idx, arr) => (
-              <TouchableOpacity
-                key={item.key}
-                style={[
-                  approveStyles.checkRow,
-                  approvalFlags[item.key] && approveStyles.checkRowActive,
-                  idx === arr.length - 1 && {marginBottom: 0},
-                ]}
-                onPress={() =>
-                  setApprovalFlags(prev => ({
-                    ...prev,
-                    [item.key]: !prev[item.key],
-                  }))
-                }
-                activeOpacity={0.7}>
-                {/* Left icon */}
-                <View
+            {approvalOptions.map((opt, idx, arr) => {
+              const ic = APPROVAL_OPTION_ICONS[opt.key] || DEFAULT_OPTION_ICON;
+              const checked = !!approvalFlags[opt.key];
+              return (
+                <TouchableOpacity
+                  key={opt.key}
                   style={[
-                    approveStyles.itemIcon,
-                    {backgroundColor: item.iconBg},
-                  ]}>
-                  <Ionicons
-                    name={item.icon as any}
-                    size={18}
-                    color={item.iconColor}
-                  />
-                </View>
+                    approveStyles.checkRow,
+                    opt.needed && approveStyles.checkRowNeeded,
+                    checked && approveStyles.checkRowActive,
+                    idx === arr.length - 1 && {marginBottom: 0},
+                  ]}
+                  onPress={() =>
+                    setApprovalFlags(prev => ({
+                      ...prev,
+                      [opt.key]: !prev[opt.key],
+                    }))
+                  }
+                  activeOpacity={0.7}>
+                  <View
+                    style={[approveStyles.itemIcon, {backgroundColor: ic.iconBg}]}>
+                    <Ionicons
+                      name={ic.icon as any}
+                      size={18}
+                      color={ic.iconColor}
+                    />
+                  </View>
 
-                {/* Text */}
-                <View style={{flex: 1}}>
-                  <Text style={approveStyles.checkTitle}>{item.title}</Text>
-                  <Text style={approveStyles.checkSub}>{item.sub}</Text>
-                </View>
+                  <View style={{flex: 1}}>
+                    <Text style={approveStyles.checkTitle}>{opt.label}</Text>
+                    {opt.help ? (
+                      <Text style={approveStyles.checkSub}>{opt.help}</Text>
+                    ) : null}
+                  </View>
 
-                {/* Checkbox */}
-                <View
-                  style={[
-                    approveStyles.checkbox,
-                    approvalFlags[item.key] && approveStyles.checkboxChecked,
-                  ]}>
-                  {approvalFlags[item.key] && (
-                    <Ionicons name="checkmark" size={13} color="#fff" />
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))}
+                  <View
+                    style={[
+                      approveStyles.checkbox,
+                      checked && approveStyles.checkboxChecked,
+                    ]}>
+                    {checked && (
+                      <Ionicons name="checkmark" size={13} color="#fff" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
 
             {/* Footer */}
             <View style={[styles.modalFooter, {marginTop: 20}]}>
@@ -1199,11 +1278,7 @@ const ExpenseApprovalDetailComponent = ({
                 style={styles.modalCancelBtn}
                 onPress={() => {
                   setApproveModalVisible(false);
-                  setApprovalFlags({
-                    bike_over_100: false,
-                    extra: false,
-                    promotional: false,
-                  });
+                  setApprovalFlags({});
                 }}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -1423,6 +1498,10 @@ const approveStyles = StyleSheet.create({
     borderColor: '#e2e8f0',
     backgroundColor: '#f8fafc',
     marginBottom: 10,
+  },
+  checkRowNeeded: {
+    borderColor: '#f59e0b',
+    backgroundColor: '#fffbeb',
   },
   checkRowActive: {
     borderColor: '#16a34a',
@@ -1732,6 +1811,51 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: 10,
     color: '#64748B',
+  },
+  expenseWhy: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  checkList: {
+    paddingTop: 8,
+    gap: 6,
+  },
+  checkLine: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  checkLineText: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    lineHeight: 16,
+  },
+  reviewBanner: {
+    marginHorizontal: 14,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    backgroundColor: '#fffbeb',
+    gap: 4,
+  },
+  reviewBannerHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  reviewBannerTitle: {
+    fontFamily: Fonts.semiBold,
+    fontSize: 12,
+    color: '#b45309',
+  },
+  reviewBannerText: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#92400e',
   },
   receiptBtn: {
     flexDirection: 'row',

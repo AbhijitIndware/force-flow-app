@@ -59,6 +59,9 @@ import {
   RTeamTargets,
   TeamReportView,
   TeamTargetsShow,
+  RDailySales,
+  ISaveDailySales,
+  ISetOpening,
 } from '../../types/baseType';
 import {createSlice} from '@reduxjs/toolkit';
 
@@ -231,6 +234,39 @@ export const promoterBaseApi = createApi({
     createStockBalance: builder.mutation<RCreateStockBalance, ICreateStockBalance>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.stock_api.create_stock_balance',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+
+    // ─── DAILY SALES (replaces Count Stock for promoters / Team Leaders) ─────
+    // The sheet for a store and date (both optional: today, first store).
+    getDailySales: builder.query<RDailySales, {store?: string; date?: string}>({
+      query: ({store, date}) => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.daily_sales_api.get_daily_sales',
+        method: 'GET',
+        params: {
+          ...(store ? {store} : {}),
+          ...(date ? {date} : {}),
+        },
+      }),
+      providesTags: ['Promoter'],
+    }),
+    // Saves / corrects one day's sales. Sending a day again replaces it;
+    // qty 0 takes an item off the day. Reply data is the refreshed sheet.
+    saveDailySales: builder.mutation<RDailySales, ISaveDailySales>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.daily_sales_api.save_daily_sales',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    // Gives an item's opening, or corrects one given this month.
+    setOpening: builder.mutation<RDailySales, ISetOpening>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.daily_sales_api.set_opening',
         method: 'POST',
         body,
       }),
@@ -918,6 +954,9 @@ export const {
 
   // Screen 4 — Stock Take
   useGetStoreStockStatusQuery,
+  useGetDailySalesQuery,
+  useSaveDailySalesMutation,
+  useSetOpeningMutation,
   useLazyGetStoreStockStatusQuery,
   useCreateStockBalanceMutation,
   useRecordStockReceivedMutation,

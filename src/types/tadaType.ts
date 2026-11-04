@@ -90,6 +90,44 @@ export interface ExpenseClaimData {
   revision_count?: number;
   max_revisions?: number;
   revisions_remaining?: number;
+  /** KM Gone From HQ (decides HQ / Ex-HQ / Outstation; not the km paid) */
+  hq_distance_km?: number | null;
+  /** KM Home to PJP Start (0 until the employee's home is entered) */
+  home_to_start_km?: number | null;
+  /** KM PJP End to Home (0 until the employee's home is entered) */
+  end_to_home_km?: number | null;
+  /** KM Paid On: PJP km + both home legs */
+  journey_km?: number | null;
+  /** Approver only: the ticks the approve sheet shows */
+  approval_options?: ApprovalOption[];
+  /** Approver only: why this claim must be approved on its own */
+  needs_review?: string[];
+  /** Approver only: same km check as the HR Claims Desk */
+  distance_check?: DistanceCheck | null;
+}
+
+export type ApprovalOptionKey = 'bike_over_100' | 'extra' | 'promotional';
+
+export interface ApprovalOption {
+  key: ApprovalOptionKey | string;
+  label: string;
+  help?: string;
+  value: number;
+  needed: boolean;
+}
+
+export interface DistanceCheckLine {
+  level: 'ok' | 'look' | 'info' | string;
+  text: string;
+}
+
+export interface DistanceCheck {
+  entered?: number;
+  travelled?: number;
+  legs?: number;
+  paid_on?: number;
+  away?: number;
+  lines: DistanceCheckLine[];
 }
 
 export interface Expense {
@@ -129,6 +167,8 @@ export interface PendingApprovalClaim {
   custom_travel_start_date?: string;
   custom_travel_type?: string;
   is_editable?: boolean;
+  needs_review?: string[];
+  bulk_allowed?: boolean;
 }
 
 export interface BulkClaimActionPayload {
@@ -143,12 +183,15 @@ export interface BulkClaimActionResult {
   error_code?: string;
   workflow_state?: string;
   total_sanctioned_amount?: number;
+  needs_review?: string[];
 }
 
 export interface BulkClaimActionData {
   requested: number;
   succeeded: number;
   failed: number;
+  /** Claim ids skipped because they must be approved on their own */
+  needs_review?: string[];
   results: BulkClaimActionResult[];
 }
 
@@ -188,6 +231,8 @@ export interface ApproverExpenseClaim {
   custom_manager_approval_promotional: number;
   custom_manager_approval_for_extra: number;
   custom_manager_approval_bike_over_100: number;
+  needs_review?: string[];
+  bulk_allowed?: boolean;
 }
 
 // ─── Phase 3 – Dashboard ───────────────────────────────────────────────────
@@ -379,9 +424,10 @@ export interface ReviseExpenseClaimResponse {
 
 export interface ApproveClaimPayload {
   claim_id: string;
-  bike_over_100: number;
-  extra: number;
-  promotional: number;
+  /** Send only the keys the approve sheet shows (from approval_options). */
+  bike_over_100?: number;
+  extra?: number;
+  promotional?: number;
 }
 
 export interface ApproverEditClaimRow {

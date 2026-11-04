@@ -150,14 +150,19 @@ const StockRow: React.FC<StockRowProps> = ({
 
       {/* ── Stock Count Input ── */}
       <View style={[styles.col, { width: COL.qty, alignItems: 'center' }]}>
-        <TextInput
-          style={styles.qtyInput}
-          keyboardType="numeric"
-          placeholder="0"
-          value={String(entry.quantity)}
-          placeholderTextColor="#9ca3af"
-          onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
-        />
+        {matchItem?.kept_by_daily_sales === true ? (
+          // The promoter's daily sales keep this item's stock: not counted.
+          <Text style={styles.keptText}>Kept by the promoter's daily sales</Text>
+        ) : (
+          <TextInput
+            style={styles.qtyInput}
+            keyboardType="numeric"
+            placeholder="0"
+            value={String(entry.quantity)}
+            placeholderTextColor="#9ca3af"
+            onChangeText={v => onQtyChange(index, v.replace(/[^0-9]/g, ''))}
+          />
+        )}
       </View>
 
       {/* ── Delete ── */}
@@ -402,6 +407,13 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
 export default StockManagementFormScreen;
 
 const styles = StyleSheet.create({
+  keptText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: '#64748b',
+    textAlign: 'center',
+    fontFamily: Fonts.regular,
+  },
   // ── Table shell — matches AddSaleForm ──
   tableScroll: {
     backgroundColor: '#ffffff',

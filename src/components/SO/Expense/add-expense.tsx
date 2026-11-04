@@ -106,6 +106,15 @@ const AddExpenseComponent = ({
   const maxRevisions = existingDetail?.message?.data?.max_revisions ?? 1;
   const isMaxRevisionReached = isRejected && revisionsRemaining <= 0;
 
+  // Extra km figures from the server; the two home legs stay hidden while 0.
+  const detailData = existingDetail?.message?.data;
+  const kmRows = [
+    {label: 'KM Gone From HQ', value: detailData?.hq_distance_km},
+    {label: 'KM Home to PJP Start', value: detailData?.home_to_start_km},
+    {label: 'KM PJP End to Home', value: detailData?.end_to_home_km},
+    {label: 'KM Paid On', value: detailData?.journey_km},
+  ].filter(row => claimId && Number(row.value) > 0);
+
   // ── Derive workflow status from API ──
   useEffect(() => {
     const rows = existingDetail?.message?.data?.expenses;
@@ -456,11 +465,17 @@ const AddExpenseComponent = ({
       {/* ── Distance KM Display ── */}
       <View style={styles.distanceCard}>
         <View style={styles.distanceContent}>
-          <Text style={styles.distanceLabel}>Distance Travelled</Text>
+          <Text style={styles.distanceLabel}>KM Travelled on PJP</Text>
           <Text style={styles.distanceValue}>
             {distanceKm || distanceKm === 0 ? `${distanceKm} km` : 'N/A'}
           </Text>
         </View>
+        {kmRows.map(row => (
+          <View key={row.label} style={styles.distanceContent}>
+            <Text style={styles.distanceLabel}>{row.label}</Text>
+            <Text style={styles.distanceValue}>{row.value} km</Text>
+          </View>
+        ))}
       </View>
 
       {/* ── Self Arranged Stay (only before draft, not in edit mode) ── */}

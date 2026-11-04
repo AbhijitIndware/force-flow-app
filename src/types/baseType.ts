@@ -2348,6 +2348,11 @@ export interface StockDashboardItem {
   reorder_level?: number | null;
   /** true when opening>0 OR current>0 OR item appears in any previous SO */
   has_history: boolean;
+  /**
+   * The promoter's daily sales keep this item's stock at this store, so it is
+   * not counted: disable the physical count (it can still be ordered).
+   */
+  kept_by_daily_sales?: boolean;
 }
 
 export interface RGetStoreStockStatus {
@@ -3743,4 +3748,55 @@ export interface RTeamReport {
     kpis: TeamReportKpi[];
     note?: string;
   };
+}
+
+// ─── PROMOTER DAILY SALES ────────────────────────────────────────────────────
+
+export interface DailySalesItem {
+  item_code: string;
+  item_name: string;
+  /** The opening given once per item per store */
+  opening: number;
+  opening_date: string | null;
+  /** Opening can still be corrected (given this month) */
+  can_correct_opening: boolean;
+  month_opening: number;
+  received: number;
+  customer_returned: number;
+  returned: number;
+  sold_mtd: number;
+  on_shelf: number;
+  /** What this date already has */
+  sold: number;
+  /** The most this date can show */
+  max_sold: number;
+}
+
+export interface DailySalesSheet {
+  store: string;
+  store_name: string;
+  date: string;
+  can_edit: boolean;
+  entry: {name: string; entered_by: string; at: string} | null;
+  items: DailySalesItem[];
+  add_items: {item_code: string; item_name: string}[];
+}
+
+export interface RDailySales {
+  message: {
+    success: boolean;
+    message?: string;
+    data?: DailySalesSheet;
+  };
+}
+
+export interface ISaveDailySales {
+  store: string;
+  date: string;
+  items: {item_code: string; qty: number}[];
+}
+
+export interface ISetOpening {
+  store: string;
+  items: {item_code: string; qty: number}[];
 }

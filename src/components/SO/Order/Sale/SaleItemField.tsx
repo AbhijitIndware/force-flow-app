@@ -59,8 +59,14 @@ export const SaleItemField: React.FC<Props> = ({
       }));
   }, [allItems, search]);
 
+  // At a promoter's store the promoter's daily sales keep this item's stock,
+  // so it is not counted here and can be ordered without a count.
+  const keptByDailySales = stockInfo?.kept_by_daily_sales === true;
+
   const isOrderLocked =
-    (stockInfo?.has_history ?? false) && stockInfo?.physical_count === null;
+    !keptByDailySales &&
+    (stockInfo?.has_history ?? false) &&
+    stockInfo?.physical_count === null;
 
   const canOrder = !isOrderLocked && !isStockFetching;
 
@@ -175,13 +181,19 @@ export const SaleItemField: React.FC<Props> = ({
       </View>*/}
       {/* --- Physical Qty --- */}
       <View style={[styles.col, {width: COLUMN_WIDTHS.qty}]}>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={String(item.physical_qty)}
-          onChangeText={v => handleChange('physical_qty', v)}
-          placeholder="0"
-        />
+        {keptByDailySales ? (
+          <Text style={styles.keptText}>
+            Kept by the promoter's daily sales
+          </Text>
+        ) : (
+          <TextInput
+            style={styles.input}
+            keyboardType="numeric"
+            value={String(item.physical_qty)}
+            onChangeText={v => handleChange('physical_qty', v)}
+            placeholder="0"
+          />
+        )}
       </View>
 
       {/* --- Order Qty --- */}
@@ -235,6 +247,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: '#e5e7eb',
+  },
+  keptText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: '#64748b',
+    textAlign: 'center',
+    fontFamily: Fonts.regular,
   },
   evenRow: {backgroundColor: '#fff'},
   oddRow: {backgroundColor: '#f9fafb'},

@@ -8,7 +8,7 @@ import {AssignedStore} from '../types/baseType';
 import {useIsTeamLeader} from '../utils/roles';
 import {getCurrentLocation} from '../utils/utils';
 
-// The stores a stock screen (Count Stock, Receive Stock, the returns, Store
+// The stores a stock screen (Daily Sales, Receive Stock, the returns, Store
 // Activity) offers. A promoter gets their assigned stores. A Team Leader gets
 // the store they are checked into; when they are not checked in anywhere,
 // the same list as check-in (shift stores, then the nearest of their zone).

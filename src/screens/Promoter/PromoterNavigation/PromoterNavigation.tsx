@@ -7,6 +7,7 @@ import {PromoterAppStackParamList} from '../../../types/Navigation';
 import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import StockEntryFormScreen from '../Stock/StockEntryFormScreen';
+import DailySalesScreen from '../Stock/DailySalesScreen';
 import StockReceivedScreen from '../Stock/StockReceivedScreen';
 import {
   CustomerReturnScreen,
@@ -101,6 +102,11 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="StockScreen"
         component={StockScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DailySalesScreen"
+        component={DailySalesScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

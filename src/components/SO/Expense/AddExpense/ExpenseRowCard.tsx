@@ -16,6 +16,7 @@ import { Size } from '../../../../utils/fontSize';
 import { LocalExpenseItem } from '../add-expense';
 import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { parseExpenseNote } from '../../../../utils/expenseNote';
 
 const TYPE_CONFIG: Record<string, { icon: string; bg: string }> = {
   'Daily Allowance': { icon: '💵', bg: '#EAF3DE' },
@@ -56,6 +57,7 @@ export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
     icon: '💰',
     bg: '#F1EFE8',
   };
+  const note = parseExpenseNote(expense.custom_claim_description);
   const attachmentUri =
     typeof expense.attachment === 'string'
       ? `${imageBaseUrl}${expense.attachment}`
@@ -83,11 +85,21 @@ export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
             {expense.ta_mode ? ` · ${expense.ta_mode}` : ''}
             {expense.ta_rail_class ? ` · ${expense.ta_rail_class}` : ''}
           </Text>
-          {expense.custom_claim_description ? (
+          {note.employee.length ? (
             <Text style={styles.desc} numberOfLines={3}>
-              {expense.custom_claim_description}
+              {note.employee.join(' | ')}
             </Text>
           ) : null}
+          {note.approver.map((text, i) => (
+            <Text key={`a${i}`} style={styles.approverNote}>
+              {text}
+            </Text>
+          ))}
+          {note.system.map((text, i) => (
+            <Text key={`s${i}`} style={styles.systemNote}>
+              Why: {text}
+            </Text>
+          ))}
           {expense.attachment ? (
             <TouchableOpacity
               style={styles.receiptBtn}
@@ -212,6 +224,18 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: Colors.gray,
     marginTop: 2,
+  },
+  approverNote: {
+    fontSize: 11,
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    marginTop: 2,
+  },
+  systemNote: {
+    fontSize: 10.5,
+    fontFamily: Fonts.regular,
+    color: '#94A3B8',
+    marginTop: 3,
   },
   attachPill: {
     flexDirection: 'row',
