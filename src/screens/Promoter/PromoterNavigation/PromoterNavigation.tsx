@@ -7,6 +7,7 @@ import {PromoterAppStackParamList} from '../../../types/Navigation';
 import SalesScreen from '../Sales/Sales';
 import StockScreen from '../Stock/Stock';
 import StockEntryFormScreen from '../Stock/StockEntryFormScreen';
+import DailySalesScreen from '../Stock/DailySalesScreen';
 import StockReceivedScreen from '../Stock/StockReceivedScreen';
 import {
   CustomerReturnScreen,
@@ -35,6 +36,7 @@ import OrdersScreen from '../../SO/OrdersScreen/OrdersScreen';
 import AddStoreScreen from '../../SO/PartnersScreen/AddStoreScreen';
 import AddDistributorScreen from '../../SO/PartnersScreen/AddDistributorScreen';
 import StoreDetailScreen from '../../SO/PartnersScreen/StoreDetailScreen';
+import DistributorDetailScreen from '../../SO/PartnersScreen/DistributorDetailScreen';
 import AddSaleScreen from '../../SO/OrdersScreen/AddSaleScreen';
 import SaleDetailScreen from '../../SO/OrdersScreen/SaleDetailScreen';
 import PurchaseDetailScreen from '../../SO/OrdersScreen/PurchaseDetailScreen';
@@ -55,6 +57,7 @@ const TEAM_LEADER_SCREENS: {name: string; component: any}[] = [
   {name: 'AddStoreScreen', component: AddStoreScreen},
   {name: 'AddDistributorScreen', component: AddDistributorScreen},
   {name: 'StoreDetailScreen', component: StoreDetailScreen},
+  {name: 'DistributorDetailScreen', component: DistributorDetailScreen},
   {name: 'AddSaleScreen', component: AddSaleScreen},
   {name: 'SaleDetailScreen', component: SaleDetailScreen},
   {name: 'PurchaseDetailScreen', component: PurchaseDetailScreen},
@@ -99,6 +102,11 @@ const PromoterNavigation = () => {
       <Stack.Screen
         name="StockScreen"
         component={StockScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DailySalesScreen"
+        component={DailySalesScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

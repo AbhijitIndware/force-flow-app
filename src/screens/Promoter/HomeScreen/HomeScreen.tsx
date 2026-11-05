@@ -45,12 +45,12 @@ export const SHOW_PRODUCT_FEEDBACK = false;
 const STOCK_QUICK_LINKS: {
   key: keyof typeof STOCK_SCREENS;
   route:
-    | 'StockScreen'
+    | 'DailySalesScreen'
     | 'StockReceivedScreen'
     | 'CustomerReturnScreen'
     | 'DistributorReturnScreen';
 }[] = [
-  {key: 'count', route: 'StockScreen'},
+  {key: 'dailySales', route: 'DailySalesScreen'},
   {key: 'receive', route: 'StockReceivedScreen'},
   {key: 'customerReturn', route: 'CustomerReturnScreen'},
   ...(SHOW_DISTRIBUTOR_RETURNS

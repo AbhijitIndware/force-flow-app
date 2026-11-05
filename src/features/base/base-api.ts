@@ -6,6 +6,8 @@ import {
   ICopyPjpRequest,
   IAddCheckIn,
   IAddDistributorPayload,
+  IUpdateDistributorPayload,
+  RDistributorDetails,
   IAddPjpPayload,
   IAddPurchaseOrder,
   IAddSalesOrder,
@@ -457,6 +459,23 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['Distributor'],
     }),
+    // The server also renames the distributor on its stores, hence 'Store'.
+    updateDistributor: builder.mutation<any, IUpdateDistributorPayload>({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.dms_apis.distributor.modify_distributor',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Distributor', 'Store'],
+    }),
+    getDistributorDetails: builder.query<RDistributorDetails, string>({
+      query: distributor_id => ({
+        url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_details`,
+        method: 'GET',
+        params: { distributor_id },
+      }),
+      providesTags: ['Distributor'],
+    }),
     checkStoreName: builder.query<
       { message: { exists: boolean; message?: string } },
       string
@@ -524,14 +543,15 @@ export const baseApi = createApi({
     }),
     getDistributorList: builder.query<
       RDistributorList,
-      { page: number; page_size: number; status: string }
+      { page: number; page_size: number; status: string; search?: string }
     >({
-      query: ({ page, page_size, status }) => ({
+      query: ({ page, page_size, status, search }) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_distributor_by_owner`,
         method: 'GET',
         params: {
           page: page,
           page_size: page_size,
+          search,
           // status: status,
         },
       }),
@@ -1720,6 +1740,9 @@ export const baseApi = createApi({
   }),
 });
 
+// Shared by the edit form and the list, so the list can tell when an edit saved.
+export const UPDATE_DISTRIBUTOR_CACHE_KEY = 'update-distributor';
+
 export const {
   // PJP Workflow
   useGetPjpNextActionQuery,
@@ -1767,6 +1790,8 @@ export const {
   useGetStoreListQuery,
   useGetDistributorListQuery,
   useAddDistributorMutation,
+  useUpdateDistributorMutation,
+  useGetDistributorDetailsQuery,
   useAddStoreMutation,
   useUpdateStoreMutation,
   useGetStoreByIdQuery,

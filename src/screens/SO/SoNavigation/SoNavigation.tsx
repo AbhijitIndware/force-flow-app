@@ -30,6 +30,7 @@ import AddVisibilityScreen from '../VisibilityScreen/AddVisibilityClaim';
 import VisibilityApprovalDetailScreen from '../VisibilityScreen/VisibilityApprovalDetailScreen';
 import TeamsSalesReport from '../Sales/TeamSalesReport';
 import StoreDetailScreen from '../PartnersScreen/StoreDetailScreen';
+import DistributorDetailScreen from '../PartnersScreen/DistributorDetailScreen';
 import AsmDashboard from '../Sales/AsmDashboardScreen';
 import TeamDetailScreen from '../Sales/TeamDetailScreen';
 import DetailByStoreScreen from '../Sales/DetailByStoreScreen';
@@ -117,6 +118,11 @@ const SoNavigation = () => {
       <Stack.Screen
         name="StoreDetailScreen"
         component={StoreDetailScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="DistributorDetailScreen"
+        component={DistributorDetailScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

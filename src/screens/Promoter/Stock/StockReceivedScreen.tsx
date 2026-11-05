@@ -70,7 +70,7 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
     [stores],
   );
 
-  // Opened from Count Stock for a specific store.
+  // Opened from another stock screen for a specific store.
   const routeStore = route?.params?.store;
   useEffect(() => {
     if (routeStore) {

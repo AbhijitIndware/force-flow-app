@@ -370,6 +370,9 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  // Claims the last bulk approve skipped (NEEDS_REVIEW): kept highlighted so
+  // the manager can tap straight into each one.
+  const [reviewIds, setReviewIds] = useState<string[]>([]);
 
   const [page, setPage] = useState(1);
   const isRange = !!(fromDate && toDate);
@@ -449,9 +452,12 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
     });
   };
 
+  // Claims that need the manager's own tick (bulk_allowed: false) are left
+  // out of Select all; they must be opened and approved on their own.
   const selectableIds: string[] = claimList
     .filter(
-      (c: ApproverExpenseClaim) => c.workflow_state === 'Pending Approval',
+      (c: ApproverExpenseClaim) =>
+        c.workflow_state === 'Pending Approval' && c.bulk_allowed !== false,
     )
     .map((c: ApproverExpenseClaim) => c.name);
   const selectAllTarget = selectableIds.slice(0, MAX_SELECTION);
@@ -476,21 +482,36 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
   const showBulkResult = (response: any) => {
     const result = response?.message;
     const data = result?.data;
-    const failures =
-      data?.results?.filter((item: any) => item.status === 'error') || [];
+    const results: any[] = data?.results || [];
+    const needsReview: string[] =
+      data?.needs_review ||
+      results
+        .filter((item: any) => item.error_code === 'NEEDS_REVIEW')
+        .map((item: any) => item.claim_id);
+    // NEEDS_REVIEW claims are explained by the server's summary message; list
+    // only the other failures underneath it.
+    const failures = results.filter(
+      (item: any) =>
+        item.status === 'error' && item.error_code !== 'NEEDS_REVIEW',
+    );
     const summary =
       result?.message ||
       `${data?.succeeded || 0} approved; ${data?.failed || 0} failed.`;
-    if (failures.length) {
-      Alert.alert(
-        summary,
-        failures
-          .map((item: any) => `${item.claim_id}: ${item.message}`)
-          .join('\n'),
-      );
-    } else {
-      Alert.alert('Bulk action complete', summary);
-    }
+    const title =
+      result?.error_code === 'PARTIAL' || needsReview.length
+        ? 'Approve on its own'
+        : failures.length
+        ? 'Some claims failed'
+        : 'Bulk action complete';
+    Alert.alert(
+      title,
+      failures.length
+        ? `${summary}\n\n${failures
+            .map((item: any) => `${item.claim_id}: ${item.message}`)
+            .join('\n')}`
+        : summary,
+    );
+    setReviewIds(needsReview);
     setSelectedClaims([]);
     refetch();
   };
@@ -498,7 +519,12 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
   const handleBulkApprove = async () => {
     try {
       const response = await bulkApprove({claim_ids: selectedClaims}).unwrap();
-      assertServerSuccess(response);
+      // PARTIAL (some approved, some skipped) and an all-skipped reply both
+      // come back as status "error" but carry per-claim results: they are not
+      // a failure of the call, so show them as a result.
+      if (!response?.message?.data?.results) {
+        assertServerSuccess(response);
+      }
       showBulkResult(response);
     } catch (error: any) {
       Alert.alert(
@@ -542,9 +568,17 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
     const st = getStatus(item.workflow_state);
     const isSelected = selectedClaims.includes(item.name);
     const canSelect = item.workflow_state === 'Pending Approval';
+    const reviewNotes = item.needs_review || [];
+    const approveAlone =
+      canSelect && (item.bulk_allowed === false || reviewIds.includes(item.name));
 
     return (
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          approveAlone && styles.cardNeedsReview,
+          reviewIds.includes(item.name) && styles.cardSkipped,
+        ]}>
         <View style={styles.cardMain}>
           {canSelect && (
             <TouchableOpacity
@@ -591,6 +625,20 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
               </View>
               <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
             </View>
+
+            {approveAlone && (
+              <View style={styles.reviewBox}>
+                <View style={styles.reviewChip}>
+                  <Ionicons name="alert-circle" size={12} color="#b45309" />
+                  <Text style={styles.reviewChipText}>Approve on its own</Text>
+                </View>
+                {reviewNotes.map((note, i) => (
+                  <Text key={i} style={styles.reviewNote}>
+                    {note}
+                  </Text>
+                ))}
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -1160,6 +1208,41 @@ const styles = StyleSheet.create({
     color: Colors.darkButton,
     fontSize: 12,
     fontFamily: Fonts.medium,
+  },
+  cardNeedsReview: {
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  cardSkipped: {
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+    backgroundColor: '#fffbeb',
+  },
+  reviewBox: {
+    marginTop: 8,
+    gap: 4,
+  },
+  reviewChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  reviewChipText: {
+    fontSize: 11,
+    fontFamily: Fonts.semiBold,
+    color: '#b45309',
+  },
+  reviewNote: {
+    fontSize: 11,
+    fontFamily: Fonts.regular,
+    color: '#92400e',
   },
   selectAllRow: {
     flexDirection: 'row',

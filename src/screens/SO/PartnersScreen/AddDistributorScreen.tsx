@@ -14,9 +14,10 @@ import {useFormik} from 'formik';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {SoAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
+import LoadingScreen from '../../../components/ui/LoadingScreen';
 import {flexCol} from '../../../utils/styles';
 import {Colors} from '../../../utils/colors';
-import {distributorSchema} from '../../../types/schema';
+import {distributorEditSchema, distributorSchema} from '../../../types/schema';
 import {
   useGetCityQuery,
   useGetDesignationQuery,
@@ -26,10 +27,18 @@ import {
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
 import {REmployee} from '../../../types/dropdownType';
-import {useAddDistributorMutation} from '../../../features/base/base-api';
+import {
+  UPDATE_DISTRIBUTOR_CACHE_KEY,
+  useAddDistributorMutation,
+  useGetDistributorDetailsQuery,
+  useUpdateDistributorMutation,
+} from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
 import AddDistributorForm from '../../../components/SO/Partner/Distributor/AddDistributorForm';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+} from '../../../utils/errorMessage';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
@@ -60,7 +69,8 @@ let initial = {
   designation: '',
 };
 
-const AddDistributorScreen = ({navigation}: Props) => {
+const AddDistributorScreen = ({navigation, route}: Props) => {
+  const distributorId: string | undefined = route?.params?.distributorId;
   const [loading, setLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -102,6 +112,14 @@ const AddDistributorScreen = ({navigation}: Props) => {
     useState(false);
 
   const [addDistributor] = useAddDistributorMutation();
+  const [updateDistributor] = useUpdateDistributorMutation({
+    fixedCacheKey: UPDATE_DISTRIBUTOR_CACHE_KEY,
+  });
+  const {data: distributorData} = useGetDistributorDetailsQuery(
+    distributorId as string,
+    {skip: !distributorId},
+  );
+  const distributor = distributorData?.message?.data;
 
   const {
     values,
@@ -111,14 +129,30 @@ const AddDistributorScreen = ({navigation}: Props) => {
     handleBlur,
     handleSubmit,
     setFieldValue,
+    setValues,
   } = useFormik({
     initialValues: initial,
-    validationSchema: distributorSchema,
+    validationSchema: distributorId ? distributorEditSchema : distributorSchema,
     onSubmit: async (formValues, actions) => {
       try {
         setLoading(true);
-        const payload = {data: formValues};
-        const res = await addDistributor(payload).unwrap();
+        const res = distributorId
+          ? await updateDistributor({
+              data: {
+                name: distributorId,
+                distributor_name: formValues.distributor_name,
+                distributor_group: formValues.distributor_group,
+                distributor_code: formValues.distributor_code,
+                mobile: formValues.mobile,
+                email: formValues.email,
+                zone: formValues.zone,
+                state: formValues.state,
+                city: formValues.city,
+                reports_to: formValues.reports_to,
+                designation: formValues.designation,
+              },
+            }).unwrap()
+          : await addDistributor({data: formValues}).unwrap();
 
         if (res?.message?.status === 'success') {
           Toast.show({
@@ -126,12 +160,18 @@ const AddDistributorScreen = ({navigation}: Props) => {
             text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
-          actions.resetForm();
-          navigation.navigate('PartnersScreen');
+          if (distributorId) {
+            navigation.goBack();
+          } else {
+            actions.resetForm();
+            navigation.navigate('PartnersScreen');
+          }
         } else {
           Toast.show({
             type: 'error',
-            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
+            text1:
+              getSafeServerMessage(res.message.message) ??
+              'Something went wrong',
             position: 'top',
           });
         }
@@ -140,14 +180,40 @@ const AddDistributorScreen = ({navigation}: Props) => {
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1: getUserFacingError(error, 'Internal Server Error'),
-          text2: 'Please try again later.',
+          text1: getUserFacingError(
+            error,
+            distributorId
+              ? 'Could not update distributor.'
+              : 'Internal Server Error',
+          ),
+          // Edit failures (403, 404, 422) are not fixed by trying again later.
+          text2: distributorId ? undefined : 'Please try again later.',
           position: 'top',
         });
         setLoading(false);
       }
     },
   });
+
+  useEffect(() => {
+    if (distributor) {
+      setValues({
+        ...initial,
+        distributor_name: distributor.distributor_name ?? '',
+        distributor_sap_code:
+          distributor.distributor_sap_code || distributor.name,
+        distributor_group: distributor.distributor_group ?? '',
+        distributor_code: distributor.distributor_code ?? '',
+        mobile: distributor.mobile ?? '',
+        email: distributor.email ?? '',
+        zone: distributor.zone ?? '',
+        state: distributor.state ?? '',
+        city: distributor.city ?? '',
+        reports_to: distributor.reports_to ?? '',
+        designation: distributor.designation ?? '',
+      });
+    }
+  }, [distributor]);
 
   const transformToDropdownList = (arr: {name: string}[] = []) =>
     arr.map(item => ({label: item.name, value: item.name}));
@@ -197,6 +263,30 @@ const AddDistributorScreen = ({navigation}: Props) => {
       page: String(listConfig.distributorGroup.page),
       search: listConfig.distributorGroup.search,
     });
+
+  // Runs before the effects below: cached data arrives in the same render as
+  // the parent field, and must fill the list after it is cleared, not before.
+  // 🔄 Clear dependent lists when parent field changes
+  useEffect(() => {
+    if (values.zone !== '') {
+      setStateListData([]);
+      setListConfig(prev => ({
+        ...prev,
+        state: {page: 1, search: ''}, // reset state pagination & search
+        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
+      }));
+    }
+  }, [values.zone]);
+
+  useEffect(() => {
+    if (values.state !== '') {
+      setCityListData([]);
+      setListConfig(prev => ({
+        ...prev,
+        city: {page: 1, search: ''}, // reset city pagination & search
+      }));
+    }
+  }, [values.state]);
 
   useEffect(() => {
     if (stateData?.message?.data) {
@@ -301,28 +391,6 @@ const AddDistributorScreen = ({navigation}: Props) => {
     }
   }, [distributorGroupData]);
 
-  // 🔄 Clear dependent lists when parent field changes
-  useEffect(() => {
-    if (values.zone !== '') {
-      setStateListData([]);
-      setListConfig(prev => ({
-        ...prev,
-        state: {page: 1, search: ''}, // reset state pagination & search
-        city: {page: 1, search: ''}, // also reset city (because state depends on zone)
-      }));
-    }
-  }, [values.zone]);
-
-  useEffect(() => {
-    if (values.state !== '') {
-      setCityListData([]);
-      setListConfig(prev => ({
-        ...prev,
-        city: {page: 1, search: ''}, // reset city pagination & search
-      }));
-    }
-  }, [values.state]);
-
   const handleLoadMoreCity = () => {
     if (!cityFetching) {
       setLoadingMoreCity(true);
@@ -360,7 +428,7 @@ const AddDistributorScreen = ({navigation}: Props) => {
       setLoadingMoreEmployee(true);
       setListConfig(prev => ({
         ...prev,
-        state: {page: prev.employee.page + 1, search: prev.employee.search},
+        employee: {page: prev.employee.page + 1, search: prev.employee.search},
       }));
       setLoadingMoreEmployee(false);
     }
@@ -438,56 +506,72 @@ const AddDistributorScreen = ({navigation}: Props) => {
     }));
   };
 
+  const prefillPending = !!distributorId && !distributor;
+
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title="Add Distributor"
+        title={distributorId ? 'Update Distributor' : 'Add Distributor'}
         navigation={() => navigation.goBack()}
       />
-      <AddDistributorForm
-        {...{values, errors, touched, handleChange, handleBlur, setFieldValue}}
-        scrollY={scrollY}
-        distributorGroupList={distributorGroupListData}
-        employeeList={employeeListData}
-        zoneList={zoneListData}
-        stateList={stateListData}
-        cityList={cityListData}
-        designationList={designationListData}
-        // pagination props
-        onLoadMoreState={handleLoadMoreStates}
-        loadingMoreState={loadingMoreState}
-        onLoadMoreEmployee={handleLoadMoreEmployees}
-        loadingMoreEmployee={loadingMoreEmployee}
-        onLoadMoreZone={handleLoadMoreZones}
-        loadingMoreZone={loadingMoreZone}
-        onLoadMoreCity={handleLoadMoreCity}
-        loadingMoreCity={loadingMoreCity}
-        // search props 👇
-        zoneSearchText={listConfig.zone.search}
-        setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
-        stateSearchText={listConfig.state.search}
-        setStateSearchText={(text: string) => handleSearchChange('state', text)}
-        citySearchText={listConfig.city.search}
-        setCitySearchText={(text: string) => handleSearchChange('city', text)}
-        employeeSearchText={listConfig.employee.search}
-        setEmployeeSearchText={(text: string) =>
-          handleSearchChange('employee', text)
-        }
-        // pagination
-        onLoadMoreDesignation={handleLoadMoreDesignation}
-        loadingMoreDesignation={loadingMoreDesignation}
-        onLoadMoreDistributorGroup={handleLoadMoreDistributorGroup}
-        loadingMoreDistributorGroup={loadingMoreDistributorGroup}
-        // search
-        designationSearchText={listConfig.designation.search}
-        setDesignationSearchText={(text: string) =>
-          handleSearchChange('designation', text)
-        }
-        distributorGroupSearchText={listConfig.distributorGroup.search}
-        setDistributorGroupSearchText={(text: string) =>
-          handleSearchChange('distributorGroup', text)
-        }
-      />
+      {prefillPending ? (
+        <LoadingScreen />
+      ) : (
+        <AddDistributorForm
+          {...{
+            values,
+            errors,
+            touched,
+            handleChange,
+            handleBlur,
+            setFieldValue,
+          }}
+          scrollY={scrollY}
+          isEdit={!!distributorId}
+          distributorGroupList={distributorGroupListData}
+          employeeList={employeeListData}
+          zoneList={zoneListData}
+          stateList={stateListData}
+          cityList={cityListData}
+          designationList={designationListData}
+          // pagination props
+          onLoadMoreState={handleLoadMoreStates}
+          loadingMoreState={loadingMoreState}
+          onLoadMoreEmployee={handleLoadMoreEmployees}
+          loadingMoreEmployee={loadingMoreEmployee}
+          onLoadMoreZone={handleLoadMoreZones}
+          loadingMoreZone={loadingMoreZone}
+          onLoadMoreCity={handleLoadMoreCity}
+          loadingMoreCity={loadingMoreCity}
+          // search props 👇
+          zoneSearchText={listConfig.zone.search}
+          setZoneSearchText={(text: string) => handleSearchChange('zone', text)}
+          stateSearchText={listConfig.state.search}
+          setStateSearchText={(text: string) =>
+            handleSearchChange('state', text)
+          }
+          citySearchText={listConfig.city.search}
+          setCitySearchText={(text: string) => handleSearchChange('city', text)}
+          employeeSearchText={listConfig.employee.search}
+          setEmployeeSearchText={(text: string) =>
+            handleSearchChange('employee', text)
+          }
+          // pagination
+          onLoadMoreDesignation={handleLoadMoreDesignation}
+          loadingMoreDesignation={loadingMoreDesignation}
+          onLoadMoreDistributorGroup={handleLoadMoreDistributorGroup}
+          loadingMoreDistributorGroup={loadingMoreDistributorGroup}
+          // search
+          designationSearchText={listConfig.designation.search}
+          setDesignationSearchText={(text: string) =>
+            handleSearchChange('designation', text)
+          }
+          distributorGroupSearchText={listConfig.distributorGroup.search}
+          setDistributorGroupSearchText={(text: string) =>
+            handleSearchChange('distributorGroup', text)
+          }
+        />
+      )}
       <View
         style={{
           paddingHorizontal: 20,
@@ -499,13 +583,18 @@ const AddDistributorScreen = ({navigation}: Props) => {
           height: 80,
         }}>
         <TouchableOpacity
-          style={[styles.submitBtn, loading && {opacity: 0.7}]}
+          style={[
+            styles.submitBtn,
+            (loading || prefillPending) && {opacity: 0.7},
+          ]}
           onPress={() => handleSubmit()}
-          disabled={loading}>
+          disabled={loading || prefillPending}>
           {loading ? (
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
-            <Text style={styles.submitText}>Add Distributor</Text>
+            <Text style={styles.submitText}>
+              {distributorId ? 'Update Distributor' : 'Add Distributor'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>

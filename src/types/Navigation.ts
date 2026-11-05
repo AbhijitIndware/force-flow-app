@@ -20,6 +20,7 @@ export type PromoterAppStackParamList = {
   PromoterSaleDetailScreen: {id: string};
   AddSalesScreen: undefined;
   StockScreen: undefined;
+  DailySalesScreen: {store?: string} | undefined;
   StockEntryFormScreen: {store: string; storeName: string};
   StockReceivedScreen: {store?: string} | undefined;
   CustomerReturnScreen: undefined;
@@ -48,6 +49,7 @@ type TeamLeaderSoScreens = Pick<
   | 'AddStoreScreen'
   | 'AddDistributorScreen'
   | 'StoreDetailScreen'
+  | 'DistributorDetailScreen'
   | 'AddSaleScreen'
   | 'SaleDetailScreen'
   | 'PurchaseDetailScreen'
@@ -80,7 +82,7 @@ export type SoAppStackParamList = {
   OrdersScreen: {index?: number} | undefined;
   PartnersScreen: {index?: number} | undefined;
   ProfileScreen: undefined;
-  AddDistributorScreen: undefined;
+  AddDistributorScreen: {distributorId?: string} | undefined;
   AddStoreScreen: {storeId?: string} | undefined;
   AddMarketVisitScreen: undefined;
   AddPjpScreen: {id?: string; beatPlan?: string | null} | undefined;
@@ -111,6 +113,7 @@ export type SoAppStackParamList = {
   VisibilityApprovalScreen: undefined;
   VisibilityApprovalDetailScreen: {claimId: string; isApprover: boolean};
   StoreDetailScreen: {storeId: string};
+  DistributorDetailScreen: {distributorId: string};
   TeamDetailScreen: {date: string; employee_id: string};
   DetailByStoreScreen: {
     store_id: string;
