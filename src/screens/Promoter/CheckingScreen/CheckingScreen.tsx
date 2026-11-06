@@ -195,7 +195,7 @@ const CheckingScreen = ({ navigation }: Props) => {
 
   useEffect(() => {
     if (!isTL) return;
-    getCurrentLocation()
+    getCurrentLocation({fast: true})
       .then(location => {
         setHere(location);
         const [lat, lng] = location.split(',').map(Number);

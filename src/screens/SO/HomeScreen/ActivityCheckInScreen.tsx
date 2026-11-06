@@ -157,8 +157,12 @@ const ActivityCheckInScreen = ({ navigation }: { navigation: NavigationProp }) =
       const locationStr = await getCurrentLocation();
       setCurrentLocation(locationStr);
       setConfirmModalVisible(true);
-    } catch (err) {
-      Toast.show({ type: 'error', text1: 'Unable to fetch location' });
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to fetch location',
+        text2: err?.message,
+      });
     } finally {
       setIsGetLocation(false);
     }

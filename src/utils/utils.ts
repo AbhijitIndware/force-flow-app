@@ -1,4 +1,4 @@
-import {PermissionsAndroid, Platform} from 'react-native';
+import {Alert, Linking, PermissionsAndroid, Platform} from 'react-native';
 import {Dimensions} from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 
@@ -26,15 +26,30 @@ export async function requestLocationPermission(): Promise<boolean> {
   }
 
   if (Platform.OS === 'android') {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: 'Location Permission',
-        message: 'We need your location for store check-in verification.',
-        buttonPositive: 'OK',
-      },
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
+    const {ACCESS_FINE_LOCATION: FINE, ACCESS_COARSE_LOCATION: COARSE} =
+      PermissionsAndroid.PERMISSIONS;
+    const {GRANTED, NEVER_ASK_AGAIN} = PermissionsAndroid.RESULTS;
+
+    // Already granted: skip the prompt (avoids repeated dialogs).
+    if (await PermissionsAndroid.check(FINE)) return true;
+
+    // Android 12+ ignores a FINE-only request; FINE and COARSE must be
+    // requested together. The user may also choose "Approximate", which grants
+    // only COARSE — accept it (fixes will be less accurate and are flagged).
+    const result = await PermissionsAndroid.requestMultiple([FINE, COARSE]);
+    if (result[FINE] === GRANTED || result[COARSE] === GRANTED) return true;
+
+    if (result[FINE] === NEVER_ASK_AGAIN || result[COARSE] === NEVER_ASK_AGAIN) {
+      Alert.alert(
+        'Location permission required',
+        'Location access is blocked. Please enable it in App Settings > Permissions > Location.',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'Open Settings', onPress: () => Linking.openSettings()},
+        ],
+      );
+    }
+    return false;
   }
 
   return false;
@@ -45,7 +60,10 @@ export async function requestLocationPermission(): Promise<boolean> {
 export const TARGET_LOCATION_ACCURACY = 30;
 // Fixes worse than this are flagged to the user as low accuracy.
 export const LOW_LOCATION_ACCURACY = 50;
-const LOCATION_WAIT_MS = 15000;
+const LOCATION_WAIT_MS = 20000;
+// Max age of a cached fix we accept as an initial seed while GPS warms up.
+const SEED_MAX_AGE_MS = 60000;
+const FALLBACK_WAIT_MS = 10000;
 
 export type AccuratePosition = {
   latitude: number;
@@ -53,16 +71,43 @@ export type AccuratePosition = {
   accuracy: number;
 };
 
+// Errors that will not resolve by waiting longer (permission denied,
+// location settings off / not satisfied).
+const isFatalLocationError = (error: any) =>
+  error?.code === 1 || error?.code === 5;
+
+const getSinglePosition = (
+  options: Parameters<typeof Geolocation.getCurrentPosition>[2],
+): Promise<AccuratePosition> =>
+  new Promise((resolve, reject) => {
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude, accuracy} = position.coords;
+        resolve({latitude, longitude, accuracy});
+      },
+      reject,
+      options,
+    );
+  });
+
 // Watches GPS until a fix within `targetAccuracy` arrives or `maxWaitMs`
-// elapses, then resolves with the most accurate fix seen.
+// elapses, then resolves with the most accurate fix seen. A quick
+// cached/network fix seeds the result so a cold GPS doesn't cause a failure.
 const getAccuratePosition = (
   targetAccuracy = TARGET_LOCATION_ACCURACY,
   maxWaitMs = LOCATION_WAIT_MS,
 ): Promise<AccuratePosition> =>
   new Promise((resolve, reject) => {
     let best: AccuratePosition | null = null;
+    let lastError: any = null;
     let settled = false;
     let watchId: number | null = null;
+
+    const consider = (pos: AccuratePosition) => {
+      if (settled) return;
+      if (!best || pos.accuracy < best.accuracy) best = pos;
+      if (pos.accuracy <= targetAccuracy) finish();
+    };
 
     const finish = (error?: any) => {
       if (settled) return;
@@ -70,22 +115,32 @@ const getAccuratePosition = (
       clearTimeout(timer);
       if (watchId !== null) Geolocation.clearWatch(watchId);
       if (best) resolve(best);
-      else reject(error ?? {code: 3, message: 'Location request timed out'});
+      else
+        reject(
+          error ?? lastError ?? {code: 3, message: 'Location request timed out'},
+        );
     };
 
     const timer = setTimeout(() => finish(), maxWaitMs);
 
+    // Seed with a recent cached / network fix (returns almost instantly).
+    getSinglePosition({
+      enableHighAccuracy: false,
+      timeout: maxWaitMs,
+      maximumAge: SEED_MAX_AGE_MS,
+    })
+      .then(consider)
+      .catch(() => {});
+
     watchId = Geolocation.watchPosition(
       position => {
         const {latitude, longitude, accuracy} = position.coords;
-        if (!best || accuracy < best.accuracy) {
-          best = {latitude, longitude, accuracy};
-        }
-        if (accuracy <= targetAccuracy) finish();
+        consider({latitude, longitude, accuracy});
       },
       error => {
-        // Keep waiting on transient errors if we already have a fix.
-        if (!best) finish(error);
+        // Only abort on unrecoverable errors; otherwise keep waiting.
+        if (isFatalLocationError(error)) finish(error);
+        else lastError = error;
       },
       {
         enableHighAccuracy: true,
@@ -103,23 +158,70 @@ const timeoutError = () =>
     'Location request timed out. Please move to an open area and try again.',
   );
 
-export const getCurrentPositionWithAccuracy =
-  async (): Promise<AccuratePosition> => {
-    const hasPermission = await requestLocationPermission();
-    if (!hasPermission) {
-      throw new Error('Location permission not granted');
-    }
+// Turn raw geolocation error codes into messages a field user can act on.
+const toLocationError = (error: any): Error => {
+  switch (error?.code) {
+    case 1:
+      return new Error(
+        'Location permission denied. Please allow location access for this app.',
+      );
+    case 2:
+      return new Error(
+        'Location unavailable. Please turn on Location (GPS) and try again.',
+      );
+    case 4:
+      return new Error(
+        'Google Play Services is unavailable or outdated. Please update it and try again.',
+      );
+    case 5:
+      return new Error(
+        'Location is turned off. Please turn on Location (GPS) and try again.',
+      );
+    default:
+      return timeoutError();
+  }
+};
 
+export type LocationRequestOptions = {
+  // Resolve with the first fix of any accuracy (for background lookups such
+  // as listing nearby stores, where speed matters more than precision).
+  fast?: boolean;
+};
+
+export const getCurrentPositionWithAccuracy = async (
+  {fast = false}: LocationRequestOptions = {},
+): Promise<AccuratePosition> => {
+  const hasPermission = await requestLocationPermission();
+  if (!hasPermission) {
+    throw new Error('Location permission not granted');
+  }
+
+  try {
+    return fast
+      ? await getAccuratePosition(Infinity, FALLBACK_WAIT_MS)
+      : await getAccuratePosition();
+  } catch (error: any) {
+    if (isFatalLocationError(error)) throw toLocationError(error);
+    // Last resort: network / Wi-Fi based fix (may be less accurate).
     try {
-      return await getAccuratePosition();
-    } catch (error: any) {
-      if (error?.code === 3) throw timeoutError();
-      throw error;
+      return await getSinglePosition({
+        enableHighAccuracy: false,
+        timeout: FALLBACK_WAIT_MS,
+        maximumAge: SEED_MAX_AGE_MS,
+        forceRequestLocation: true,
+      });
+    } catch (fallbackError: any) {
+      throw toLocationError(
+        isFatalLocationError(fallbackError) ? fallbackError : error,
+      );
     }
-  };
+  }
+};
 
-export const getCurrentLocation = async (): Promise<string> => {
-  const {latitude, longitude} = await getCurrentPositionWithAccuracy();
+export const getCurrentLocation = async (
+  options?: LocationRequestOptions,
+): Promise<string> => {
+  const {latitude, longitude} = await getCurrentPositionWithAccuracy(options);
   return `${latitude},${longitude}`;
 };
 
