@@ -22,7 +22,6 @@ import {
   LOW_LOCATION_ACCURACY,
   getStoreLabel,
   requestLocationPermission,
-  windowHeight,
   windowWidth,
 } from '../../../utils/utils';
 import { useFormik } from 'formik';
@@ -258,16 +257,21 @@ const CheckInForm = ({ navigation }: Props) => {
     <SafeAreaView style={[flexCol, styles.screen]}>
       <PageHeader title="Check In" navigation={() => navigation.goBack()} />
 
-      <ScrollView>
-        {!pjpWorkflowData ? (
-          <LoadingScreen />
-        ) : storeDailyList.length === 0 ? (
+      {!pjpWorkflowData ? (
+        <LoadingScreen />
+      ) : storeDailyList.length === 0 ? (
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <NoPjpState
             formattedDate={formattedDate}
             onAddPjp={() => navigation.navigate('AddPjpScreen')}
           />
-        ) : (
-          <>
+        </ScrollView>
+      ) : (
+        <>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled">
             {/* Store selector */}
             <View style={styles.selectorPad}>
               <ReusableDropdown
@@ -284,60 +288,59 @@ const CheckInForm = ({ navigation }: Props) => {
               />
             </View>
 
-            <View style={{ flex: 1, minHeight: windowHeight * 0.8 }}>
-
-              {/* Confirm check-in modal */}
-              <ConfirmCheckInModal
-                visible={confirmModalVisible}
-                loading={loading}
-                payload={pendingPayload}
-                onCancel={dismissConfirmModal}
-                onConfirm={handleConfirmCheckIn}
+            {/* Check-in form, once the location is verified */}
+            {locationVerified ? (
+              <AddCheckInForm
+                values={values}
+                errors={errors}
+                touched={touched}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                setFieldValue={setFieldValue}
+                scrollY={scrollY}
+                storeList={storeDailyList}
+                needsStoreImage={storesWithoutImage.has(values.store)}
               />
+            ) : null}
+          </ScrollView>
 
-              {/* Verify location OR check-in form + submit */}
-              {!locationVerified ? (
-                <TouchableOpacity
-                  style={[styles.submitBtn, locationLoading && styles.disabledBtn]}
-                  onPress={handleVerifyLocation}
-                  disabled={locationLoading}>
-                  {locationLoading ? (
-                    <ActivityIndicator size="small" color={Colors.white} />
-                  ) : (
-                    <Text style={styles.submitText}>Verify Location</Text>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <View>
-                  <AddCheckInForm
-                    values={values}
-                    errors={errors}
-                    touched={touched}
-                    handleChange={handleChange}
-                    handleBlur={handleBlur}
-                    setFieldValue={setFieldValue}
-                    scrollY={scrollY}
-                    storeList={storeDailyList}
-                    needsStoreImage={storesWithoutImage.has(values.store)}
-                  />
-                  <View style={styles.submitBar}>
-                    <TouchableOpacity
-                      style={[styles.submitBtn, loading && styles.disabledBtn]}
-                      onPress={() => handleSubmit()}
-                      disabled={loading}>
-                      {loading ? (
-                        <ActivityIndicator size="small" color={Colors.white} />
-                      ) : (
-                        <Text style={styles.submitText}>Check In</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          </>
-        )}
-      </ScrollView>
+          {/* Confirm check-in modal */}
+          <ConfirmCheckInModal
+            visible={confirmModalVisible}
+            loading={loading}
+            payload={pendingPayload}
+            onCancel={dismissConfirmModal}
+            onConfirm={handleConfirmCheckIn}
+          />
+
+          {/* Fixed footer: Verify Location, then Check In */}
+          <View style={styles.footer}>
+            {!locationVerified ? (
+              <TouchableOpacity
+                style={[styles.submitBtn, locationLoading && styles.disabledBtn]}
+                onPress={handleVerifyLocation}
+                disabled={locationLoading}>
+                {locationLoading ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <Text style={styles.submitText}>Verify Location</Text>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.submitBtn, loading && styles.disabledBtn]}
+                onPress={() => handleSubmit()}
+                disabled={loading}>
+                {loading ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <Text style={styles.submitText}>Check In</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        </>
+      )}
     </SafeAreaView>
   );
 };
@@ -436,28 +439,23 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 0,
   },
-  submitBar: {
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.bgColor,
-    width: '100%',
-    height: 80,
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  footer: {
+    padding: 20,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
   submitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    position: 'absolute',
-    bottom: 15,
-    left: 20,
+    borderRadius: 12,
+    padding: 16,
     gap: 5,
-    zIndex: 1,
-    width: windowWidth * 0.9,
   },
   disabledBtn: {
     opacity: 0.7,

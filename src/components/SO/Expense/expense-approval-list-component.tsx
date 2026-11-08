@@ -30,6 +30,8 @@ import ReusableDropdownv2 from '../../ui-lib/resusable-dropdown-v2';
 import {ApproverExpenseClaim} from '../../../types/tadaType';
 import {
   assertServerSuccess,
+  getSafeServerMessage,
+  getServerBody,
   getUserFacingError,
 } from '../../../utils/errorMessage';
 
@@ -479,8 +481,18 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
     setSelectedClaims(selectAllTarget);
   };
 
-  const showBulkResult = (response: any) => {
-    const result = response?.message;
+  // PARTIAL / NONE_DONE replies carry per-claim results, on HTTP 200 or an
+  // error status. Returns the body when it has them, so they are shown as a
+  // result rather than as "failed".
+  const getBulkBody = (resOrError: any) => {
+    const body = getServerBody(resOrError);
+    return Array.isArray(body?.data?.results) ? body : null;
+  };
+
+  const showBulkResult = (
+    result: any,
+    action: 'approved' | 'rejected' = 'approved',
+  ) => {
     const data = result?.data;
     const results: any[] = data?.results || [];
     const needsReview: string[] =
@@ -494,12 +506,23 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
       (item: any) =>
         item.status === 'error' && item.error_code !== 'NEEDS_REVIEW',
     );
+    const otherFailed = Math.max(
+      (data?.failed || 0) - needsReview.length,
+      0,
+    );
     const summary =
-      result?.message ||
-      `${data?.succeeded || 0} approved; ${data?.failed || 0} failed.`;
-    const title =
-      result?.error_code === 'PARTIAL' || needsReview.length
-        ? 'Approve on its own'
+      getSafeServerMessage(result?.message) ||
+      [
+        `${data?.succeeded || 0} ${action}`,
+        needsReview.length ? `${needsReview.length} need your decision` : '',
+        otherFailed ? `${otherFailed} failed` : '',
+      ]
+        .filter(Boolean)
+        .join(', ') + '.';
+    const title = needsReview.length
+      ? 'Some claims need your decision'
+      : result?.error_code === 'PARTIAL'
+        ? 'Partly done'
         : failures.length
         ? 'Some claims failed'
         : 'Bulk action complete';
@@ -522,11 +545,15 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
       // PARTIAL (some approved, some skipped) and an all-skipped reply both
       // come back as status "error" but carry per-claim results: they are not
       // a failure of the call, so show them as a result.
-      if (!response?.message?.data?.results) {
-        assertServerSuccess(response);
-      }
-      showBulkResult(response);
+      const body = getBulkBody(response);
+      if (!body) assertServerSuccess(response);
+      showBulkResult(body ?? response?.message, 'approved');
     } catch (error: any) {
+      const body = getBulkBody(error);
+      if (body) {
+        showBulkResult(body, 'approved');
+        return;
+      }
       Alert.alert(
         'Approval failed',
         getUserFacingError(error, 'Unable to approve selected claims.'),
@@ -540,11 +567,19 @@ const ExpenseApprovalListComponent = ({navigation}: any) => {
         claim_ids: selectedClaims,
         reason: rejectReason.trim(),
       }).unwrap();
-      assertServerSuccess(response);
+      const body = getBulkBody(response);
+      if (!body) assertServerSuccess(response);
       setRejectModalVisible(false);
       setRejectReason('');
-      showBulkResult(response);
+      showBulkResult(body ?? response?.message, 'rejected');
     } catch (error: any) {
+      const body = getBulkBody(error);
+      if (body) {
+        setRejectModalVisible(false);
+        setRejectReason('');
+        showBulkResult(body, 'rejected');
+        return;
+      }
       Alert.alert(
         'Rejection failed',
         getUserFacingError(error, 'Unable to reject selected claims.'),

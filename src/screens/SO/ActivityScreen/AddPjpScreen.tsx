@@ -200,7 +200,14 @@ const AddPjpScreen = ({navigation, route}: Props) => {
                 "Today's PJP already exists",
               position: 'top',
             });
-            navigation.navigate('Home');
+            // Use the existing PJP rather than creating another.
+            const existingId = (res.message as any).document_name;
+            if (existingId) {
+              setDuplicatePjpId(existingId);
+              setShowDuplicatePjp(true);
+            } else {
+              navigation.navigate('Home');
+            }
           } else {
             Toast.show({
               type: 'success',

@@ -29,7 +29,8 @@ import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import { StockDashboardItem } from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { assertServerSuccess, getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import { assertServerSuccess,
+  getServerWarnings, getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -266,6 +267,18 @@ const StockManagementFormScreen = ({ navigation, route }: Props) => {
       assertServerSuccess(response);
 
       if (response.message) {
+        // Saved, but some items may have been skipped or not reconciled:
+        // the server says so in _server_messages. Show them.
+        const warnings = getServerWarnings(response);
+        if (warnings.length) {
+          Alert.alert(
+            'Saved with warnings',
+            warnings.map(w => `• ${w}`).join('\n\n'),
+            [{text: 'OK', onPress: () => navigation.goBack()}],
+            {cancelable: false},
+          );
+          return;
+        }
         Toast.show({ type: 'success', text1: 'Stock updated successfully' });
         navigation.goBack();
       }

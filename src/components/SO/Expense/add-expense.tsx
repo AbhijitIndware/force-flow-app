@@ -36,6 +36,8 @@ import {ExpenseClaimResponse} from '../../../types/tadaType';
 import {
   getUserFacingError,
   getSafeServerMessage,
+  getServerBody,
+  getServerErrorCode,
 } from '../../../utils/errorMessage';
 
 export type LocalExpenseItem = {
@@ -146,6 +148,27 @@ const AddExpenseComponent = ({
     setTotal(mapped.reduce((s, r) => s + r.amount, 0));
   }, [existingDetail]);
 
+  // Reload the claim from the server. The screen shows it read-only when it
+  // is no longer a Draft (e.g. after NOT_DRAFT or CLAIM_EXISTS).
+  const reopenClaim = (id: string) => {
+    clearFormData();
+    navigation.replace('AddExpenseScreen', {claimId: id});
+  };
+
+  // NOT_DRAFT: the claim was submitted/approved elsewhere. Show the server's
+  // message and reload it read-only instead of leaving the draft screen open.
+  const handleNotDraft = (resOrError: any, fallback: string): boolean => {
+    if (getServerErrorCode(resOrError) !== 'NOT_DRAFT') return false;
+    Toast.show({
+      type: 'error',
+      text1:
+        getSafeServerMessage(getServerBody(resOrError)?.message) ?? fallback,
+      position: 'top',
+    });
+    if (claimId) reopenClaim(claimId);
+    return true;
+  };
+
   // ── Step 1: Create Draft ──
   const handleCreateDraft = async () => {
     if (!pjpStoreId) {
@@ -160,7 +183,34 @@ const AddExpenseComponent = ({
         pjp_store_id: pjpStoreId,
         // is_self_arranged_stay: isSelfArrangedStay ? 1 : 0,
       }).unwrap();
-      const newClaimId = draftRes.message.data?.claim_id;
+      const draftData = draftRes.message.data;
+      const serverMsg = getSafeServerMessage(draftRes.message.message);
+
+      // The day already has a claim. Open that claim (read-only when it is
+      // not editable) instead of an empty draft.
+      if (draftData?.existing_claim && draftData?.claim_id) {
+        const editable = draftData.editable === true;
+        Toast.show({
+          type: editable ? 'info' : 'error',
+          text1:
+            serverMsg ??
+            (editable
+              ? 'Opening your existing draft for this day.'
+              : 'You already claimed this day.'),
+          position: 'top',
+        });
+        reopenClaim(draftData.claim_id);
+        return;
+      }
+      if (draftRes.message.success === false) {
+        Toast.show({
+          type: 'error',
+          text1: serverMsg ?? 'Failed to create draft',
+          position: 'top',
+        });
+        return;
+      }
+      const newClaimId = draftData?.claim_id;
       const distance = draftRes.message.data?.distance_km;
       if (!newClaimId) throw new Error('Failed to obtain claim ID');
       setClaimId(newClaimId);
@@ -172,6 +222,16 @@ const AddExpenseComponent = ({
       });
     } catch (error: any) {
       draftAttempted.current = false;
+      const errData = getServerBody(error)?.data;
+      if (errData?.existing_claim && errData?.claim_id) {
+        Toast.show({
+          type: 'error',
+          text1: getUserFacingError(error, 'You already claimed this day.'),
+          position: 'top',
+        });
+        reopenClaim(errData.claim_id);
+        return;
+      }
       Toast.show({
         type: 'error',
         text1: getUserFacingError(error, 'Failed to create draft'),
@@ -229,7 +289,11 @@ const AddExpenseComponent = ({
       }).unwrap();
       // Validation failures come back as HTTP 200 with status "error", so
       // unwrap() doesn't throw; don't add the row locally.
-      if (rowRes?.message?.status === 'error') {
+      if (
+        rowRes?.message?.status === 'error' ||
+        rowRes?.message?.success === false
+      ) {
+        if (handleNotDraft(rowRes, 'This claim is no longer a draft.')) return;
         Toast.show({
           type: 'error',
           text1:
@@ -243,6 +307,7 @@ const AddExpenseComponent = ({
       setExpenses(prev => [...prev, {...item, row_id}]);
       setTotal(prev => prev + item.amount);
     } catch (error: any) {
+      if (handleNotDraft(error, 'This claim is no longer a draft.')) return;
       Toast.show({
         type: 'error',
         text1: getUserFacingError(error, 'Failed to add expense item'),
@@ -265,7 +330,11 @@ const AddExpenseComponent = ({
           claim_id: claimId,
           row_id: item.row_id,
         }).unwrap();
-        if (res?.message?.status === 'error') {
+        if (
+          res?.message?.status === 'error' ||
+          res?.message?.success === false
+        ) {
+          if (handleNotDraft(res, 'This claim is no longer a draft.')) return;
           Toast.show({
             type: 'error',
             text1:
@@ -276,6 +345,7 @@ const AddExpenseComponent = ({
           return;
         }
       } catch (error: any) {
+        if (handleNotDraft(error, 'This claim is no longer a draft.')) return;
         Toast.show({
           type: 'error',
           text1: getUserFacingError(error, 'Failed to remove item'),
@@ -308,7 +378,11 @@ const AddExpenseComponent = ({
       setLoading(true);
       setUploadStep('Finalizing submission...');
       const res = await submitExpenseClaim({claim_id: claimId}).unwrap();
-      if (res?.message?.status === 'error') {
+      if (
+        res?.message?.status === 'error' ||
+        res?.message?.success === false
+      ) {
+        if (handleNotDraft(res, 'This claim is no longer a draft.')) return;
         Toast.show({
           type: 'error',
           text1:
@@ -326,6 +400,7 @@ const AddExpenseComponent = ({
       clearFormData();
       navigation.goBack();
     } catch (error: any) {
+      if (handleNotDraft(error, 'This claim is no longer a draft.')) return;
       Toast.show({
         type: 'error',
         text1: getUserFacingError(error, 'Failed to submit expense'),
