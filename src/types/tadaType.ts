@@ -17,6 +17,9 @@ export type TadaErrorCode =
   | 'UNAUTHORIZED'
   | 'VALIDATION_ERROR'
   | 'NOT_DRAFT'
+  | 'CLAIM_EXISTS'
+  | 'PARTIAL'
+  | 'NONE_DONE'
   | 'NOT_SUBMITTED'
   | 'INVALID_STATUS'
   | 'INVALID_STATE'
@@ -31,6 +34,11 @@ export type CreateExpenseClaim = {
   travel_date: string; // ISO date string "YYYY-MM-DD"
   from_city: string;
   to_city: string;
+  /** Set when the day already has a claim (CLAIM_EXISTS / existing draft) */
+  existing_claim?: boolean;
+  editable?: boolean;
+  approval_status?: string;
+  total_claimed_amount?: number;
 };
 
 export interface ExpenseClaim {

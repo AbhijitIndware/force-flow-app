@@ -16,6 +16,9 @@ import {
   StyleSheet,
   Animated,
   Image,
+  Linking,
+  Platform,
+  TouchableOpacity,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {
@@ -75,6 +78,11 @@ const MainNavigation = () => {
 
   const insets = useSafeAreaInsets();
 
+  // Set by any HTTP 426 (Upgrade Required) across the API slices.
+  const updateRequired = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.updateRequired,
+  );
+
   const {
     data,
     isLoading,
@@ -112,6 +120,10 @@ const MainNavigation = () => {
     return <FullScreenLoader />;
   }
 
+  if (updateRequired) {
+    return <UpdateRequiredScreen message={updateRequired} />;
+  }
+
   return (
     <View style={{flex: 1}}>
       {!isConnected && <NoInternetBanner />}
@@ -133,6 +145,31 @@ const MainNavigation = () => {
 const NoInternetBanner = () => (
   <View style={styles.noInternetBanner}>
     <Text style={styles.bannerText}>📡 No internet connection</Text>
+  </View>
+);
+
+// ── Update Required (HTTP 426) ────────────────────────────────────────────────
+const PLAY_STORE_APP = 'market://details?id=com.forceflow';
+const PLAY_STORE_WEB =
+  'https://play.google.com/store/apps/details?id=com.forceflow';
+
+const openStore = async () => {
+  try {
+    await Linking.openURL(PLAY_STORE_APP);
+  } catch {
+    Linking.openURL(PLAY_STORE_WEB).catch(() => {});
+  }
+};
+
+const UpdateRequiredScreen = ({message}: {message: string}) => (
+  <View style={styles.updateContainer}>
+    <Text style={styles.updateTitle}>Update required</Text>
+    <Text style={styles.updateMessage}>{message}</Text>
+    {Platform.OS === 'android' && (
+      <TouchableOpacity style={styles.updateButton} onPress={openStore}>
+        <Text style={styles.updateButtonText}>Update app</Text>
+      </TouchableOpacity>
+    )}
   </View>
 );
 
@@ -271,6 +308,36 @@ const FullScreenLoader = () => {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  updateContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    backgroundColor: Colors.white,
+  },
+  updateTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.darkButton,
+    marginBottom: 12,
+  },
+  updateMessage: {
+    fontSize: 15,
+    color: '#475569',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  updateButton: {
+    backgroundColor: Colors.orange,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+  },
+  updateButtonText: {
+    color: Colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
   noInternetBanner: {
     backgroundColor: '#92400E', // deep amber
     paddingVertical: 10,

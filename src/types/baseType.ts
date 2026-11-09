@@ -2320,6 +2320,7 @@ export interface ICreateStockBalance {
 
 export interface RCreateStockBalance {
   message: boolean;
+  _server_messages?: string;
 }
 
 export interface StockDashboardItem {

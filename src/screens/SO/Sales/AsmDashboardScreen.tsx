@@ -40,6 +40,10 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { useGetAsmDashboardQuery } from '../../../features/base/base-api';
+import {
+  getSafeServerMessage,
+  getUserFacingError,
+} from '../../../utils/errorMessage';
 import { useAppSelector } from '../../../store/hook';
 import AsmStoreTypeComponent from '../../../components/SO/Sales/AsmStoreTypeComponent';
 
@@ -1128,7 +1132,11 @@ const AsmDashboard: React.FC<AsmDashboardProps> = ({ navigation }) => {
         />
         <View style={styles.centered}>
           <Text style={styles.errorText}>
-            {(data?.message as any)?.error || 'Failed to load dashboard'}
+            {isError
+              ? getUserFacingError(error, 'Failed to load dashboard')
+              : getSafeServerMessage((data?.message as any)?.message) ??
+                (data?.message as any)?.error ??
+                'Failed to load dashboard'}
           </Text>
           <TouchableOpacity onPress={refetch} style={styles.retryBtn}>
             <Text style={styles.retryBtnText}>Retry</Text>

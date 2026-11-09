@@ -77,8 +77,12 @@ const AddActivityLocationScreen = ({
         setCoordinates({ latitude: lat, longitude: lng });
         Toast.show({ type: 'success', text1: 'Location captured' });
       }
-    } catch (error) {
-      Toast.show({ type: 'error', text1: 'Failed to get location' });
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to get location',
+        text2: error?.message,
+      });
     } finally {
       setIsLocating(false);
     }

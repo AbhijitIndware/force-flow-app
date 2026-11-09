@@ -12,6 +12,10 @@ import {
 } from 'react-native';
 import {useEffect, useRef, useState} from 'react';
 import {useFormik} from 'formik';
+import {
+  buildItemNotes,
+  getSalesOrderItemAnswers,
+} from '../../../utils/salesOrderNotes';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -31,7 +35,11 @@ import {
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+  getServerBody,
+} from '../../../utils/errorMessage';
 
 const {width} = Dimensions.get('window');
 
@@ -60,6 +68,8 @@ const initial: IAddSalesOrderV2 = {
 
 const AddSalesScreen = ({navigation}: Props) => {
   const [loading, setLoading] = useState(false);
+  // Per-item notes from the server (blocked_items / not_counted).
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   type DateField = 'transaction_date' | 'delivery_date';
@@ -74,6 +84,32 @@ const AddSalesScreen = ({navigation}: Props) => {
 
   const {data: attendanceData} = usePromoterStatusQuery();
   const storesToday = attendanceData?.message?.data?.stores_today ?? [];
+
+
+  // blocked_items: highlight those rows instead of a generic error.
+  const showBlockedItems = (resOrError: any): boolean => {
+    const {blocked, notCounted} = getSalesOrderItemAnswers(resOrError);
+    setItemNotes(buildItemNotes(blocked, notCounted));
+    if (!blocked.length) return false;
+    Toast.show({
+      type: 'error',
+      text1:
+        getSafeServerMessage(getServerBody(resOrError)?.message) ??
+        'Physical stock update required before ordering',
+      text2: 'Update the physical stock of the highlighted items.',
+      position: 'top',
+      visibilityTime: 6000,
+    });
+    return true;
+  };
+
+  // not_counted: items kept by Daily Sales, so their count was not taken.
+  const notCountedText = (res: any): string | undefined => {
+    const {notCounted} = getSalesOrderItemAnswers(res);
+    return notCounted.length
+      ? `Count not taken (kept by Daily Sales): ${notCounted.join(', ')}`
+      : undefined;
+  };
 
   const {
     values,
@@ -117,10 +153,12 @@ const AddSalesScreen = ({navigation}: Props) => {
             type: 'success',
             text1:
               getSafeServerMessage(res.message.message) ?? 'Sales order created successfully',
+            text2: notCountedText(res),
             position: 'top',
           });
           navigation.navigate('SalesScreen');
         } else {
+          if (showBlockedItems(res)) return;
           Toast.show({
             type: 'error',
             text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
@@ -128,6 +166,7 @@ const AddSalesScreen = ({navigation}: Props) => {
           });
         }
       } catch (error: any) {
+        if (showBlockedItems(error)) return;
         Toast.show({
           type: 'error',
           text1:
@@ -279,6 +318,7 @@ const AddSalesScreen = ({navigation}: Props) => {
 
       <AddPromoterSaleForm
         values={values}
+        itemNotes={itemNotes}
         errors={errors}
         touched={touched}
         handleChange={handleChange}

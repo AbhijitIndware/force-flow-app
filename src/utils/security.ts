@@ -115,7 +115,13 @@ export function getRetryAfterSeconds(result: any): number | null {
   if (fromHeader) return fromHeader;
 
   const data = result?.error?.data ?? result?.data ?? result;
+  // Frappe puts returned fields inside `message`; check both levels.
+  const inner =
+    data?.message && typeof data.message === 'object' ? data.message : {};
   const directKeys = [
+    inner?.retry_after_seconds,
+    inner?.retry_after,
+    inner?.lockout_seconds,
     data?.retry_after_seconds,
     data?.retryAfterSeconds,
     data?.retry_after,

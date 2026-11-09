@@ -107,3 +107,42 @@ export function getSafeServerMessage(
 
   return message;
 }
+
+// The server's answer body (`message` object) from either a resolved
+// response or a thrown RTK Query error, so callers can read `error_code`,
+// `data` and other fields on every HTTP status.
+export function getServerBody(resOrError: any): any {
+  const root = resOrError?.data ?? resOrError;
+  const body = root?.message;
+  return body && typeof body === 'object' ? body : root ?? {};
+}
+
+export function getServerErrorCode(resOrError: any): string | undefined {
+  return getServerBody(resOrError)?.error_code;
+}
+
+// Warnings Frappe attaches to a successful answer (`_server_messages`).
+// Only show these where the server's notes are meant for the user (stock
+// count); elsewhere they are internal and must be ignored.
+export function getServerWarnings(res: any): string[] {
+  const raw = res?._server_messages ?? res?.data?._server_messages;
+  if (typeof raw !== 'string' || !raw.trim()) return [];
+  try {
+    const rows = JSON.parse(raw);
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .map(row => {
+        if (typeof row !== 'string') return '';
+        try {
+          const parsed = JSON.parse(row);
+          return typeof parsed?.message === 'string' ? parsed.message : '';
+        } catch {
+          return row;
+        }
+      })
+      .map(text => text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim())
+      .filter(text => text && !UNSAFE_MESSAGE_PATTERN.test(text));
+  } catch {
+    return [];
+  }
+}

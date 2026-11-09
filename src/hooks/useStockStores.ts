@@ -30,7 +30,7 @@ export const useStockStores = () => {
   const [locating, setLocating] = useState(true);
   useEffect(() => {
     if (!needList) return;
-    getCurrentLocation()
+    getCurrentLocation({fast: true})
       .then(setHere)
       .catch(() => {})
       .finally(() => setLocating(false));

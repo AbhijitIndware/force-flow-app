@@ -87,6 +87,8 @@ interface InitialState {
   globalError: any | null;
   resetToken: string | null;
   rateLimitUntil: number | null;
+  /** Set by HTTP 426: message to show on the "Update app" screen */
+  updateRequired: string | null;
 }
 const initialState: InitialState = {
   status: null,
@@ -102,6 +104,7 @@ const initialState: InitialState = {
   globalError: null,
   resetToken: null,
   rateLimitUntil: null,
+  updateRequired: null,
 };
 
 //auth api response handling(saving the token)
@@ -136,6 +139,9 @@ export const authSlice = createSlice({
     },
     setRateLimitUntil: (state, action) => {
       state.rateLimitUntil = action.payload;
+    },
+    setUpdateRequired: (state, action) => {
+      state.updateRequired = action.payload;
     },
     restoreSession: (state, action) => {
       const session = action.payload as SecureSession | null;
@@ -204,6 +210,7 @@ export const {
   setResetToken,
   clearResetToken,
   setRateLimitUntil,
+  setUpdateRequired,
   restoreSession,
 } = authSlice.actions;
 export default authSlice.reducer;

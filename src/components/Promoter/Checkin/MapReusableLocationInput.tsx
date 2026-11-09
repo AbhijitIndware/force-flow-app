@@ -10,6 +10,7 @@ import {MapPin, X} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
+import Toast from 'react-native-toast-message';
 import {getCurrentLocation} from '../../../utils/utils';
 import {skipToken} from '@reduxjs/toolkit/query/react';
 import {useGetLocationByLatLongQuery} from '../../../features/dropdown/dropdown-api';
@@ -61,7 +62,12 @@ const MapReusableLocationInput: React.FC<Props> = ({
         setFieldValue('longitude', lng);
         // Address will be set automatically from API
       }
-    } catch {
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to fetch location',
+        text2: err?.message ?? 'Please try again.',
+      });
     } finally {
       setLoading(false);
     }

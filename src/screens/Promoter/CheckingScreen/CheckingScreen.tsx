@@ -33,7 +33,11 @@ import moment from 'moment';
 import AddCheckInForm from '../../../components/Promoter/Checkin/CheckinForm';
 import { Animated } from 'react-native';
 import { ActivityIndicator } from 'react-native';
-import { getUserFacingError, getSafeServerMessage } from '../../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+  getServerBody,
+} from '../../../utils/errorMessage';
 import { imageBaseUrl } from '../../../features/apiBaseUrl';
 import { useIsTeamLeader } from '../../../utils/roles';
 import { getCurrentLocation } from '../../../utils/utils';
@@ -86,6 +90,10 @@ const CheckingScreen = ({ navigation }: Props) => {
   const [storeSearch, setStoreSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [pickedStore, setPickedStore] = useState<AvailableStore | null>(null);
+  // Stores the server asked the user to choose from (needs_store_choice).
+  const [serverStoreChoices, setServerStoreChoices] = useState<
+    AvailableStore[]
+  >([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(storeSearch.trim()), 400);
@@ -130,10 +138,12 @@ const CheckingScreen = ({ navigation }: Props) => {
     )
     : 'N/A';
 
-  const availableStores = useMemo(
-    () => data?.message?.data?.available_stores ?? [],
-    [data],
-  );
+  const availableStores = useMemo(() => {
+    const listed = data?.message?.data?.available_stores ?? [];
+    if (!serverStoreChoices.length) return listed;
+    const ids = new Set(serverStoreChoices.map(s => s.store_id));
+    return [...serverStoreChoices, ...listed.filter(s => !ids.has(s.store_id))];
+  }, [data, serverStoreChoices]);
   // Keep the chosen store in the list after the search text changes.
   const storeList = useMemo(() => {
     const rows =
@@ -166,6 +176,7 @@ const CheckingScreen = ({ navigation }: Props) => {
           address: formValues.address,
         };
         const res = await promoterCheckin(payload).unwrap();
+        if (handleCheckinAnswer(res)) return;
 
         if (res?.message?.success === true) {
           Toast.show({
@@ -183,6 +194,7 @@ const CheckingScreen = ({ navigation }: Props) => {
           });
         }
       } catch (error: any) {
+        if (handleCheckinAnswer(error)) return;
         Toast.show({
           type: 'error',
           text1: getUserFacingError(error, 'Internal Server Error'),
@@ -193,9 +205,57 @@ const CheckingScreen = ({ navigation }: Props) => {
     },
   });
 
+  // Answers that are not plain success/failure. Returns true when handled.
+  // The fields may sit on `message` or on `message.data`.
+  function handleCheckinAnswer(resOrError: any): boolean {
+    const body = getServerBody(resOrError);
+    const d = {...(body?.data ?? {}), ...body};
+    const serverMsg = getSafeServerMessage(body?.message);
+
+    // Several stores possible: let the user pick one, then check in again.
+    if (d.needs_store_choice && Array.isArray(d.available_stores)) {
+      setServerStoreChoices(d.available_stores);
+      setFieldValue('store', '');
+      Toast.show({
+        type: 'info',
+        text1: serverMsg ?? 'Choose your store',
+        text2: 'Select the store you are at, then tap Check-in again.',
+        position: 'top',
+      });
+      return true;
+    }
+
+    // Still checked in at another store: send the user to check out there.
+    if (body?.success !== true && (d.open_log_id || d.open_store)) {
+      Toast.show({
+        type: 'error',
+        text1:
+          serverMsg ??
+          `Check out of ${d.open_store} before checking in at another store.`,
+        position: 'top',
+        visibilityTime: 6000,
+      });
+      navigation.navigate('CheckOutScreen');
+      return true;
+    }
+
+    // Attendance already marked today: not an error, show the status.
+    if (body?.success !== true && d.attendance_id && d.attendance_status) {
+      Toast.show({
+        type: 'info',
+        text1: serverMsg ?? 'Attendance already marked for today',
+        text2: `Status: ${d.attendance_status}`,
+        position: 'top',
+      });
+      navigation.navigate('Home');
+      return true;
+    }
+    return false;
+  }
+
   useEffect(() => {
     if (!isTL) return;
-    getCurrentLocation()
+    getCurrentLocation({fast: true})
       .then(location => {
         setHere(location);
         const [lat, lng] = location.split(',').map(Number);

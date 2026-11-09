@@ -43,6 +43,8 @@ interface Props {
   isStockFetching: boolean;
   stockWarning?: string;
   onShowRules?: () => void;
+  /** Server notes per item_code (blocked_items / not_counted); highlighted */
+  itemNotes?: Record<string, string>;
 }
 
 const AddPromoterSaleForm: React.FC<Props> = ({
@@ -58,6 +60,7 @@ const AddPromoterSaleForm: React.FC<Props> = ({
   seededCount = 0,
   allItems,
   isStockFetching,
+  itemNotes = {},
   onShowRules,
 }) => {
   const [itemLockMap, setItemLockMap] = useState<Record<number, boolean>>({});
@@ -206,6 +209,13 @@ const AddPromoterSaleForm: React.FC<Props> = ({
                   allItems={allItems}
                   isStockFetching={isStockFetching}
                 />{' '}
+                {itemNotes[item.item_code] ? (
+                  <View style={styles.rowErrorBox}>
+                    <Text style={styles.rowErrorText}>
+                      • {itemNotes[item.item_code]}
+                    </Text>
+                  </View>
+                ) : null}
                 {touched.items?.[index] &&
                   errors.items?.[index] &&
                   typeof errors.items[index] === 'object' && (
