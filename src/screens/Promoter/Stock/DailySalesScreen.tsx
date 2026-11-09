@@ -2,7 +2,6 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -25,6 +24,10 @@ import {
   StockScreenIcon,
 } from '../../../components/Promoter/Stock/stockScreens';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
+import ConfirmSaveSheet, {
+  ConfirmSpec,
+} from '../../../components/ui/ConfirmSaveSheet';
+import {confirmHeader, typoWarnings} from '../../../utils/confirmChecks';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
@@ -75,6 +78,10 @@ const DailySalesScreen = ({navigation, route}: Props) => {
   const [addSearch, setAddSearch] = useState('');
   const [opening, setOpening] = useState<OpeningTarget | null>(null);
   const [openingQty, setOpeningQty] = useState('');
+  const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
+  // Server refusals, shown on the form / in the opening dialog.
+  const [formError, setFormError] = useState('');
+  const [openingError, setOpeningError] = useState('');
 
   const {data: storesResponse} = useStockStores();
   const stores = useMemo(
@@ -124,6 +131,7 @@ const DailySalesScreen = ({navigation, route}: Props) => {
   // A new store or day starts from that day's saved figures.
   useEffect(() => {
     setEdits({});
+    setFormError('');
   }, [store, date]);
 
   const canEdit = !!sheet?.can_edit;
@@ -174,10 +182,18 @@ const DailySalesScreen = ({navigation, route}: Props) => {
     [sheet, edits],
   );
 
-  const showServerError = (message: string) =>
-    Alert.alert(STOCK_SCREENS.dailySales.title, message);
+  const storeName =
+    storeOptions.find(option => option.value === store)?.label ??
+    sheet?.store_name ??
+    store;
 
-  const save = async () => {
+  // The item's usual day: this month's sales spread over the days so far.
+  const usualDaily = (item: DailySalesItem) => {
+    const days = Math.max(1, moment(date).date());
+    return Number(item.sold_mtd || 0) / days;
+  };
+
+  const askSave = () => {
     if (!sheet) {
       return;
     }
@@ -185,6 +201,56 @@ const DailySalesScreen = ({navigation, route}: Props) => {
       Toast.show({type: 'info', text1: 'Nothing changed'});
       return;
     }
+    const byCode = Object.fromEntries(
+      sheet.items.map(item => [item.item_code, item]),
+    );
+    const rows = changedRows.map(row => {
+      const item = byCode[row.item_code];
+      const savedSold = Number(item?.sold || 0);
+      // Everything that can be sold this day, plus the can't-sell pieces.
+      const sellable = Number(item?.max_sold ?? 0);
+      const after = sellable + Number(item?.cant_sell ?? 0) - row.qty;
+      return {
+        row,
+        item,
+        sellable,
+        confirmRow: {
+          key: row.item_code,
+          name: item?.item_name ?? row.item_code,
+          removed: row.qty === 0 && savedSold > 0,
+          figures: [
+            {
+              label: soldLabel,
+              value: row.qty,
+              old: savedSold > 0 ? savedSold : undefined,
+            },
+          ],
+          lines: [`left on shelf after: ${Math.max(after, 0)}`],
+        },
+      };
+    });
+    const pieces = changedRows.reduce((sum, row) => sum + row.qty, 0);
+    setConfirm({
+      header: confirmHeader('Daily Sales', storeName, date),
+      rows: rows.map(r => r.confirmRow),
+      totals: [`${changedRows.length} item(s) · ${pieces} pcs sold`],
+      warnings: typoWarnings(
+        rows.map(({row, item, sellable}) => ({
+          name: item?.item_name ?? row.item_code,
+          qty: row.qty,
+          usual: item ? usualDaily(item) : undefined,
+          shelf: sellable,
+        })),
+      ),
+      onConfirm: save,
+    });
+  };
+
+  const save = async () => {
+    if (!sheet) {
+      return;
+    }
+    setFormError('');
     try {
       const response = await saveDailySales({
         store: sheet.store,
@@ -192,8 +258,9 @@ const DailySalesScreen = ({navigation, route}: Props) => {
         items: changedRows,
       }).unwrap();
       const result = response?.message;
+      setConfirm(null);
       if (!result?.success) {
-        showServerError(
+        setFormError(
           getSafeServerMessage(result?.message) ?? 'Could not save sales.',
         );
         return;
@@ -208,18 +275,19 @@ const DailySalesScreen = ({navigation, route}: Props) => {
       }
       setEdits({});
     } catch (error: any) {
-      showServerError(getUserFacingError(error, 'Could not save sales.'));
+      setConfirm(null);
+      setFormError(getUserFacingError(error, 'Could not save sales.'));
     }
   };
 
   const openOpeningDialog = (target: OpeningTarget) => {
     setOpening(target);
-    setOpeningQty(
-      target.current !== undefined ? String(target.current) : '',
-    );
+    setOpeningError('');
+    setOpeningQty(target.current !== undefined ? String(target.current) : '');
   };
 
-  const saveOpening = async () => {
+  // The opening dialog hides while the confirm is up; Edit brings it back.
+  const askSaveOpening = () => {
     if (!opening || !sheet) {
       return;
     }
@@ -227,14 +295,47 @@ const DailySalesScreen = ({navigation, route}: Props) => {
       Toast.show({type: 'error', text1: 'Enter how many are on the shelf.'});
       return;
     }
+    const qty = toCount(openingQty);
+    const correcting = opening.current !== undefined;
+    setConfirm({
+      header: confirmHeader(
+        correcting ? 'Correct Opening' : 'Opening Stock',
+        storeName,
+        today,
+      ),
+      rows: [
+        {
+          key: opening.item_code,
+          name: opening.item_name,
+          figures: [
+            {
+              label: 'On the shelf',
+              value: qty,
+              old: correcting ? opening.current : undefined,
+            },
+          ],
+        },
+      ],
+      totals: [`1 item · ${qty} pcs`],
+      warnings: typoWarnings([{name: opening.item_name, qty}]),
+      onConfirm: saveOpening,
+    });
+  };
+
+  const saveOpening = async () => {
+    if (!opening || !sheet) {
+      return;
+    }
+    setOpeningError('');
     try {
       const response = await setOpeningMutation({
         store: sheet.store,
         items: [{item_code: opening.item_code, qty: toCount(openingQty)}],
       }).unwrap();
       const result = response?.message;
+      setConfirm(null);
       if (!result?.success) {
-        showServerError(
+        setOpeningError(
           getSafeServerMessage(result?.message) ?? 'Could not save opening.',
         );
         return;
@@ -252,13 +353,13 @@ const DailySalesScreen = ({navigation, route}: Props) => {
         refetch();
       }
     } catch (error: any) {
-      showServerError(getUserFacingError(error, 'Could not save opening.'));
+      setConfirm(null);
+      setOpeningError(getUserFacingError(error, 'Could not save opening.'));
     }
   };
 
   const renderItem = ({item}: {item: DailySalesItem}) => {
-    const value =
-      edits[item.item_code] ?? (item.sold ? String(item.sold) : '');
+    const value = edits[item.item_code] ?? (item.sold ? String(item.sold) : '');
     const overMax =
       edits[item.item_code] !== undefined &&
       toCount(edits[item.item_code]) > Number(item.max_sold ?? 0);
@@ -354,6 +455,11 @@ const DailySalesScreen = ({navigation, route}: Props) => {
         </View>
         {extras.length ? (
           <Text style={styles.itemMeta}>{extras.join(' · ')}</Text>
+        ) : null}
+        {Number(item.cant_sell) > 0 ? (
+          <Text style={styles.cantSell}>
+            Can't sell: {item.cant_sell}, send back by Store Return
+          </Text>
         ) : null}
       </View>
     );
@@ -467,13 +573,14 @@ const DailySalesScreen = ({navigation, route}: Props) => {
 
       {canEdit ? (
         <View style={styles.footer}>
+          {formError ? <Text style={styles.formError}>{formError}</Text> : null}
           <TouchableOpacity
             style={[
               styles.primaryButton,
               (saving || !changedRows.length) && styles.disabled,
             ]}
             disabled={saving}
-            onPress={save}>
+            onPress={askSave}>
             {saving ? (
               <ActivityIndicator color={Colors.white} />
             ) : (
@@ -556,7 +663,7 @@ const DailySalesScreen = ({navigation, route}: Props) => {
 
       {/* ── Opening: give it once, or correct this month's ── */}
       <Modal
-        visible={!!opening}
+        visible={!!opening && !confirm}
         transparent
         animationType="fade"
         onRequestClose={() => setOpening(null)}>
@@ -584,6 +691,9 @@ const DailySalesScreen = ({navigation, route}: Props) => {
               value={openingQty}
               onChangeText={text => setOpeningQty(text.replace(/[^0-9]/g, ''))}
             />
+            {openingError ? (
+              <Text style={styles.formError}>{openingError}</Text>
+            ) : null}
             <View style={styles.dialogActions}>
               <TouchableOpacity
                 style={styles.secondaryButton}
@@ -597,7 +707,7 @@ const DailySalesScreen = ({navigation, route}: Props) => {
                   savingOpening && styles.disabled,
                 ]}
                 disabled={savingOpening}
-                onPress={saveOpening}>
+                onPress={askSaveOpening}>
                 {savingOpening ? (
                   <ActivityIndicator color={Colors.white} />
                 ) : (
@@ -608,6 +718,8 @@ const DailySalesScreen = ({navigation, route}: Props) => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <ConfirmSaveSheet spec={confirm} onEdit={() => setConfirm(null)} />
     </SafeAreaView>
   );
 };
@@ -781,6 +893,19 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   correctText: {fontFamily: Fonts.medium, color: '#2563EB', fontSize: 11},
+  cantSell: {
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  formError: {
+    color: '#B91C1C',
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+    marginBottom: 8,
+    marginTop: 8,
+  },
   footer: {
     backgroundColor: Colors.white,
     padding: 14,

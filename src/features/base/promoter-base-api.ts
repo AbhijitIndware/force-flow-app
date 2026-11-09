@@ -1,6 +1,10 @@
 import {createApi} from '@reduxjs/toolkit/query/react';
 import {baseQueryWithAuthGuard} from '../utility';
 import {
+  ICorrectCustomerReturn,
+  ICorrectStockReceived,
+  ICorrectStockReturn,
+  RCorrectStockEntry,
   AttendanceData,
   GetInvoiceDetailsResponse,
   IAttendanceStatusData,
@@ -312,6 +316,19 @@ export const promoterBaseApi = createApi({
       }),
       invalidatesTags: ['Promoter'],
     }),
+    // Corrects any entry of the current month: send the whole entry as it
+    // should be. Every item at 0 cancels it.
+    correctStockReceived: builder.mutation<
+      RCorrectStockEntry,
+      ICorrectStockReceived
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_receipt_api.correct_stock_received',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
 
     // ─── STOCK RETURNS ───────────────────────────────────────────────────────
     recordStockReturn: builder.mutation<any, {
@@ -346,6 +363,17 @@ export const promoterBaseApi = createApi({
     cancelStockReturn: builder.mutation<any, {name: string}>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_return_api.cancel_stock_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    correctStockReturn: builder.mutation<
+      RCorrectStockEntry,
+      ICorrectStockReturn
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.stock_return_api.correct_stock_return',
         method: 'POST',
         body,
       }),
@@ -389,6 +417,17 @@ export const promoterBaseApi = createApi({
     cancelCustomerReturn: builder.mutation<any, {name: string}>({
       query: body => ({
         url: '/method/salesforce_management.mobile_app_apis.promoter_app.customer_return_api.cancel_customer_return',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Promoter'],
+    }),
+    correctCustomerReturn: builder.mutation<
+      RCorrectStockEntry,
+      ICorrectCustomerReturn
+    >({
+      query: body => ({
+        url: '/method/salesforce_management.mobile_app_apis.promoter_app.customer_return_api.correct_customer_return',
         method: 'POST',
         body,
       }),
@@ -969,6 +1008,9 @@ export const {
   useRecordCustomerReturnMutation,
   useGetCustomerReturnsQuery,
   useCancelCustomerReturnMutation,
+  useCorrectStockReceivedMutation,
+  useCorrectStockReturnMutation,
+  useCorrectCustomerReturnMutation,
   useGetMySalesQuery,
   useLazyGetMySalesQuery,
 

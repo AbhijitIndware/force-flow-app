@@ -9,7 +9,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
 } from 'react-native';
 import PageHeader from '../../../components/ui/PageHeader';
@@ -33,10 +32,13 @@ import Toast from 'react-native-toast-message';
 import SaleItemDropdown from '../../../components/ui-lib/sale-item-dropdown';
 import {StockDashboardItem} from '../../../types/baseType';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import ResultModal, {ResultInfo} from '../../../components/ui/ResultModal';
+import {
+  stockCountFailed,
+  stockCountSaved,
+} from '../../../utils/stockSaveResult';
 import {
   assertServerSuccess,
-  getServerWarnings,
-  getUserFacingError,
   getSafeServerMessage,
 } from '../../../utils/errorMessage';
 
@@ -195,6 +197,15 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
   );
   const [createStockBalance, {isLoading: isSubmitting}] =
     useCreateStockBalanceMutation();
+  // The save's outcome card; after a save, closing it leaves the screen.
+  const [result, setResult] = useState<ResultInfo | null>(null);
+  const [leaveAfterResult, setLeaveAfterResult] = useState(false);
+  const closeResult = () => {
+    setResult(null);
+    if (leaveAfterResult) {
+      navigation.goBack();
+    }
+  };
 
   const [entries, setEntries] = useState<StockItemEntry[]>([]);
   const [allItems, setAllItems] = useState<StockDashboardItem[]>([]);
@@ -284,26 +295,13 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
       assertServerSuccess(response);
 
       if (response.message) {
-        // Saved, but some items may have been skipped or not reconciled:
-        // the server says so in _server_messages. Show them.
-        const warnings = getServerWarnings(response);
-        if (warnings.length) {
-          Alert.alert(
-            'Saved with warnings',
-            warnings.map(w => `• ${w}`).join('\n\n'),
-            [{text: 'OK', onPress: () => navigation.goBack()}],
-            {cancelable: false},
-          );
-          return;
-        }
-        Toast.show({type: 'success', text1: 'Stock count saved'});
-        navigation.goBack();
+        // Saved. The server's notes (success or skipped items) go in the card.
+        setResult(stockCountSaved(response, storeName));
+        setLeaveAfterResult(true);
       }
     } catch (error: any) {
-      Alert.alert(
-        'Error',
-        getUserFacingError(error, 'Failed to update stock. Please try again.'),
-      );
+      setResult(stockCountFailed(error));
+      setLeaveAfterResult(false);
     }
   };
 
@@ -426,6 +424,7 @@ const StockEntryFormScreen = ({navigation, route}: Props) => {
           </Text>
         </TouchableOpacity>
       </View>
+      <ResultModal result={result} onClose={closeResult} />
     </SafeAreaView>
   );
 };

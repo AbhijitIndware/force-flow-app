@@ -21,10 +21,30 @@ import {
   StockScreenIcon,
 } from '../../../components/Promoter/Stock/stockScreens';
 import StockMovementHistory from '../../../components/Promoter/Stock/StockMovementHistory';
+import {
+  MovementType,
+  ROUTE_FOR_TYPE,
+  correctingLine,
+  entryFigures,
+  entryItemNames,
+  useCancelStockEntry,
+} from '../../../components/Promoter/Stock/stockCorrection';
+import ConfirmSaveSheet, {
+  ConfirmRow,
+  ConfirmSpec,
+} from '../../../components/ui/ConfirmSaveSheet';
+import {
+  confirmHeader,
+  typoWarnings,
+  usualPerEntry,
+} from '../../../utils/confirmChecks';
+import {StockHistoryEntry} from '../../../types/baseType';
 import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
+  useCorrectStockReceivedMutation,
+  useGetStockReceivedQuery,
   useGetStoreStockStatusQuery,
   useRecordStockReceivedMutation,
 } from '../../../features/base/promoter-base-api';
@@ -37,8 +57,11 @@ import {
 // Rendered both as a stack screen and as a bottom-bar tab, so only the
 // navigation calls it uses are typed.
 type Props = {
-  navigation: {goBack: () => void};
-  route?: {params?: {store?: string}};
+  navigation: {
+    goBack: () => void;
+    navigate: (route: any, params?: any) => void;
+  };
+  route?: {params?: {store?: string; correct?: StockHistoryEntry}};
 };
 type Tab = 'record' | 'history';
 type ReceivedRow = {item_code: string; qty: number};
@@ -59,6 +82,11 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const [search, setSearch] = useState('');
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
+  // The History entry being corrected; null while recording a new one.
+  const [correcting, setCorrecting] = useState<StockHistoryEntry | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
+  // The server's refusal, kept on the form with what was typed.
+  const [formError, setFormError] = useState('');
 
   const {data: storesResponse} = useStockStores();
   const stores = useMemo(
@@ -84,12 +112,78 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
     }
   }, [store, stores]);
 
+  const startCorrecting = (entry: StockHistoryEntry) => {
+    const figures = entryFigures(entry, 'receipt');
+    setCorrecting(entry);
+    setStore(entry.store);
+    setQuantities(
+      Object.fromEntries(
+        Object.entries(figures).map(([code, qty]) => [code, String(qty)]),
+      ),
+    );
+    setRemarks(entry.remarks ?? '');
+    setSearch('');
+    setFormError('');
+    setTab('record');
+  };
+
+  const stopCorrecting = () => {
+    setCorrecting(null);
+    setQuantities({});
+    setRemarks('');
+    setFormError('');
+  };
+
+  // Opened from another screen's History to correct a delivery.
+  const routeCorrect = route?.params?.correct;
+  useEffect(() => {
+    if (routeCorrect) {
+      startCorrecting(routeCorrect);
+    }
+  }, [routeCorrect]);
+
+  const onCorrect = (entry: StockHistoryEntry, type: MovementType) => {
+    if (type === 'receipt') {
+      startCorrecting(entry);
+    } else {
+      navigation.navigate(ROUTE_FOR_TYPE[type], {
+        store: entry.store,
+        correct: entry,
+      });
+    }
+  };
+
   const {data: stockResponse, isFetching: stockLoading} =
     useGetStoreStockStatusQuery({store}, {skip: !store});
-  const [recordStock, {isLoading: saving}] = useRecordStockReceivedMutation();
+  // Same call History makes: used for each item's usual delivery.
+  const {data: receivedResponse} = useGetStockReceivedQuery(
+    {store: store || undefined},
+    {skip: !store},
+  );
+  const [recordStock, {isLoading: savingNew}] =
+    useRecordStockReceivedMutation();
+  const [correctStock, {isLoading: savingCorrection}] =
+    useCorrectStockReceivedMutation();
+  const saving = savingNew || savingCorrection;
+  const cancelSpec = useCancelStockEntry();
+
+  const originalFigures = useMemo(
+    () => (correcting ? entryFigures(correcting, 'receipt') : {}),
+    [correcting],
+  );
 
   const items = useMemo(() => {
-    const all = stockResponse?.message?.all_items ?? [];
+    const listed = stockResponse?.message?.all_items ?? [];
+    // An item on the entry but no longer listed for the store stays editable.
+    const names = correcting ? entryItemNames(correcting) : {};
+    const extra = Object.keys(originalFigures)
+      .filter(code => !listed.some(item => item.item_code === code))
+      .map(code => ({
+        item_code: code,
+        item_name: names[code] ?? code,
+        current_stock: undefined,
+      })) as any[];
+    const all = [...listed, ...extra];
     const q = search.trim().toLowerCase();
     if (!q) {
       return all;
@@ -99,7 +193,7 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
         item.item_name?.toLowerCase().includes(q) ||
         item.item_code?.toLowerCase().includes(q),
     );
-  }, [stockResponse, search]);
+  }, [stockResponse, search, correcting, originalFigures]);
 
   const setQty = (itemCode: string, value: string) => {
     const clean = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
@@ -109,6 +203,8 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const finish = (savedSomething: boolean) => {
     setQuantities({});
     setRemarks('');
+    setCorrecting(null);
+    setFormError('');
     if (savedSomething) {
       setTab('history');
     }
@@ -116,7 +212,14 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
 
   const itemName = (itemCode: string) =>
     stockResponse?.message?.all_items?.find(i => i.item_code === itemCode)
-      ?.item_name ?? itemCode;
+      ?.item_name ??
+    (correcting ? entryItemNames(correcting)[itemCode] : undefined) ??
+    itemCode;
+
+  const storeName =
+    storeOptions.find(option => option.value === store)?.label ??
+    correcting?.store_name ??
+    store;
 
   // The server skips items matching a delivery recorded for this store in
   // the last 3 days. Let the promoter say whether this is a second delivery.
@@ -133,7 +236,9 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
       : rows.filter(row => repeatCodes.has(row.item_code));
     const earlier = already.map(a => {
       const source =
-        a.kind === 'ddn' ? 'distributor delivery note' : STOCK_SCREENS.receive.title;
+        a.kind === 'ddn'
+          ? 'distributor delivery note'
+          : STOCK_SCREENS.receive.title;
       const by = a.by ? ` by ${a.by}` : '';
       return `• ${itemName(a.item_code)}: ${a.qty}${by} on ${moment(
         a.date,
@@ -163,6 +268,7 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   };
 
   const save = async (rows: ReceivedRow[], confirmDuplicate = false) => {
+    setFormError('');
     try {
       const response = await recordStock({
         store: store || undefined,
@@ -171,18 +277,17 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
         ...(confirmDuplicate ? {confirm_duplicate: 1 as const} : {}),
       }).unwrap();
       const result = response?.message;
+      setConfirm(null);
       const already: AlreadyRecorded[] = result?.data?.already ?? [];
       if (!confirmDuplicate && (result?.duplicate || already.length > 0)) {
         askAboutRepeat(rows, result, already);
         return;
       }
       if (!result?.success) {
-        Toast.show({
-          type: 'error',
-          text1:
-            getSafeServerMessage(result?.message) ??
+        setFormError(
+          getSafeServerMessage(result?.message) ??
             'Could not record stock received',
-        });
+        );
         return;
       }
       Toast.show({
@@ -191,29 +296,146 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
       });
       finish(true);
     } catch (error: any) {
+      setConfirm(null);
+      setFormError(
+        getUserFacingError(error, 'Could not record stock received'),
+      );
+    }
+  };
+
+  const saveCorrection = async (rows: ReceivedRow[]) => {
+    if (!correcting) {
+      return;
+    }
+    setFormError('');
+    try {
+      const response = await correctStock({
+        name: correcting.name,
+        items: rows,
+        remarks: remarks.trim(),
+      }).unwrap();
+      const result = response?.message;
+      setConfirm(null);
+      const message = getSafeServerMessage(result?.message);
+      if (!result?.success) {
+        // Corrected by someone else meanwhile: History has the current one.
+        if (/already corrected/i.test(result?.message ?? '')) {
+          Toast.show({
+            type: 'error',
+            text1: 'Already corrected',
+            text2: message,
+          });
+          finish(true);
+          return;
+        }
+        setFormError(message ?? 'Could not correct the delivery.');
+        return;
+      }
       Toast.show({
-        type: 'error',
-        text1: getUserFacingError(error, 'Could not record stock received'),
+        type: result.data ? 'success' : 'info',
+        text1: message ?? 'Delivery corrected',
       });
+      finish(true);
+    } catch (error: any) {
+      setConfirm(null);
+      setFormError(
+        getUserFacingError(error, 'Could not correct the delivery.'),
+      );
     }
   };
 
   const submit = () => {
-    const selected = Object.entries(quantities)
+    const typed = Object.entries(quantities)
       .map(([item_code, qty]) => ({item_code, qty: Number(qty)}))
       .filter(row => Number.isFinite(row.qty) && row.qty > 0);
-    if (!selected.length) {
+    if (!typed.length && !correcting) {
       Toast.show({
         type: 'error',
         text1: 'Enter the quantity received for at least one item.',
       });
       return;
     }
-    save(selected);
+    // A correction sends the whole entry: items taken off go as 0, and all
+    // at 0 cancels it.
+    const removedCodes = Object.keys(originalFigures).filter(
+      code => !typed.some(row => row.item_code === code),
+    );
+    const rows: ReceivedRow[] = [
+      ...typed,
+      ...removedCodes.map(item_code => ({item_code, qty: 0})),
+    ];
+
+    const usual = usualPerEntry(
+      receivedResponse?.message?.data?.entries,
+      correcting?.name,
+    );
+    const confirmRows: ConfirmRow[] = rows.map(row => ({
+      key: row.item_code,
+      name: itemName(row.item_code),
+      removed: !!correcting && row.qty === 0,
+      figures: [
+        {
+          value: row.qty,
+          old: correcting ? originalFigures[row.item_code] ?? 0 : undefined,
+        },
+      ],
+    }));
+    const pieces = typed.reduce((sum, row) => sum + row.qty, 0);
+    setConfirm({
+      header: confirmHeader(
+        correcting ? 'Receive Stock · Correction' : 'Receive Stock',
+        storeName,
+        correcting?.posting_date,
+      ),
+      subheader: correcting ? correctingLine(correcting) : undefined,
+      rows: confirmRows,
+      totals: [`${typed.length} item(s) · ${pieces} pcs`],
+      remarks: remarks.trim() || undefined,
+      warnings: [
+        ...(correcting && !typed.length
+          ? ['Every item is 0, so this delivery will be cancelled.']
+          : []),
+        ...typoWarnings(
+          typed.map(row => ({
+            name: itemName(row.item_code),
+            qty: row.qty,
+            usual: usual[row.item_code],
+          })),
+        ),
+      ],
+      onConfirm: () => (correcting ? saveCorrection(rows) : save(typed)),
+    });
+  };
+
+  const cancelEntry = () => {
+    if (!correcting) {
+      return;
+    }
+    setConfirm(
+      cancelSpec(correcting, 'receipt', result => {
+        setConfirm(null);
+        if (result.ok) {
+          Toast.show({type: 'success', text1: result.message});
+          finish(true);
+        } else {
+          setFormError(result.message);
+        }
+      }),
+    );
   };
 
   const renderRecord = () => (
     <View style={{flex: 1}}>
+      {correcting ? (
+        <View style={styles.correctingBar}>
+          <Text style={styles.correctingText}>
+            {correctingLine(correcting)}
+          </Text>
+          <TouchableOpacity onPress={stopCorrecting} hitSlop={8}>
+            <Ionicons name="close" size={18} color="#1D4ED8" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <View style={styles.searchRow}>
         <Ionicons name="search" size={17} color={Colors.gray} />
         <TextInput
@@ -270,17 +492,31 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
           value={remarks}
           onChangeText={setRemarks}
         />
-        <TouchableOpacity
-          style={[styles.primaryButton, saving && styles.disabled]}
-          disabled={saving}
-          onPress={submit}>
-          {saving ? (
-            <ActivityIndicator color={Colors.white} />
-          ) : (
-            <Text style={styles.primaryButtonText}>Save Delivery</Text>
-          )}
-        </TouchableOpacity>
+        {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+        <View style={styles.buttonRow}>
+          {correcting ? (
+            <TouchableOpacity
+              style={[styles.dangerButton, saving && styles.disabled]}
+              disabled={saving}
+              onPress={cancelEntry}>
+              <Text style={styles.dangerButtonText}>Cancel Entry</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={[styles.primaryButton, saving && styles.disabled]}
+            disabled={saving}
+            onPress={submit}>
+            {saving ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {correcting ? 'Save Correction' : 'Save Delivery'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+      <ConfirmSaveSheet spec={confirm} onEdit={() => setConfirm(null)} />
     </View>
   );
 
@@ -291,7 +527,9 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
         icon={<StockScreenIcon screen="receive" />}
         navigation={() => navigation.goBack()}
       />
-      <Text style={styles.screenHint}>Enter goods delivered to your store.</Text>
+      <Text style={styles.screenHint}>
+        Enter goods delivered to your store.
+      </Text>
       <View style={styles.storePicker}>
         <ReusableDropdown
           // The dropdown prefixes "Select ", so this reads "Select store".
@@ -302,6 +540,8 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
             setStore(value);
             setQuantities({});
           }}
+          // A correction stays on the entry's store.
+          disabled={!!correcting}
           error={false}
           field="label"
           label="Store"
@@ -319,7 +559,11 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
             onPress={() => setTab(value)}>
             <Text
               style={[styles.tabText, tab === value && styles.activeTabText]}>
-              {value === 'record' ? 'New Delivery' : 'History'}
+              {value === 'record'
+                ? correcting
+                  ? 'Correct Delivery'
+                  : 'New Delivery'
+                : 'History'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -327,7 +571,11 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
       {tab === 'record' ? (
         renderRecord()
       ) : (
-        <StockMovementHistory store={store} defaultFilter="receipt" />
+        <StockMovementHistory
+          store={store}
+          defaultFilter="receipt"
+          onCorrect={onCorrect}
+        />
       )}
     </SafeAreaView>
   );
@@ -436,12 +684,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: Colors.darkButton,
   },
+  buttonRow: {flexDirection: 'row', gap: 10, marginTop: 12},
   primaryButton: {
+    flex: 1,
     backgroundColor: Colors.darkButton,
     borderRadius: 10,
     alignItems: 'center',
     paddingVertical: 13,
-    marginTop: 12,
+  },
+  dangerButton: {
+    flex: 1,
+    backgroundColor: '#FBE8E8',
+    borderRadius: 10,
+    alignItems: 'center',
+    paddingVertical: 13,
+  },
+  dangerButtonText: {fontFamily: Fonts.semiBold, color: '#B91C1C'},
+  correctingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#BFDBFE',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  correctingText: {fontFamily: Fonts.semiBold, color: '#1D4ED8', fontSize: 12},
+  formError: {
+    marginTop: 10,
+    color: '#B91C1C',
+    fontFamily: Fonts.medium,
+    fontSize: 12,
   },
   primaryButtonText: {fontFamily: Fonts.semiBold, color: Colors.white},
   disabled: {opacity: 0.6},

@@ -2342,6 +2342,10 @@ export interface StockDashboardItem {
   received_this_month?: number;
   /** Not-resaleable customer returns still in the store, awaiting return to distributor. */
   unsellable_on_hand?: number;
+  /** Can't-sell customer returns kept aside in current_stock; never sellable. */
+  cant_sell_stock?: number;
+  /** current_stock less cant_sell_stock. */
+  can_sell_stock?: number;
   is_low_stock?: boolean | 0 | 1 | '0' | '1';
   low_stock?: boolean | 0 | 1 | '0' | '1';
   stock_status?: string | null;
@@ -3767,9 +3771,13 @@ export interface DailySalesItem {
   returned: number;
   sold_mtd: number;
   on_shelf: number;
+  /** Can't-sell pieces on the shelf: kept aside, go back by Store Return */
+  cant_sell?: number;
+  /** on_shelf less cant_sell */
+  can_sell?: number;
   /** What this date already has */
   sold: number;
-  /** The most this date can show */
+  /** The most this date can show (never counts can't-sell pieces) */
   max_sold: number;
 }
 
@@ -3800,4 +3808,72 @@ export interface ISaveDailySales {
 export interface ISetOpening {
   store: string;
   items: {item_code: string; qty: number}[];
+}
+
+// ─── PROMOTER STOCK MOVEMENT HISTORY (receive / store return / customer return)
+
+export interface StockHistoryItem {
+  item_code: string;
+  item_name?: string;
+  qty: number;
+  condition?: 'resaleable' | 'not_resaleable';
+}
+
+export interface StockHistoryEntry {
+  name: string;
+  /** Added by the app when the lists are merged. */
+  type?: 'receipt' | 'customer_return' | 'return';
+  posting_date: string;
+  posting_time?: string;
+  store: string;
+  store_name?: string;
+  recorded_by?: string;
+  corrected?: boolean;
+  corrected_by?: string | null;
+  corrected_on?: string | null;
+  reason?: string | null;
+  remarks?: string | null;
+  /** The server decides; show Correct / Cancel only when true. */
+  can_correct?: boolean;
+  can_cancel?: boolean;
+  /** Why neither is allowed, e.g. the month is closed. */
+  closed_reason?: string | null;
+  items: StockHistoryItem[];
+  /** Customer returns only: both quantities per item. */
+  by_item?: {
+    item_code: string;
+    item_name?: string;
+    can_sell: number;
+    cant_sell: number;
+  }[];
+}
+
+/** Reply of correct_stock_received / correct_stock_return / correct_customer_return. */
+export interface RCorrectStockEntry {
+  message: {
+    success: boolean;
+    message?: string;
+    error_code?: string;
+    data?: StockHistoryEntry | {name: string} | null;
+  };
+}
+
+export interface ICorrectStockReceived {
+  name: string;
+  items: {item_code: string; qty: number}[];
+  remarks?: string;
+}
+
+export interface ICorrectStockReturn {
+  name: string;
+  items: {item_code: string; qty: number}[];
+  reason?: string;
+  remarks?: string;
+}
+
+export interface ICorrectCustomerReturn {
+  name: string;
+  items: {item_code: string; can_sell: number; cant_sell: number}[];
+  reason?: string;
+  remarks?: string;
 }
