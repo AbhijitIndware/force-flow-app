@@ -39,7 +39,10 @@ export async function requestLocationPermission(): Promise<boolean> {
     const result = await PermissionsAndroid.requestMultiple([FINE, COARSE]);
     if (result[FINE] === GRANTED || result[COARSE] === GRANTED) return true;
 
-    if (result[FINE] === NEVER_ASK_AGAIN || result[COARSE] === NEVER_ASK_AGAIN) {
+    if (
+      result[FINE] === NEVER_ASK_AGAIN ||
+      result[COARSE] === NEVER_ASK_AGAIN
+    ) {
       Alert.alert(
         'Location permission required',
         'Location access is blocked. Please enable it in App Settings > Permissions > Location.',
@@ -117,7 +120,8 @@ const getAccuratePosition = (
       if (best) resolve(best);
       else
         reject(
-          error ?? lastError ?? {code: 3, message: 'Location request timed out'},
+          error ??
+            lastError ?? {code: 3, message: 'Location request timed out'},
         );
     };
 
@@ -188,9 +192,9 @@ export type LocationRequestOptions = {
   fast?: boolean;
 };
 
-export const getCurrentPositionWithAccuracy = async (
-  {fast = false}: LocationRequestOptions = {},
-): Promise<AccuratePosition> => {
+export const getCurrentPositionWithAccuracy = async ({
+  fast = false,
+}: LocationRequestOptions = {}): Promise<AccuratePosition> => {
   const hasPermission = await requestLocationPermission();
   if (!hasPermission) {
     throw new Error('Location permission not granted');
@@ -283,4 +287,4 @@ export const getStoreLabel = (item: any) => {
   return label;
 };
 
-export const APP_VERSION = '6.1.0';
+export const APP_VERSION = '6.2.0';
