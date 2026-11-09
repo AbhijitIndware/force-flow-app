@@ -1,7 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -16,20 +15,17 @@ import moment from 'moment';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
-  useCancelCustomerReturnMutation,
-  useCancelStockReceivedMutation,
-  useCancelStockReturnMutation,
   useGetCustomerReturnsQuery,
   useGetStockReceivedQuery,
   useGetStockReturnsQuery,
 } from '../../../features/base/promoter-base-api';
-import {
-  getSafeServerMessage,
-  getUserFacingError,
-} from '../../../utils/errorMessage';
+import {getSafeServerMessage} from '../../../utils/errorMessage';
+import {StockHistoryEntry} from '../../../types/baseType';
+import ConfirmSaveSheet, {ConfirmSpec} from '../../ui/ConfirmSaveSheet';
 import {SHOW_DISTRIBUTOR_RETURNS} from './stockScreens';
+import {MovementType, useCancelStockEntry} from './stockCorrection';
 
-export type MovementType = 'receipt' | 'customer_return' | 'return';
+export type {MovementType} from './stockCorrection';
 type Filter = 'all' | MovementType;
 
 const FILTERS: {value: Filter; label: string}[] = [
@@ -41,44 +37,24 @@ const FILTERS: {value: Filter; label: string}[] = [
     : []),
 ];
 
-// Per type: badge label, whether stock comes in (+) or goes out (−), and
-// the wording used when cancelling.
+// Per type: badge label and whether stock comes in (+) or goes out (−).
 const TYPE_INFO: Record<
   MovementType,
-  {
-    label: string;
-    stockIn: boolean;
-    noun: string;
-    cancelTitle: string;
-    cancelBody: string;
-    empty: string;
-  }
+  {label: string; stockIn: boolean; empty: string}
 > = {
   receipt: {
     label: 'Delivery',
     stockIn: true,
-    noun: 'delivery',
-    cancelTitle: 'Cancel delivery?',
-    cancelBody:
-      'The received stock will be removed. To correct a quantity, cancel and record it again.',
     empty: 'No deliveries recorded for this store.',
   },
   customer_return: {
     label: 'Customer return',
     stockIn: true,
-    noun: 'customer return',
-    cancelTitle: 'Cancel customer return?',
-    cancelBody:
-      'The returned stock will be taken back out of the store. To correct a quantity, cancel and record it again.',
     empty: 'No customer returns recorded for this store.',
   },
   return: {
     label: 'Return to distributor',
     stockIn: false,
-    noun: 'return',
-    cancelTitle: 'Cancel return?',
-    cancelBody:
-      'The returned stock will be added back to the store. To correct a quantity, cancel and record it again.',
     empty: 'No returns to distributor recorded for this store.',
   },
 };
@@ -86,13 +62,22 @@ const TYPE_INFO: Record<
 type Props = {
   store?: string;
   defaultFilter?: Filter;
+  /** Opens the entry in its form, filled in, to be corrected. */
+  onCorrect?: (entry: StockHistoryEntry, type: MovementType) => void;
 };
 
 // Deliveries and returns in one list. Each row keeps its `type`, so the
-// filter can show them merged or one kind at a time.
-const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
+// filter can show them merged or one kind at a time. Whether an entry can
+// be corrected or cancelled is the server's call (can_correct / can_cancel).
+const StockMovementHistory = ({
+  store,
+  defaultFilter = 'all',
+  onCorrect,
+}: Props) => {
   const [filter, setFilter] = useState<Filter>(defaultFilter);
   const [refreshing, setRefreshing] = useState(false);
+  const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
+  const cancelSpec = useCancelStockEntry();
 
   const params = {store: store || undefined};
   const receivedQuery = useGetStockReceivedQuery(params);
@@ -100,14 +85,6 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     skip: !SHOW_DISTRIBUTOR_RETURNS,
   });
   const customerQuery = useGetCustomerReturnsQuery(params);
-  const [cancelReceived, {isLoading: cancellingReceived}] =
-    useCancelStockReceivedMutation();
-  const [cancelReturn, {isLoading: cancellingReturn}] =
-    useCancelStockReturnMutation();
-  const [cancelCustomer, {isLoading: cancellingCustomer}] =
-    useCancelCustomerReturnMutation();
-  const cancelling =
-    cancellingReceived || cancellingReturn || cancellingCustomer;
 
   const entries = useMemo(() => {
     const tag = (list: any[] | undefined, type: MovementType) =>
@@ -154,47 +131,17 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
     }
   };
 
-  const doCancel = async (name: string, type: MovementType) => {
-    const label = TYPE_INFO[type].noun;
-    const cancel =
-      type === 'return'
-        ? cancelReturn
-        : type === 'customer_return'
-        ? cancelCustomer
-        : cancelReceived;
-    try {
-      const response = await cancel({name}).unwrap();
-      if (!response?.message?.success) {
+  const confirmCancel = (entry: StockHistoryEntry, type: MovementType) =>
+    setConfirm(
+      cancelSpec(entry, type, result => {
+        setConfirm(null);
         Toast.show({
-          type: 'error',
-          text1: `Could not cancel ${label}`,
-          text2: getSafeServerMessage(response?.message?.message),
+          type: result.ok ? 'success' : 'error',
+          text1: result.ok ? result.message : 'Could not cancel',
+          text2: result.ok ? undefined : result.message,
         });
-        return;
-      }
-      Toast.show({
-        type: 'success',
-        text1: response.message.message || `Cancelled ${label}`,
-      });
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: getUserFacingError(error, `Could not cancel ${label}`),
-      });
-    }
-  };
-
-  const confirmCancel = (name: string, type: MovementType) => {
-    const info = TYPE_INFO[type];
-    Alert.alert(info.cancelTitle, info.cancelBody, [
-      {text: 'Keep', style: 'cancel'},
-      {
-        text: `Cancel ${info.noun}`,
-        style: 'destructive',
-        onPress: () => doCancel(name, type),
-      },
-    ]);
-  };
+      }),
+    );
 
   const emptyText =
     filter === 'all'
@@ -225,7 +172,9 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
       </ScrollView>
       <FlatList
         data={visible}
-        keyExtractor={entry => `${entry.type}-${entry.name}`}
+        keyExtractor={(entry: StockHistoryEntry) =>
+          `${entry.type}-${entry.name}`
+        }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={refresh} />
         }
@@ -242,13 +191,19 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
             <Text style={styles.empty}>{emptyText}</Text>
           )
         }
-        renderItem={({item: entry}) => {
+        renderItem={({item: entry}: {item: StockHistoryEntry}) => {
           const type: MovementType = TYPE_INFO[entry.type as MovementType]
-            ? entry.type
+            ? (entry.type as MovementType)
             : 'receipt';
           const info = TYPE_INFO[type];
+          const canCorrect = !!entry.can_correct && !!onCorrect;
+          const canCancel = !!entry.can_cancel;
           return (
-            <View style={styles.card}>
+            <TouchableOpacity
+              activeOpacity={canCorrect ? 0.7 : 1}
+              disabled={!canCorrect}
+              onPress={() => onCorrect?.(entry, type)}
+              style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.headerLeft}>
                   <View style={styles.titleRow}>
@@ -269,17 +224,26 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
                       ? ` · ${entry.reason}`
                       : ''}
                   </Text>
+                  {entry.corrected ? (
+                    <View style={styles.correctedRow}>
+                      <View style={styles.correctedChip}>
+                        <Text style={styles.correctedChipText}>Corrected</Text>
+                      </View>
+                      {entry.corrected_by || entry.corrected_on ? (
+                        <Text style={styles.correctedBy} numberOfLines={1}>
+                          {entry.corrected_by ? `by ${entry.corrected_by}` : ''}
+                          {entry.corrected_on
+                            ? ` on ${moment(entry.corrected_on).format(
+                                'D MMM, HH:mm',
+                              )}`
+                            : ''}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ) : null}
                 </View>
-                {entry.can_cancel ? (
-                  <TouchableOpacity
-                    disabled={cancelling}
-                    onPress={() => confirmCancel(entry.name, type)}
-                    style={styles.cancelButton}>
-                    <Text style={styles.cancelText}>Cancel</Text>
-                  </TouchableOpacity>
-                ) : null}
               </View>
-              {entry.items?.map((item: any, index: number) => (
+              {entry.items?.map((item, index) => (
                 <View
                   key={`${item.item_code}-${item.condition ?? ''}-${index}`}
                   style={styles.itemRow}>
@@ -288,7 +252,7 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
                       {item.item_name || item.item_code}
                     </Text>
                     {item.condition === 'not_resaleable' ? (
-                      <Text style={styles.unsellable}>Unsellable</Text>
+                      <Text style={styles.unsellable}>Can't sell</Text>
                     ) : null}
                   </View>
                   <Text style={badgeStyles[type].qty}>
@@ -297,13 +261,37 @@ const StockMovementHistory = ({store, defaultFilter = 'all'}: Props) => {
                   </Text>
                 </View>
               ))}
+              {entry.remarks ? (
+                <Text style={styles.remarks}>{entry.remarks}</Text>
+              ) : null}
               <Text style={styles.reference}>
                 {entry.name} · {entry.recorded_by}
               </Text>
-            </View>
+              {canCorrect || canCancel ? (
+                <View style={styles.actionRow}>
+                  {canCorrect ? (
+                    <TouchableOpacity
+                      onPress={() => onCorrect?.(entry, type)}
+                      style={styles.correctButton}>
+                      <Text style={styles.correctText}>Correct</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {canCancel ? (
+                    <TouchableOpacity
+                      onPress={() => confirmCancel(entry, type)}
+                      style={styles.cancelButton}>
+                      <Text style={styles.cancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : entry.closed_reason ? (
+                <Text style={styles.closedReason}>{entry.closed_reason}</Text>
+              ) : null}
+            </TouchableOpacity>
           );
         }}
       />
+      <ConfirmSaveSheet spec={confirm} onEdit={() => setConfirm(null)} />
     </View>
   );
 };
@@ -382,6 +370,54 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontSize: 12,
     marginTop: 4,
+  },
+  correctedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 5,
+  },
+  correctedChip: {
+    backgroundColor: '#DBEAFE',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  correctedChipText: {
+    fontFamily: Fonts.semiBold,
+    color: '#1D4ED8',
+    fontSize: 10,
+  },
+  correctedBy: {
+    flex: 1,
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 10,
+  },
+  remarks: {
+    fontFamily: Fonts.regular,
+    color: '#475569',
+    fontSize: 11,
+    marginTop: 6,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 10,
+  },
+  correctButton: {
+    backgroundColor: '#E0E7FF',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  correctText: {fontFamily: Fonts.semiBold, color: '#1D4ED8', fontSize: 11},
+  closedReason: {
+    fontFamily: Fonts.regular,
+    color: Colors.gray,
+    fontSize: 10,
+    marginTop: 8,
   },
   cancelButton: {
     backgroundColor: '#FBE8E8',

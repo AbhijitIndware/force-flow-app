@@ -40,6 +40,11 @@ import {Size} from '../../../utils/fontSize';
 import {getStoreLabel} from '../../../utils/utils';
 import {imageBaseUrl} from '../../../features/apiBaseUrl';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import ConfirmSaveSheet, {
+  ConfirmRow,
+  ConfirmSpec,
+} from '../../../components/ui/ConfirmSaveSheet';
+import {typoWarnings} from '../../../utils/confirmChecks';
 import {
   getUserFacingError,
   getSafeServerMessage,
@@ -101,6 +106,8 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const [selectedStoreId, setSelectedStoreId] = useState('');
   const [hasLockedItem, setHasLockedItem] = useState(false);
   const [seededCount, setSeededCount] = useState(0);
+  // "Check before saving": the form's submit opens it; Confirm sends.
+  const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
   const seededWarehouseRef = useRef<string | null>(null);
 
   const user = useAppSelector(
@@ -127,7 +134,6 @@ const AddSaleScreen = ({navigation, route}: Props) => {
   const allItems = stockData?.message?.all_items ?? [];
   const stockWarning = stockData?.message?.warning;
 
-
   // blocked_items: highlight those rows instead of a generic error.
   const showBlockedItems = (resOrError: any): boolean => {
     const {blocked, notCounted} = getSalesOrderItemAnswers(resOrError);
@@ -153,6 +159,164 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       : undefined;
   };
 
+  const sendOrder = async (
+    formValues: IAddSalesOrderV2,
+    actions: {resetForm: () => void},
+  ) => {
+    try {
+      setLoading(true);
+      // Transform 0 to empty string for submission as per user request
+      const payload = {
+        ...formValues,
+        items: formValues.items.map(it => ({
+          ...it,
+          qty: it.qty === 0 ? 0 : it.qty,
+          physical_qty: it.physical_qty === 0 ? 0 : it.physical_qty,
+        })),
+      };
+      const updatePayload = {
+        ...formValues,
+        order_id: orderId,
+        items: formValues.items.map(it => ({
+          ...it,
+          qty: it.qty === 0 ? 0 : it.qty,
+          physical_qty: it.physical_qty === 0 ? 0 : it.physical_qty,
+        })),
+      };
+      const res = orderId
+        ? await updateSaleOrder(updatePayload).unwrap()
+        : await addSalesOrder(payload as any).unwrap();
+      setConfirm(null);
+
+      if (res?.message?.success) {
+        Toast.show({
+          type: 'success',
+          text1: getSafeServerMessage(res.message.message) ?? 'Success',
+          text2: notCountedText(res),
+          position: 'top',
+        });
+        actions.resetForm();
+        seededWarehouseRef.current = null;
+        setSeededCount(0);
+        navigation.replace('OrdersScreen', {index: 0});
+      } else {
+        if (showBlockedItems(res)) return;
+        Toast.show({
+          type: 'error',
+          text1:
+            getSafeServerMessage(res.message.message) ?? 'Something went wrong',
+          position: 'top',
+        });
+      }
+    } catch (error: any) {
+      setConfirm(null);
+      if (showBlockedItems(error)) return;
+      Toast.show({
+        type: 'error',
+        text1: getUserFacingError(error, 'Internal Server Error'),
+        text2: 'Please try again later.',
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Per item: stock counted, order qty, rate × qty; plus the typo checks.
+  const askConfirm = (
+    formValues: IAddSalesOrderV2,
+    actions: {resetForm: () => void},
+  ) => {
+    const num = (v: unknown) => {
+      const n = Number(v);
+      return v === '' || v == null || !Number.isFinite(n) ? null : n;
+    };
+    const lines = formValues.items
+      .filter(it => it.item_code)
+      .map(it => {
+        const stock = allItems.find(s => s.item_code === it.item_code);
+        return {
+          code: it.item_code,
+          name: stock?.item_name ?? it.item_code,
+          qty: num(it.qty) ?? 0,
+          counted: num(it.physical_qty),
+          rate: Number(it.rate || 0),
+          current: stock ? Number(stock.current_stock ?? 0) : null,
+        };
+      })
+      .filter(line => line.qty > 0 || line.counted !== null);
+    // Same columns on every row so the table lines up: Stock only when
+    // something was counted.
+    const anyCounted = lines.some(line => line.counted !== null);
+    const rupees = (n: number) => `₹${n.toFixed(2)}`;
+    const rows: ConfirmRow[] = lines.map(line => ({
+      key: line.code,
+      name: line.name,
+      figures: [
+        ...(anyCounted ? [{label: 'Stock', value: line.counted ?? '—'}] : []),
+        {label: 'Qty', value: line.qty},
+        {label: 'Amount', value: rupees(line.rate * line.qty), wide: true},
+      ],
+      lines: [`${rupees(line.rate)} each`],
+    }));
+    const ordered = lines.filter(line => line.qty > 0);
+    const pieces = ordered.reduce((sum, line) => sum + line.qty, 0);
+    const value = ordered.reduce((sum, line) => sum + line.qty * line.rate, 0);
+    const storeRow: any = storeData?.message?.stores?.find(
+      s => s.warehouse_id === formValues.custom_warehouse,
+    );
+    const distributor =
+      salesDetails?.message?.data?.store_details?.distributor ??
+      storeRow?.distributor_name ??
+      storeRow?.distributor;
+    // A count above the stock on record, with no delivery recorded since.
+    const countWarnings = lines
+      .filter(
+        line =>
+          line.counted !== null &&
+          line.current !== null &&
+          line.counted > line.current,
+      )
+      .map(
+        line =>
+          `Check: counted ${line.counted} of ${line.name}, more than the ${line.current} on record. Was there a delivery?`,
+      );
+    setConfirm({
+      header: [
+        orderId ? 'Update Order' : 'Sales Order',
+        selectedStoreName || storeRow?.store_name,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      subheader: [
+        distributor ? `Distributor: ${distributor}` : '',
+        formValues.delivery_date
+          ? `Delivery: ${moment(formValues.delivery_date).format('D MMM YYYY')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      rows,
+      totals: [
+        `${ordered.length} item(s) · ${pieces} pcs`,
+        `Total ${rupees(value)}`,
+      ],
+      warnings: [
+        ...typoWarnings(
+          lines.flatMap(line => [
+            {name: line.name, qty: line.qty},
+            ...(line.counted !== null
+              ? [{name: `${line.name} (stock count)`, qty: line.counted}]
+              : []),
+          ]),
+        ),
+        ...countWarnings,
+      ],
+      confirmLabel: 'Confirm & Submit',
+      onConfirm: () => sendOrder(formValues, actions),
+    });
+  };
+
   const {
     values,
     errors,
@@ -165,62 +329,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
     initialValues,
     validationSchema: addSalesOrderSchema,
     enableReinitialize: true,
-    onSubmit: async (formValues, actions) => {
-      try {
-        setLoading(true);
-        // Transform 0 to empty string for submission as per user request
-        const payload = {
-          ...formValues,
-          items: formValues.items.map(it => ({
-            ...it,
-            qty: it.qty === 0 ? 0 : it.qty,
-            physical_qty: it.physical_qty === 0 ? 0 : it.physical_qty,
-          })),
-        };
-        const updatePayload = {
-          ...formValues,
-          order_id: orderId,
-          items: formValues.items.map(it => ({
-            ...it,
-            qty: it.qty === 0 ? 0 : it.qty,
-            physical_qty: it.physical_qty === 0 ? 0 : it.physical_qty,
-          })),
-        };
-        const res = orderId
-          ? await updateSaleOrder(updatePayload).unwrap()
-          : await addSalesOrder(payload as any).unwrap();
-
-        if (res?.message?.success) {
-          Toast.show({
-            type: 'success',
-            text1: getSafeServerMessage(res.message.message) ?? 'Success',
-            text2: notCountedText(res),
-            position: 'top',
-          });
-          actions.resetForm();
-          seededWarehouseRef.current = null;
-          setSeededCount(0);
-          navigation.replace('OrdersScreen', {index: 0});
-        } else {
-          if (showBlockedItems(res)) return;
-          Toast.show({
-            type: 'error',
-            text1: getSafeServerMessage(res.message.message) ?? 'Something went wrong',
-            position: 'top',
-          });
-        }
-      } catch (error: any) {
-        if (showBlockedItems(error)) return;
-        Toast.show({
-          type: 'error',
-          text1: getUserFacingError(error, 'Internal Server Error'),
-          text2: 'Please try again later.',
-          position: 'top',
-        });
-      } finally {
-        setLoading(false);
-      }
-    },
+    onSubmit: (formValues, actions) => askConfirm(formValues, actions),
   });
 
   // ── Seed previous_items when stock loads ──────────────────────────────────
@@ -432,6 +541,8 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           </View>
         </View>
       </Modal>
+
+      <ConfirmSaveSheet spec={confirm} onEdit={() => setConfirm(null)} />
 
       <AddSaleForm
         values={values}

@@ -1,4 +1,9 @@
-import {PjpDailyStore, PjpListStatus, ProductFeedbackItem} from './baseType';
+import {
+  PjpDailyStore,
+  PjpListStatus,
+  ProductFeedbackItem,
+  StockHistoryEntry,
+} from './baseType';
 import {UserManualVideo} from './userManualType';
 
 //Stack ParamList Type
@@ -22,9 +27,16 @@ export type PromoterAppStackParamList = {
   StockScreen: undefined;
   DailySalesScreen: {store?: string} | undefined;
   StockEntryFormScreen: {store: string; storeName: string};
-  StockReceivedScreen: {store?: string} | undefined;
-  CustomerReturnScreen: undefined;
-  DistributorReturnScreen: undefined;
+  // `correct`: an entry from History, opened in the form to be corrected.
+  StockReceivedScreen:
+    | {store?: string; correct?: StockHistoryEntry}
+    | undefined;
+  CustomerReturnScreen:
+    | {store?: string; correct?: StockHistoryEntry}
+    | undefined;
+  DistributorReturnScreen:
+    | {store?: string; correct?: StockHistoryEntry}
+    | undefined;
   MySalesScreen: undefined;
   IncentiveScreen: undefined;
   CheckingScreen: undefined;

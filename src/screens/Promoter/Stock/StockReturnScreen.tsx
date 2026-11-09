@@ -18,6 +18,20 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import PageHeader from '../../../components/ui/PageHeader';
 import StockMovementHistory from '../../../components/Promoter/Stock/StockMovementHistory';
 import {
+  MovementType,
+  ROUTE_FOR_TYPE,
+  correctingLine,
+  entryFigures,
+  entryItemNames,
+  useCancelStockEntry,
+} from '../../../components/Promoter/Stock/stockCorrection';
+import ConfirmSaveSheet, {
+  ConfirmRow,
+  ConfirmSpec,
+} from '../../../components/ui/ConfirmSaveSheet';
+import {confirmHeader, typoWarnings} from '../../../utils/confirmChecks';
+import {StockHistoryEntry} from '../../../types/baseType';
+import {
   STOCK_SCREENS,
   StockScreenIcon,
 } from '../../../components/Promoter/Stock/stockScreens';
@@ -26,6 +40,8 @@ import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {PromoterAppStackParamList} from '../../../types/Navigation';
 import {
+  useCorrectCustomerReturnMutation,
+  useCorrectStockReturnMutation,
   useGetCustomerReturnsQuery,
   useGetStockReturnsQuery,
   useGetStoreStockStatusQuery,
@@ -75,13 +91,20 @@ const FALLBACK_REASONS: Record<Mode, string[]> = {
 const qtyKey = (itemCode: string, condition?: Condition) =>
   condition ? `${itemCode}|${condition}` : itemCode;
 
-const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
+const StockReturnScreen = ({navigation, route, mode}: Props & {mode: Mode}) => {
   const [tab, setTab] = useState<Tab>('record');
-  const [store, setStore] = useState('');
+  const [store, setStore] = useState(route?.params?.store ?? '');
   const [search, setSearch] = useState('');
   const [reason, setReason] = useState('');
   const [remarks, setRemarks] = useState('');
   const [quantities, setQuantities] = useState<Record<string, string>>({});
+  // The History entry being corrected; null while recording a new one.
+  const [correcting, setCorrecting] = useState<StockHistoryEntry | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
+  // The server's refusal, kept on the form with what was typed.
+  const [formError, setFormError] = useState('');
+  const isCustomer = mode === 'customer';
+  const ownType: MovementType = isCustomer ? 'customer_return' : 'return';
 
   const {data: storesResponse} = useStockStores();
   const stores = useMemo(
@@ -99,9 +122,55 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
     }
   }, [store, stores]);
 
+  const startCorrecting = (entry: StockHistoryEntry) => {
+    const figures = entryFigures(entry, ownType);
+    setCorrecting(entry);
+    setStore(entry.store);
+    setQuantities(
+      Object.fromEntries(
+        Object.entries(figures).map(([key, qty]) => [key, String(qty)]),
+      ),
+    );
+    setReason(entry.reason ?? '');
+    setRemarks(entry.remarks ?? '');
+    setSearch('');
+    setFormError('');
+    setTab('record');
+  };
+
+  const resetForm = () => {
+    setCorrecting(null);
+    setQuantities({});
+    setReason('');
+    setRemarks('');
+    setFormError('');
+  };
+
+  // Opened from another screen's History to correct one of these entries.
+  const routeStore = route?.params?.store;
+  const routeCorrect = route?.params?.correct;
+  useEffect(() => {
+    if (routeCorrect) {
+      startCorrecting(routeCorrect);
+    } else if (routeStore) {
+      setStore(routeStore);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeCorrect, routeStore]);
+
+  const onCorrect = (entry: StockHistoryEntry, type: MovementType) => {
+    if (type === ownType) {
+      startCorrecting(entry);
+    } else {
+      navigation.navigate(ROUTE_FOR_TYPE[type] as any, {
+        store: entry.store,
+        correct: entry,
+      });
+    }
+  };
+
   const {data: stockResponse, isFetching: stockLoading} =
     useGetStoreStockStatusQuery({store}, {skip: !store});
-  const isCustomer = mode === 'customer';
   // Only needed here for the reason picker; history has its own list.
   const {data: distributorResponse} = useGetStockReturnsQuery(
     {store: store || undefined},
@@ -115,10 +184,35 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
     useRecordStockReturnMutation();
   const [recordCustomerReturn, {isLoading: savingCustomer}] =
     useRecordCustomerReturnMutation();
-  const saving = savingDistributor || savingCustomer;
+  const [correctReturn, {isLoading: correctingDistributor}] =
+    useCorrectStockReturnMutation();
+  const [correctCustomerReturn, {isLoading: correctingCustomer}] =
+    useCorrectCustomerReturnMutation();
+  const saving =
+    savingDistributor ||
+    savingCustomer ||
+    correctingDistributor ||
+    correctingCustomer;
+  const cancelSpec = useCancelStockEntry();
+
+  const originalFigures = useMemo(
+    () => (correcting ? entryFigures(correcting, ownType) : {}),
+    [correcting, ownType],
+  );
 
   const items = useMemo(() => {
-    const all = stockResponse?.message?.all_items ?? [];
+    const listed = stockResponse?.message?.all_items ?? [];
+    // An item on the entry but no longer listed for the store stays editable.
+    const names = correcting ? entryItemNames(correcting) : {};
+    const extra = Array.from(
+      new Set(Object.keys(originalFigures).map(key => key.split('|')[0])),
+    )
+      .filter(code => !listed.some(item => item.item_code === code))
+      .map(code => ({
+        item_code: code,
+        item_name: names[code] ?? code,
+      })) as any[];
+    const all = [...listed, ...extra];
     const q = search.trim().toLowerCase();
     if (!q) {
       return all;
@@ -128,12 +222,28 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
         item.item_name?.toLowerCase().includes(q) ||
         item.item_code?.toLowerCase().includes(q),
     );
-  }, [stockResponse, search]);
+  }, [stockResponse, search, correcting, originalFigures]);
+
+  const itemName = (itemCode: string) =>
+    stockResponse?.message?.all_items?.find(i => i.item_code === itemCode)
+      ?.item_name ??
+    (correcting ? entryItemNames(correcting)[itemCode] : undefined) ??
+    itemCode;
+
+  const storeName =
+    storeOptions.find(option => option.value === store)?.label ??
+    correcting?.store_name ??
+    store;
 
   const apiReasons: string[] | undefined = (
     isCustomer ? customerResponse : distributorResponse
   )?.message?.data?.reasons;
-  const reasons = apiReasons?.length ? apiReasons : FALLBACK_REASONS[mode];
+  const baseReasons = apiReasons?.length ? apiReasons : FALLBACK_REASONS[mode];
+  // A corrected entry keeps its reason selectable even if no longer listed.
+  const reasons =
+    reason && !baseReasons.includes(reason)
+      ? [reason, ...baseReasons]
+      : baseReasons;
 
   const setQty = (key: string, value: string, maxQty?: number) => {
     let clean = value.replace(/[^0-9]/g, '');
@@ -149,23 +259,45 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
     setQuantities(prev => ({...prev, [key]: clean}));
   };
 
+  // Refusals stay on the form, next to what was typed.
   const showSaveError = (result: any) => {
-    Toast.show({
-      type: 'error',
-      text1: 'Could not record return',
-      text2: getSafeServerMessage(result?.message) ?? 'Please try again later.',
-    });
+    setConfirm(null);
+    setFormError(
+      getSafeServerMessage(result?.message) ??
+        'Could not save. Please try again later.',
+    );
   };
 
-  const onSaved = (result: any) => {
+  const onSaved = (result: any, fallback = 'Return saved') => {
+    setConfirm(null);
     Toast.show({
-      type: 'success',
-      text1: getSafeServerMessage(result?.message) ?? 'Return saved',
+      type: result?.data === null ? 'info' : 'success',
+      text1: getSafeServerMessage(result?.message) ?? fallback,
     });
-    setQuantities({});
-    setReason('');
-    setRemarks('');
+    resetForm();
     setTab('history');
+  };
+
+  const onThrown = (error: any) => {
+    setConfirm(null);
+    setFormError(getUserFacingError(error, 'Could not save the return.'));
+  };
+
+  // A correction refused because someone corrected it first: History has
+  // the current version.
+  const alreadyCorrected = (result: any) => {
+    if (!/already corrected/i.test(result?.message ?? '')) {
+      return false;
+    }
+    setConfirm(null);
+    Toast.show({
+      type: 'error',
+      text1: 'Already corrected',
+      text2: getSafeServerMessage(result?.message),
+    });
+    resetForm();
+    setTab('history');
+    return true;
   };
 
   const extras = () => ({
@@ -174,24 +306,57 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
     ...(remarks.trim() ? {remarks: remarks.trim()} : {}),
   });
 
-  const submitCustomer = async () => {
-    const selected = Object.entries(quantities)
-      .map(([key, qty]) => {
-        const [item_code, condition] = key.split('|');
-        return {item_code, qty: Number(qty), condition: condition as Condition};
-      })
-      .filter(row => Number.isFinite(row.qty) && row.qty > 0);
-    if (!selected.length) {
-      Toast.show({
-        type: 'error',
-        text1: 'Enter the quantity brought back for at least one item.',
-      });
-      return;
-    }
+  const typedQty = (key: string) => {
+    const n = Number(quantities[key] ?? '');
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+
+  const sendCustomer = async (
+    rows: {item_code: string; can_sell: number; cant_sell: number}[],
+  ) => {
+    setFormError('');
     try {
+      if (correcting) {
+        const response = await correctCustomerReturn({
+          name: correcting.name,
+          items: rows,
+          reason,
+          remarks: remarks.trim(),
+        }).unwrap();
+        const result = response?.message;
+        if (!result?.success) {
+          if (!alreadyCorrected(result)) {
+            showSaveError(result);
+          }
+          return;
+        }
+        onSaved(result, 'Customer return corrected');
+        return;
+      }
+      // New: one row per item and condition, as before.
+      const newRows = rows.flatMap(row => [
+        ...(row.can_sell
+          ? [
+              {
+                item_code: row.item_code,
+                qty: row.can_sell,
+                condition: 'resaleable' as Condition,
+              },
+            ]
+          : []),
+        ...(row.cant_sell
+          ? [
+              {
+                item_code: row.item_code,
+                qty: row.cant_sell,
+                condition: 'not_resaleable' as Condition,
+              },
+            ]
+          : []),
+      ]);
       const response = await recordCustomerReturn({
         ...extras(),
-        items: selected,
+        items: newRows,
       }).unwrap();
       const result = response?.message;
       if (!result?.success) {
@@ -200,28 +365,33 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
       }
       onSaved(result);
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: getUserFacingError(error, 'Could not record return'),
-      });
+      onThrown(error);
     }
   };
 
-  const submitDistributor = async () => {
-    const selected = Object.entries(quantities)
-      .map(([item_code, qty]) => ({item_code, qty: Number(qty)}))
-      .filter(row => Number.isFinite(row.qty) && row.qty > 0);
-    if (!selected.length) {
-      Toast.show({
-        type: 'error',
-        text1: 'Enter the quantity going back for at least one item.',
-      });
-      return;
-    }
+  const sendDistributor = async (rows: {item_code: string; qty: number}[]) => {
+    setFormError('');
     try {
+      if (correcting) {
+        const response = await correctReturn({
+          name: correcting.name,
+          items: rows,
+          reason,
+          remarks: remarks.trim(),
+        }).unwrap();
+        const result = response?.message;
+        if (!result?.success) {
+          if (!alreadyCorrected(result)) {
+            showSaveError(result);
+          }
+          return;
+        }
+        onSaved(result, 'Return corrected');
+        return;
+      }
       const response = await recordReturn({
         ...extras(),
-        items: selected,
+        items: rows,
       }).unwrap();
       const result = response?.message;
       if (!result?.success) {
@@ -241,20 +411,180 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
       }
       onSaved(result);
     } catch (error: any) {
+      onThrown(error);
+    }
+  };
+
+  const confirmBase = (action: string) => ({
+    header: confirmHeader(
+      correcting ? `${action} · Correction` : action,
+      storeName,
+      correcting?.posting_date,
+    ),
+    subheader: correcting ? correctingLine(correcting) : undefined,
+    reason: reason || undefined,
+    remarks: remarks.trim() || undefined,
+  });
+
+  const allZeroWarning = (anyTyped: boolean) =>
+    correcting && !anyTyped
+      ? ['Every item is 0, so this entry will be cancelled.']
+      : [];
+
+  const submitCustomer = () => {
+    const codes = new Set<string>();
+    [...Object.keys(quantities), ...Object.keys(originalFigures)].forEach(key =>
+      codes.add(key.split('|')[0]),
+    );
+    const rows = Array.from(codes)
+      .map(item_code => ({
+        item_code,
+        can_sell: typedQty(qtyKey(item_code, 'resaleable')),
+        cant_sell: typedQty(qtyKey(item_code, 'not_resaleable')),
+      }))
+      // New entries send only items with a quantity; corrections also send
+      // the items taken off (as 0).
+      .filter(
+        row =>
+          row.can_sell ||
+          row.cant_sell ||
+          (correcting &&
+            (originalFigures[qtyKey(row.item_code, 'resaleable')] ||
+              originalFigures[qtyKey(row.item_code, 'not_resaleable')])),
+      );
+    const typed = rows.filter(row => row.can_sell || row.cant_sell);
+    if (!typed.length && !correcting) {
       Toast.show({
         type: 'error',
-        text1: getUserFacingError(error, 'Could not record return'),
+        text1: 'Enter the quantity brought back for at least one item.',
       });
+      return;
     }
+    const old = (code: string, cond: Condition) =>
+      correcting ? originalFigures[qtyKey(code, cond)] ?? 0 : undefined;
+    const confirmRows: ConfirmRow[] = rows.map(row => ({
+      key: row.item_code,
+      name: itemName(row.item_code),
+      removed: !!correcting && !row.can_sell && !row.cant_sell,
+      figures: [
+        {
+          label: 'Can sell',
+          value: row.can_sell,
+          old: old(row.item_code, 'resaleable'),
+        },
+        {
+          label: "Can't sell",
+          value: row.cant_sell,
+          old: old(row.item_code, 'not_resaleable'),
+        },
+      ],
+    }));
+    const canSell = typed.reduce((sum, row) => sum + row.can_sell, 0);
+    const cantSell = typed.reduce((sum, row) => sum + row.cant_sell, 0);
+    setConfirm({
+      ...confirmBase('Customer Return'),
+      rows: confirmRows,
+      totals: [
+        `${typed.length} item(s) · ${canSell + cantSell} pcs`,
+        `Can sell ${canSell} · Can't sell ${cantSell}`,
+      ],
+      warnings: [
+        ...allZeroWarning(typed.length > 0),
+        ...typoWarnings(
+          typed.flatMap(row => [
+            {name: `${itemName(row.item_code)} (can sell)`, qty: row.can_sell},
+            {
+              name: `${itemName(row.item_code)} (can't sell)`,
+              qty: row.cant_sell,
+            },
+          ]),
+        ),
+      ],
+      onConfirm: () => sendCustomer(rows),
+    });
+  };
+
+  const submitDistributor = () => {
+    const codes = new Set([
+      ...Object.keys(quantities),
+      ...Object.keys(originalFigures),
+    ]);
+    const rows = Array.from(codes)
+      .map(item_code => ({item_code, qty: typedQty(item_code)}))
+      .filter(row => row.qty || (correcting && originalFigures[row.item_code]));
+    const typed = rows.filter(row => row.qty);
+    if (!typed.length && !correcting) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter the quantity going back for at least one item.',
+      });
+      return;
+    }
+    const confirmRows: ConfirmRow[] = rows.map(row => ({
+      key: row.item_code,
+      name: itemName(row.item_code),
+      removed: !!correcting && !row.qty,
+      figures: [
+        {
+          value: row.qty,
+          old: correcting ? originalFigures[row.item_code] ?? 0 : undefined,
+        },
+      ],
+    }));
+    setConfirm({
+      ...confirmBase('Store Return'),
+      rows: confirmRows,
+      totals: [
+        `${typed.length} item(s) · ${typed.reduce(
+          (s2, r) => s2 + r.qty,
+          0,
+        )} pcs`,
+      ],
+      warnings: [
+        ...allZeroWarning(typed.length > 0),
+        ...typoWarnings(
+          typed.map(row => ({name: itemName(row.item_code), qty: row.qty})),
+        ),
+      ],
+      onConfirm: () => sendDistributor(rows),
+    });
   };
 
   const submit = isCustomer ? submitCustomer : submitDistributor;
 
+  const cancelEntry = () => {
+    if (!correcting) {
+      return;
+    }
+    setConfirm(
+      cancelSpec(correcting, ownType, result => {
+        setConfirm(null);
+        if (result.ok) {
+          Toast.show({type: 'success', text1: result.message});
+          resetForm();
+          setTab('history');
+        } else {
+          setFormError(result.message);
+        }
+      }),
+    );
+  };
+
   const renderRecord = () => (
     <View style={{flex: 1}}>
+      {correcting ? (
+        <View style={styles.correctingBar}>
+          <Text style={styles.correctingText}>
+            {correctingLine(correcting)}
+          </Text>
+          <TouchableOpacity onPress={resetForm} hitSlop={8}>
+            <Ionicons name="close" size={18} color="#1D4ED8" />
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <Text style={styles.modeHint}>
         {isCustomer
-          ? 'A shopper brought it back. It is added to store stock.'
+          ? "Can sell goes back on the shelf. Can't sell is kept aside to send back to the distributor."
           : 'The store sends it away. It is taken out of store stock.'}
       </Text>
       <View style={styles.searchRow}>
@@ -278,59 +608,83 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
           keyExtractor={item => item.item_code}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
-          renderItem={({item}) => (
-            <View style={styles.itemRow}>
-              <View style={{flex: 1}}>
-                <Text style={styles.itemName}>{item.item_name}</Text>
-                <Text style={styles.itemMeta} numberOfLines={1}>
-                  Current stock:{' '}
-                  <Text style={styles.stockCount}>
-                    {item.current_stock ?? 0}
-                  </Text>
-                </Text>
-              </View>
-              {isCustomer ? (
-                <View style={styles.conditionInputs}>
-                  {CONDITIONS.map(({value, label}) => (
-                    <View key={value} style={styles.conditionCol}>
-                      <Text
-                        style={[
-                          styles.conditionLabel,
-                          value === 'not_resaleable' && styles.unsellableLabel,
-                        ]}>
-                        {label}
+          renderItem={({item}) => {
+            const cantSell = Number(item.cant_sell_stock ?? 0);
+            const canSell = Number(
+              item.can_sell_stock ?? Number(item.current_stock ?? 0) - cantSell,
+            );
+            // Correcting a store return puts its pieces back first.
+            const maxReturn =
+              Number(item.current_stock ?? 0) +
+              (correcting ? originalFigures[item.item_code] ?? 0 : 0);
+            return (
+              <View style={styles.itemRow}>
+                <View style={{flex: 1}}>
+                  <Text style={styles.itemName}>{item.item_name}</Text>
+                  {isCustomer && cantSell > 0 ? (
+                    <Text style={styles.itemMeta} numberOfLines={1}>
+                      Can sell: <Text style={styles.stockCount}>{canSell}</Text>
+                      {' · '}
+                      <Text style={styles.cantSellText}>
+                        Can't sell: {cantSell}
                       </Text>
-                      <TextInput
-                        style={[styles.qtyInput, styles.qtyInputSmall]}
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        placeholderTextColor={Colors.gray}
-                        value={quantities[qtyKey(item.item_code, value)] ?? ''}
-                        onChangeText={text =>
-                          setQty(qtyKey(item.item_code, value), text)
-                        }
-                      />
-                    </View>
-                  ))}
+                    </Text>
+                  ) : (
+                    <Text style={styles.itemMeta} numberOfLines={1}>
+                      Current stock:{' '}
+                      <Text style={styles.stockCount}>
+                        {item.current_stock ?? 0}
+                      </Text>
+                    </Text>
+                  )}
+                  {!isCustomer && cantSell > 0 ? (
+                    <Text style={styles.cantSellText} numberOfLines={1}>
+                      Can't sell: {cantSell}
+                    </Text>
+                  ) : null}
                 </View>
-              ) : (
-                <TextInput
-                  style={styles.qtyInput}
-                  keyboardType="number-pad"
-                  placeholder="Qty"
-                  placeholderTextColor={Colors.gray}
-                  value={quantities[qtyKey(item.item_code)] ?? ''}
-                  onChangeText={value =>
-                    setQty(
-                      qtyKey(item.item_code),
-                      value,
-                      Number(item.current_stock ?? 0),
-                    )
-                  }
-                />
-              )}
-            </View>
-          )}
+                {isCustomer ? (
+                  <View style={styles.conditionInputs}>
+                    {CONDITIONS.map(({value, label}) => (
+                      <View key={value} style={styles.conditionCol}>
+                        <Text
+                          style={[
+                            styles.conditionLabel,
+                            value === 'not_resaleable' &&
+                              styles.unsellableLabel,
+                          ]}>
+                          {label}
+                        </Text>
+                        <TextInput
+                          style={[styles.qtyInput, styles.qtyInputSmall]}
+                          keyboardType="number-pad"
+                          placeholder="0"
+                          placeholderTextColor={Colors.gray}
+                          value={
+                            quantities[qtyKey(item.item_code, value)] ?? ''
+                          }
+                          onChangeText={text =>
+                            setQty(qtyKey(item.item_code, value), text)
+                          }
+                        />
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <TextInput
+                    style={styles.qtyInput}
+                    keyboardType="number-pad"
+                    placeholder="Qty"
+                    placeholderTextColor={Colors.gray}
+                    value={quantities[qtyKey(item.item_code)] ?? ''}
+                    onChangeText={value =>
+                      setQty(qtyKey(item.item_code), value, maxReturn)
+                    }
+                  />
+                )}
+              </View>
+            );
+          }}
           ListEmptyComponent={
             <Text style={styles.empty}>No active stock items found.</Text>
           }
@@ -376,21 +730,35 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
           value={remarks}
           onChangeText={setRemarks}
         />
-        <TouchableOpacity
-          style={[styles.primaryButton, saving && styles.disabled]}
-          disabled={saving}
-          onPress={submit}>
-          {saving ? (
-            <ActivityIndicator color={Colors.white} />
-          ) : (
-            <Text style={styles.primaryButtonText}>
-              {isCustomer
-                ? 'Save Customer Return'
-                : 'Save Return to Distributor'}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+        <View style={styles.buttonRow}>
+          {correcting ? (
+            <TouchableOpacity
+              style={[styles.dangerButton, saving && styles.disabled]}
+              disabled={saving}
+              onPress={cancelEntry}>
+              <Text style={styles.dangerButtonText}>Cancel Entry</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={[styles.primaryButton, saving && styles.disabled]}
+            disabled={saving}
+            onPress={submit}>
+            {saving ? (
+              <ActivityIndicator color={Colors.white} />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {correcting
+                  ? 'Save Correction'
+                  : isCustomer
+                  ? 'Save Customer Return'
+                  : 'Save Return to Distributor'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+      <ConfirmSaveSheet spec={confirm} onEdit={() => setConfirm(null)} />
     </View>
   );
 
@@ -413,6 +781,8 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
             setStore(value);
             setQuantities({});
           }}
+          // A correction stays on the entry's store.
+          disabled={!!correcting}
           error={false}
           field="label"
           label="Store"
@@ -431,7 +801,9 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
             <Text
               style={[styles.tabText, tab === value && styles.activeTabText]}>
               {value === 'record'
-                ? isCustomer
+                ? correcting
+                  ? 'Correct Entry'
+                  : isCustomer
                   ? 'New Customer Return'
                   : 'New Return'
                 : 'History'}
@@ -445,6 +817,7 @@ const StockReturnScreen = ({navigation, mode}: Props & {mode: Mode}) => {
         <StockMovementHistory
           store={store}
           defaultFilter={isCustomer ? 'customer_return' : 'return'}
+          onCorrect={onCorrect}
         />
       )}
     </SafeAreaView>
@@ -582,12 +955,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: Colors.darkButton,
   },
+  buttonRow: {flexDirection: 'row', gap: 10, marginTop: 12},
   primaryButton: {
+    flex: 1,
     backgroundColor: Colors.darkButton,
     borderRadius: 10,
     alignItems: 'center',
     paddingVertical: 13,
-    marginTop: 12,
+  },
+  dangerButton: {
+    flex: 1,
+    backgroundColor: '#FBE8E8',
+    borderRadius: 10,
+    alignItems: 'center',
+    paddingVertical: 13,
+  },
+  dangerButtonText: {fontFamily: Fonts.semiBold, color: '#B91C1C'},
+  correctingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#BFDBFE',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  correctingText: {fontFamily: Fonts.semiBold, color: '#1D4ED8', fontSize: 12},
+  cantSellText: {
+    fontFamily: Fonts.medium,
+    color: '#B45309',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  formError: {
+    marginTop: 10,
+    color: '#B91C1C',
+    fontFamily: Fonts.medium,
+    fontSize: 12,
   },
   primaryButtonText: {fontFamily: Fonts.semiBold, color: Colors.white},
   disabled: {opacity: 0.6},
