@@ -3,7 +3,7 @@ import {
   TouchableOpacity, ActivityIndicator, Modal,
   TextInput, RefreshControl,
 } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { RSoDetailData } from '../../../../types/baseType';
 import { soStatusColors } from '../../../../utils/utils';
 import {
@@ -17,7 +17,12 @@ import CreatePoFromSo from './CreatePoFromSo';
 import { Fonts } from '../../../../constants';
 import { Size } from '../../../../utils/fontSize';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { getUserFacingError, getSafeServerMessage } from '../../../../utils/errorMessage';
+import {
+  getUserFacingError,
+  getSafeServerMessage,
+  getServerBody,
+  getServerErrorCode,
+} from '../../../../utils/errorMessage';
 
 type Props = {
   detail: RSoDetailData;
@@ -59,6 +64,7 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
   const [submitSaleOrder, { isLoading: isSubmitLoading }] = useSubmitSaleOrderMutation();
   const [cancelSaleOrder, { isLoading: isCancelLoading }] = useCancelSaleOrderMutation();
   const [amendSaleOrder, { isLoading: isAmendLoading }] = useAmendSaleOrderMutation();
+  const amendInFlight = useRef(false);
 
   const statusColor = soStatusColors[order_details.status] || '#6B7280';
 
@@ -101,7 +107,27 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
     }
   };
 
+  // The server answers a repeat amend of an order whose amendment is already
+  // submitted with error_code ALREADY_AMENDED (on HTTP 200 or an error
+  // status). That is not a failure: show its message and open the amendment.
+  const openAlreadyAmended = (resOrError: any): boolean => {
+    if (getServerErrorCode(resOrError) !== 'ALREADY_AMENDED') return false;
+    const body = getServerBody(resOrError);
+    const amendedId = body?.data?.amended_order_id;
+    Toast.show({
+      type: 'success',
+      text1: getSafeServerMessage(body?.message) ?? 'This order has already been amended.',
+      position: 'top',
+    });
+    if (amendedId) navigation.replace('SaleDetailScreen', { id: amendedId });
+    return true;
+  };
+
   const handleAmend = async () => {
+    // isAmendLoading only disables the button after a re-render, so a fast
+    // double tap could still send two requests; the ref blocks it at once.
+    if (amendInFlight.current) return;
+    amendInFlight.current = true;
     try {
       const res = await amendSaleOrder({
         order_id: order_details?.order_id,
@@ -113,13 +139,17 @@ const SaleDetailComponent = ({ detail, navigation, refetch }: Props) => {
           })),
         },
       }).unwrap();
+      if (openAlreadyAmended(res)) return;
       Toast.show({
         type: res?.message?.success ? 'success' : 'error',
         text1: res?.message?.success ? (getSafeServerMessage(res.message.message) ?? 'Success') : (getSafeServerMessage(res.message.message) ?? 'Something went wrong'),
         position: 'top',
       });
     } catch (error: any) {
+      if (openAlreadyAmended(error)) return;
       Toast.show({ type: 'error', text1: getUserFacingError(error, 'Internal Server Error'), position: 'top' });
+    } finally {
+      amendInFlight.current = false;
     }
   };
 

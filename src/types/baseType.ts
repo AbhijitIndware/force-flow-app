@@ -850,6 +850,11 @@ export interface RPjpCreateResponse {
     message: string;
     document_name: string;
     already_existed?: boolean;
+    /**
+     * Stores just created by this person that are not on today's existing
+     * PJP. Non-empty: show `message` and offer Edit PJP; nothing was added.
+     */
+    not_on_pjp?: string[];
   };
 }
 
@@ -2346,6 +2351,12 @@ export interface StockDashboardItem {
   cant_sell_stock?: number;
   /** current_stock less cant_sell_stock. */
   can_sell_stock?: number;
+  /** This store's most recent count of the item before today; null if never counted. */
+  last_count?: number | null;
+  /** Date of last_count (YYYY-MM-DD). */
+  last_count_date?: string | null;
+  /** A delivery of the item to the store was recorded after last_count. */
+  delivered_since_last_count?: boolean | 0 | 1 | null;
   is_low_stock?: boolean | 0 | 1 | '0' | '1';
   low_stock?: boolean | 0 | 1 | '0' | '1';
   stock_status?: string | null;

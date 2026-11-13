@@ -6,9 +6,11 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {Colors} from '../../utils/colors';
 import {Fonts} from '../../constants';
@@ -61,6 +63,8 @@ type Props = {
 
 const CELL = 58;
 const WIDE_CELL = 82;
+// Shown before "+ N more checks".
+const WARNINGS_SHOWN = 3;
 
 // "Check before saving": shown before every save on the stock screens and
 // on the Sales Order screen, so a 100 typed for 10 is caught before it's sent.
@@ -68,10 +72,21 @@ const WIDE_CELL = 82;
 // list can be checked at a glance.
 const ConfirmSaveSheet = ({spec, onEdit}: Props) => {
   const [busy, setBusy] = useState(false);
+  const [allWarnings, setAllWarnings] = useState(false);
   // A ref as well as state: two taps in the same frame both see busy=false.
   const sending = useRef(false);
+  const {height} = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // Measured, so the middle gets an explicit max height: header + list +
+  // buttons always fit in 90% of the screen.
+  const [topHeight, setTopHeight] = useState(0);
+  const [footerHeight, setFooterHeight] = useState(0);
+  const sheetMax = Math.round(height * 0.9);
+  const bodyMax = Math.max(sheetMax - topHeight - footerHeight, 120);
 
   useEffect(() => {
+    // Each sheet opens with the warnings folded.
+    setAllWarnings(false);
     if (!spec) {
       sending.current = false;
       setBusy(false);
@@ -100,10 +115,16 @@ const ConfirmSaveSheet = ({spec, onEdit}: Props) => {
 
   const columns = spec?.rows[0]?.figures ?? [];
   const warnings = spec?.warnings ?? [];
+  const shownWarnings = allWarnings
+    ? warnings
+    : warnings.slice(0, WARNINGS_SHOWN);
+  const hiddenWarnings = warnings.length - shownWarnings.length;
   // A row is flagged when a warning names its item.
   const flagged = (row: ConfirmRow) => warnings.some(w => w.includes(row.name));
   const cellWidth = (fig?: ConfirmFigure) => (fig?.wide ? WIDE_CELL : CELL);
 
+  // Header and buttons are pinned; only the middle scrolls, so the save
+  // button stays on screen however many items or warnings there are.
   return (
     <Modal
       visible={!!spec}
@@ -112,47 +133,88 @@ const ConfirmSaveSheet = ({spec, onEdit}: Props) => {
       onRequestClose={close}>
       <View style={styles.overlay}>
         {spec ? (
-          <View style={styles.sheet}>
-            <View style={styles.handle} />
-            <Text style={styles.title}>
-              {spec.title ?? 'Check before saving'}
-            </Text>
-            <Text style={styles.header}>{spec.header}</Text>
-            {spec.subheader ? (
-              <Text style={styles.subheader}>{spec.subheader}</Text>
-            ) : null}
+          <View style={[styles.sheet, {maxHeight: sheetMax}]}>
+            {/* ── Pinned header ── */}
+            <View
+              style={styles.top}
+              onLayout={e => setTopHeight(e.nativeEvent.layout.height)}>
+              <View style={styles.handle} />
+              <Text style={styles.title}>
+                {spec.title ?? 'Check before saving'}
+              </Text>
+              <Text style={styles.header}>{spec.header}</Text>
+              {spec.subheader ? (
+                <Text style={styles.subheader}>{spec.subheader}</Text>
+              ) : null}
+              {spec.totals?.length ? (
+                <View style={styles.summary}>
+                  {spec.totals.map((t, i) => (
+                    <Text
+                      key={t}
+                      style={[
+                        styles.summaryText,
+                        i === 0 && styles.summaryMain,
+                      ]}>
+                      {t}
+                    </Text>
+                  ))}
+                </View>
+              ) : null}
+            </View>
 
-            {spec.totals?.length ? (
-              <View style={styles.summary}>
-                {spec.totals.map((t, i) => (
-                  <Text
-                    key={t}
-                    style={[styles.summaryText, i === 0 && styles.summaryMain]}>
-                    {t}
-                  </Text>
-                ))}
-              </View>
-            ) : null}
+            {/* ── Scrolling middle ── */}
+            <ScrollView
+              style={[styles.body, {maxHeight: bodyMax}]}
+              contentContainerStyle={styles.bodyContent}
+              showsVerticalScrollIndicator>
+              {warnings.length ? (
+                <View style={styles.warningBox}>
+                  {shownWarnings.map(w => (
+                    <View key={w} style={styles.warningRow}>
+                      <Ionicons
+                        name="alert-circle-outline"
+                        size={14}
+                        color="#B45309"
+                      />
+                      <Text style={styles.warningText}>{w}</Text>
+                    </View>
+                  ))}
+                  {hiddenWarnings > 0 || allWarnings ? (
+                    warnings.length > WARNINGS_SHOWN ? (
+                      <TouchableOpacity
+                        hitSlop={8}
+                        onPress={() => setAllWarnings(v => !v)}>
+                        <Text style={styles.moreChecks}>
+                          {allWarnings
+                            ? 'Show fewer checks'
+                            : `+ ${hiddenWarnings} more check${
+                                hiddenWarnings === 1 ? '' : 's'
+                              }`}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null
+                  ) : null}
+                </View>
+              ) : null}
 
-            <View style={styles.table}>
-              <View style={styles.tableHead}>
-                <Text style={[styles.headText, styles.nameCol]}>
-                  Item ({spec.rows.length})
-                </Text>
-                {columns.map((fig, i) => (
-                  <Text
-                    key={i}
-                    numberOfLines={2}
-                    style={[
-                      styles.headText,
-                      styles.numHead,
-                      {width: cellWidth(fig)},
-                    ]}>
-                    {fig.label ?? 'Qty'}
+              <View style={styles.table}>
+                <View style={styles.tableHead}>
+                  <Text style={[styles.headText, styles.nameCol]}>
+                    Item ({spec.rows.length})
                   </Text>
-                ))}
-              </View>
-              <ScrollView style={styles.rows}>
+                  {columns.map((fig, i) => (
+                    <Text
+                      key={i}
+                      numberOfLines={2}
+                      style={[
+                        styles.headText,
+                        styles.numHead,
+                        {width: cellWidth(fig)},
+                      ]}>
+                      {fig.label ?? 'Qty'}
+                    </Text>
+                  ))}
+                </View>
                 {spec.rows.map((row, index) => {
                   const warn = flagged(row);
                   return (
@@ -218,66 +280,60 @@ const ConfirmSaveSheet = ({spec, onEdit}: Props) => {
                     </View>
                   );
                 })}
-              </ScrollView>
-            </View>
-
-            {spec.reason || spec.remarks ? (
-              <View style={styles.extras}>
-                {spec.reason ? (
-                  <Text style={styles.extra}>
-                    <Text style={styles.extraLabel}>Reason: </Text>
-                    {spec.reason}
-                  </Text>
-                ) : null}
-                {spec.remarks ? (
-                  <Text style={styles.extra}>
-                    <Text style={styles.extraLabel}>Remarks: </Text>
-                    {spec.remarks}
-                  </Text>
-                ) : null}
               </View>
-            ) : null}
 
-            {warnings.length ? (
-              <View style={styles.warningBox}>
-                {warnings.map(w => (
-                  <View key={w} style={styles.warningRow}>
-                    <Ionicons
-                      name="alert-circle-outline"
-                      size={14}
-                      color="#B45309"
-                    />
-                    <Text style={styles.warningText}>{w}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
+              {spec.reason || spec.remarks ? (
+                <View style={styles.extras}>
+                  {spec.reason ? (
+                    <Text style={styles.extra}>
+                      <Text style={styles.extraLabel}>Reason: </Text>
+                      {spec.reason}
+                    </Text>
+                  ) : null}
+                  {spec.remarks ? (
+                    <Text style={styles.extra}>
+                      <Text style={styles.extraLabel}>Remarks: </Text>
+                      {spec.remarks}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
+            </ScrollView>
 
-            {spec.note ? <Text style={styles.note}>{spec.note}</Text> : null}
-
-            <View style={styles.actions}>
-              <TouchableOpacity
-                style={styles.editButton}
-                disabled={busy}
-                onPress={close}>
-                <Text style={styles.editText}>{spec.editLabel ?? 'Edit'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  spec.destructive && styles.destructive,
-                  busy && styles.disabled,
-                ]}
-                disabled={busy}
-                onPress={confirm}>
-                {busy ? (
-                  <ActivityIndicator color={Colors.white} />
-                ) : (
-                  <Text style={styles.confirmText}>
-                    {spec.confirmLabel ?? 'Confirm & Save'}
+            {/* ── Pinned buttons ── */}
+            <View
+              onLayout={e => setFooterHeight(e.nativeEvent.layout.height)}
+              style={[
+                styles.footer,
+                {paddingBottom: 14 + Math.max(insets.bottom, 0)},
+              ]}>
+              {spec.note ? <Text style={styles.note}>{spec.note}</Text> : null}
+              <View style={styles.actions}>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  disabled={busy}
+                  onPress={close}>
+                  <Text style={styles.editText}>
+                    {spec.editLabel ?? 'Edit'}
                   </Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    spec.destructive && styles.destructive,
+                    busy && styles.disabled,
+                  ]}
+                  disabled={busy}
+                  onPress={confirm}>
+                  {busy ? (
+                    <ActivityIndicator color={Colors.white} />
+                  ) : (
+                    <Text style={styles.confirmText}>
+                      {spec.confirmLabel ?? 'Confirm & Save'}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         ) : null}
@@ -296,10 +352,31 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    overflow: 'hidden',
+  },
+  top: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 20,
-    maxHeight: '90%',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  // Takes whatever height is left between header and buttons, and scrolls.
+  body: {flexGrow: 0, flexShrink: 1},
+  bodyContent: {paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12},
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    backgroundColor: Colors.white,
+  },
+  moreChecks: {
+    fontFamily: Fonts.semiBold,
+    color: '#B45309',
+    fontSize: 12,
+    marginTop: 2,
+    textDecorationLine: 'underline',
   },
   handle: {
     alignSelf: 'center',
@@ -337,7 +414,6 @@ const styles = StyleSheet.create({
   summaryText: {fontFamily: Fonts.semiBold, color: '#334155', fontSize: 12},
   summaryMain: {color: Colors.darkButton, fontSize: 13},
   table: {
-    marginTop: 10,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     borderRadius: 10,
@@ -362,7 +438,6 @@ const styles = StyleSheet.create({
   },
   numHead: {textAlign: 'right'},
   nameCol: {flex: 1, paddingRight: 8},
-  rows: {flexGrow: 0},
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -409,7 +484,7 @@ const styles = StyleSheet.create({
     borderColor: '#FDE68A',
     borderRadius: 8,
     padding: 8,
-    marginTop: 10,
+    marginBottom: 10,
     gap: 4,
   },
   warningRow: {flexDirection: 'row', alignItems: 'flex-start', gap: 6},
@@ -423,9 +498,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
     color: '#334155',
     fontSize: 12,
-    marginTop: 10,
+    marginBottom: 10,
   },
-  actions: {flexDirection: 'row', gap: 10, marginTop: 14},
+  actions: {flexDirection: 'row', gap: 10},
   editButton: {
     flex: 1,
     borderRadius: 10,

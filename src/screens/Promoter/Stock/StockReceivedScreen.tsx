@@ -399,7 +399,9 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
           typed.map(row => ({
             name: itemName(row.item_code),
             qty: row.qty,
-            usual: usual[row.item_code],
+            // Skipped unless the item had 3+ deliveries in the last 30 days.
+            usual: usual[row.item_code]?.usual,
+            entries: usual[row.item_code]?.entries,
           })),
         ),
       ],
