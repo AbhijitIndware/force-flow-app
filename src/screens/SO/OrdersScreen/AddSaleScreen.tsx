@@ -241,7 +241,7 @@ const AddSaleScreen = ({navigation, route}: Props) => {
           qty: num(it.qty) ?? 0,
           counted: num(it.physical_qty),
           rate: Number(it.rate || 0),
-          current: stock ? Number(stock.current_stock ?? 0) : null,
+          stock,
         };
       })
       .filter(line => line.qty > 0 || line.counted !== null);
@@ -270,17 +270,31 @@ const AddSaleScreen = ({navigation, route}: Props) => {
       storeRow?.distributor_name ??
       storeRow?.distributor;
     // A count above the stock on record, with no delivery recorded since.
-    const countWarnings = lines
-      .filter(
-        line =>
-          line.counted !== null &&
-          line.current !== null &&
-          line.counted > line.current,
-      )
-      .map(
-        line =>
-          `Check: counted ${line.counted} of ${line.name}, more than the ${line.current} on record. Was there a delivery?`,
-      );
+    // A count above this store's previous count with no delivery since.
+    // Only when the server says what the previous count was: an item never
+    // counted here has nothing to compare with, so it never warns.
+    const countWarnings = lines.flatMap(line => {
+      const last = line.stock?.last_count;
+      const lastDate = line.stock?.last_count_date;
+      const delivered = line.stock?.delivered_since_last_count;
+      if (
+        line.counted === null ||
+        last == null ||
+        !lastDate ||
+        delivered == null ||
+        !!delivered ||
+        line.counted <= Number(last)
+      ) {
+        return [];
+      }
+      return [
+        `Check: counted ${line.counted} of ${
+          line.name
+        }, last count was ${Number(last)} on ${moment(lastDate).format(
+          'D MMM',
+        )} with no delivery since. Was there a delivery?`,
+      ];
+    });
     setConfirm({
       header: [
         orderId ? 'Update Order' : 'Sales Order',

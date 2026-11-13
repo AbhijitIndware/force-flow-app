@@ -25,6 +25,7 @@ import {
   useUpdateDailyPjpMutation,
 } from '../../../features/base/base-api';
 import Toast from 'react-native-toast-message';
+import ResultModal, {ResultInfo} from '../../../components/ui/ResultModal';
 import AddPjpForm from '../../../components/SO/Activity/Pjp/AddPjpForm';
 import {useAppSelector} from '../../../store/hook';
 import {Fonts} from '../../../constants';
@@ -107,6 +108,10 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   );
   const [duplicatePjpId, setDuplicatePjpId] = useState<string | null>(null);
   const [showDuplicatePjp, setShowDuplicatePjp] = useState(false);
+  // Today's PJP exists and a store just created isn't on it: the server's
+  // message ("… is not on your PJP yet. …"). Nothing was added.
+  const [notOnPjpMessage, setNotOnPjpMessage] = useState<string | null>(null);
+  const [result, setResult] = useState<ResultInfo | null>(null);
 
   const [triggerGetDailyPjpList] = useLazyGetDailyPjpListQuery();
 
@@ -156,6 +161,13 @@ const AddPjpScreen = ({navigation, route}: Props) => {
       value: item.name,
     }));
 
+  // Today's PJP, open for editing (where a new store is ticked and saved).
+  const openExistingPjp = (pjpId: string) => {
+    setShowDuplicatePjp(false);
+    setNotOnPjpMessage(null);
+    navigation.navigate('AddPjpScreen', {id: pjpId});
+  };
+
   const {
     values,
     errors,
@@ -193,6 +205,28 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         }
         if (res?.message?.status === 'success') {
           if ('already_existed' in res.message && res.message.already_existed) {
+            const existingId = (res.message as any).document_name;
+            const notOnPjp = res.message.not_on_pjp ?? [];
+            if (notOnPjp.length) {
+              // Never read as "added": the store is only on the PJP once
+              // the person ticks it in Edit PJP and saves.
+              const message =
+                getSafeServerMessage(res.message.message) ??
+                'This store is not on your PJP yet. To visit it today, open Edit PJP, tick the store and Save.';
+              setNotOnPjpMessage(message);
+              setDuplicatePjpId(existingId ?? null);
+              setShowDuplicatePjp(true);
+              setResult({
+                tone: 'warning',
+                title: 'Not on your PJP yet',
+                message,
+                buttonLabel: 'Later',
+                action: existingId
+                  ? {label: 'Edit PJP', onPress: () => openExistingPjp(existingId)}
+                  : undefined,
+              });
+              return;
+            }
             Toast.show({
               type: 'info',
               text1:
@@ -201,7 +235,6 @@ const AddPjpScreen = ({navigation, route}: Props) => {
               position: 'top',
             });
             // Use the existing PJP rather than creating another.
-            const existingId = (res.message as any).document_name;
             if (existingId) {
               setDuplicatePjpId(existingId);
               setShowDuplicatePjp(true);
@@ -334,7 +367,8 @@ const AddPjpScreen = ({navigation, route}: Props) => {
             borderColor: '#FFE69C',
           }}>
           <Text style={{color: '#856404', marginBottom: 10}}>
-            A PJP already exists for the selected employee and date.
+            {notOnPjpMessage ??
+              'A PJP already exists for the selected employee and date.'}
           </Text>
 
           <TouchableOpacity
@@ -344,15 +378,9 @@ const AddPjpScreen = ({navigation, route}: Props) => {
               borderRadius: 6,
               alignItems: 'center',
             }}
-            onPress={() => {
-              setShowDuplicatePjp(false);
-
-              navigation.navigate('AddPjpScreen', {
-                id: duplicatePjpId as string, // 👈 open in edit mode
-              });
-            }}>
+            onPress={() => openExistingPjp(duplicatePjpId as string)}>
             <Text style={{color: Colors.white, fontWeight: '600'}}>
-              Modify Existing PJP
+              {notOnPjpMessage ? 'Edit PJP' : 'Modify Existing PJP'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -414,6 +442,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
           )}
         </TouchableOpacity>
       </View>
+      <ResultModal result={result} onClose={() => setResult(null)} />
     </SafeAreaView>
   );
 };

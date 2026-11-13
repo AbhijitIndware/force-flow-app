@@ -14,6 +14,8 @@ export type ResultInfo = {
   /** Item-level notes, shown as a list. */
   points?: string[];
   buttonLabel?: string;
+  /** A second, main button, e.g. "Edit PJP". The close button then reads "Later". */
+  action?: {label: string; onPress: () => void};
 };
 
 type Props = {
@@ -77,13 +79,37 @@ const ResultModal = ({result, onClose}: Props) => {
                 ))}
               </View>
             ) : null}
-            <TouchableOpacity
-              style={[styles.button, {backgroundColor: tone.button}]}
-              onPress={onClose}>
-              <Text style={styles.buttonText}>
-                {result.buttonLabel ?? 'OK'}
-              </Text>
-            </TouchableOpacity>
+            {result.action ? (
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.secondaryButton]}
+                  onPress={onClose}>
+                  <Text style={styles.secondaryText}>
+                    {result.buttonLabel ?? 'Later'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.mainButton,
+                    {backgroundColor: Colors.darkButton},
+                  ]}
+                  onPress={() => {
+                    onClose();
+                    result.action?.onPress();
+                  }}>
+                  <Text style={styles.buttonText}>{result.action.label}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.button, {backgroundColor: tone.button}]}
+                onPress={onClose}>
+                <Text style={styles.buttonText}>
+                  {result.buttonLabel ?? 'OK'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : null}
       </View>
@@ -151,6 +177,20 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     alignItems: 'center',
     marginTop: 18,
+  },
+  buttonRow: {flexDirection: 'row', gap: 10, alignSelf: 'stretch'},
+  secondaryButton: {
+    flex: 1,
+    alignSelf: 'auto',
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+    backgroundColor: Colors.white,
+  },
+  mainButton: {flex: 1.4, alignSelf: 'auto'},
+  secondaryText: {
+    fontFamily: Fonts.medium,
+    color: Colors.darkButton,
+    fontSize: 14,
   },
   buttonText: {fontFamily: Fonts.semiBold, color: Colors.white, fontSize: 14},
 });

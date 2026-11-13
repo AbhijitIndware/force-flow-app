@@ -27,11 +27,16 @@ import ReusableDropdown from '../../../components/ui-lib/resusable-dropdown';
 import ConfirmSaveSheet, {
   ConfirmSpec,
 } from '../../../components/ui/ConfirmSaveSheet';
-import {confirmHeader, typoWarnings} from '../../../utils/confirmChecks';
+import {
+  confirmHeader,
+  typoWarnings,
+  usualDailySales,
+} from '../../../utils/confirmChecks';
 import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {
   useGetDailySalesQuery,
+  useGetMySalesQuery,
   useSaveDailySalesMutation,
   useSetOpeningMutation,
 } from '../../../features/base/promoter-base-api';
@@ -115,6 +120,15 @@ const DailySalesScreen = ({navigation, route}: Props) => {
     {skip: !store, refetchOnMountOrArgChange: true},
   );
   const [saveDailySales, {isLoading: saving}] = useSaveDailySalesMutation();
+  // The 30 days before the date being entered: each item's usual day.
+  const {data: recentSales} = useGetMySalesQuery(
+    {
+      store,
+      from_date: moment(date).subtract(30, 'days').format(API_DATE),
+      to_date: moment(date).subtract(1, 'day').format(API_DATE),
+    },
+    {skip: !store},
+  );
   const [setOpeningMutation, {isLoading: savingOpening}] =
     useSetOpeningMutation();
 
@@ -187,11 +201,12 @@ const DailySalesScreen = ({navigation, route}: Props) => {
     sheet?.store_name ??
     store;
 
-  // The item's usual day: this month's sales spread over the days so far.
-  const usualDaily = (item: DailySalesItem) => {
-    const days = Math.max(1, moment(date).date());
-    return Number(item.sold_mtd || 0) / days;
-  };
+  // Each item's usual day; empty for a new store or promoter, so only the
+  // 100-or-more check applies there.
+  const usual = useMemo(
+    () => usualDailySales(recentSales?.message?.data?.stores, store),
+    [recentSales, store],
+  );
 
   const askSave = () => {
     if (!sheet) {
@@ -238,7 +253,8 @@ const DailySalesScreen = ({navigation, route}: Props) => {
         rows.map(({row, item, sellable}) => ({
           name: item?.item_name ?? row.item_code,
           qty: row.qty,
-          usual: item ? usualDaily(item) : undefined,
+          usual: usual[row.item_code]?.usual,
+          entries: usual[row.item_code]?.entries,
           shelf: sellable,
         })),
       ),
