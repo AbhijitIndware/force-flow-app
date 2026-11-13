@@ -12,7 +12,7 @@ import {
   TextInput,
   RefreshControl,
 } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { POOrderData, RSoDetailData } from '../../../../types/baseType';
 import { soStatusColors } from '../../../../utils/utils';
 import {
@@ -28,6 +28,8 @@ import { Fonts } from '../../../../constants';
 import {
   getUserFacingError,
   getSafeServerMessage,
+  getServerBody,
+  getServerErrorCode,
 } from '../../../../utils/errorMessage';
 
 type Props = {
@@ -49,6 +51,7 @@ const PurchaseDetailComponent = ({ detail, navigation, refetch }: Props) => {
     useCancelPurchaseOrderMutation();
   const [amendPurchaseOrder, { isLoading: isAmendLoading }] =
     useAmendPurchaseOrderMutation();
+  const amendInFlight = useRef(false);
 
   const onConfirmCancel = () => {
     setCancelModalVisible(false);
@@ -119,7 +122,31 @@ const PurchaseDetailComponent = ({ detail, navigation, refetch }: Props) => {
     }
   };
 
+  // The server answers a repeat amend of an order whose amendment is already
+  // submitted with error_code ALREADY_AMENDED (on HTTP 200 or an error
+  // status). That is not a failure: show its message and open the amendment.
+  const openAlreadyAmended = (resOrError: any): boolean => {
+    if (getServerErrorCode(resOrError) !== 'ALREADY_AMENDED') return false;
+    const body = getServerBody(resOrError);
+    const amendedId = body?.data?.amended_order_id;
+    Toast.show({
+      type: 'success',
+      text1:
+        getSafeServerMessage(body?.message) ??
+        'This order has already been amended.',
+      position: 'top',
+    });
+    if (amendedId) {
+      navigation.replace('PurchaseDetailScreen', { id: amendedId });
+    }
+    return true;
+  };
+
   const handleAmend = async () => {
+    // isAmendLoading only disables the button after a re-render, so a fast
+    // double tap could still send two requests; the ref blocks it at once.
+    if (amendInFlight.current) return;
+    amendInFlight.current = true;
     try {
       let _amendment = {
         schedule_date: order_details?.schedule_date,
@@ -136,6 +163,7 @@ const PurchaseDetailComponent = ({ detail, navigation, refetch }: Props) => {
         amendments: _amendment,
       };
       const res = await amendPurchaseOrder(payload).unwrap();
+      if (openAlreadyAmended(res)) return;
       if (res?.message?.success) {
         Toast.show({
           type: 'success',
@@ -151,12 +179,15 @@ const PurchaseDetailComponent = ({ detail, navigation, refetch }: Props) => {
         });
       }
     } catch (error: any) {
+      if (openAlreadyAmended(error)) return;
       Toast.show({
         type: 'error',
         text1: getUserFacingError(error, 'Internal Server Error'),
         text2: 'Please try again later.',
         position: 'top',
       });
+    } finally {
+      amendInFlight.current = false;
     }
   };
 

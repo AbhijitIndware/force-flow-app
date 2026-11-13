@@ -39,6 +39,8 @@ import {useAppSelector} from '../../../store/hook';
 import {Animated} from 'react-native';
 import AddStoreForm from '../../../components/SO/Partner/Store/AddStoreForm';
 import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import ResultModal, {ResultInfo} from '../../../components/ui/ResultModal';
+import {useNewStorePjpNotice} from '../../../hooks/useNewStorePjpNotice';
 
 import {Fonts} from '../../../constants';
 import {Size} from '../../../utils/fontSize';
@@ -152,6 +154,9 @@ const AddStoreScreen = ({navigation, route}: Props) => {
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
   );
+  const getNewStorePjpNotice = useNewStorePjpNotice();
+  const [result, setResult] = useState<ResultInfo | null>(null);
+  const openedPjp = useRef(false);
 
   const [listConfig, setListConfig] = useState({
     zone: {page: 1, search: ''},
@@ -261,8 +266,30 @@ const AddStoreScreen = ({navigation, route}: Props) => {
             text1: getSafeServerMessage(res.message.message) ?? 'Success',
             position: 'top',
           });
+          // A new store is not on today's PJP; say so instead of leaving
+          // the person to assume it was added.
+          const notice = storeId
+            ? null
+            : await getNewStorePjpNotice(formValues.store_name);
           actions.resetForm();
-          navigation.goBack();
+          if (notice) {
+            setResult({
+              tone: 'warning',
+              title: 'Not on your PJP yet',
+              message: notice.message,
+              buttonLabel: 'Later',
+              action: {
+                label: 'Edit PJP',
+                // Back to Add/Edit PJP if it opened this screen, else open it.
+                onPress: () => {
+                  openedPjp.current = true;
+                  navigation.popTo('AddPjpScreen', {id: notice.pjpId});
+                },
+              },
+            });
+          } else {
+            navigation.goBack();
+          }
         } else {
           Toast.show({
             type: 'error',
@@ -808,6 +835,16 @@ const AddStoreScreen = ({navigation, route}: Props) => {
           </View>
         </>
       )}
+      <ResultModal
+        result={result}
+        onClose={() => {
+          // "Later" (or back) leaves the screen; "Edit PJP" has already
+          // navigated to the PJP.
+          setResult(null);
+          if (!openedPjp.current) navigation.goBack();
+          openedPjp.current = false;
+        }}
+      />
     </SafeAreaView>
   );
 };

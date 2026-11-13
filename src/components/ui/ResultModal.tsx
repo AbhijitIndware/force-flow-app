@@ -95,8 +95,9 @@ const ResultModal = ({result, onClose}: Props) => {
                     {backgroundColor: Colors.darkButton},
                   ]}
                   onPress={() => {
-                    onClose();
+                    // Action first, so onClose can tell it apart from "Later".
                     result.action?.onPress();
+                    onClose();
                   }}>
                   <Text style={styles.buttonText}>{result.action.label}</Text>
                 </TouchableOpacity>
