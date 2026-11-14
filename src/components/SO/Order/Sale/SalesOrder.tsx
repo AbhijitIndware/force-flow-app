@@ -245,7 +245,7 @@ const SalesOrder = ({navigation}: any) => {
                 alignItems: 'center',
               }}>
               <Text style={{fontSize: 16, color: 'gray'}}>
-                No Primary Sale Order Found
+                No secondary orders yet
               </Text>
             </View>
           ) : (
