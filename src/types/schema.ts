@@ -25,10 +25,8 @@ export const distributorSchema = Yup.object().shape({
 });
 
 // Employee, Reports To, Designation and Distributor Code are set by the server.
-// Edit: the SAP code is read-only.
-export const distributorEditSchema = distributorSchema.omit([
-  'distributor_sap_code',
-]);
+// Edit uses the same rules as add (the SAP code is editable on update).
+export const distributorEditSchema = distributorSchema;
 
 export const storeSchema = Yup.object().shape({
   store_name: Yup.string()

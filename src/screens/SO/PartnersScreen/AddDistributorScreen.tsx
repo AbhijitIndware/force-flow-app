@@ -123,6 +123,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
               data: {
                 name: distributorId,
                 distributor_name: formValues.distributor_name,
+                distributor_sap_code: formValues.distributor_sap_code.trim(),
                 distributor_group: formValues.distributor_group,
                 mobile: formValues.mobile,
                 email: formValues.email,
@@ -179,8 +180,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
       setValues({
         ...initial,
         distributor_name: distributor.distributor_name ?? '',
-        distributor_sap_code:
-          distributor.distributor_sap_code || distributor.name,
+        distributor_sap_code: distributor.distributor_sap_code ?? '',
         distributor_group: distributor.distributor_group ?? '',
         mobile: distributor.mobile ?? '',
         email: distributor.email ?? '',
