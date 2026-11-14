@@ -446,6 +446,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
           backgroundColor: Colors.bgColor,
           width: '100%',
           height: 80,
+          flexShrink: 0,
         }}>
         <TouchableOpacity
           style={[
@@ -479,10 +480,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 15,
     paddingVertical: 18,
-    position: 'absolute',
-    bottom: 15,
     gap: 5,
-    zIndex: 1,
     width: width * 0.9,
   },
   submitText: {

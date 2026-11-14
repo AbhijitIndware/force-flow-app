@@ -327,14 +327,14 @@ const StockManagementScreen = ({ navigation }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title="Stock Management"
+        title="Update Stock"
         navigation={() => navigation.goBack()}
       />
 
       {/* Store picker */}
       <View style={styles.filterContainer}>
         <ReusableDropdown
-          placeholder="Select Store"
+          placeholder="Store"
           data={storesList}
           value={selectedStore}
           onChange={handleStoreSelect}

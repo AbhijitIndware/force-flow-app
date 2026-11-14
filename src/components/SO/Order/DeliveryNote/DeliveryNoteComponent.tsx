@@ -238,7 +238,7 @@ const DeliveryNoteComponent = ({navigation}: any) => {
           ) : deliveryNotes.length === 0 ? (
             <View style={styles.centered}>
               <Text style={{fontSize: 16, color: 'gray'}}>
-                No Delivery Note Found
+                No deliveries yet
               </Text>
             </View>
           ) : (

@@ -519,6 +519,9 @@ const HomeScreen = ({ navigation }: Props) => {
             isOvernightOutstationJourney={isOvernightOutstationJourney}
           />
 
+          {/* Shown right below the header so managers see it on login */}
+          {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
+
           <StatsOverview prodData={prodData} />
 
           <FilterSection
@@ -640,8 +643,6 @@ const HomeScreen = ({ navigation }: Props) => {
               </TouchableOpacity>
             </View>
           </View>
-
-          {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
 
           <QuickLinks navigation={navigation} />
 

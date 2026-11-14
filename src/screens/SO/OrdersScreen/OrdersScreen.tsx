@@ -27,6 +27,13 @@ import {useGetSalesPurchaseCountQuery} from '../../../features/base/base-api';
 
 const {width} = Dimensions.get('window');
 
+// One line under the tabs explaining what the selected tab lists.
+const TAB_HINTS = [
+  'Orders you took from stores',
+  'Orders placed on the distributor',
+  'Deliveries made by the distributor',
+];
+
 type Props = {
   navigation: any;
   route: any;
@@ -279,7 +286,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
               gap: 0,
             }}>
             <Tab.Item
-              title="Orders"
+              title="Secondary"
               titleStyle={{
                 fontSize: Size.xs,
                 fontFamily: Fonts.medium,
@@ -296,7 +303,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
               buttonStyle={{paddingHorizontal: 0}}
             />
             <Tab.Item
-              title="Distributor"
+              title="Primary"
               titleStyle={{
                 fontSize: Size.xs,
                 fontFamily: Fonts.medium,
@@ -313,7 +320,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
               buttonStyle={{paddingHorizontal: 0}}
             />
             <Tab.Item
-              title="Delivery Note"
+              title="Delivery"
               titleStyle={{
                 fontSize: Size.xs,
                 fontFamily: Fonts.medium,
@@ -331,6 +338,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
             />
           </Tab>
         </View>
+        <Text style={styles.tabHint}>{TAB_HINTS[index]}</Text>
         {/* Conditionally rendered tab content */}
         {index === 0 ? (
           <SalesOrder navigation={navigation} />
@@ -704,6 +712,14 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     fontSize: 11,
     color: '#94A3B8',
+  },
+  tabHint: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#94A3B8',
+    textAlign: 'center',
+    paddingTop: 8,
+    paddingHorizontal: 16,
   },
   statText: {
     flexDirection: 'column',

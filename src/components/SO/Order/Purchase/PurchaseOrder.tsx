@@ -108,7 +108,7 @@ const PurchaseOrderScreen = ({navigation}: any) => {
                 alignItems: 'center',
               }}>
               <Text style={{fontSize: 16, color: 'gray'}}>
-                No Purchase Order Found
+                No primary orders yet
               </Text>
             </View>
           ) : (
