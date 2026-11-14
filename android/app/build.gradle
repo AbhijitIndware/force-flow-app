@@ -83,8 +83,8 @@ android {
         applicationId "com.forceflow"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 23
-        versionName "6.3.0"
+        versionCode 24
+        versionName "6.4.0"
     }
     signingConfigs {
         debug {
