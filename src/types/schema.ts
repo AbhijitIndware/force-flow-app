@@ -15,22 +15,18 @@ export const distributorSchema = Yup.object().shape({
     .test('no-forbidden-chars', 'Distributor name cannot contain <, >, -, {, }, [, ], or control characters', forbiddenNameTest),
   distributor_sap_code: Yup.string().required('SAP code is required'),
   distributor_group: Yup.string().required('Please select a distributor group'),
-  distributor_code: Yup.string().required('Distributor code is required'),
   mobile: Yup.string().required('Mobile number is required'),
   email: Yup.string()
     .email('Please enter a valid email address')
     .required('Email address is required'),
-  employee: Yup.string().required('Please select an employee'),
   zone: Yup.string().required('Please select a zone'),
   state: Yup.string().required('Please select a state'),
   city: Yup.string().required('Please select a city'),
-  reports_to: Yup.string().required('Please select a reporting manager'),
-  designation: Yup.string().required('Please select a designation'),
 });
 
-// Edit: employee isn't part of the modify API, and the SAP code is read-only.
+// Employee, Reports To, Designation and Distributor Code are set by the server.
+// Edit: the SAP code is read-only.
 export const distributorEditSchema = distributorSchema.omit([
-  'employee',
   'distributor_sap_code',
 ]);
 

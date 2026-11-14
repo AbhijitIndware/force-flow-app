@@ -20,13 +20,10 @@ import {Colors} from '../../../utils/colors';
 import {distributorEditSchema, distributorSchema} from '../../../types/schema';
 import {
   useGetCityQuery,
-  useGetDesignationQuery,
   useGetDistributorGroupQuery,
-  useGetEmployeeQuery,
   useGetStateQuery,
   useGetZoneQuery,
 } from '../../../features/dropdown/dropdown-api';
-import {REmployee} from '../../../types/dropdownType';
 import {
   UPDATE_DISTRIBUTOR_CACHE_KEY,
   useAddDistributorMutation,
@@ -58,15 +55,11 @@ let initial = {
   distributor_name: '',
   distributor_sap_code: '',
   distributor_group: '',
-  distributor_code: '',
   mobile: '',
   email: '',
-  employee: '',
   zone: '',
   state: '',
   city: '',
-  reports_to: '',
-  designation: '',
 };
 
 const AddDistributorScreen = ({navigation, route}: Props) => {
@@ -78,15 +71,10 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
     zone: {page: 1, search: ''},
     state: {page: 1, search: ''},
     city: {page: 1, search: ''},
-    employee: {page: 1, search: ''},
-    designation: {page: 1, search: ''},
     distributorGroup: {page: 1, search: ''},
   });
 
   const [stateListData, setStateListData] = useState<
-    {label: string; value: string}[]
-  >([]);
-  const [employeeListData, setEmployeeListData] = useState<
     {label: string; value: string}[]
   >([]);
   const [zoneListData, setZoneListData] = useState<
@@ -95,19 +83,13 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
   const [cityListData, setCityListData] = useState<
     {label: string; value: string}[]
   >([]);
-  const [designationListData, setDesignationListData] = useState<
-    {label: string; value: string}[]
-  >([]);
   const [distributorGroupListData, setDistributorGroupListData] = useState<
     {label: string; value: string}[]
   >([]);
 
   const [loadingMoreState, setLoadingMoreState] = useState(false);
-  const [loadingMoreEmployee, setLoadingMoreEmployee] = useState(false);
   const [loadingMoreZone, setLoadingMoreZone] = useState(false);
   const [loadingMoreCity, setLoadingMoreCity] = useState(false);
-
-  const [loadingMoreDesignation, setLoadingMoreDesignation] = useState(false);
   const [loadingMoreDistributorGroup, setLoadingMoreDistributorGroup] =
     useState(false);
 
@@ -142,14 +124,11 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
                 name: distributorId,
                 distributor_name: formValues.distributor_name,
                 distributor_group: formValues.distributor_group,
-                distributor_code: formValues.distributor_code,
                 mobile: formValues.mobile,
                 email: formValues.email,
                 zone: formValues.zone,
                 state: formValues.state,
                 city: formValues.city,
-                reports_to: formValues.reports_to,
-                designation: formValues.designation,
               },
             }).unwrap()
           : await addDistributor({data: formValues}).unwrap();
@@ -203,26 +182,17 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
         distributor_sap_code:
           distributor.distributor_sap_code || distributor.name,
         distributor_group: distributor.distributor_group ?? '',
-        distributor_code: distributor.distributor_code ?? '',
         mobile: distributor.mobile ?? '',
         email: distributor.email ?? '',
         zone: distributor.zone ?? '',
         state: distributor.state ?? '',
         city: distributor.city ?? '',
-        reports_to: distributor.reports_to ?? '',
-        designation: distributor.designation ?? '',
       });
     }
   }, [distributor]);
 
   const transformToDropdownList = (arr: {name: string}[] = []) =>
     arr.map(item => ({label: item.name, value: item.name}));
-
-  const transformEmployeeList = (arr: REmployee['message']['data'] = []) =>
-    arr.map(item => ({
-      label: `${item.employee_name} (${item.designation})`,
-      value: item.name,
-    }));
 
   const {data: cityData, isFetching: cityFetching} = useGetCityQuery({
     state: values.state,
@@ -237,25 +207,11 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
     search: listConfig.state.search,
   });
 
-  const {data: employeeData, isFetching: employeeFetching} =
-    useGetEmployeeQuery({
-      name: listConfig.employee.search,
-      page_size: '20',
-      page: String(listConfig.employee.page),
-    });
-
   const {data: zoneData, isFetching: zoneFetching} = useGetZoneQuery({
     page_size: '20',
     page: String(listConfig.zone.page),
     search: listConfig.zone.search as string,
   });
-
-  const {data: designationData, isFetching: designationFetching} =
-    useGetDesignationQuery({
-      page_size: '20',
-      page: String(listConfig.designation.page),
-      search: listConfig.designation.search,
-    });
 
   const {data: distributorGroupData, isFetching: distributorGroupFetching} =
     useGetDistributorGroupQuery({
@@ -304,24 +260,6 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
   }, [stateData]);
 
   useEffect(() => {
-    if (employeeData?.message?.data) {
-      const newData = transformEmployeeList(employeeData.message.data);
-      setEmployeeListData(prev => {
-        let merged = [];
-        if (
-          listConfig.employee.search !== '' &&
-          listConfig.employee.page === 1
-        ) {
-          merged = newData;
-        } else {
-          merged = [...prev, ...newData];
-        }
-        return uniqueByValue(merged);
-      });
-    }
-  }, [employeeData]);
-
-  useEffect(() => {
     if (zoneData?.message?.data) {
       const newData = transformToDropdownList(zoneData.message.data);
 
@@ -352,24 +290,6 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
       });
     }
   }, [cityData]);
-
-  useEffect(() => {
-    if (designationData?.message?.data) {
-      const newData = transformToDropdownList(designationData.message.data);
-      setDesignationListData(prev => {
-        let merged = [];
-        if (
-          listConfig.designation.search !== '' &&
-          listConfig.designation.page === 1
-        ) {
-          merged = newData;
-        } else {
-          merged = [...prev, ...newData];
-        }
-        return uniqueByValue(merged);
-      });
-    }
-  }, [designationData]);
 
   useEffect(() => {
     if (distributorGroupData?.message?.data) {
@@ -418,22 +338,6 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
     }
   };
 
-  const handleLoadMoreEmployees = () => {
-    if (!employeeFetching) {
-      const currentPage = employeeData?.message?.pagination?.page ?? 1;
-      const totalPages = employeeData?.message?.pagination?.total_pages ?? 1;
-
-      if (currentPage >= totalPages) return; // 🚫 No more pages
-
-      setLoadingMoreEmployee(true);
-      setListConfig(prev => ({
-        ...prev,
-        employee: {page: prev.employee.page + 1, search: prev.employee.search},
-      }));
-      setLoadingMoreEmployee(false);
-    }
-  };
-
   const handleLoadMoreZones = () => {
     if (!zoneFetching) {
       const currentPage = zoneData?.message?.pagination?.page ?? 1;
@@ -447,25 +351,6 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
         zone: {page: prev.zone.page + 1, search: prev.zone.search},
       }));
       setLoadingMoreZone(false);
-    }
-  };
-
-  const handleLoadMoreDesignation = () => {
-    if (!designationFetching) {
-      const currentPage = designationData?.message?.pagination?.page ?? 1;
-      const totalPages = designationData?.message?.pagination?.total_pages ?? 1;
-
-      if (currentPage >= totalPages) return; // 🚫 No more pages
-
-      setLoadingMoreDesignation(true);
-      setListConfig(prev => ({
-        ...prev,
-        designation: {
-          page: prev.designation.page + 1,
-          search: prev.designation.search,
-        },
-      }));
-      setLoadingMoreDesignation(false);
     }
   };
 
@@ -490,13 +375,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
   };
 
   const handleSearchChange = (
-    type:
-      | 'zone'
-      | 'state'
-      | 'city'
-      | 'employee'
-      | 'designation'
-      | 'distributorGroup',
+    type: 'zone' | 'state' | 'city' | 'distributorGroup',
     text: string,
   ) => {
     // Reset pagination & trigger new search query
@@ -529,16 +408,12 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
           scrollY={scrollY}
           isEdit={!!distributorId}
           distributorGroupList={distributorGroupListData}
-          employeeList={employeeListData}
           zoneList={zoneListData}
           stateList={stateListData}
           cityList={cityListData}
-          designationList={designationListData}
           // pagination props
           onLoadMoreState={handleLoadMoreStates}
           loadingMoreState={loadingMoreState}
-          onLoadMoreEmployee={handleLoadMoreEmployees}
-          loadingMoreEmployee={loadingMoreEmployee}
           onLoadMoreZone={handleLoadMoreZones}
           loadingMoreZone={loadingMoreZone}
           onLoadMoreCity={handleLoadMoreCity}
@@ -552,20 +427,10 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
           }
           citySearchText={listConfig.city.search}
           setCitySearchText={(text: string) => handleSearchChange('city', text)}
-          employeeSearchText={listConfig.employee.search}
-          setEmployeeSearchText={(text: string) =>
-            handleSearchChange('employee', text)
-          }
           // pagination
-          onLoadMoreDesignation={handleLoadMoreDesignation}
-          loadingMoreDesignation={loadingMoreDesignation}
           onLoadMoreDistributorGroup={handleLoadMoreDistributorGroup}
           loadingMoreDistributorGroup={loadingMoreDistributorGroup}
           // search
-          designationSearchText={listConfig.designation.search}
-          setDesignationSearchText={(text: string) =>
-            handleSearchChange('designation', text)
-          }
           distributorGroupSearchText={listConfig.distributorGroup.search}
           setDistributorGroupSearchText={(text: string) =>
             handleSearchChange('distributorGroup', text)

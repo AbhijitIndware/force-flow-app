@@ -92,7 +92,11 @@ export interface PurchaseOrder {
     linked_sales_orders: string[];
     linked_so_count: number;
     docstatus: number;
-    workflow_state: string
+    workflow_state: string;
+    store_name?: string;
+    store_code?: string;
+    total_qty?: number;
+    items_summary?: string;
 }
 
 
@@ -121,9 +125,12 @@ export interface DeliveryNoteItem {
     workflow_state: string;
     store_warehouse: string;
     store_name: string;
+    store_code?: string;
     invoice_no: string;
     purchase_order: string;
     item_count: number;
+    total_qty?: number;
+    items_summary?: string;
     docstatus: number;
     store_image?: string;
 }

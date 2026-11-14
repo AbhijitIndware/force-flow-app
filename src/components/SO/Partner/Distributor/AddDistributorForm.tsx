@@ -25,16 +25,12 @@ interface Props {
   scrollY: Animated.Value;
   isEdit?: boolean;
   distributorGroupList: {label: string; value: string}[];
-  employeeList: {label: string; value: string}[];
   zoneList: {label: string; value: string}[];
   stateList: {label: string; value: string}[];
   cityList: {label: string; value: string}[];
-  designationList: {label: string; value: string}[];
 
   onLoadMoreState?: () => void;
   loadingMoreState?: boolean;
-  onLoadMoreEmployee?: () => void;
-  loadingMoreEmployee?: boolean;
   onLoadMoreZone?: () => void;
   loadingMoreZone?: boolean;
   onLoadMoreCity?: () => void;
@@ -46,15 +42,9 @@ interface Props {
   setStateSearchText?: (text: string) => void;
   citySearchText?: string;
   setCitySearchText?: (text: string) => void;
-  employeeSearchText?: string;
-  setEmployeeSearchText?: (text: string) => void;
 
-  designationSearchText?: string;
-  setDesignationSearchText?: (text: string) => void;
   distributorGroupSearchText?: string;
   setDistributorGroupSearchText?: (text: string) => void;
-  onLoadMoreDesignation?: () => void;
-  loadingMoreDesignation?: boolean;
   onLoadMoreDistributorGroup?: () => void;
   loadingMoreDistributorGroup?: boolean;
 }
@@ -69,15 +59,11 @@ const AddDistributorForm: React.FC<Props> = ({
   scrollY,
   isEdit = false,
   distributorGroupList,
-  employeeList,
   zoneList,
   stateList,
   cityList,
-  designationList,
   onLoadMoreState,
   loadingMoreState,
-  onLoadMoreEmployee,
-  loadingMoreEmployee,
   onLoadMoreZone,
   loadingMoreZone,
   onLoadMoreCity,
@@ -89,15 +75,9 @@ const AddDistributorForm: React.FC<Props> = ({
   setStateSearchText,
   citySearchText,
   setCitySearchText,
-  employeeSearchText,
-  setEmployeeSearchText,
 
-  designationSearchText,
-  setDesignationSearchText,
   distributorGroupSearchText,
   setDistributorGroupSearchText,
-  onLoadMoreDesignation,
-  loadingMoreDesignation,
   onLoadMoreDistributorGroup,
   loadingMoreDistributorGroup,
 }) => {
@@ -145,22 +125,6 @@ const AddDistributorForm: React.FC<Props> = ({
         searchText={distributorGroupSearchText}
         setSearchText={setDistributorGroupSearchText}
       />
-
-      {/* Employee (Full Width) - not part of the modify API */}
-      {!isEdit && (
-        <ReusableDropdown
-          label="Employee"
-          field="employee"
-          value={values.employee}
-          data={employeeList}
-          error={touched.employee && errors.employee}
-          onChange={(val: string) => onSelect('employee', val)}
-          onLoadMore={onLoadMoreEmployee}
-          loadingMore={loadingMoreEmployee}
-          searchText={employeeSearchText}
-          setSearchText={setEmployeeSearchText}
-        />
-      )}
 
       {/* Zone, State, City (3 Columns) */}
       <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
@@ -235,63 +199,17 @@ const AddDistributorForm: React.FC<Props> = ({
         </View>
       </View>
 
-      {/* SAP Code and Distributor Code (2 Columns) */}
-      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
-        <View style={{flex: 1, opacity: isEdit ? 0.6 : 1}}>
-          <ReusableInput
-            label="SAP Code"
-            placeholder="Enter SAP code"
-            value={values.distributor_sap_code}
-            onChangeText={handleChange('distributor_sap_code')}
-            onBlur={() => handleBlur('distributor_sap_code')}
-            error={touched.distributor_sap_code && errors.distributor_sap_code}
-            disabled={isEdit}
-          />
-        </View>
-        <View style={{flex: 1}}>
-          <ReusableInput
-            label="Distributor Code"
-            placeholder="Enter distributor code"
-            value={values.distributor_code}
-            onChangeText={handleChange('distributor_code')}
-            onBlur={() => handleBlur('distributor_code')}
-            error={touched.distributor_code && errors.distributor_code}
-          />
-        </View>
-      </View>
-
-      {/* Reports To and Designation (2 Columns) */}
-      <View style={{flexDirection: 'row', gap: 12, marginBottom: 12}}>
-        <View style={{flex: 1}}>
-          <ReusableDropdown
-            label="Reports To"
-            field="reports_to"
-            value={values.reports_to}
-            selectedLabel={labelFor(employeeList, values.reports_to)}
-            data={employeeList}
-            error={touched.reports_to && errors.reports_to}
-            onChange={(val: string) => onSelect('reports_to', val)}
-            onLoadMore={onLoadMoreEmployee}
-            loadingMore={loadingMoreEmployee}
-            searchText={employeeSearchText}
-            setSearchText={setEmployeeSearchText}
-          />
-        </View>
-        <View style={{flex: 1}}>
-          <ReusableDropdown
-            label="Designation"
-            field="designation"
-            value={values.designation}
-            selectedLabel={labelFor(designationList, values.designation)}
-            data={designationList}
-            error={touched.designation && errors.designation}
-            onChange={(val: string) => onSelect('designation', val)}
-            onLoadMore={onLoadMoreDesignation}
-            loadingMore={loadingMoreDesignation}
-            searchText={designationSearchText}
-            setSearchText={setDesignationSearchText}
-          />
-        </View>
+      {/* SAP Code (Full Width). Distributor Code is generated by the server. */}
+      <View style={{opacity: isEdit ? 0.6 : 1}}>
+        <ReusableInput
+          label="SAP Code"
+          placeholder="Enter SAP code"
+          value={values.distributor_sap_code}
+          onChangeText={handleChange('distributor_sap_code')}
+          onBlur={() => handleBlur('distributor_sap_code')}
+          error={touched.distributor_sap_code && errors.distributor_sap_code}
+          disabled={isEdit}
+        />
       </View>
     </Animated.ScrollView>
   );

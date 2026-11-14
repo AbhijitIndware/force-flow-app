@@ -12,7 +12,10 @@ import {
   Calendar,
   ChevronRight,
   Clock,
+  Store,
+  ShoppingBag,
 } from 'lucide-react-native';
+import { formatItemsLine } from '../orderListUtils';
 
 const PurchaseComponent = ({
   item,
@@ -77,11 +80,35 @@ const PurchaseComponent = ({
         {/* Details Column */}
         <View style={styles.detailsContent}>
           <View style={styles.infoRow}>
-            <Building2 size={13} color="#4B5563" />
-            <Text style={styles.distributorNameText} numberOfLines={1} ellipsizeMode="tail">
+            <Store size={13} color="#4B5563" />
+            <Text style={styles.storeNameText} numberOfLines={1} ellipsizeMode="tail">
+              {item.store_name || 'N/A'}
+            </Text>
+            {!!item.store_code && (
+              <Text style={styles.storeCodeText} numberOfLines={1}>
+                {item.store_code}
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.infoRow}>
+            <Building2 size={12} color="#9CA3AF" />
+            <Text style={styles.scheduleText} numberOfLines={1} ellipsizeMode="tail">
               {item.distributor_name || 'N/A'}
             </Text>
           </View>
+
+          {item.linked_sales_orders?.length > 0 && (
+            <View style={styles.infoRow}>
+              <ShoppingBag size={11} color="#9CA3AF" />
+              <Text style={styles.scheduleText} numberOfLines={1}>
+                SO: {item.linked_sales_orders[0]}
+                {item.linked_sales_orders.length > 1
+                  ? ` +${item.linked_sales_orders.length - 1}`
+                  : ''}
+              </Text>
+            </View>
+          )}
 
           {!!item.schedule_date && (
             <View style={styles.infoRow}>
@@ -94,6 +121,12 @@ const PurchaseComponent = ({
         </View>
       </View>
 
+      {!!item.items_summary && (
+        <Text style={styles.itemsSummaryText} numberOfLines={2} ellipsizeMode="tail">
+          {item.items_summary}
+        </Text>
+      )}
+
       {/* Divider */}
       <View style={styles.cardDivider} />
 
@@ -101,7 +134,9 @@ const PurchaseComponent = ({
       <View style={styles.cardFooterRow}>
         <View style={styles.footerDateWrap}>
           <Calendar size={11} color="#9CA3AF" />
-          <Text style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
+          <Text style={styles.footerDateText} numberOfLines={1}>
+            {`${day} ${month} ${year} · ${formatItemsLine(item.item_count, item.total_qty)}`}
+          </Text>
         </View>
         <View style={styles.amountContainer}>
           <Text style={styles.amountLabel}>PO Amount: </Text>
@@ -219,11 +254,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-  distributorNameText: {
+  storeNameText: {
     fontFamily: Fonts.semiBold,
     fontSize: Size.xs,
     color: Colors.darkButton,
     flex: 1,
+  },
+  storeCodeText: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#9CA3AF',
+    flexShrink: 0,
+  },
+  itemsSummaryText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#4B5563',
+    marginTop: 6,
   },
   scheduleText: {
     fontFamily: Fonts.regular,
@@ -245,6 +292,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    flexShrink: 1,
+    marginRight: 6,
   },
   footerDateText: {
     fontFamily: Fonts.regular,

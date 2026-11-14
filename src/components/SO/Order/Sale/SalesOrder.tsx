@@ -15,6 +15,7 @@ import {
   Building2,
   Calendar,
   ChevronRight,
+  FileCheck,
 } from 'lucide-react-native';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
@@ -25,6 +26,7 @@ import {usePagedList} from '../../../../hooks/usePagedList';
 import {SalesOrderType} from '../../../../types/baseType';
 import {imageBaseUrl} from '../../../../features/apiBaseUrl';
 import {soStatusColors, windowHeight} from '../../../../utils/utils';
+import {formatItemsLine} from '../orderListUtils';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -132,6 +134,11 @@ const SalesOrder = ({navigation}: any) => {
                 ellipsizeMode="tail">
                 {item.store_name || 'N/A'}
               </Text>
+              {!!item.store_code && (
+                <Text style={styles.storeCodeText} numberOfLines={1}>
+                  {item.store_code}
+                </Text>
+              )}
             </View>
 
             <View style={styles.infoRow}>
@@ -140,11 +147,29 @@ const SalesOrder = ({navigation}: any) => {
                 style={styles.distributorText}
                 numberOfLines={1}
                 ellipsizeMode="tail">
-                {item.distributor || 'N/A'}
+                {item.distributor_name || item.distributor || 'N/A'}
               </Text>
             </View>
+
+            {!!item.purchase_order && (
+              <View style={styles.infoRow}>
+                <FileCheck size={12} color="#9CA3AF" />
+                <Text style={styles.distributorText} numberOfLines={1}>
+                  PO: {item.purchase_order}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
+
+        {!!item.items_summary && (
+          <Text
+            style={styles.itemsSummaryText}
+            numberOfLines={2}
+            ellipsizeMode="tail">
+            {item.items_summary}
+          </Text>
+        )}
 
         {/* Divider */}
         <View style={styles.cardDivider} />
@@ -153,11 +178,15 @@ const SalesOrder = ({navigation}: any) => {
         <View style={styles.cardFooterRow}>
           <View style={styles.footerDateWrap}>
             <Calendar size={11} color="#9CA3AF" />
-            <Text
-              style={styles.footerDateText}>{`${day} ${month} ${year}`}</Text>
+            <Text style={styles.footerDateText} numberOfLines={1}>
+              {`${day} ${month} ${year} · ${formatItemsLine(
+                item.item_count,
+                item.total_qty,
+              )}`}
+            </Text>
           </View>
           <View style={styles.amountContainer}>
-            <Text style={styles.amountLabel}>PO Amount: </Text>
+            <Text style={styles.amountLabel}>Order Amount: </Text>
             <Text style={styles.amountValue}>
               ₹
               {Number(item.grand_total || 0).toLocaleString('en-IN', {
@@ -474,6 +503,18 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     flex: 1,
   },
+  storeCodeText: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#9CA3AF',
+    flexShrink: 0,
+  },
+  itemsSummaryText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#4B5563',
+    marginTop: 6,
+  },
   cardDivider: {
     height: 1,
     backgroundColor: '#F3F4F6',
@@ -488,6 +529,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    flexShrink: 1,
+    marginRight: 6,
   },
   footerDateText: {
     fontFamily: Fonts.regular,

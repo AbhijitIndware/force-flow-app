@@ -151,12 +151,24 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
                 <View style={styles.mainInfo}>
                     <View style={[flexRow, { gap: 5, alignItems: 'center' }]}>
                         <Ionicons name="business-outline" size={15} color={C.textMuted} />
-                        <Text style={styles.distributorName}>{item.store_name}</Text>
+                        <Text style={[styles.distributorName, { flexShrink: 1 }]} numberOfLines={1}>
+                            {item.store_name}
+                        </Text>
+                        {item.store_code ? (
+                            <Text style={[styles.cardMeta, { marginBottom: 4 }]}>{item.store_code}</Text>
+                        ) : null}
                     </View>
 
-                    <Text style={styles.cardMeta}>
-                        {moment(item.posting_date).format('MMM DD, YYYY')} • PO: {item.purchase_order}
+                    <Text style={styles.cardMeta} numberOfLines={1}>
+                        {moment(item.posting_date).format('MMM DD, YYYY')}
+                        {item.purchase_order ? ` • PO: ${item.purchase_order}` : ''}
+                        {item.invoice_no ? ` • Invoice: ${item.invoice_no}` : ''}
                     </Text>
+                    {item.items_summary ? (
+                        <Text style={[styles.cardMeta, { marginTop: 4 }]} numberOfLines={2}>
+                            {item.items_summary}
+                        </Text>
+                    ) : null}
                 </View>
 
                 <View style={styles.statsRow}>
@@ -208,7 +220,7 @@ const DeliveryNotesScreen = ({ navigation }: Props) => {
                     <Search size={16} color={C.textMuted} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search by note name..."
+                        placeholder="Search DDN, PO, invoice or store"
                         placeholderTextColor={C.textMuted}
                         value={search}
                         onChangeText={t => {

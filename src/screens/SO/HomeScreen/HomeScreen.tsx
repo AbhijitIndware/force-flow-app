@@ -54,7 +54,6 @@ import { ActivityCheckInBlock } from '../../../components/SO/HomeScreen/Activity
 import { QuickLinks } from '../../../components/SO/HomeScreen/QuickLinks';
 import { ClaimsSection } from '../../../components/SO/HomeScreen/ClaimsSection';
 import LateCheckinApprovalLink from '../../../components/SO/HomeScreen/LateCheckinApprovalLink';
-import { StockAndActivityLinks } from '../../../components/SO/HomeScreen/StockAndActivityLinks';
 import { CheckoutConfirmModal } from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
 import { SetTargetsModal } from '../../../components/SO/HomeScreen/SetTargetsModal';
 import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
@@ -650,7 +649,6 @@ const HomeScreen = ({ navigation }: Props) => {
 
           <ClaimsSection navigation={navigation} />
 
-          <StockAndActivityLinks navigation={navigation} />
         </ScrollView>
       )}
     </SafeAreaView>

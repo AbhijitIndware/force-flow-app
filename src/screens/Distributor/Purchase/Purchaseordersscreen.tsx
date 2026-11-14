@@ -24,6 +24,7 @@ import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
 import { PurchaseOrder } from '../../../types/distributorType';
 import { DistributorAppStackParamList } from '../../../types/Navigation';
+import { formatItemsLine } from '../../../components/SO/Order/orderListUtils';
 
 type NavigationProp = NativeStackNavigationProp<
     DistributorAppStackParamList,
@@ -155,6 +156,29 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                         ₹{item.grand_total.toLocaleString('en-IN')}
                     </Text>
                 </View>
+                {item.store_name ? (
+                    <Text style={styles.cardStore} numberOfLines={1}>
+                        {item.store_name}
+                        {item.store_code ? (
+                            <Text style={styles.cardSub}>  {item.store_code}</Text>
+                        ) : null}
+                    </Text>
+                ) : null}
+                {item.items_summary ? (
+                    <Text style={styles.cardSub} numberOfLines={2}>
+                        {item.items_summary}
+                    </Text>
+                ) : null}
+                <Text style={styles.cardSub} numberOfLines={1}>
+                    {formatItemsLine(item.item_count, item.total_qty)}
+                    {item.linked_sales_orders?.length
+                        ? ` · SO: ${item.linked_sales_orders[0]}${
+                              item.linked_sales_orders.length > 1
+                                  ? ` +${item.linked_sales_orders.length - 1}`
+                                  : ''
+                          }`
+                        : ''}
+                </Text>
                 {item.supplier_name ? (
                     <Text style={styles.cardSub}>{item.supplier_name}</Text>
                 ) : null}
@@ -199,7 +223,7 @@ const PurchaseOrdersScreen = ({ navigation }: Props) => {
                     <Search size={16} color={C.textMuted} />
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search order ID..."
+                        placeholder="Search order ID or store"
                         placeholderTextColor={C.textMuted}
                         value={search}
                         onChangeText={t => {
@@ -432,6 +456,7 @@ const styles = StyleSheet.create({
     cardMeta: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted },
     cardAmount: { fontSize: 13, fontFamily: Fonts.semiBold, color: C.accent },
     cardSub: { fontSize: 11, fontFamily: Fonts.regular, color: C.textMuted },
+    cardStore: { fontSize: 12, fontFamily: Fonts.medium, color: C.text },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
