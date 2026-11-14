@@ -16,6 +16,7 @@ import {
   Calendar,
   ChevronRight,
   Package,
+  FileCheck,
 } from 'lucide-react-native';
 import {Fonts} from '../../../../constants';
 import {Size} from '../../../../utils/fontSize';
@@ -25,6 +26,7 @@ import {useCallback, useState} from 'react';
 import {usePagedList} from '../../../../hooks/usePagedList';
 import {IDistributorDeliveryNote} from '../../../../types/baseType';
 import {windowHeight} from '../../../../utils/utils';
+import {formatQty} from '../orderListUtils';
 
 const {width} = Dimensions.get('window');
 const PAGE_SIZE = 10;
@@ -138,6 +140,11 @@ const DeliveryNoteComponent = ({navigation}: any) => {
                 ellipsizeMode="tail">
                 {item.store_name || 'N/A'}
               </Text>
+              {!!item.store_code && (
+                <Text style={styles.storeCodeText} numberOfLines={1}>
+                  {item.store_code}
+                </Text>
+              )}
             </View>
 
             <View style={styles.infoRow}>
@@ -149,8 +156,34 @@ const DeliveryNoteComponent = ({navigation}: any) => {
                 {item.distributor_name || 'N/A'}
               </Text>
             </View>
+
+            {(!!item.purchase_order || !!item.invoice_no) && (
+              <View style={styles.infoRow}>
+                <FileCheck size={12} color="#9CA3AF" />
+                <Text
+                  style={styles.distributorText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail">
+                  {[
+                    item.purchase_order && `PO: ${item.purchase_order}`,
+                    item.invoice_no && `Invoice: ${item.invoice_no}`,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
+
+        {!!item.items_summary && (
+          <Text
+            style={styles.itemsSummaryText}
+            numberOfLines={2}
+            ellipsizeMode="tail">
+            {item.items_summary}
+          </Text>
+        )}
 
         {/* Divider */}
         <View style={styles.cardDivider} />
@@ -159,8 +192,9 @@ const DeliveryNoteComponent = ({navigation}: any) => {
         <View style={styles.cardFooterRow}>
           <View style={styles.footerQtyWrap}>
             <Package size={11} color="#6B7280" />
-            <Text style={styles.footerQtyText}>
-              Qty: {item.delivered_qty ?? 0}
+            <Text style={styles.footerQtyText} numberOfLines={1}>
+              Ordered {formatQty(item.ordered_qty)} · Delivered{' '}
+              {formatQty(item.delivered_qty)}
             </Text>
           </View>
           <View style={styles.amountContainer}>
@@ -355,6 +389,18 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     flex: 1,
   },
+  storeCodeText: {
+    fontFamily: Fonts.regular,
+    fontSize: 10,
+    color: '#9CA3AF',
+    flexShrink: 0,
+  },
+  itemsSummaryText: {
+    fontFamily: Fonts.regular,
+    fontSize: Size.xxs,
+    color: '#4B5563',
+    marginTop: 6,
+  },
   cardDivider: {
     height: 1,
     backgroundColor: '#F3F4F6',
@@ -369,6 +415,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    flexShrink: 1,
+    marginRight: 6,
   },
   footerQtyText: {
     fontFamily: Fonts.medium,

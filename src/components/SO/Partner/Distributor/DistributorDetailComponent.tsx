@@ -50,6 +50,13 @@ const DistributorDetailComponent = ({distributor, navigation}: Props) => {
         <InfoRow label="City" value={distributor.city} />
       </Section>
 
+      {/* -------- Assigned To (set by the server, read-only) -------- */}
+      <Section title="Assigned To" icon="person">
+        <InfoRow label="Employee" value={distributor.employee || undefined} />
+        <InfoRow label="Reports To" value={distributor.reports_to || undefined} />
+        <InfoRow label="Designation" value={distributor.designation || undefined} />
+      </Section>
+
       {/* -------- Stores -------- */}
       <Section title="Stores" icon="store">
         <InfoRow label="Stores" value={distributor.store_count} />
