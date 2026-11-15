@@ -123,6 +123,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
               data: {
                 name: distributorId,
                 distributor_name: formValues.distributor_name,
+                distributor_sap_code: formValues.distributor_sap_code.trim(),
                 distributor_group: formValues.distributor_group,
                 mobile: formValues.mobile,
                 email: formValues.email,
@@ -140,7 +141,14 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
             position: 'top',
           });
           if (distributorId) {
-            navigation.goBack();
+            // Changing the SAP code renames the distributor on the server, so
+            // the details screen below still holds an ID that no longer
+            // exists. Return to it with the ID from the reply instead.
+            // popTo (not navigate) replaces that screen rather than stacking
+            // a second details screen above this form.
+            navigation.popTo('DistributorDetailScreen', {
+              distributorId: res.message.distributor_name || distributorId,
+            });
           } else {
             actions.resetForm();
             navigation.navigate('PartnersScreen');
@@ -179,8 +187,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
       setValues({
         ...initial,
         distributor_name: distributor.distributor_name ?? '',
-        distributor_sap_code:
-          distributor.distributor_sap_code || distributor.name,
+        distributor_sap_code: distributor.distributor_sap_code ?? '',
         distributor_group: distributor.distributor_group ?? '',
         mobile: distributor.mobile ?? '',
         email: distributor.email ?? '',

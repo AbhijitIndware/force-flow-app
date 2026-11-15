@@ -19,6 +19,7 @@ export interface IUpdateDistributorPayload {
   data: {
     name: string;
     distributor_name: string;
+    distributor_sap_code: string;
     distributor_group: string;
     mobile: string;
     email: string;
