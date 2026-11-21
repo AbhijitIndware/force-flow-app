@@ -132,6 +132,8 @@ export type RDailyStore = {
 export type IDailyStore = {
   date: string;
   user: string;
+  // "lat,lon": stores come nearest first, with distance_m / distance_km.
+  current_location?: string;
 };
 
 export type RActivityPjp = {

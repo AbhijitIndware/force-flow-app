@@ -778,32 +778,28 @@ const ExpenseApprovalDetailComponent = ({
           <InfoRow label="From" value={claim.from_city || 'N/A'} />
           <InfoRow label="To" value={claim.to_city || 'N/A'} />
           <InfoRow
-            label="KM Travelled on PJP"
-            value={formatKm(claim.distance_km)}
+            label="Total km (home to home)"
+            value={formatKm(claim.journey_km ?? claim.distance_km)}
+            bold
           />
+          {/* Approver only: the three legs that make up the total. */}
+          {claim.pjp_km != null ? (
+            <View style={styles.kmBreakdown}>
+              <Text style={styles.kmBreakdownText}>
+                Home to PJP Start: {formatKm(claim.home_to_start_km)}
+              </Text>
+              <Text style={styles.kmBreakdownText}>
+                PJP km (Start to End): {formatKm(claim.pjp_km)}
+              </Text>
+              <Text style={styles.kmBreakdownText}>
+                PJP End to Home: {formatKm(claim.end_to_home_km)}
+              </Text>
+            </View>
+          ) : null}
           {claim.hq_distance_km != null ? (
             <InfoRow
               label="KM Gone From HQ"
               value={formatKm(claim.hq_distance_km)}
-            />
-          ) : null}
-          {Number(claim.home_to_start_km) > 0 ? (
-            <InfoRow
-              label="KM Home to PJP Start"
-              value={formatKm(claim.home_to_start_km)}
-            />
-          ) : null}
-          {Number(claim.end_to_home_km) > 0 ? (
-            <InfoRow
-              label="KM PJP End to Home"
-              value={formatKm(claim.end_to_home_km)}
-            />
-          ) : null}
-          {claim.journey_km != null ? (
-            <InfoRow
-              label="KM Paid On"
-              value={formatKm(claim.journey_km)}
-              bold
             />
           ) : null}
           {claim.distance_check?.lines?.length ? (
@@ -1817,6 +1813,15 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#94A3B8',
     marginTop: 2,
+  },
+  kmBreakdown: {
+    paddingBottom: 6,
+    gap: 2,
+  },
+  kmBreakdownText: {
+    fontFamily: Fonts.regular,
+    fontSize: 11,
+    color: '#9CA3AF',
   },
   checkList: {
     paddingTop: 8,

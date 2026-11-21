@@ -399,14 +399,23 @@ export const baseApi = createApi({
       providesTags: ['PJP'],
       keepUnusedDataFor: 0,
     }),
-    getDailyPjpById: builder.query<RPjpDailyById, string>({
-      query: id => ({
-        url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_store_by_id`,
-        method: 'GET',
-        params: {
-          pjp_doc_name: id,
-        },
-      }),
+    getDailyPjpById: builder.query<
+      RPjpDailyById,
+      string | {id: string; current_location?: string}
+    >({
+      query: arg => {
+        const {id, current_location} =
+          typeof arg === 'string' ? {id: arg, current_location: undefined} : arg;
+        return {
+          url: `/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_store_by_id`,
+          method: 'GET',
+          params: {
+            pjp_doc_name: id,
+            // Stores come nearest first, with distance_m / distance_km.
+            ...(current_location ? {current_location} : {}),
+          },
+        };
+      },
       providesTags: ['PJP'],
     }),
     getLastPjpStores: builder.query<RLastPjpStores, { employee?: string }>({
@@ -433,11 +442,17 @@ export const baseApi = createApi({
       }),
       invalidatesTags: ['PJP'],
     }),
-    getPjpDailyStoresForEdit: builder.query<RPjpDailyStoresForEdit, { document_name: string }>({
-      query: ({ document_name }) => ({
+    getPjpDailyStoresForEdit: builder.query<
+      RPjpDailyStoresForEdit,
+      { document_name: string; current_location?: string }
+    >({
+      query: ({ document_name, current_location }) => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.pjp.get_pjp_daily_stores_for_edit',
         method: 'GET',
-        params: { document_name },
+        params: {
+          document_name,
+          ...(current_location ? { current_location } : {}),
+        },
       }),
       providesTags: ['PJP'],
     }),
@@ -520,6 +535,8 @@ export const baseApi = createApi({
         search?: string;
         include_subordinates: string;
         include_direct_subordinates: string;
+        // "lat,lon": stores come nearest first, with distance_m / distance_km.
+        current_location?: string;
       }
     >({
       query: ({
@@ -528,6 +545,7 @@ export const baseApi = createApi({
         search,
         include_direct_subordinates,
         include_subordinates,
+        current_location,
       }) => ({
         url: `/method/salesforce_management.mobile_app_apis.master_data.master_data_pa.get_store_by_owner`,
         method: 'GET',
@@ -537,6 +555,7 @@ export const baseApi = createApi({
           search,
           include_direct_subordinates,
           include_subordinates,
+          ...(current_location ? {current_location} : {}),
         },
       }),
       providesTags: ['Store'],

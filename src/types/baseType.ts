@@ -797,6 +797,9 @@ export interface Store {
   warehouse: Warehouse[];
   store_image?: string;
   is_unplanned?: 0 | 1;
+  // Sent only when the request had current_location; null = no map location.
+  distance_m?: number | null;
+  distance_km?: number | null;
 }
 
 export interface Warehouse {
@@ -895,6 +898,8 @@ export interface RPjpDailyStoresForEdit {
         created_by_employee_name: string;
         warehouse_id: string;
         is_unplanned?: 0 | 1;
+        distance_m?: number | null;
+        distance_km?: number | null;
       }[];
       planned_activities: {
         activity_type: string;

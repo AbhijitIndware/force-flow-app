@@ -11,6 +11,8 @@ interface DropdownOption {
   value: string;
   disabled?: boolean;
   imageUrl?: string;
+  subLabel?: string;
+  subLabelMuted?: boolean;
 }
 
 interface ReusableDropdownProps {

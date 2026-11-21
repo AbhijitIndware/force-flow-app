@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View } from 'react-native';
 import { useGetStoreListQuery } from '../../../../features/base/base-api';
 import ReusableDropdown from '../../../ui-lib/resusable-dropdown';
-import { getStoreLabel } from '../../../../utils/utils';
+import { formatStoreDistance, getStoreLabel } from '../../../../utils/utils';
 import { imageBaseUrl } from '../../../../features/apiBaseUrl';
 
 interface StoreItem {
@@ -13,12 +13,16 @@ interface StoreItem {
   pin_code: string;
   store_owner_name?: string;
   store_image?: string;
+  // Only when the request had current_location; null = no map location.
+  distance_m?: number | null;
 }
 
 interface DropdownOption {
   label: string;
   value: string;
   imageUrl?: string;
+  subLabel?: string;
+  subLabelMuted?: boolean;
 }
 
 interface Pagination {
@@ -43,18 +47,30 @@ interface Props {
   onChange: (val: string) => void;
   navigation: any;
   disabled?: boolean;
+  // The phone's "lat,lon" (see useCurrentLocation); stores come nearest first.
+  here?: string;
+  // True while the first location read is in progress.
+  locating?: boolean;
+  // Re-reads the location (on search).
+  refreshLocation?: () => void;
 }
 
 const PAGE_SIZE = '20';
 
+// Kept in the server's order (nearest first when a location was sent).
 const transformStores = (arr: StoreItem[] = []): DropdownOption[] =>
-  arr.map(item => ({
-    label: getStoreLabel(item),
-    value: item.name,
-    imageUrl: item.store_image
-      ? `${imageBaseUrl}${item.store_image}`
-      : undefined,
-  }));
+  arr.map(item => {
+    const distance = formatStoreDistance(item.distance_m);
+    return {
+      label: getStoreLabel(item),
+      value: item.name,
+      imageUrl: item.store_image
+        ? `${imageBaseUrl}${item.store_image}`
+        : undefined,
+      subLabel: distance?.text,
+      subLabelMuted: distance?.muted,
+    };
+  });
 
 const StoreDropdownField = ({
   label,
@@ -64,6 +80,9 @@ const StoreDropdownField = ({
   onChange,
   navigation,
   disabled = false,
+  here,
+  locating = false,
+  refreshLocation,
 }: Props) => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -78,8 +97,9 @@ const StoreDropdownField = ({
       search: value,
       include_subordinates: '1',
       include_direct_subordinates: '1',
+      current_location: here,
     },
-    { skip: !value },
+    { skip: !value || locating },
   );
 
   // ✅ Seed with full label in edit mode
@@ -104,15 +124,24 @@ const StoreDropdownField = ({
   useEffect(() => {
     setPage(1);
     setStoreList([]);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, here]);
 
-  const { data, isFetching } = useGetStoreListQuery({
-    page: String(page),
-    page_size: PAGE_SIZE,
-    search: debouncedSearch,
-    include_subordinates: '1',
-    include_direct_subordinates: '1',
-  });
+  // A new search re-reads the location; the list only reloads if it moved.
+  useEffect(() => {
+    if (debouncedSearch) refreshLocation?.();
+  }, [debouncedSearch, refreshLocation]);
+
+  const { data, isFetching } = useGetStoreListQuery(
+    {
+      page: String(page),
+      page_size: PAGE_SIZE,
+      search: debouncedSearch,
+      include_subordinates: '1',
+      include_direct_subordinates: '1',
+      current_location: here,
+    },
+    { skip: locating },
+  );
 
   useEffect(() => {
     const stores = (data as StoreApiResponse)?.message?.data?.stores;

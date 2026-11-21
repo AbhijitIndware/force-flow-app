@@ -33,6 +33,7 @@ import {Size} from '../../../utils/fontSize';
 import {uniqueByValue} from '../../../utils/utils';
 import MinStoresWarningModal from '../../../components/SO/Activity/Pjp/MinStoresWarningModal';
 import {getUserFacingError, getSafeServerMessage} from '../../../utils/errorMessage';
+import {useCurrentLocation} from '../../../hooks/useCurrentLocation';
 const {width} = Dimensions.get('window');
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -133,10 +134,23 @@ const AddPjpScreen = ({navigation, route}: Props) => {
     name: employeeSearch,
   });
 
+  // Phone location: store lists come nearest first, with distances.
+  const {here, locating, refresh: refreshLocation} = useCurrentLocation();
+  // The PJP's own stores are fetched with the first location only, so a later
+  // re-read doesn't refetch them and reset the form while it is being edited.
+  const [editLocation, setEditLocation] = useState<string | undefined>();
+  const [editLocationReady, setEditLocationReady] = useState(false);
+  useEffect(() => {
+    if (!locating && !editLocationReady) {
+      setEditLocation(here);
+      setEditLocationReady(true);
+    }
+  }, [locating, here, editLocationReady]);
+
   // Use the edit endpoint to fetch PJP data including planned_activities
   const {data: pjpDetails} = useGetPjpDailyStoresForEditQuery(
-    {document_name: id!},
-    {skip: id === null || id === undefined},
+    {document_name: id!, current_location: editLocation},
+    {skip: id === null || id === undefined || !editLocationReady},
   );
   const pjpStatus = (pjpDetails as any)?.message?.data?.running_status;
   const beatPlan =
@@ -352,7 +366,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title={id ? 'Modify PJP' : 'Add PJP'}
+        title={id ? 'Modify PJP' : 'Create PJP'}
         navigation={() => navigation.goBack()}
       />
       {showDuplicatePjp && (
@@ -401,6 +415,9 @@ const AddPjpScreen = ({navigation, route}: Props) => {
         beatPlan={beatPlan}
         initialActivityCount={initialActivityCount}
         initialStoreCount={initialStoreCount}
+        here={here}
+        locating={locating}
+        refreshLocation={refreshLocation}
       />
       <MinStoresWarningModal
         visible={showMinStoreModal}
@@ -437,7 +454,7 @@ const AddPjpScreen = ({navigation, route}: Props) => {
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
             <Text style={styles.submitText}>
-              {id ? 'Modify PJP' : 'Add PJP'}
+              {id ? 'Modify PJP' : 'Create PJP'}
             </Text>
           )}
         </TouchableOpacity>

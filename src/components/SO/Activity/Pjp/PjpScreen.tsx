@@ -298,7 +298,7 @@ const PJPScreen = ({navigation, onRefresh: onParentRefresh}: any) => {
                   ? '  ·  '
                   : ''}
                 {item.travel_distance_km !== null
-                  ? `${item.travel_distance_km.toFixed(1)} km`
+                  ? `Total km (home to home): ${item.travel_distance_km.toFixed(1)} km`
                   : ''}
               </Text>
             ) : null}

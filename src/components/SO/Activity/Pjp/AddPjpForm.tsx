@@ -62,6 +62,10 @@ interface Props {
   beatPlan?: string | null;
   initialActivityCount?: number;
   initialStoreCount?: number;
+  // The phone's location for the store lists (nearest first).
+  here?: string;
+  locating?: boolean;
+  refreshLocation?: () => void;
 }
 
 const ACTIVITY_TYPES = [
@@ -83,6 +87,9 @@ const AddPjpForm: React.FC<Props> = ({
   beatPlan = null,
   initialActivityCount = 0,
   initialStoreCount = 0,
+  here,
+  locating = false,
+  refreshLocation,
 }) => {
   const navigation = useNavigation<NavigationProp>();
 
@@ -339,6 +346,9 @@ const AddPjpForm: React.FC<Props> = ({
               }}
               navigation={navigation}
               disabled={isProtectedPlannedStore || isExistingRunningStore || isSavedStore}
+              here={here}
+              locating={locating}
+              refreshLocation={refreshLocation}
             />
 
             {isProtectedPlannedStore && (

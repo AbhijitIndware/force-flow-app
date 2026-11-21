@@ -20,6 +20,7 @@ import { flexCol } from '../../../utils/styles';
 import {
   getCurrentPositionWithAccuracy,
   LOW_LOCATION_ACCURACY,
+  formatStoreDistance,
   getStoreLabel,
   requestLocationPermission,
   windowWidth,
@@ -30,8 +31,10 @@ import { useAppDispatch, useAppSelector } from '../../../store/hook';
 import {
   setSelectedStore,
   useAddCheckInMutation,
+  useGetDailyPjpByIdQuery,
   useLocationVerificationMutation,
 } from '../../../features/base/base-api';
+import { useCurrentLocation } from '../../../hooks/useCurrentLocation';
 
 import PageHeader from '../../../components/ui/PageHeader';
 import LoadingScreen from '../../../components/ui/LoadingScreen';
@@ -85,17 +88,45 @@ const CheckInForm = ({ navigation }: Props) => {
     s => s.persistedReducer.pjpSlice.pjpWorkflowData,
   );
 
+  // ── Nearest first ───────────────────────────────────────────────────────────
+  // The PJP's stores with the server's distance from the phone, nearest
+  // first. Status still comes from the workflow data; without a location
+  // (or while this loads) the list keeps the workflow order, as before.
+  const pjpId = pjpWorkflowData?.pjp_data?.pjp_details?.name;
+  const { here, locating } = useCurrentLocation(!!pjpId);
+  const { data: nearestData } = useGetDailyPjpByIdQuery(
+    { id: pjpId ?? '', current_location: here },
+    { skip: !pjpId || locating || !here },
+  );
+  const nearest = new Map(
+    (nearestData?.message?.data?.stores ?? []).map((s, i) => [
+      s.store_id,
+      { rank: i, distance_m: s.distance_m },
+    ]),
+  );
+
   // ── Derived data ────────────────────────────────────────────────────────────
   const storeDailyList = (pjpWorkflowData?.pjp_data?.stores ?? [])
     .filter(s => s.status !== 'Completed')
-    .map(s => ({
-      label: getStoreLabel(s),
-      value: s.store,
-      disabled: s.status === 'Visited',
-      imageUrl: s.store_image
-        ? `${imageBaseUrl}${s.store_image}`
-        : undefined,
-    }));
+    .map((s, i) => ({ s, i, near: nearest.get(s.store) }))
+    // Server order; stores it didn't return keep their place at the end.
+    .sort(
+      (a, b) =>
+        (a.near?.rank ?? Infinity) - (b.near?.rank ?? Infinity) || a.i - b.i,
+    )
+    .map(({ s, near }) => {
+      const distance = formatStoreDistance(near?.distance_m);
+      return {
+        label: getStoreLabel(s),
+        value: s.store,
+        disabled: s.status === 'Visited',
+        imageUrl: s.store_image
+          ? `${imageBaseUrl}${s.store_image}`
+          : undefined,
+        subLabel: distance?.text,
+        subLabelMuted: distance?.muted,
+      };
+    });
 
   const storesWithoutImage = new Set(
     (pjpWorkflowData?.pjp_data?.stores ?? [])
@@ -367,7 +398,7 @@ const NoPjpState = ({
       activeOpacity={0.85}
       style={emptyStyles.cta}
       onPress={onAddPjp}>
-      <Text style={emptyStyles.ctaText}>Add PJP</Text>
+      <Text style={emptyStyles.ctaText}>Create PJP</Text>
     </TouchableOpacity>
   </View>
 );

@@ -719,7 +719,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title={storeId ? 'Edit Store' : 'Add Store'}
+        title={storeId ? 'Edit Store' : 'Create Store'}
         navigation={() => navigation.goBack()}
       />
 
@@ -828,7 +828,7 @@ const AddStoreScreen = ({navigation, route}: Props) => {
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
                 <Text style={styles.submitText}>
-                  {storeId ? 'Update Store' : 'Add Store'}
+                  {storeId ? 'Update Store' : 'Create Store'}
                 </Text>
               )}
             </TouchableOpacity>

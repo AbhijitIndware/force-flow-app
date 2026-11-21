@@ -215,12 +215,13 @@ export const dropdownApi = createApi({
       }),
     }),
     getDailyStore: builder.query<RDailyStore, IDailyStore>({
-      query: ({ date, user }) => ({
+      query: ({ date, user, current_location }) => ({
         url: '/method/salesforce_management.mobile_app_apis.pjp_apis.get_pjp_store.get_pjp_stores',
         method: 'GET',
         params: {
           date,
           user,
+          ...(current_location ? { current_location } : {}),
         },
       }),
     }),

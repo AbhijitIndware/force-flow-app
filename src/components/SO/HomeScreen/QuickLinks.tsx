@@ -30,12 +30,12 @@ type QuickLink = {
 // A store needs its distributor; a PJP needs stores and activity locations;
 // orders come from store visits.
 const LINKS: QuickLink[] = [
-  { title: 'Add Distributor', icon: Package, screen: 'AddDistributorScreen' },
-  { title: 'Add Store', icon: Hotel, screen: 'AddStoreScreen' },
+  { title: 'Create Distributor', icon: Package, screen: 'AddDistributorScreen' },
+  { title: 'Create Store', icon: Hotel, screen: 'AddStoreScreen' },
   // Opens the list, which has the "Create New Location" button.
-  { title: 'Add Activity Location', icon: MapPin, screen: 'ActivityLocationScreen' },
-  { title: 'Add PJP', icon: FilePlus2, screen: 'AddPjpScreen' },
-  { title: 'Add Order', icon: BaggageClaim, screen: 'OrdersScreen', params: { index: 0 } },
+  { title: 'Create Activity Location', icon: MapPin, screen: 'ActivityLocationScreen' },
+  { title: 'Create PJP', icon: FilePlus2, screen: 'AddPjpScreen' },
+  { title: 'Create Order', icon: BaggageClaim, screen: 'OrdersScreen', params: { index: 0 } },
   { title: 'Update Stock', icon: Boxes, screen: 'StockManagementScreen' },
 ];
 

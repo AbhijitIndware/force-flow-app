@@ -19,6 +19,7 @@ import {
   useStartPjpMutation,
 } from '../../../../features/base/base-api';
 import {
+  formatStoreDistance,
   getCurrentLocation,
   requestLocationPermission,
 } from '../../../../utils/utils';
@@ -34,6 +35,8 @@ type Props = {
   detail: PjpDailyStore;
   navigation: any;
   refetch: any;
+  // Re-reads the phone's location (pull-to-refresh), for store distances.
+  refreshLocation?: () => Promise<unknown>;
 };
 
 const STATUS_CONFIG = {
@@ -57,7 +60,12 @@ const STATUS_CONFIG = {
   },
 };
 
-const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
+const PjpDetailComponent = ({
+  detail,
+  navigation,
+  refetch,
+  refreshLocation,
+}: Props) => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [updatePjpRoute] = useStartPjpMutation(); // unused but kept for type compat
@@ -101,10 +109,15 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
     }
   }, [isRunning]);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 2000);
-  }, []);
+    try {
+      await refreshLocation?.();
+      await refetch?.();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshLocation, refetch]);
 
   const getParsedLocation = async () => {
     const hasPermission = await requestLocationPermission();
@@ -433,6 +446,19 @@ const PjpDetailComponent = ({detail, navigation, refetch}: Props) => {
                     </>
                   ) : null}
                 </View>
+                {(() => {
+                  // Server's distance from the phone; the list is nearest first.
+                  const distance = formatStoreDistance(item.distance_m);
+                  return distance ? (
+                    <Text
+                      style={[
+                        styles.storeDistance,
+                        distance.muted && styles.storeDistanceMuted,
+                      ]}>
+                      {distance.text}
+                    </Text>
+                  ) : null;
+                })()}
               </View>
             </View>
 
@@ -767,6 +793,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   storeMeta: {fontSize: 12, color: GRAY_400},
+  storeDistance: {
+    fontSize: 12,
+    color: ACCENT,
+    fontFamily: Fonts.medium,
+    marginTop: 2,
+  },
+  storeDistanceMuted: {color: GRAY_400, fontFamily: Fonts.regular},
   metaDot: {fontSize: 12, color: GRAY_200, marginHorizontal: 2},
 
   /* Warehouse */

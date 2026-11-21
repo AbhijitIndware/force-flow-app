@@ -276,6 +276,18 @@ export const getInitials = (name?: string) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+// The server's distance from the phone to a store (distance_m), as shown on
+// store cards. Undefined when the list was loaded without a location.
+export const formatStoreDistance = (
+  metres?: number | null,
+): {text: string; muted: boolean} | undefined => {
+  if (metres === undefined) return undefined;
+  if (metres === null) return {text: 'Location not set', muted: true};
+  return metres < 1000
+    ? {text: `${Math.round(metres)} m away`, muted: false}
+    : {text: `${(metres / 1000).toFixed(1)} km away`, muted: false};
+};
+
 export const getStoreLabel = (item: any) => {
   if (!item) return '';
   let label = item.store_name || '';

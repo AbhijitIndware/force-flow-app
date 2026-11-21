@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -87,6 +88,24 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
   const [confirm, setConfirm] = useState<ConfirmSpec | null>(null);
   // The server's refusal, kept on the form with what was typed.
   const [formError, setFormError] = useState('');
+  // While the keyboard is open for a Qty box, Remarks is hidden so the item
+  // list keeps its space (otherwise Remarks sits above the keyboard and the
+  // list shrinks to nothing). It comes back when the keyboard closes.
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [remarksFocused, setRemarksFocused] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () =>
+      setKeyboardOpen(true),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () =>
+      setKeyboardOpen(false),
+    );
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  const hideRemarks = keyboardOpen && !remarksFocused;
 
   const {data: storesResponse} = useStockStores();
   const stores = useMemo(
@@ -486,16 +505,22 @@ const StockReceivedScreen = ({navigation, route}: Props) => {
         />
       )}
       <View style={styles.footerForm}>
-        <Text style={styles.fieldLabel}>Remarks (optional)</Text>
-        <TextInput
-          style={styles.remarksInput}
-          placeholder="Challan or invoice number"
-          placeholderTextColor={Colors.gray}
-          value={remarks}
-          onChangeText={setRemarks}
-        />
+        {hideRemarks ? null : (
+          <>
+            <Text style={styles.fieldLabel}>Remarks (optional)</Text>
+            <TextInput
+              style={styles.remarksInput}
+              placeholder="Challan or invoice number"
+              placeholderTextColor={Colors.gray}
+              value={remarks}
+              onChangeText={setRemarks}
+              onFocus={() => setRemarksFocused(true)}
+              onBlur={() => setRemarksFocused(false)}
+            />
+          </>
+        )}
         {formError ? <Text style={styles.formError}>{formError}</Text> : null}
-        <View style={styles.buttonRow}>
+        <View style={[styles.buttonRow, hideRemarks && {marginTop: 0}]}>
           {correcting ? (
             <TouchableOpacity
               style={[styles.dangerButton, saving && styles.disabled]}

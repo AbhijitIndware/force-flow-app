@@ -104,8 +104,10 @@ export interface ExpenseClaimData {
   home_to_start_km?: number | null;
   /** KM PJP End to Home (0 until the employee's home is entered) */
   end_to_home_km?: number | null;
-  /** KM Paid On: PJP km + both home legs */
+  /** Total km (home to home): home → PJP start + PJP km + PJP end → home */
   journey_km?: number | null;
+  /** PJP km, start to end only. Approver breakdown only; never shown to the field team. */
+  pjp_km?: number | null;
   /** Approver only: the ticks the approve sheet shows */
   approval_options?: ApprovalOption[];
   /** Approver only: why this claim must be approved on its own */

@@ -176,7 +176,7 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                     <TouchableOpacity
                       style={styles.checkinButton}
                       onPress={() => navigation.navigate('AddPjpScreen')}>
-                      <Text style={styles.checkinButtonText}>Add Daily PJP</Text>
+                      <Text style={styles.checkinButtonText}>Create Daily PJP</Text>
                       <Ionicons
                         name="chevron-forward-circle-sharp"
                         size={24}

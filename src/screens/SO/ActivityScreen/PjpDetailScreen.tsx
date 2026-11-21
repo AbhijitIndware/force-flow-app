@@ -14,6 +14,7 @@ import PjpDetailComponent from '../../../components/SO/Activity/Pjp/PjpDetailCom
 import moment from 'moment';
 import { Fonts } from '../../../constants';
 import { getUserFacingError } from '../../../utils/errorMessage';
+import { useCurrentLocation } from '../../../hooks/useCurrentLocation';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -27,9 +28,15 @@ type Props = {
 const PjpDetailScreen = ({ navigation, route }: Props) => {
   const { details, readOnly = false } = route.params;
 
+  // Stores come nearest first, with the distance from the phone.
+  const { here, locating, refresh: refreshLocation } = useCurrentLocation();
   const { data, isFetching, isError, error, refetch } = useGetDailyPjpByIdQuery(
-    details?.pjp_daily_store_id,
-    {refetchOnMountOrArgChange: true, refetchOnFocus: true},
+    { id: details?.pjp_daily_store_id, current_location: here },
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+      skip: locating,
+    },
   );
 
   const resolvedDetails = data?.message?.data;
@@ -42,7 +49,7 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader title="PJP Detail" navigation={() => navigation.goBack()} />
 
-      {isFetching ? (
+      {isFetching || locating ? (
         <ActivityIndicator size="large" color={Colors.primary} style={{ marginTop: 40 }} />
       ) : (
         isError || !resolvedDetails ? (
@@ -75,6 +82,7 @@ const PjpDetailScreen = ({ navigation, route }: Props) => {
             detail={resolvedDetails as PjpDailyStore}
             navigation={navigation}
             refetch={refetch}
+            refreshLocation={refreshLocation}
           />
         </>
         )

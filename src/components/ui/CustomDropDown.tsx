@@ -20,7 +20,13 @@ import { DropDownList } from '../../types/Navigation';
 import { ChevronDown } from 'lucide-react-native';
 
 // Extend DropDownList locally if you can't modify the type file
-type DropDownItem = DropDownList & { disabled?: boolean; imageUrl?: string };
+type DropDownItem = DropDownList & {
+  disabled?: boolean;
+  imageUrl?: string;
+  // Small line under the label, e.g. a store's "1.9 km away".
+  subLabel?: string;
+  subLabelMuted?: boolean;
+};
 
 type Props = {
   selectText: string;
@@ -228,16 +234,28 @@ const DropdownComponent = ({
                     onPress={() => handleSelect(item)}
                     disabled={isDisabled}
                     style={styles.labelWrapper}>
-                    <Text
-                      style={[
-                        styles.itemText,
-                        { fontSize: textSize },
-                        isSelected && styles.selectedItemText,
-                        isDisabled && styles.disabledItemText,
-                      ]}
-                      numberOfLines={wrapLabels ? undefined : 2}>
-                      {item.label}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.itemText,
+                          { fontSize: textSize },
+                          isSelected && styles.selectedItemText,
+                          isDisabled && styles.disabledItemText,
+                        ]}
+                        numberOfLines={wrapLabels ? undefined : 2}>
+                        {item.label}
+                      </Text>
+                      {item.subLabel ? (
+                        <Text
+                          style={[
+                            styles.subLabelText,
+                            item.subLabelMuted && styles.subLabelMuted,
+                            isSelected && styles.selectedItemText,
+                          ]}>
+                          {item.subLabel}
+                        </Text>
+                      ) : null}
+                    </View>
                     {/* Visited badge */}
                     {isDisabled && (
                       <View style={styles.visitedBadge}>
@@ -357,6 +375,16 @@ const styles = StyleSheet.create({
   },
   disabledItemText: {
     color: '#9CA3AF',
+  },
+  subLabelText: {
+    color: Colors.darkButton,
+    fontFamily: Fonts.medium,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  subLabelMuted: {
+    color: '#9CA3AF',
+    fontFamily: Fonts.regular,
   },
   visitedBadge: {
     backgroundColor: '#DCFCE7',

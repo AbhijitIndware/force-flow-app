@@ -397,7 +397,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
   return (
     <SafeAreaView style={[flexCol, {flex: 1, backgroundColor: Colors.lightBg}]}>
       <PageHeader
-        title={distributorId ? 'Update Distributor' : 'Add Distributor'}
+        title={distributorId ? 'Update Distributor' : 'Create Distributor'}
         navigation={() => navigation.goBack()}
       />
       {prefillPending ? (
@@ -466,7 +466,7 @@ const AddDistributorScreen = ({navigation, route}: Props) => {
             <ActivityIndicator size="small" color={Colors.white} />
           ) : (
             <Text style={styles.submitText}>
-              {distributorId ? 'Update Distributor' : 'Add Distributor'}
+              {distributorId ? 'Update Distributor' : 'Create Distributor'}
             </Text>
           )}
         </TouchableOpacity>
