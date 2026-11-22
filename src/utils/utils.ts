@@ -299,4 +299,4 @@ export const getStoreLabel = (item: any) => {
   return label;
 };
 
-export const APP_VERSION = '6.4.0';
+export const APP_VERSION = '6.5.0';
