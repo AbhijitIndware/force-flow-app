@@ -539,7 +539,7 @@ const AddExpenseComponent = ({
       {/* ── Distance KM Display ── */}
       <View style={styles.distanceCard}>
         <View style={styles.distanceContent}>
-          <Text style={styles.distanceLabel}>Total km (home to home)</Text>
+          <Text style={styles.distanceLabel}>Total KM (Home To Home)</Text>
           <Text style={styles.distanceValue}>
             {totalKm || totalKm === 0 ? `${totalKm} km` : 'N/A'}
           </Text>

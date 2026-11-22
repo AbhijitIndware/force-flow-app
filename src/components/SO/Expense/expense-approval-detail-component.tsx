@@ -778,7 +778,7 @@ const ExpenseApprovalDetailComponent = ({
           <InfoRow label="From" value={claim.from_city || 'N/A'} />
           <InfoRow label="To" value={claim.to_city || 'N/A'} />
           <InfoRow
-            label="Total km (home to home)"
+            label="Total KM (Home To Home)"
             value={formatKm(claim.journey_km ?? claim.distance_km)}
             bold
           />
