@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -28,7 +28,7 @@ import {
   useGetPendingLeaveApprovalsQuery,
   useRejectLeaveMutation,
 } from '../../../features/base/base-api';
-import { PendingLeaveApproval, leaveRows } from '../../../types/leaveType';
+import { PendingLeaveApproval, managerStepRows } from '../../../types/leaveType';
 import {
   getSafeServerMessage,
   getUserFacingError,
@@ -42,7 +42,6 @@ type Props = {
   >;
 };
 
-type StageFilter = 'all' | 'manager' | 'hr';
 type Decision = { item: PendingLeaveApproval; action: 'approve' | 'reject' };
 
 const TYPE_COLORS: Record<string, { fg: string; bg: string }> = {
@@ -53,8 +52,6 @@ const TYPE_COLORS: Record<string, { fg: string; bg: string }> = {
 const DEFAULT_TYPE_COLOR = { fg: '#0F766E', bg: '#CCFBF1' };
 
 const typeColor = (t: string) => TYPE_COLORS[t] ?? DEFAULT_TYPE_COLOR;
-
-const isHrStep = (item: PendingLeaveApproval) => item.stage === 'With HR';
 
 function daysLabel(n?: number) {
   if (n === undefined || n === null) return '';
@@ -69,8 +66,8 @@ function initials(name?: string) {
 }
 
 /**
- * Leave the user can decide now: managers see their team at the manager
- * step; HR also sees every leave at the HR step.
+ * Team leave waiting at the manager step. Approving sends it to HR, who
+ * gives the final approval on the website (there is no HR step in the app).
  */
 const LeaveApprovalScreen = ({ navigation }: Props) => {
   const { data, isLoading, isFetching, refetch } =
@@ -80,23 +77,11 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
   const [approveLeave, { isLoading: isApproving }] = useApproveLeaveMutation();
   const [rejectLeave, { isLoading: isRejecting }] = useRejectLeaveMutation();
 
-  const [filter, setFilter] = useState<StageFilter>('all');
   const [decision, setDecision] = useState<Decision | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
   const empId = useAppSelector(s => s.persistedReducer.authSlice.empId);
-  // Never list the user's own leave for approval.
-  const rows = leaveRows(data?.message?.data).filter(
-    r => !r.employee || r.employee !== empId,
-  );
-  const hrCount = rows.filter(isHrStep).length;
-  const managerCount = rows.length - hrCount;
-  const showFilters = hrCount > 0 && managerCount > 0;
-
-  const visibleRows = useMemo(() => {
-    if (!showFilters || filter === 'all') return rows;
-    return rows.filter(r => (filter === 'hr' ? isHrStep(r) : !isHrStep(r)));
-  }, [rows, filter, showFilters]);
+  const rows = managerStepRows(data?.message?.data, empId);
 
   const isSubmitting = isApproving || isRejecting;
   const reasonMissing =
@@ -166,40 +151,8 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
           <Text style={styles.summaryTitle}>
             {rows.length} leave request{rows.length === 1 ? '' : 's'} waiting
           </Text>
-          <Text style={styles.summarySub}>
-            {hrCount > 0 && managerCount > 0
-              ? `${managerCount} at manager step · ${hrCount} at HR step`
-              : hrCount > 0
-              ? 'Waiting for HR approval'
-              : 'Waiting for your approval'}
-          </Text>
+          <Text style={styles.summarySub}>Waiting for your approval</Text>
         </View>
-      </View>
-    );
-  };
-
-  const renderFilters = () => {
-    if (!showFilters) return null;
-    const chips: { key: StageFilter; label: string }[] = [
-      { key: 'all', label: `All (${rows.length})` },
-      { key: 'manager', label: `Manager step (${managerCount})` },
-      { key: 'hr', label: `HR step (${hrCount})` },
-    ];
-    return (
-      <View style={styles.filterRow}>
-        {chips.map(c => {
-          const active = filter === c.key;
-          return (
-            <TouchableOpacity
-              key={c.key}
-              onPress={() => setFilter(c.key)}
-              style={[styles.chip, active && styles.chipActive]}>
-              <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                {c.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
       </View>
     );
   };
@@ -207,15 +160,11 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
   const renderItem = ({ item }: { item: PendingLeaveApproval }) => {
     const tc = typeColor(item.leave_type);
     const sameDay = item.from_date === item.to_date;
-    const hr = isHrStep(item);
     const dates = sameDay
       ? moment(item.from_date).format('DD MMM')
       : `${moment(item.from_date).format('DD MMM')} – ${moment(
           item.to_date,
         ).format('DD MMM')}`;
-    const subLine = [item.designation, item.stage ? (hr ? 'HR step' : 'Manager step') : null]
-      .filter(Boolean)
-      .join(' · ');
     return (
       <View style={styles.card}>
         <View style={[styles.cardStripe, { backgroundColor: tc.fg }]} />
@@ -231,11 +180,9 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
               <Text style={styles.name} numberOfLines={1}>
                 {item.employee_name}
               </Text>
-              {!!subLine && (
-                <Text
-                  style={[styles.designation, hr && { color: '#0F766E' }]}
-                  numberOfLines={1}>
-                  {subLine}
+              {!!item.designation && (
+                <Text style={styles.designation} numberOfLines={1}>
+                  {item.designation}
                 </Text>
               )}
             </View>
@@ -329,15 +276,10 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
         </View>
       ) : (
         <FlatList
-          data={visibleRows}
+          data={rows}
           keyExtractor={item => item.name}
           renderItem={renderItem}
-          ListHeaderComponent={
-            <>
-              {renderSummary()}
-              {renderFilters()}
-            </>
-          }
+          ListHeaderComponent={renderSummary()}
           ListEmptyComponent={renderEmpty}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -381,9 +323,7 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
                 </Text>
                 <Text style={styles.sheetSub}>
                   {approving
-                    ? d && isHrStep(d)
-                      ? 'This is the final approval.'
-                      : 'It will go to HR for final approval.'
+                    ? 'It will go to HR for final approval.'
                     : 'The employee will see your reason.'}
                 </Text>
               </View>
@@ -483,20 +423,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)',
     marginTop: 1,
   },
-
-  // Filters
-  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  chipActive: { backgroundColor: Colors.darkButton, borderColor: Colors.darkButton },
-  chipText: { fontFamily: Fonts.medium, fontSize: 12, color: '#334155' },
-  chipTextActive: { color: Colors.white },
 
   // Card (compact)
   card: {

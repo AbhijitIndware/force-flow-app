@@ -3,21 +3,18 @@ import {CalendarCheck} from 'lucide-react-native';
 import {Colors} from '../../../utils/colors';
 import {useGetPendingLeaveApprovalsQuery} from '../../../features/base/base-api';
 import {useAppSelector} from '../../../store/hook';
-import {leaveRows} from '../../../types/leaveType';
+import {managerStepRows} from '../../../types/leaveType';
 import {ApprovalLinkCard} from './LateCheckinApprovalLink';
 
 interface Props {
   navigation: any;
 }
 
-/** Home card for approvers (manager / HR): leave waiting for their decision. */
+/** Home card for managers: team leave waiting at the manager step. */
 const LeaveApprovalLink: React.FC<Props> = ({navigation}) => {
   const empId = useAppSelector(s => s.persistedReducer.authSlice.empId);
   const {data} = useGetPendingLeaveApprovalsQuery();
-  // Never count the user's own leave as something to approve.
-  const pendingCount = leaveRows(data?.message?.data).filter(
-    r => !r.employee || r.employee !== empId,
-  ).length;
+  const pendingCount = managerStepRows(data?.message?.data, empId).length;
   return (
     <ApprovalLinkCard
       title="Leave Approvals"

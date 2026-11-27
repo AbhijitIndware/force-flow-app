@@ -1,5 +1,6 @@
 // Leave (leave_apis.leave_api): Casual / Privilege / Without Pay.
-// Flow: reporting manager first, then HR (final approval).
+// Flow: reporting manager first (in the app), then HR (final approval, on
+// the website only).
 
 export const LEAVE_TYPES = [
   'Casual Leave',
@@ -120,4 +121,18 @@ export function leaveRows<T>(data: T[] | { leaves?: T[] } | undefined): T[] {
   if (!data) return [];
   if (Array.isArray(data)) return data;
   return data.leaves ?? [];
+}
+
+/**
+ * Leave the user can decide in the app: the manager step only, never their
+ * own. HR gives the final approval on the website, so rows at the HR step
+ * (sent to HR users by the same endpoint) are left out of the app.
+ */
+export function managerStepRows(
+  data: PendingLeaveApproval[] | { leaves?: PendingLeaveApproval[] } | undefined,
+  empId?: string | null,
+): PendingLeaveApproval[] {
+  return leaveRows(data).filter(
+    r => r.stage !== 'With HR' && (!r.employee || r.employee !== empId),
+  );
 }

@@ -122,7 +122,7 @@ import { PaginationInfo } from '../../types/Navigation';
 const PJP_REOPEN_API =
   '/method/salesforce_automation.mobile_app_apis.pjp_apis.pjp_reopen_api';
 
-// Leave: Casual / Privilege / Without Pay, manager then HR.
+// Leave: Casual / Privilege / Without Pay, manager (app) then HR (website).
 const LEAVE_API =
   '/method/salesforce_management.mobile_app_apis.leave_apis.leave_api';
 
@@ -1795,7 +1795,7 @@ export const baseApi = createApi({
       invalidatesTags: ['PjpReopen', 'PJP'],
     }),
 
-    // ── Leave (manager first, then HR) ──────────────────────────────────────
+    // ── Leave (manager in the app, then HR on the website) ──────────────────────────────────────
     // data.balances: one row each for Casual / Privilege Leave.
     // data.leave_types: the three types for the Apply screen.
     getLeaveBalances: builder.query<RGetLeaveBalances, void>({
@@ -1828,7 +1828,8 @@ export const baseApi = createApi({
       invalidatesTags: ['Leave'],
     }),
 
-    // Managers: team leave at the manager step. HR: also every leave at the HR step.
+    // Managers: team leave at the manager step. HR users also get every leave
+    // at the HR step; the app drops those (managerStepRows): HR is website-only.
     getPendingLeaveApprovals: builder.query<RGetPendingLeaveApprovals, void>({
       query: () => ({
         url: `${LEAVE_API}.get_pending_leave_approvals`,

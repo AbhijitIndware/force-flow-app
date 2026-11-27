@@ -3,7 +3,10 @@ package com.forceflow
 import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -52,6 +55,7 @@ class MainActivity : ReactActivity() {
     // react-native-screens < 4.16 must not restore Fragment state on activity recreation.
     super.onCreate(null)
     onBackPressedDispatcher.addCallback(this, backCallback)
+    resizeForKeyboard()
 
     // Tapjacking/overlay protection. `filterTouchesWhenObscured` is a
     // View property — applying it to the root decor view covers all
@@ -89,6 +93,28 @@ class MainActivity : ReactActivity() {
         }
         .show()
     }
+  }
+
+  /**
+   * Android 15+ forces edge-to-edge on apps targeting SDK 35+, and in that
+   * mode `windowSoftInputMode="adjustResize"` no longer shrinks the window:
+   * the keyboard is drawn over the React root, so inputs in the lower half of
+   * a screen get hidden (worse with a large system font). Restore the old
+   * behaviour by padding the content view by the keyboard's height; the root
+   * view shrinks and ScrollViews bring the focused input back into view.
+   * RN Modals are not affected: their dialog root already fits system windows.
+   */
+  private fun resizeForKeyboard() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    val content = findViewById<View>(android.R.id.content) ?: return
+    ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+      val keyboardBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+      if (view.paddingBottom != keyboardBottom) {
+        view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, keyboardBottom)
+      }
+      insets
+    }
+    ViewCompat.requestApplyInsets(content)
   }
 
   /**
