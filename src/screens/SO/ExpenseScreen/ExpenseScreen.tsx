@@ -1,15 +1,11 @@
-import { StyleSheet, SafeAreaView, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { SafeAreaView } from 'react-native';
+import React from 'react';
 import { flexCol } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import PageHeader from '../../../components/ui/PageHeader';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import ExpenseComponent from '../../../components/SO/Expense/expense-component';
-import VisibilityComponent from '../../../components/SO/Visibility/visibility-component';
-import { Tab, TabView } from '@rneui/themed';
-import { Size } from '../../../utils/fontSize';
-import { Fonts } from '../../../constants';
 
 type NavigationProp = NativeStackNavigationProp<
   SoAppStackParamList,
@@ -18,98 +14,22 @@ type NavigationProp = NativeStackNavigationProp<
 
 type Props = {
   navigation: NavigationProp;
-  route: any;
 };
 
-const ExpenseScreen = ({ navigation, route }: Props) => {
-  const { index: initialIndex } = route.params || {};
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (initialIndex !== undefined) {
-      setIndex(initialIndex);
-    }
-  }, [initialIndex]);
-  return (
-    <SafeAreaView
-      style={[
-        flexCol,
-        {
-          flex: 1,
-          backgroundColor: Colors.lightBg,
-        },
-      ]}>
-      <PageHeader
-        // Matches the home link that opens each tab.
-        title={index === 1 ? 'Create Visibility Claim' : 'Expense Claim'}
-        navigation={() => {
-          navigation.navigate('Home');
-        }}
-      />
-      <View style={styles.tabSection}>
-        <Tab
-          value={index}
-          onChange={e => setIndex(e)}
-          indicatorStyle={{
-            height: 0,
-          }}
-          variant="primary"
-          style={{ backgroundColor: Colors.transparent, padding: 0 }}>
-          <Tab.Item
-            title="Expense"
-            titleStyle={{
-              fontSize: Size.xxs,
-              fontFamily: Fonts.medium,
-              lineHeight: 9,
-              paddingHorizontal: 0,
-            }}
-            containerStyle={active => ({
-              backgroundColor: active ? Colors.Orangelight : undefined,
-              borderRadius: active ? 10 : undefined,
-              borderColor: active ? '#FFBF83' : undefined,
-              borderTopWidth: active ? 1 : undefined,
-              borderLeftWidth: active ? 1 : undefined,
-              borderRightWidth: active ? 1 : undefined,
-            })}
-          />
-          <Tab.Item
-            title="Visibility"
-            titleStyle={{
-              fontSize: Size.xxs,
-              fontFamily: Fonts.medium,
-              lineHeight: 9,
-            }}
-            containerStyle={active => ({
-              backgroundColor: active ? Colors.Orangelight : undefined,
-              borderRadius: active ? 10 : undefined,
-              borderColor: active ? '#FFBF83' : undefined,
-              borderTopWidth: active ? 1 : undefined,
-              borderLeftWidth: active ? 1 : undefined,
-              borderRightWidth: active ? 1 : undefined,
-            })}
-          />
-        </Tab>
-      </View>
-      <TabView value={index} onChange={setIndex} animationType="spring">
-        <TabView.Item
-          style={{ width: '100%', flex: 1, backgroundColor: Colors.lightBg }}>
-          <ExpenseComponent navigation={navigation} />
-        </TabView.Item>
-        <TabView.Item
-          style={{ width: '100%', flex: 1, backgroundColor: Colors.lightBg }}>
-          <VisibilityComponent navigation={navigation} />
-        </TabView.Item>
-      </TabView>
-    </SafeAreaView>
-  );
-};
+/**
+ * The employee's own expense claims ("Expense Claim" in Claims & Leave).
+ * Visibility claims have their own screen (VisibilityScreen).
+ */
+const ExpenseScreen = ({ navigation }: Props) => (
+  <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
+    <PageHeader
+      title="Expense Claim"
+      navigation={() => {
+        navigation.navigate('Home');
+      }}
+    />
+    <ExpenseComponent navigation={navigation} />
+  </SafeAreaView>
+);
 
 export default ExpenseScreen;
-
-const styles = StyleSheet.create({
-  tabSection: {
-    backgroundColor: Colors.orange,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-});

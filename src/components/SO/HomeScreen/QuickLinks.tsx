@@ -50,13 +50,8 @@ const LINKS: QuickLink[] = [
     params: { index: 0, title: 'Create Order' },
   },
   { title: 'Update Stock', icon: Boxes, screen: 'StockManagementScreen' },
-  // Raised for a store, so it is store work: the Visibility tab of ExpenseScreen.
-  {
-    title: 'Create Visibility Claim',
-    icon: Eye,
-    screen: 'ExpenseScreen',
-    params: { index: 1 },
-  },
+  // Raised for a store, so it is store work. Its own screen, apart from expenses.
+  { title: 'Create Visibility Claim', icon: Eye, screen: 'VisibilityScreen' },
 ];
 
 export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {

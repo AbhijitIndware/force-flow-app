@@ -115,7 +115,7 @@ export type SoAppStackParamList = {
   TeamsSalesReport: {reportName: string};
   AsmDashboard: undefined;
 
-  ExpenseScreen: {index?: number} | undefined;
+  ExpenseScreen: undefined;
   AddExpenseScreen: {claimId?: string} | undefined;
   AddExpenseItemScreen: undefined;
   ExpenseClaimScreen: {id: string; name: string};

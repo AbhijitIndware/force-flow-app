@@ -60,7 +60,6 @@ export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
       title: 'Expense Claim',
       icon: BanknoteArrowDown,
       screen: 'ExpenseScreen',
-      params: { index: 0 },
     },
     // Leave is only for RSM, ASM, ASE, Sales Officer and ISR.
     ...(canUseLeave(employee?.designation)
