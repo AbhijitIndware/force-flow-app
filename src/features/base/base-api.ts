@@ -52,8 +52,6 @@ import {
   AsmDashboardResponse,
   AsmAttendanceResponse,
   RGetEmployeeTargets,
-  ISetEmployeeTargets,
-  RSetEmployeeTargets,
   IDdnStatsParams,
   RGetDdnStats,
   RGetSoStats,
@@ -87,8 +85,6 @@ import {
   RGetTeamEmployees,
   RGetEmployeeTargetsWithEmp,
   IGetEmployeeTargetsWithEmpParams,
-  RSetEmployeeTargetsWithEmp,
-  ISetEmployeeTargetsWithEmp,
   RGetTargetAchievementSummary,
   IGetTargetAchievementSummaryParams,
   pjpWorkflowDataType,
@@ -105,9 +101,30 @@ import {
   RAddActivityLocationImage,
   PjpListParams,
   RPjpList,
+  RGetMyPjpReopenStatus,
+  RRequestPjpReopen,
+  RGetPjpReopenRequests,
+  IDecidePjpReopen,
+  RDecidePjpReopen,
 } from '../../types/baseType';
+import {
+  RGetLeaveBalances,
+  IApplyLeave,
+  RLeaveAction,
+  RGetMyLeaves,
+  RGetPendingLeaveApprovals,
+} from '../../types/leaveType';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { PaginationInfo } from '../../types/Navigation';
+
+// Reopen a PJP ended by mistake (manager approval).
+// Lives in the salesforce_automation app on the server, not salesforce_management.
+const PJP_REOPEN_API =
+  '/method/salesforce_automation.mobile_app_apis.pjp_apis.pjp_reopen_api';
+
+// Leave: Casual / Privilege / Without Pay, manager then HR.
+const LEAVE_API =
+  '/method/salesforce_management.mobile_app_apis.leave_apis.leave_api';
 
 // Base api calling ---
 export const baseApi = createApi({
@@ -126,7 +143,9 @@ export const baseApi = createApi({
     'VC',
     'Stock',
     'Activity',
-    'LateCheckin'
+    'LateCheckin',
+    'PjpReopen',
+    'Leave',
   ],
   endpoints: builder => ({
     // PJP Workflow State Machine
@@ -1442,17 +1461,9 @@ export const baseApi = createApi({
       }),
     }),
 
-    // API 2 — Save / update targets for a specific month/year (upsert)
-    setEmployeeTargets: builder.mutation<
-      RSetEmployeeTargets,
-      ISetEmployeeTargets
-    >({
-      query: body => ({
-        url: `/method/salesforce_management.api.asm_dashboard.set_employee_targets`,
-        method: 'POST',
-        body,
-      }),
-    }),
+    // Targets are set only from the beat plan Excel on the desk
+    // (Daily PJP -> Monthly Beat Plan, SO Targets sheet). The server rejects
+    // set_employee_targets / set_global_targets, so the app has no write call.
 
     // API 3 — Fetch SO stats for a date range
     // Use data.message.value for total SO achievement (₹)
@@ -1690,19 +1701,6 @@ export const baseApi = createApi({
       providesTags: ['SO', 'Stock', 'Activity'],
     }),
 
-    // Upsert targets for a specific employee or entire team ("ALL")
-    setEmployeeTargetsForEmp: builder.mutation<
-      RSetEmployeeTargetsWithEmp,
-      ISetEmployeeTargetsWithEmp
-    >({
-      query: body => ({
-        url: '/method/salesforce_management.api.asm_dashboard.set_employee_targets',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: ['SO', 'Stock', 'Activity'],
-    }),
-
     // Target achievement summary (aggregated SO + DDN vs targets)
     getTargetAchievementSummary: builder.query<
       RGetTargetAchievementSummary,
@@ -1755,6 +1753,110 @@ export const baseApi = createApi({
         body,
       }),
       invalidatesTags: ['LateCheckin'],
+    }),
+
+    // ── PJP reopen (manager approval), only for today's PJP ──────────────────
+    // Employee: status of today's reopen request (can_request / data.status).
+    getMyPjpReopenStatus: builder.query<RGetMyPjpReopenStatus, void>({
+      query: () => ({
+        url: `${PJP_REOPEN_API}.get_my_pjp_reopen_status`,
+        method: 'GET',
+      }),
+      providesTags: ['PjpReopen'],
+    }),
+
+    // Employee: ask the manager to reopen today's ended PJP.
+    requestPjpReopen: builder.mutation<RRequestPjpReopen, { reason: string }>({
+      query: body => ({
+        url: `${PJP_REOPEN_API}.request_pjp_reopen`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PjpReopen'],
+    }),
+
+    // Manager (ASM / RSM): reopen requests from the last `days` days.
+    getPjpReopenRequests: builder.query<RGetPjpReopenRequests, { days?: number } | void>({
+      query: args => ({
+        url: `${PJP_REOPEN_API}.get_pjp_reopen_requests`,
+        method: 'GET',
+        params: { days: (args && args.days) ?? 7 },
+      }),
+      providesTags: ['PjpReopen'],
+    }),
+
+    // Manager: approve or reject. A remark is required to reject.
+    decidePjpReopen: builder.mutation<RDecidePjpReopen, IDecidePjpReopen>({
+      query: body => ({
+        url: `${PJP_REOPEN_API}.decide_pjp_reopen`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['PjpReopen', 'PJP'],
+    }),
+
+    // ── Leave (manager first, then HR) ──────────────────────────────────────
+    // data.balances: one row each for Casual / Privilege Leave.
+    // data.leave_types: the three types for the Apply screen.
+    getLeaveBalances: builder.query<RGetLeaveBalances, void>({
+      query: () => ({ url: `${LEAVE_API}.get_leave_balances`, method: 'GET' }),
+      providesTags: ['Leave'],
+    }),
+
+    // On error, show `message` exactly: it says what to do.
+    applyLeave: builder.mutation<RLeaveAction, IApplyLeave>({
+      query: body => ({
+        url: `${LEAVE_API}.apply_leave`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Leave'],
+    }),
+
+    getMyLeaves: builder.query<RGetMyLeaves, void>({
+      query: () => ({ url: `${LEAVE_API}.get_my_leaves`, method: 'GET' }),
+      providesTags: ['Leave'],
+    }),
+
+    // Withdraw a leave still waiting (status "Open").
+    cancelLeave: builder.mutation<RLeaveAction, { leave_application_id: string }>({
+      query: body => ({
+        url: `${LEAVE_API}.cancel_leave`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Leave'],
+    }),
+
+    // Managers: team leave at the manager step. HR: also every leave at the HR step.
+    getPendingLeaveApprovals: builder.query<RGetPendingLeaveApprovals, void>({
+      query: () => ({
+        url: `${LEAVE_API}.get_pending_leave_approvals`,
+        method: 'GET',
+      }),
+      providesTags: ['Leave'],
+    }),
+
+    approveLeave: builder.mutation<RLeaveAction, { leave_application_id: string }>({
+      query: body => ({
+        url: `${LEAVE_API}.approve_leave`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Leave'],
+    }),
+
+    // A reason is required to reject.
+    rejectLeave: builder.mutation<
+      RLeaveAction,
+      { leave_application_id: string; reason: string }
+    >({
+      query: body => ({
+        url: `${LEAVE_API}.reject_leave`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Leave'],
     }),
   }),
 });
@@ -1863,7 +1965,6 @@ export const {
 
   // TARGETVSACHIEVMENT
   useGetEmployeeTargetsQuery,
-  useSetEmployeeTargetsMutation,
   useGetSoStatsQuery,
   useGetDdnStatsQuery,
 
@@ -1895,7 +1996,6 @@ export const {
   useGetTeamEmployeesQuery,
   useGetEmployeeTargetsForEmpQuery,
   useLazyGetEmployeeTargetsForEmpQuery,
-  useSetEmployeeTargetsForEmpMutation,
   useGetTargetAchievementSummaryQuery,
   useLazyGetTargetAchievementSummaryQuery,
 
@@ -1903,6 +2003,19 @@ export const {
   useRequestLateCheckinMutation,
   useGetPendingLateApprovalsQuery,
   useApproveRejectLateCheckinMutation,
+  // PJP reopen
+  useGetMyPjpReopenStatusQuery,
+  useRequestPjpReopenMutation,
+  useGetPjpReopenRequestsQuery,
+  useDecidePjpReopenMutation,
+  // Leave
+  useGetLeaveBalancesQuery,
+  useApplyLeaveMutation,
+  useGetMyLeavesQuery,
+  useCancelLeaveMutation,
+  useGetPendingLeaveApprovalsQuery,
+  useApproveLeaveMutation,
+  useRejectLeaveMutation,
 
 } = baseApi;
 

@@ -1,49 +1,62 @@
 import React from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
-import { ClipboardPenLine, MapPinCheck } from 'lucide-react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { ClipboardPenLine, MapPinCheck, ShoppingCart } from 'lucide-react-native';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
-import { flexCol } from '../../../utils/styles';
-
-const { width } = Dimensions.get('window');
+import { RProdCount } from '../../../types/baseType';
 
 interface StatsOverviewProps {
-  prodData: any;
+  prodData: RProdCount | undefined;
 }
 
+/**
+ * Today's call counts from get_prod_counts:
+ *  - Total Calls: stores in today's PJP plus any visited outside it
+ *  - Visited Calls: stores checked in today
+ *  - Productive Calls: checked-in stores with an order booked today
+ * status_counts.Visited is left on the server for older APKs; don't read it.
+ */
 export const StatsOverview: React.FC<StatsOverviewProps> = ({ prodData }) => {
+  const counts = prodData?.message?.counts;
+  const cards = [
+    {
+      key: 'total',
+      label: 'Total Calls',
+      value: counts?.total_stores ?? 0,
+      icon: <ClipboardPenLine size={18} strokeWidth={1.4} color={Colors.orange} />,
+      iconBg: Colors.holdLight,
+    },
+    {
+      key: 'visited',
+      label: 'Visited Calls',
+      value: counts?.visited_calls ?? 0,
+      icon: <MapPinCheck size={18} strokeWidth={1.4} color={Colors.success} />,
+      iconBg: Colors.lightSuccess,
+    },
+    {
+      key: 'productive',
+      label: 'Productive Calls',
+      value: counts?.productive_calls ?? 0,
+      icon: <ShoppingCart size={18} strokeWidth={1.4} color={Colors.success} />,
+      iconBg: Colors.lightSuccess,
+    },
+  ];
+
   return (
     <View style={styles.countBoxSection}>
-      <View style={styles.countBox}>
-        <View style={[flexCol]}>
-          <Text style={styles.countBoxDay}>
-            {prodData?.message?.counts?.total_stores ?? 0}
+      {cards.map(card => (
+        <View key={card.key} style={styles.countBox}>
+          <View style={styles.topRow}>
+            <Text style={styles.countBoxDay}>{card.value}</Text>
+            <View style={[styles.countBoxIcon, { backgroundColor: card.iconBg }]}>
+              {card.icon}
+            </View>
+          </View>
+          <Text style={styles.countBoxTitle} numberOfLines={1} adjustsFontSizeToFit>
+            {card.label}
           </Text>
-          <Text style={styles.countBoxTitle}>Total call</Text>
         </View>
-        <View
-          style={[
-            styles.countBoxIcon,
-            { backgroundColor: Colors.holdLight },
-          ]}>
-          <ClipboardPenLine strokeWidth={1.4} color={Colors.orange} />
-        </View>
-      </View>
-      <View style={styles.countBox}>
-        <View style={[flexCol]}>
-          <Text style={styles.countBoxDay}>
-            {prodData?.message?.counts?.status_counts?.Visited ?? 0}
-          </Text>
-          <Text style={styles.countBoxTitle}>Productive Call</Text>
-        </View>
-        <View
-          style={[
-            styles.countBoxIcon,
-            { backgroundColor: Colors.lightSuccess },
-          ]}>
-          <MapPinCheck strokeWidth={1.4} color={Colors.success} />
-        </View>
-      </View>
+      ))}
     </View>
   );
 };
@@ -54,31 +67,33 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
   countBox: {
+    flex: 1,
     backgroundColor: Colors.white,
-    width: width * 0.44,
     borderRadius: 12,
-    padding: 12,
+    padding: 10,
     height: 80,
+    justifyContent: 'space-between',
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   countBoxIcon: {
-    width: 34,
-    height: 34,
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.darkButton,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   countBoxTitle: {
     fontFamily: Fonts.regular,
     color: Colors.black,
-    fontSize: 14,
-    marginTop: 2,
+    fontSize: 12,
   },
   countBoxDay: {
     fontFamily: Fonts.semiBold,

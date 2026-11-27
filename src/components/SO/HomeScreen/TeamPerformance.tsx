@@ -1,16 +1,13 @@
 import React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import moment from 'moment';
-import {Fonts} from '../../../constants';
 import {SectionTitle, TargetMetricBox} from './Common';
-import {useAppSelector} from '../../../store/hook';
 
 interface TeamPerformanceProps {
   filterMode: 'month' | 'month_range' | 'date_range';
   selectedMonth: number;
   startDate: Date;
   endDate: Date;
-  handleOpenTargetModal: () => void;
   pjpSummary: any;
   apiParams: any;
   today: string;
@@ -28,7 +25,6 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
   selectedMonth,
   startDate,
   endDate,
-  handleOpenTargetModal,
   pjpSummary,
   apiParams,
   today,
@@ -40,13 +36,6 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
   ddnPct,
   navigation,
 }) => {
-  const employee = useAppSelector(
-    state => state?.persistedReducer?.authSlice?.employee,
-  );
-  const isAsm =
-    employee?.designation === 'ASM' ||
-    employee?.designation === 'Area Sales Executive' ||
-    employee?.designation === 'ASE';
   return (
     <View style={[styles.section, {marginBottom: 10}]}>
       <View
@@ -68,31 +57,7 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
                 ).format('DD MMM')}`
           }
         />
-        {/* Edit targets button */}
-        {isAsm && (
-          <TouchableOpacity
-            onPress={handleOpenTargetModal}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 20,
-              borderWidth: 0.5,
-              borderColor: '#534AB7',
-              backgroundColor: 'rgba(83,74,183,0.07)',
-            }}>
-            <Text
-              style={{
-                fontSize: 11,
-                color: '#534AB7',
-                fontFamily: Fonts.medium,
-              }}>
-              Set Targets
-            </Text>
-          </TouchableOpacity>
-        )}
+        {/* Targets are view-only: they are set from the beat plan Excel. */}
       </View>
 
       <View style={styles.metricRow}>
@@ -119,6 +84,14 @@ export const TeamPerformance: React.FC<TeamPerformanceProps> = ({
           target={`₹${salesTarget}`}
           rate={soPct}
           accentColor="#0F6E56"
+          // Employee-wise amount target vs achieved
+          onPress={() =>
+            navigation.navigate('TeamPerformanceListScreen', {
+              apiParams,
+              today,
+              mode: 'value',
+            })
+          }
         />
       </View>
       <View style={[styles.metricRow, {marginTop: 10}]}>

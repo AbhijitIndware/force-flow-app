@@ -49,6 +49,10 @@ import ExpenseApprovalDetailScreen from '../ExpenseScreen/ExpenseApprovalDetailS
 import WeeklyOffScreen from '../WeeklyOffScreen/WeeklyOffScreen';
 import LateCheckinApprovalScreen from '../HomeScreen/LateCheckinApprovalScreen';
 import LateCheckinRequestScreen from '../HomeScreen/LateCheckinRequestScreen';
+import PjpReopenApprovalScreen from '../HomeScreen/PjpReopenApprovalScreen';
+import LeaveScreen from '../Leave/LeaveScreen';
+import ApplyLeaveScreen from '../Leave/ApplyLeaveScreen';
+import LeaveApprovalScreen from '../Leave/LeaveApprovalScreen';
 import NotificationListScreen from '../../NotificationListScreen';
 import CreatePromoterShiftScreen from '../HomeScreen/CreatePromoterShiftScreen';
 import PromoterShiftsScreen from '../HomeScreen/PromoterShiftsScreen';
@@ -315,6 +319,26 @@ const SoNavigation = () => {
       <Stack.Screen
         name="LateCheckinRequestScreen"
         component={LateCheckinRequestScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="PjpReopenApprovalScreen"
+        component={PjpReopenApprovalScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="LeaveScreen"
+        component={LeaveScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="ApplyLeaveScreen"
+        component={ApplyLeaveScreen}
+        options={{headerShown: false}}
+      />
+      <Stack.Screen
+        name="LeaveApprovalScreen"
+        component={LeaveApprovalScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen

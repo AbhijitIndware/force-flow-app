@@ -142,14 +142,43 @@ const ValueCard = ({ item, onPress }: { item: any; onPress: () => void }) => {
                     </View>
                 </View>
 
+                {/* Amount target vs achieved (Orders) */}
                 <View style={valueStyles.blocksRow}>
+                    <View style={[valueStyles.block, { backgroundColor: C.blueSoft }]}>
+                        <Text style={valueStyles.blockLabel}>Target</Text>
+                        <Text style={[valueStyles.blockVal, { color: C.blue }]}>
+                            {item.target_amount ? fmtK(item.target_amount) : 'Not set'}
+                        </Text>
+                    </View>
                     <View style={[valueStyles.block, { backgroundColor: C.tealSoft }]}>
                         <Text style={valueStyles.blockLabel}>Achieved</Text>
                         <Text style={[valueStyles.blockVal, { color: C.teal }]}>
                             {fmtK(item.so_total)}
                         </Text>
                     </View>
+                    <View style={[valueStyles.block, { backgroundColor: C.bg }]}>
+                        <Text style={valueStyles.blockLabel}>Pending</Text>
+                        <Text style={[valueStyles.blockVal, { color: C.textSub }]}>
+                            {fmtK(Math.max((item.target_amount ?? 0) - (item.so_total ?? 0), 0))}
+                        </Text>
+                    </View>
+                    <View style={[valueStyles.block, { backgroundColor: pctBg }]}>
+                        <Text style={valueStyles.blockLabel}>Achieved %</Text>
+                        <Text style={[valueStyles.blockVal, { color: pctColor }]}>
+                            {item.target_amount ? `${pct}%` : '—'}
+                        </Text>
+                    </View>
                 </View>
+                {!!item.target_amount && (
+                    <View style={valueStyles.track}>
+                        <View
+                            style={[
+                                valueStyles.fill,
+                                { width: `${Math.min(pct, 100)}%`, backgroundColor: pctColor },
+                            ]}
+                        />
+                    </View>
+                )}
             </View>
         </TouchableOpacity>
     );
@@ -176,8 +205,18 @@ const PjpSummary = ({ s }: { s: any }) => (
 const ValueSummary = ({ s }: { s: any }) => (
     <View style={summaryStyles.row}>
         <View style={summaryStyles.chip}>
+            <Text style={summaryStyles.chipLabel}>Total Target</Text>
+            <Text style={[summaryStyles.chipVal, { color: C.blue }]}>{fmtK(s.total_target)}</Text>
+        </View>
+        <View style={summaryStyles.chip}>
             <Text style={summaryStyles.chipLabel}>Total Sales</Text>
             <Text style={[summaryStyles.chipVal, { color: C.teal }]}>{fmtK(s.total_so)}</Text>
+        </View>
+        <View style={[summaryStyles.chip, { backgroundColor: C.amberSoft, borderColor: C.amber + '30' }]}>
+            <Text style={summaryStyles.chipLabel}>Achievement</Text>
+            <Text style={[summaryStyles.chipVal, { color: C.amber }]}>
+                {s.total_target ? `${s.achievement_pct ?? 0}%` : '—'}
+            </Text>
         </View>
     </View>
 );
@@ -199,7 +238,7 @@ const TeamPerformanceListScreen = ({ navigation, route }: Props) => {
     const getTitle = () => {
         switch (mode) {
             case 'pjp': return 'Team PJP Detail';
-            case 'value': return 'Team Sales Achievement';
+            case 'value': return 'Team Sales Target vs Achievement';
             default: return 'Team Attendance';
         }
     };
@@ -436,6 +475,17 @@ const valueStyles = StyleSheet.create({
     blockVal: {
         fontSize: 12,           // was 14
         fontWeight: '800',
+    },
+    track: {
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: C.bg,
+        marginTop: 8,
+        overflow: 'hidden',
+    },
+    fill: {
+        height: 4,
+        borderRadius: 2,
     },
 });
 

@@ -36,6 +36,7 @@ import {
   useGetProdCountQuery,
   useStartPjpMutation,
   useGetEmployeeTargetsQuery,
+  useGetTargetAchievementSummaryQuery,
   useGetSoStatsQuery,
   useGetDdnStatsQuery,
   useGetActivityCheckInStatusQuery,
@@ -54,8 +55,9 @@ import { ActivityCheckInBlock } from '../../../components/SO/HomeScreen/Activity
 import { QuickLinks } from '../../../components/SO/HomeScreen/QuickLinks';
 import { ClaimsSection } from '../../../components/SO/HomeScreen/ClaimsSection';
 import LateCheckinApprovalLink from '../../../components/SO/HomeScreen/LateCheckinApprovalLink';
+import PjpReopenApprovalLink from '../../../components/SO/HomeScreen/PjpReopenApprovalLink';
+import LeaveApprovalLink from '../../../components/SO/HomeScreen/LeaveApprovalLink';
 import { CheckoutConfirmModal } from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
-import { SetTargetsModal } from '../../../components/SO/HomeScreen/SetTargetsModal';
 import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
 import { YearPickerModal } from '../../../components/SO/HomeScreen/YearPickerModal';
 import { BookOpen } from 'lucide-react-native';
@@ -145,7 +147,6 @@ const HomeScreen = ({ navigation }: Props) => {
   const [checkoutPayload, setCheckoutPayload] = useState<ICheckOut | null>(
     null,
   );
-  const [targetModalVisible, setTargetModalVisible] = useState(false);
 
   // ── Filter state ─────────────────────────────────────────────────────────────
   const [filterMode, setFilterMode] = useState<FilterMode>('month');
@@ -256,8 +257,15 @@ const HomeScreen = ({ navigation }: Props) => {
   const { data: employeeTargetsData, refetch: refetchEmployeeTargets } =
     useGetEmployeeTargetsQuery(
       { month: selectedMonth, year: selectedYear },
-      { skip: !employee?.id },
+      { skip: !employee?.id || !isSoOrIsr },
     );
+
+  // Managers: the target next to the team's achievement is the team total
+  // (sum of their team's targets). No `employee` → team aggregate on the server.
+  const { data: teamTargetData, refetch: refetchTeamTarget } =
+    useGetTargetAchievementSummaryQuery(dateRangeParams, {
+      skip: !employee?.id || isSoOrIsr,
+    });
 
   // ── Mutations ────────────────────────────────────────────────────────────────
   const [pjpInitialize, { data: pjpInitData }] = usePjpInitializeMutation();
@@ -285,8 +293,11 @@ const HomeScreen = ({ navigation }: Props) => {
 
   const pjpSummary = pjpTargetData?.message?.summary;
   const ddnStats = ddnData?.message;
-  const salesTarget = employeeTargetsData?.message?.sales_target ?? 0;
-  const ddnTarget = employeeTargetsData?.message?.ddn_target ?? 0;
+  const targetSource = isSoOrIsr
+    ? employeeTargetsData?.message
+    : teamTargetData?.message;
+  const salesTarget = targetSource?.sales_target ?? 0;
+  const ddnTarget = targetSource?.ddn_target ?? 0;
   const soAchievement = soStatsData?.message?.value ?? 0;
   const soPct =
     salesTarget > 0
@@ -310,7 +321,8 @@ const HomeScreen = ({ navigation }: Props) => {
       refetchLocationTracker();
       refetchDdnStats();
       refetchSoStats();
-      refetchEmployeeTargets();
+      if (isSoOrIsr) refetchEmployeeTargets();
+      else refetchTeamTarget();
       refetchActivityStatus();
       refetchPjpWorkflow();
     }, 2000);
@@ -324,6 +336,8 @@ const HomeScreen = ({ navigation }: Props) => {
     refetchDdnStats,
     refetchSoStats,
     refetchEmployeeTargets,
+    refetchTeamTarget,
+    isSoOrIsr,
     refetchActivityStatus,
     refetchPjpWorkflow,
   ]);
@@ -521,6 +535,9 @@ const HomeScreen = ({ navigation }: Props) => {
 
           {/* Shown right below the header so managers see it on login */}
           {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
+          {!isSoOrIsr && <PjpReopenApprovalLink navigation={navigation} />}
+          {/* SO / ISR never approve leave */}
+          {!isSoOrIsr && <LeaveApprovalLink navigation={navigation} />}
 
           <StatsOverview prodData={prodData} />
 
@@ -598,7 +615,6 @@ const HomeScreen = ({ navigation }: Props) => {
             selectedMonth={selectedMonth}
             startDate={startDate}
             endDate={endDate}
-            handleOpenTargetModal={() => setTargetModalVisible(true)}
             pjpSummary={pjpSummary}
             apiParams={apiParams}
             today={TODAY}
@@ -609,14 +625,6 @@ const HomeScreen = ({ navigation }: Props) => {
             ddnTarget={ddnTarget}
             ddnPct={ddnPct}
             navigation={navigation}
-          />
-
-          <SetTargetsModal
-            visible={targetModalVisible}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onCancel={() => setTargetModalVisible(false)}
-            onSaveSuccess={() => setTargetModalVisible(false)}
           />
 
           {/* <ActivityCheckInBlock pjpState={pjpState} navigation={navigation} /> */}

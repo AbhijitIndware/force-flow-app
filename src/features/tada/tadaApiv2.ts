@@ -45,6 +45,10 @@ import { baseQueryForTadaWithAuthGuard } from '../utility';
 
 const EXPENSE_BASE =
   '/method/salesforce_management.mobile_app_apis.expense_apis.expense_api';
+// Pull a submitted claim back to Draft while it waits for the manager.
+// Lives in the salesforce_automation app on the server, not salesforce_management.
+const EXPENSE_RECALL_BASE =
+  '/method/salesforce_automation.mobile_app_apis.expense_apis.expense_recall';
 const VISIBILITY_BASE =
   '/method/salesforce_management.mobile_app_apis.visibility_claim.visibility_claim_api';
 const SOFTSENS_BASE = '/method/softsens.api';
@@ -168,6 +172,22 @@ export const tadaApiV2 = createApi({
     >({
       query: body => ({
         url: `${EXPENSE_BASE}.revise_expense_claim`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Expense', 'Approval'],
+    }),
+
+    // 6b. Recall Expense Claim (Pending Approval → Draft, own claim only)
+    // Allowed only while workflow_state is "Pending Approval". Not a revision:
+    // the revision limit applies to rejected claims only. When the manager has
+    // already acted, success is false and message says why.
+    recallExpenseClaim: builder.mutation<
+      { message: { success: boolean; message?: string } },
+      { claim_id: string }
+    >({
+      query: body => ({
+        url: `${EXPENSE_RECALL_BASE}.recall_expense_claim`,
         method: 'POST',
         body,
       }),
@@ -533,6 +553,7 @@ export const {
   useDeleteExpenseRowMutation,
   useSubmitExpenseClaimMutation,
   useReviseExpenseClaimMutation,
+  useRecallExpenseClaimMutation,
 
   // Phase 2 – Manager Approvals
   useGetPendingApprovalsQuery,

@@ -75,6 +75,14 @@ export function assertServerSuccess<T>(res: T): T {
   return res;
 }
 
+// True unless the body says it failed (`success: false` or
+// `status: "error"`). Some endpoints answer success without a `success`
+// field, so don't require `success === true`.
+export function isServerSuccess(res: any): boolean {
+  const body = res?.message;
+  return !(body?.success === false || body?.status === 'error');
+}
+
 export function getPermissionErrorMessage(error: any): string {
   const data = error?.data ?? error;
   const message =

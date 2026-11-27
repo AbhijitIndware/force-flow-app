@@ -160,6 +160,10 @@ export type SoAppStackParamList = {
   WeeklyOffScreen: undefined;
   LateCheckinApprovalScreen: undefined;
   LateCheckinRequestScreen: undefined;
+  PjpReopenApprovalScreen: undefined;
+  LeaveScreen: undefined;
+  ApplyLeaveScreen: {leaveTypes?: string[]} | undefined;
+  LeaveApprovalScreen: undefined;
   CreatePromoterShiftScreen: undefined;
   PromoterShiftsScreen: undefined;
   PromoterDayDetailScreen: {employee?: string; date?: string} | undefined;

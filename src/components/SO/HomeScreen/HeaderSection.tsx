@@ -16,6 +16,7 @@ import { Size } from '../../../utils/fontSize';
 import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
 import { LateCheckInInfo, PjpAllowedAction, PjpWorkflowState, LiveWorkingHours } from '../../../types/baseType';
 import { Modal, Switch } from 'react-native';
+import { PjpReopenBlock } from './PjpReopenBlock';
 
 interface HeaderSectionProps {
   employee: any;
@@ -561,6 +562,9 @@ export const HeaderSection: React.FC<HeaderSectionProps> = ({
                   Your PJP for today is completed. Great work! ✅
                 </Text>
               )}
+
+              {/* ── Ended by mistake? ask the manager to reopen today's PJP ── */}
+              {pjpState === 'COMPLETED' && <PjpReopenBlock />}
             </View>
             {isRefreshingNextAction && (
               <View style={styles.actionsLoader}>

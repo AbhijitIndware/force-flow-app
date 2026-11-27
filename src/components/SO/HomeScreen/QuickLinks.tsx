@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   BaggageClaim,
   Boxes,
+  CalendarDays,
   FilePlus2,
   Hotel,
   LucideIcon,
@@ -14,6 +15,8 @@ import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
+import { useAppSelector } from '../../../store/hook';
+import { canUseLeave } from '../../../types/leaveType';
 
 interface QuickLinksProps {
   navigation: any;
@@ -39,7 +42,18 @@ const LINKS: QuickLink[] = [
   { title: 'Update Stock', icon: Boxes, screen: 'StockManagementScreen' },
 ];
 
+// Leave is only for RSM, ASM, ASE, Sales Officer and ISR.
+const LEAVE_LINK: QuickLink = {
+  title: 'Leave',
+  icon: CalendarDays,
+  screen: 'LeaveScreen',
+};
+
 export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
+  const designation = useAppSelector(
+    s => s.persistedReducer.authSlice.employee?.designation,
+  );
+  const links = canUseLeave(designation) ? [...LINKS, LEAVE_LINK] : LINKS;
   return (
     <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
       <Text
@@ -49,7 +63,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
         ]}>
         Quick links
       </Text>
-      {LINKS.map(({ title, icon: Icon, screen, params }, i) => (
+      {links.map(({ title, icon: Icon, screen, params }, i) => (
         <React.Fragment key={screen}>
           <TouchableOpacity
             style={styles.IconlinkBox}
@@ -75,7 +89,7 @@ export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
               />
             </View>
           </TouchableOpacity>
-          {i < LINKS.length - 1 && (
+          {i < links.length - 1 && (
             <Divider
               width={1}
               color={Colors.lightGray}

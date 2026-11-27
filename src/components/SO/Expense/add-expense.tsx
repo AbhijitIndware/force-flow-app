@@ -20,6 +20,7 @@ import {
   useSubmitExpenseClaimMutation,
   useDeleteExpenseRowMutation,
   useReviseExpenseClaimMutation,
+  useRecallExpenseClaimMutation,
   useGetClaimDetailQuery,
 } from '../../../features/tada/tadaApiv2';
 import {fileToBase64} from '../../../utils/fileUtils';
@@ -31,11 +32,13 @@ import {EmployeeStrip} from './AddExpense/EmployeeStrip';
 import {PjpSelectionDropdown} from './AddExpense/PjpSelectionDropdown';
 import {DraftStatusBadge} from './AddExpense/DraftStatusBadge';
 import {ProgressOverlay} from './AddExpense/ProgressOverlay';
+import ResultModal from '../../ui/ResultModal';
 import {ExpenseRowCard} from './AddExpense/ExpenseRowCard';
 import {ExpenseClaimResponse} from '../../../types/tadaType';
 import {
   getUserFacingError,
   getSafeServerMessage,
+  isServerSuccess,
   getServerBody,
   getServerErrorCode,
 } from '../../../utils/errorMessage';
@@ -89,9 +92,14 @@ const AddExpenseComponent = ({
   const [submitExpenseClaim] = useSubmitExpenseClaimMutation();
   const [deleteExpenseRow] = useDeleteExpenseRowMutation();
   const [reviseExpenseClaim] = useReviseExpenseClaimMutation();
+  const [recallExpenseClaim] = useRecallExpenseClaimMutation();
+  const [showRecallConfirm, setShowRecallConfirm] = useState(false);
 
   const employee = useAppSelector(
     state => state?.persistedReducer?.authSlice?.employee,
+  );
+  const empId = useAppSelector(
+    state => state?.persistedReducer?.authSlice?.empId,
   );
 
   const workflowStatus: string =
@@ -107,6 +115,12 @@ const AddExpenseComponent = ({
     existingDetail?.message?.data?.revisions_remaining ?? 1;
   const maxRevisions = existingDetail?.message?.data?.max_revisions ?? 1;
   const isMaxRevisionReached = isRejected && revisionsRemaining <= 0;
+
+  // Edit (recall) is offered only on the user's own claim while it waits for
+  // the manager. The server re-checks both.
+  const claimOwner = existingDetail?.message?.data?.employee;
+  const isOwnClaim = !claimOwner || !empId || claimOwner === empId;
+  const canRecall = isPendingApproval && isOwnClaim;
 
   // One km figure for the employee: Total km (home to home) = journey_km,
   // the server's figure (home → PJP start + PJP km + PJP end → home).
@@ -449,6 +463,44 @@ const AddExpenseComponent = ({
     }
   };
 
+  // ── Edit after submit (Pending Approval → Draft) ──
+  const doRecallClaim = async () => {
+    if (!claimId) return;
+    try {
+      setLoading(true);
+      setUploadStep('Pulling claim back to Draft...');
+      const res = await recallExpenseClaim({claim_id: claimId}).unwrap();
+      const msg = getSafeServerMessage(res?.message?.message);
+      if (!isServerSuccess(res)) {
+        // e.g. the manager has already acted on it
+        Toast.show({
+          type: 'error',
+          text1: msg ?? 'This claim can no longer be edited.',
+          position: 'top',
+        });
+        return;
+      }
+      Toast.show({
+        type: 'success',
+        text1: msg ?? 'Claim is back in Draft. Submit it again when done.',
+        position: 'top',
+      });
+      // It's a Draft now: reload so the usual edit and submit screens apply.
+      reopenClaim(claimId);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: getUserFacingError(error, 'Failed to edit claim'),
+        position: 'top',
+      });
+    } finally {
+      setLoading(false);
+      setUploadStep('');
+    }
+  };
+
+  const handleRecallClaim = () => setShowRecallConfirm(true);
+
   const clearFormData = () => {
     setExpenses([]);
     setTotal(0);
@@ -692,6 +744,17 @@ const AddExpenseComponent = ({
                 </Text>
               </TouchableOpacity>
             </View>
+          ) : claimId && canRecall ? (
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                {backgroundColor: Colors.darkButton},
+                loading && styles.disabled,
+              ]}
+              onPress={handleRecallClaim}
+              disabled={loading}>
+              <Text style={styles.actionBtnText}>Edit</Text>
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity
               style={[
@@ -704,6 +767,26 @@ const AddExpenseComponent = ({
           )}
         </>
       )}
+
+      <ResultModal
+        result={
+          showRecallConfirm
+            ? {
+                tone: 'warning',
+                title: 'Edit this claim?',
+                message:
+                  'Pull this claim back to Draft to correct it? Submit it again when done.',
+                points: [
+                  'Your manager won’t see it until you submit again.',
+                  'This doesn’t use up a revision.',
+                ],
+                buttonLabel: 'Cancel',
+                action: {label: 'Edit claim', onPress: doRecallClaim},
+              }
+            : null
+        }
+        onClose={() => setShowRecallConfirm(false)}
+      />
 
       <ProgressOverlay visible={loading} step={uploadStep} />
     </View>

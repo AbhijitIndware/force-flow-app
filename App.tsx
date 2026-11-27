@@ -45,6 +45,13 @@ function handleNotificationPress(data: Record<string, any>) {
     case 'late_checkin_status':
       navigate('NotificationListScreen');
       break;
+    case 'pjp_reopen':
+      navigate('PjpReopenApprovalScreen');
+      break;
+    case 'pjp_reopen_status':
+      // Approved: Home refetches the PJP state on focus.
+      navigate('Home');
+      break;
     case 'expense_claim':
       navigate('ExpenseApprovalScreen');
       break;
@@ -52,8 +59,10 @@ function handleNotificationPress(data: Record<string, any>) {
       navigate('ExpenseScreen');
       break;
     case 'leave_application':
+      navigate('LeaveApprovalScreen');
+      break;
     case 'leave_application_status':
-      navigate('NotificationListScreen');
+      navigate('LeaveScreen');
       break;
     default:
       navigate('NotificationListScreen');

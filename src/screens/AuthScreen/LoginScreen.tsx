@@ -158,6 +158,7 @@ const LoginScreen = ({navigation}: {navigation: NavigationProp}) => {
             }
           }
         } catch (error: any) {
+          console.log('🚀 ~ LoginScreen ~ error:', error);
           if (isLockedOutPayload(error?.data)) {
             const secs = getRetryAfterSeconds(error) ?? 300;
             const reason =

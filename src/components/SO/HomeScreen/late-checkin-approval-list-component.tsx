@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -15,7 +17,6 @@ import Toast from 'react-native-toast-message';
 import moment from 'moment';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
-import { Size } from '../../../utils/fontSize';
 import {
   useGetPendingLateApprovalsQuery,
   useApproveRejectLateCheckinMutation,
@@ -24,53 +25,84 @@ import { LateCheckinApprovalRecord } from '../../../types/baseType';
 import {
   getUserFacingError,
   getSafeServerMessage,
+  isServerSuccess,
 } from '../../../utils/errorMessage';
 
+type Decision = {
+  item: LateCheckinApprovalRecord;
+  status: 'Approved' | 'Rejected';
+};
+
+const ACCENT = Colors.orange;
+const ACCENT_BG = '#FFF1E6';
+
+function initials(name?: string) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+}
+
+function dayLabel(date?: string) {
+  if (!date) return '—';
+  const d = moment(date);
+  if (d.isSame(moment(), 'day')) return 'Today';
+  if (d.isSame(moment().subtract(1, 'day'), 'day')) return 'Yesterday';
+  return d.format('DD MMM');
+}
+
+/** Manager list of pending late check-in requests (compact cards + sheet). */
 const LateCheckinApprovalListComponent = () => {
   const { data, isLoading, isFetching, refetch } =
     useGetPendingLateApprovalsQuery();
   const [approveReject, { isLoading: isMutating }] =
     useApproveRejectLateCheckinMutation();
 
-  const [selectedRequest, setSelectedRequest] =
-    useState<LateCheckinApprovalRecord | null>(null);
-  const [actionType, setActionType] = useState<'Approved' | 'Rejected' | null>(
-    null,
-  );
+  const [decision, setDecision] = useState<Decision | null>(null);
   const [managerRemarks, setManagerRemarks] = useState('');
 
   const records = data?.message?.data ?? [];
 
-  const handleAction = (item: LateCheckinApprovalRecord, status: 'Approved' | 'Rejected') => {
-    setSelectedRequest(item);
-    setActionType(status);
+  const openDecision = (
+    item: LateCheckinApprovalRecord,
+    status: Decision['status'],
+  ) => {
+    setManagerRemarks('');
+    setDecision({ item, status });
+  };
+
+  const closeDecision = () => {
+    if (isMutating) return;
+    setDecision(null);
     setManagerRemarks('');
   };
 
-  const confirmAction = async () => {
-    if (!selectedRequest || !actionType) return;
+  const confirmDecision = async () => {
+    if (!decision) return;
+    const { item, status } = decision;
     try {
-      let res = await approveReject({
-        request_id: selectedRequest.name,
-        status: actionType,
-        manager_remarks: managerRemarks || undefined,
+      const res = await approveReject({
+        request_id: item.name,
+        status,
+        manager_remarks: managerRemarks.trim() || undefined,
       }).unwrap();
-      if (res?.message.success) {
+      if (isServerSuccess(res)) {
         Toast.show({
           type: 'success',
-          text1: actionType === 'Approved'
-            ? '✅ Late check-in request approved.'
-            : '✅ Late check-in request rejected.',
+          text1:
+            status === 'Approved'
+              ? '✅ Late check-in request approved.'
+              : '✅ Late check-in request rejected.',
           position: 'top',
         });
-        setSelectedRequest(null);
-        setActionType(null);
+        setDecision(null);
         setManagerRemarks('');
         refetch();
       } else {
         Toast.show({
           type: 'error',
-          text1: getSafeServerMessage(res?.message?.message) ?? 'Something went wrong. Please try again.',
+          text1:
+            getSafeServerMessage(res?.message?.message) ??
+            'Something went wrong. Please try again.',
           position: 'top',
         });
       }
@@ -86,75 +118,110 @@ const LateCheckinApprovalListComponent = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.centered}>
         <ActivityIndicator size="large" color={Colors.darkButton} />
       </View>
     );
   }
 
-  const renderItem = ({ item }: { item: LateCheckinApprovalRecord }) => (
-    <View style={styles.card}>
-      <View style={styles.cardRow}>
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {item.employee_name?.charAt(0)?.toUpperCase() || '?'}
-            </Text>
-          </View>
-          <View style={styles.statusDot} />
+  const renderSummary = () => {
+    if (records.length === 0) return null;
+    return (
+      <View style={styles.summary}>
+        <View style={styles.summaryIcon}>
+          <Ionicons name="time" size={18} color={Colors.white} />
         </View>
-        <View style={styles.cardInfo}>
-          <Text style={styles.employeeName}>{item.employee_name}</Text>
-          <Text style={styles.employeeId}>{item.employee}</Text>
-        </View>
-        <View style={styles.dateBadge}>
-          <Ionicons name="calendar-outline" size={12} color={Colors.textTertiary} />
-          <Text style={styles.dateBadgeText}>
-            {item.date ? moment(item.date).format('DD MMM') : '—'}
+        <View style={{ flex: 1 }}>
+          <Text style={styles.summaryTitle}>
+            {records.length} late check-in request
+            {records.length === 1 ? '' : 's'} waiting
+          </Text>
+          <Text style={styles.summarySub}>
+            Approve to let them check in today
           </Text>
         </View>
       </View>
+    );
+  };
 
-      {item.reason ? (
-        <View style={styles.reasonRow}>
-          <Ionicons name="chatbox-ellipses-outline" size={14} color={Colors.textTertiary} />
-          <Text style={styles.reasonText}>{item.reason}</Text>
-        </View>
-      ) : null}
-
-      <View style={styles.actionRow}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.approveBtn]}
-          onPress={() => handleAction(item, 'Approved')}
-          activeOpacity={0.8}>
-          <Ionicons name="checkmark-circle-outline" size={16} color={Colors.white} />
-          <Text style={styles.actionBtnText}>Approve</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.rejectBtn]}
-          onPress={() => handleAction(item, 'Rejected')}
-          activeOpacity={0.8}>
-          <Ionicons name="close-circle-outline" size={16} color={Colors.white} />
-          <Text style={styles.actionBtnText}>Reject</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  const renderEmpty = () => {
-    if (isLoading) return null;
+  const renderItem = ({ item }: { item: LateCheckinApprovalRecord }) => {
+    const requestedAt = item.creation
+      ? moment(item.creation.replace(' ', 'T')).format('hh:mm A')
+      : null;
+    const subLine = [item.employee, requestedAt && `requested ${requestedAt}`]
+      .filter(Boolean)
+      .join(' · ');
     return (
-      <View style={styles.emptyState}>
-        <View style={styles.emptyIconWrap}>
-          <Ionicons name="checkmark-done-circle-outline" size={44} color={Colors.orange} />
+      <View style={styles.card}>
+        <View style={styles.cardStripe} />
+        <View style={styles.cardBody}>
+          <View style={styles.personRow}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {initials(item.employee_name)}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name} numberOfLines={1}>
+                {item.employee_name}
+              </Text>
+              {!!subLine && (
+                <Text style={styles.subLine} numberOfLines={1}>
+                  {subLine}
+                </Text>
+              )}
+            </View>
+            <View style={styles.datePill}>
+              <Ionicons name="calendar-outline" size={11} color={ACCENT} />
+              <Text style={styles.datePillText}>{dayLabel(item.date)}</Text>
+            </View>
+          </View>
+
+          {!!item.reason && (
+            <Text style={styles.reasonText} numberOfLines={1}>
+              {item.reason}
+            </Text>
+          )}
+
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.rejectBtn]}
+              activeOpacity={0.8}
+              onPress={() => openDecision(item, 'Rejected')}>
+              <Ionicons name="close" size={14} color="#DC2626" />
+              <Text style={[styles.actionText, { color: '#DC2626' }]}>
+                Reject
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, styles.approveBtn]}
+              activeOpacity={0.8}
+              onPress={() => openDecision(item, 'Approved')}>
+              <Ionicons name="checkmark" size={14} color={Colors.white} />
+              <Text style={[styles.actionText, { color: Colors.white }]}>
+                Approve
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <Text style={styles.emptyTitle}>No Pending Approvals</Text>
-        <Text style={styles.emptySubtitle}>
-          All late check-in requests have been reviewed.
-        </Text>
       </View>
     );
   };
+
+  const renderEmpty = () => (
+    <View style={styles.empty}>
+      <View style={styles.emptyIcon}>
+        <Ionicons name="checkmark-done" size={36} color="#15803D" />
+      </View>
+      <Text style={styles.emptyTitle}>All caught up</Text>
+      <Text style={styles.emptySub}>
+        All late check-in requests have been reviewed.
+      </Text>
+    </View>
+  );
+
+  const d = decision?.item;
+  const approving = decision?.status === 'Approved';
 
   return (
     <View style={styles.container}>
@@ -162,65 +229,104 @@ const LateCheckinApprovalListComponent = () => {
         data={records}
         keyExtractor={item => item.name}
         renderItem={renderItem}
+        ListHeaderComponent={renderSummary}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={records.length === 0 ? styles.emptyContainer : styles.listContent}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isFetching} onRefresh={refetch} />
         }
       />
 
-      <Modal visible={!!selectedRequest} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {actionType === 'Approved' ? 'Approve' : 'Reject'} Request
-            </Text>
-            <Text style={styles.modalSubtitle}>
-              {selectedRequest?.employee_name} —{' '}
-              {selectedRequest?.date
-                ? moment(selectedRequest.date).format('DD MMM YYYY')
-                : ''}
-            </Text>
+      {/* Approve / Reject sheet */}
+      <Modal
+        visible={!!decision}
+        transparent
+        animationType="slide"
+        onRequestClose={closeDecision}>
+        <KeyboardAvoidingView
+          style={styles.sheetOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={closeDecision}
+          />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <View
+                style={[
+                  styles.sheetIcon,
+                  { backgroundColor: approving ? '#DCFCE7' : '#FEE2E2' },
+                ]}>
+                <Ionicons
+                  name={approving ? 'checkmark-circle' : 'close-circle'}
+                  size={26}
+                  color={approving ? '#15803D' : '#DC2626'}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sheetTitle}>
+                  {approving ? 'Approve late check-in?' : 'Reject late check-in?'}
+                </Text>
+                <Text style={styles.sheetSub}>
+                  {approving
+                    ? 'They can check in right away.'
+                    : 'They won’t be able to check in late today.'}
+                </Text>
+              </View>
+            </View>
 
+            {d && (
+              <View style={styles.sheetSummary}>
+                <Text style={styles.sheetName}>{d.employee_name}</Text>
+                <Text style={styles.sheetDetail}>
+                  {d.employee}
+                  {d.date ? ` · ${moment(d.date).format('DD MMM YYYY')}` : ''}
+                </Text>
+                {!!d.reason && (
+                  <Text style={styles.sheetReason}>{d.reason}</Text>
+                )}
+              </View>
+            )}
+
+            <Text style={styles.inputLabel}>Remarks (optional)</Text>
             <TextInput
-              style={styles.remarksInput}
-              placeholder="Add remarks (optional)"
-              placeholderTextColor="#94a3b8"
+              style={styles.input}
+              placeholder="Add a note for the employee"
+              placeholderTextColor="#94A3B8"
               value={managerRemarks}
               onChangeText={setManagerRemarks}
               multiline
             />
 
-            <View style={styles.modalActions}>
+            <View style={styles.sheetActions}>
               <TouchableOpacity
-                style={[styles.modalBtn, styles.cancelModalBtn]}
-                onPress={() => {
-                  setSelectedRequest(null);
-                  setActionType(null);
-                  setManagerRemarks('');
-                }}>
-                <Text style={styles.cancelModalText}>Cancel</Text>
+                style={[styles.sheetBtn, styles.sheetCancel]}
+                onPress={closeDecision}
+                disabled={isMutating}>
+                <Text style={styles.sheetCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
-                  styles.modalBtn,
-                  actionType === 'Approved'
-                    ? styles.confirmApproveBtn
-                    : styles.confirmRejectBtn,
+                  styles.sheetBtn,
+                  { backgroundColor: approving ? '#16A34A' : '#DC2626' },
+                  isMutating && { opacity: 0.55 },
                 ]}
-                onPress={confirmAction}
+                onPress={confirmDecision}
                 disabled={isMutating}>
                 {isMutating ? (
                   <ActivityIndicator size="small" color={Colors.white} />
                 ) : (
-                  <Text style={styles.confirmBtnText}>
-                    {actionType === 'Approved' ? 'Approve' : 'Reject'}
+                  <Text style={styles.sheetConfirmText}>
+                    {approving ? 'Approve' : 'Reject'}
                   </Text>
                 )}
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -229,239 +335,183 @@ const LateCheckinApprovalListComponent = () => {
 export default LateCheckinApprovalListComponent;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.lightBg,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 60,
-  },
+  container: { flex: 1, backgroundColor: Colors.lightBg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  listContent: { padding: 16, paddingBottom: 40, flexGrow: 1 },
 
-  card: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  cardRow: {
+  // Summary
+  summary: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    backgroundColor: Colors.darkButton,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
   },
-  avatarWrap: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: Colors.orange,
-    justifyContent: 'center',
+  summaryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatarText: {
-    color: Colors.white,
-    fontSize: Size.sm,
-    fontFamily: Fonts.semiBold,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#fbbf24',
-    borderWidth: 2,
-    borderColor: Colors.white,
-    position: 'absolute',
-    bottom: -1,
-    right: -1,
-  },
-  cardInfo: {
-    flex: 1,
-  },
-  employeeName: {
-    fontSize: Size.sm,
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-  },
-  employeeId: {
-    fontSize: Size.xxs,
+  summaryTitle: { fontFamily: Fonts.semiBold, fontSize: 15, color: Colors.white },
+  summarySub: {
     fontFamily: Fonts.regular,
-    color: '#64748b',
-    marginTop: 2,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 1,
   },
-  dateBadge: {
+
+  // Card (compact)
+  card: {
+    flexDirection: 'row',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: 'hidden',
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  cardStripe: { width: 3, backgroundColor: ACCENT },
+  cardBody: { flex: 1, paddingHorizontal: 12, paddingVertical: 10 },
+  personRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  avatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: ACCENT_BG,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontFamily: Fonts.semiBold, fontSize: 11, color: ACCENT },
+  name: { fontFamily: Fonts.semiBold, fontSize: 14, color: '#0F172A' },
+  subLine: { fontFamily: Fonts.regular, fontSize: 11, color: '#64748B' },
+  datePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    backgroundColor: ACCENT_BG,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
   },
-  dateBadgeText: {
-    fontSize: Size.xxs,
-    fontFamily: Fonts.medium,
-    color: Colors.darkButton,
-  },
-
-  reasonRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 12,
-    backgroundColor: '#f8fafc',
-    padding: 12,
-    borderRadius: 10,
-  },
+  datePillText: { fontFamily: Fonts.semiBold, fontSize: 11, color: ACCENT },
   reasonText: {
-    flex: 1,
-    fontSize: Size.xxs,
     fontFamily: Fonts.regular,
-    color: '#334155',
-    lineHeight: 18,
+    fontSize: 12,
+    color: '#475569',
+    marginTop: 6,
   },
-
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   actionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 11,
-    borderRadius: 10,
+    gap: 4,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  approveBtn: {
-    backgroundColor: '#16a34a',
+  rejectBtn: { borderWidth: 1, borderColor: '#FCA5A5', backgroundColor: '#FEF2F2' },
+  approveBtn: { backgroundColor: '#16A34A' },
+  actionText: { fontFamily: Fonts.semiBold, fontSize: 12 },
+
+  // Empty
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 80 },
+  emptyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
-  rejectBtn: {
-    backgroundColor: '#dc2626',
-  },
-  actionBtnText: {
-    color: Colors.white,
-    fontSize: Size.xxs,
-    fontFamily: Fonts.semiBold,
+  emptyTitle: { fontFamily: Fonts.semiBold, fontSize: 17, color: '#0F172A' },
+  emptySub: {
+    fontFamily: Fonts.regular,
+    fontSize: 13,
+    color: '#64748B',
+    marginTop: 4,
+    textAlign: 'center',
   },
 
-  emptyState: {
-    width: '100%',
-    alignItems: 'center',
+  // Sheet
+  sheetOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.5)' },
+  sheet: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingVertical: 32,
-    paddingHorizontal: 24,
-    borderWidth: 1,
-    borderColor: '#eef2f7',
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    paddingTop: 10,
   },
-  emptyIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFF3E6',
-    justifyContent: 'center',
+  sheetHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    marginBottom: 14,
+  },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sheetIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
   },
-  emptyTitle: {
-    fontSize: Size.md,
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    textAlign: 'center',
+  sheetTitle: { fontFamily: Fonts.semiBold, fontSize: 17, color: '#0F172A' },
+  sheetSub: { fontFamily: Fonts.regular, fontSize: 12, color: '#64748B', marginTop: 1 },
+  sheetSummary: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+  },
+  sheetName: { fontFamily: Fonts.semiBold, fontSize: 14, color: '#0F172A' },
+  sheetDetail: { fontFamily: Fonts.regular, fontSize: 12, color: '#475569', marginTop: 2 },
+  sheetReason: {
+    fontFamily: Fonts.regular,
+    fontSize: 12,
+    color: '#334155',
+    marginTop: 6,
+    lineHeight: 17,
+  },
+  inputLabel: {
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+    color: '#0F172A',
+    marginTop: 16,
     marginBottom: 6,
   },
-  emptySubtitle: {
-    fontSize: Size.xxs,
-    fontFamily: Fonts.regular,
-    color: '#64748b',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderRadius: 14,
-    padding: 20,
-    width: '100%',
-  },
-  modalTitle: {
-    fontSize: Size.md,
-    fontFamily: Fonts.semiBold,
-    color: Colors.darkButton,
-    marginBottom: 4,
-  },
-  modalSubtitle: {
-    fontSize: Size.xxs,
-    fontFamily: Fonts.regular,
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  remarksInput: {
+  input: {
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
     padding: 12,
-    fontSize: Size.xxs,
+    fontSize: 13,
     fontFamily: Fonts.regular,
-    color: Colors.darkButton,
-    minHeight: 70,
+    color: '#0F172A',
+    minHeight: 72,
     textAlignVertical: 'top',
-    marginBottom: 16,
   },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  modalBtn: {
+  sheetActions: { flexDirection: 'row', gap: 10, marginTop: 18 },
+  sheetBtn: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  cancelModalBtn: {
-    backgroundColor: '#f1f5f9',
-  },
-  cancelModalText: {
-    fontSize: Size.xxs,
-    fontFamily: Fonts.semiBold,
-    color: '#475569',
-  },
-  confirmApproveBtn: {
-    backgroundColor: '#16a34a',
-  },
-  confirmRejectBtn: {
-    backgroundColor: '#dc2626',
-  },
-  confirmBtnText: {
-    color: Colors.white,
-    fontSize: Size.xxs,
-    fontFamily: Fonts.semiBold,
-  },
+  sheetCancel: { backgroundColor: '#F1F5F9' },
+  sheetCancelText: { fontFamily: Fonts.semiBold, fontSize: 14, color: '#475569' },
+  sheetConfirmText: { fontFamily: Fonts.semiBold, fontSize: 14, color: Colors.white },
 });

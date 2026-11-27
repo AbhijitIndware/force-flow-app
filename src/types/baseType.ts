@@ -933,7 +933,13 @@ export interface RProdCount {
   };
 }
 export interface Counts {
+  /** Stores in today's PJP plus any store visited outside it. */
   total_stores: number;
+  /** Stores checked in today. */
+  visited_calls?: number;
+  /** Checked-in stores with an order booked today (approved or pending). */
+  productive_calls?: number;
+  /** Kept for older APKs only; the call cards no longer read it. */
   status_counts: {
     Pending: number;
     Visited: number;
@@ -3903,4 +3909,59 @@ export interface ICorrectCustomerReturn {
   items: {item_code: string; can_sell: number; cant_sell: number}[];
   reason?: string;
   remarks?: string;
+}
+
+// ── PJP reopen (pjp_apis.pjp_reopen_api) ────────────────────────────────────
+// An employee who ended today's PJP by mistake asks their manager to reopen it.
+export type PjpReopenStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface PjpReopenRequest {
+  name: string;
+  employee?: string;
+  employee_name: string;
+  pjp: string;
+  date: string;
+  reason: string;
+  status: PjpReopenStatus;
+  manager_remarks?: string | null;
+  creation: string;
+  can_decide?: boolean;
+}
+
+export interface RGetMyPjpReopenStatus {
+  message: {
+    success?: boolean;
+    message?: string;
+    can_request?: boolean;
+    data?: Partial<PjpReopenRequest> | null;
+  };
+}
+
+export interface RRequestPjpReopen {
+  message: {
+    success: boolean;
+    message: string;
+    request_id?: string;
+  };
+}
+
+export interface RGetPjpReopenRequests {
+  message: {
+    success?: boolean;
+    message?: string;
+    data: PjpReopenRequest[];
+  };
+}
+
+export interface IDecidePjpReopen {
+  request_id: string;
+  status: 'Approved' | 'Rejected';
+  manager_remarks?: string;
+}
+
+export interface RDecidePjpReopen {
+  message: {
+    success: boolean;
+    message: string;
+  };
 }

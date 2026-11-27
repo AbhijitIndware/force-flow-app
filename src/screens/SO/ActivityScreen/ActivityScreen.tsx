@@ -20,6 +20,7 @@ import {
   ClipboardPenLine,
   FileCheck,
   MapPinCheck,
+  ShoppingCart,
 } from 'lucide-react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import PJPScreen from '../../../components/SO/Activity/Pjp/PjpScreen';
@@ -60,44 +61,64 @@ const ActivityScreen = ({navigation, route}: Props) => {
           paginates on real scroll instead of loading every page up front. */}
       <View style={{flex: 1}}>
         <View style={styles.headerSec}>
-          {/* Stat Cards Row */}
+          {/* Stat Cards Row: Total / Visited / Productive (get_prod_counts) */}
           <View style={styles.statRow}>
-            <View style={styles.statCard}>
-              <View
-                style={[styles.statIcon, {backgroundColor: Colors.holdLight}]}>
-                <ClipboardPenLine
-                  strokeWidth={1.4}
-                  color={Colors.orange}
-                  size={18}
-                />
+            {[
+              {
+                key: 'total',
+                label: 'Total Calls',
+                value: prodData?.message?.counts?.total_stores ?? 0,
+                bg: Colors.holdLight,
+                icon: (
+                  <ClipboardPenLine
+                    strokeWidth={1.4}
+                    color={Colors.orange}
+                    size={16}
+                  />
+                ),
+              },
+              {
+                key: 'visited',
+                label: 'Visited Calls',
+                value: prodData?.message?.counts?.visited_calls ?? 0,
+                bg: Colors.lightSuccess,
+                icon: (
+                  <MapPinCheck
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={16}
+                  />
+                ),
+              },
+              {
+                key: 'productive',
+                label: 'Productive Calls',
+                value: prodData?.message?.counts?.productive_calls ?? 0,
+                bg: Colors.lightSuccess,
+                icon: (
+                  <ShoppingCart
+                    strokeWidth={1.4}
+                    color={Colors.success}
+                    size={16}
+                  />
+                ),
+              },
+            ].map(card => (
+              <View key={card.key} style={styles.statCard}>
+                <View style={[styles.statIcon, {backgroundColor: card.bg}]}>
+                  {card.icon}
+                </View>
+                <View style={styles.statText}>
+                  <Text style={styles.statNum}>{card.value}</Text>
+                  <Text
+                    style={styles.statLabel}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit>
+                    {card.label}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.statText}>
-                <Text style={styles.statNum}>
-                  {prodData?.message?.counts?.total_stores ?? 0}
-                </Text>
-                <Text style={styles.statLabel}>Total Call</Text>
-              </View>
-            </View>
-
-            <View style={styles.statCard}>
-              <View
-                style={[
-                  styles.statIcon,
-                  {backgroundColor: Colors.lightSuccess},
-                ]}>
-                <MapPinCheck
-                  strokeWidth={1.4}
-                  color={Colors.success}
-                  size={18}
-                />
-              </View>
-              <View style={styles.statText}>
-                <Text style={styles.statNum}>
-                  {prodData?.message?.counts?.status_counts?.Visited ?? 0}
-                </Text>
-                <Text style={styles.statLabel}>Productive Call</Text>
-              </View>
-            </View>
+            ))}
           </View>
 
           {/* Action Links Row */}
@@ -189,10 +210,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 10,
+    padding: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
     shadowColor: '#9F9D9D',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
@@ -200,13 +221,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   statIcon: {
-    width: 38,
-    height: 38,
+    width: 30,
+    height: 30,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statText: {
+    flex: 1,
     flexDirection: 'column',
   },
   statNum: {

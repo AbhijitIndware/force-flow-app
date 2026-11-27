@@ -43,6 +43,9 @@ function getIconForType(type: string): string {
     case 'late_checkin':
     case 'late_checkin_status':
       return 'clock';
+    case 'pjp_reopen':
+    case 'pjp_reopen_status':
+      return 'rotate-ccw';
     case 'expense_claim':
     case 'expense_claim_status':
       return 'dollar-sign';
@@ -63,6 +66,12 @@ function handleNotificationTap(item: ApiNotificationItem) {
     case 'late_checkin_status':
       navigate('NotificationListScreen');
       break;
+    case 'pjp_reopen':
+      navigate('PjpReopenApprovalScreen');
+      break;
+    case 'pjp_reopen_status':
+      navigate('Home');
+      break;
     case 'expense_claim':
       navigate('ExpenseApprovalScreen');
       break;
@@ -70,8 +79,10 @@ function handleNotificationTap(item: ApiNotificationItem) {
       navigate(claim_id ? 'ExpenseApprovalDetailScreen' : 'ExpenseScreen', claim_id ? {claimId: claim_id} : undefined);
       break;
     case 'leave_application':
+      navigate('LeaveApprovalScreen');
+      break;
     case 'leave_application_status':
-      navigate('NotificationListScreen');
+      navigate('LeaveScreen');
       break;
     default:
       navigate('NotificationListScreen');

@@ -117,13 +117,16 @@ export const ExpenseRowCard = ({ expense, loading, onRemove }: Props) => {
           <Text style={styles.amount}>
             ₹ {expense.amount.toLocaleString('en-IN')}
           </Text>
-          <TouchableOpacity
-            disabled={loading}
-            onPress={onRemove}
-            style={[styles.removeBtn, loading && { opacity: 0.5 }]}>
-            <Trash2 size={12} color="#A32D2D" />
-            <Text style={styles.removeText}>Remove</Text>
-          </TouchableOpacity>
+          {/* Only a Draft's rows can be removed */}
+          {onRemove ? (
+            <TouchableOpacity
+              disabled={loading}
+              onPress={onRemove}
+              style={[styles.removeBtn, loading && { opacity: 0.5 }]}>
+              <Trash2 size={12} color="#A32D2D" />
+              <Text style={styles.removeText}>Remove</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
 

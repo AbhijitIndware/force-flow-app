@@ -6,27 +6,33 @@ import {Colors} from '../../../utils/colors';
 import {Fonts} from '../../../constants';
 import {useGetPendingLateApprovalsQuery} from '../../../features/base/base-api';
 
-interface Props {
-  navigation: any;
+interface ApprovalLinkCardProps {
+  title: string;
+  idleSubtitle: string;
+  pendingCount: number;
+  icon: React.ReactNode;
+  onPress: () => void;
 }
 
 const ACCENT = Colors.orange;
 
-const LateCheckinApprovalLink: React.FC<Props> = ({navigation}) => {
-  // Same query as the approval list, so the count shares its cache and
-  // refreshes after an approve/reject.
-  const {data} = useGetPendingLateApprovalsQuery();
-  const pendingCount = data?.message?.data?.length ?? 0;
+/** Home-screen card linking a manager to an approval list, with a count badge. */
+export const ApprovalLinkCard: React.FC<ApprovalLinkCardProps> = ({
+  title,
+  idleSubtitle,
+  pendingCount,
+  icon,
+  onPress,
+}) => {
   const hasPending = pendingCount > 0;
-
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => navigation.navigate('LateCheckinApprovalScreen')}
+        onPress={onPress}
         style={[styles.card, hasPending && styles.cardPending]}>
         <View style={styles.iconBox}>
-          <Clock strokeWidth={2} color={Colors.white} size={20} />
+          {icon}
           {hasPending && (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>
@@ -36,13 +42,13 @@ const LateCheckinApprovalLink: React.FC<Props> = ({navigation}) => {
           )}
         </View>
         <View style={styles.textBox}>
-          <Text style={styles.title}>Late Check-In Approval</Text>
+          <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle} numberOfLines={1}>
             {hasPending
               ? `${pendingCount} request${
                   pendingCount > 1 ? 's' : ''
                 } waiting for approval`
-              : "Review your team's late check-ins"}
+              : idleSubtitle}
           </Text>
         </View>
         <View style={styles.arrowBox}>
@@ -54,6 +60,25 @@ const LateCheckinApprovalLink: React.FC<Props> = ({navigation}) => {
         </View>
       </TouchableOpacity>
     </View>
+  );
+};
+
+interface Props {
+  navigation: any;
+}
+
+const LateCheckinApprovalLink: React.FC<Props> = ({navigation}) => {
+  // Same query as the approval list, so the count shares its cache and
+  // refreshes after an approve/reject.
+  const {data} = useGetPendingLateApprovalsQuery();
+  return (
+    <ApprovalLinkCard
+      title="Late Check-In Approval"
+      idleSubtitle="Review your team's late check-ins"
+      pendingCount={data?.message?.data?.length ?? 0}
+      icon={<Clock strokeWidth={2} color={Colors.white} size={20} />}
+      onPress={() => navigation.navigate('LateCheckinApprovalScreen')}
+    />
   );
 };
 
