@@ -52,7 +52,10 @@ export const StatsOverview: React.FC<StatsOverviewProps> = ({ prodData }) => {
               {card.icon}
             </View>
           </View>
-          <Text style={styles.countBoxTitle} numberOfLines={1} adjustsFontSizeToFit>
+          <Text
+            style={styles.countBoxTitle}
+            numberOfLines={2}
+            maxFontSizeMultiplier={1.3}>
             {card.label}
           </Text>
         </View>
@@ -74,8 +77,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 10,
-    height: 80,
+    minHeight: 80,
+    alignSelf: 'stretch',
     justifyContent: 'space-between',
+    gap: 6,
   },
   topRow: {
     flexDirection: 'row',

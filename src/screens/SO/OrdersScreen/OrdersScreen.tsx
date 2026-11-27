@@ -40,7 +40,7 @@ type Props = {
 };
 
 const OrdersScreen = ({navigation, route}: Props) => {
-  const {index: initialIndex} = route.params || {};
+  const {index: initialIndex, title} = route.params || {};
   const [index, setIndex] = React.useState(0);
 
   const {data: countData} = useGetSalesPurchaseCountQuery();
@@ -61,7 +61,7 @@ const OrdersScreen = ({navigation, route}: Props) => {
         },
       ]}>
       <PageHeader
-        title="Orders"
+        title={title ?? 'Orders'}
         navigation={() => {
           navigation.navigate('Home', {
             screen: 'HomeScreen', // Use 'screen' to specify the nested tab

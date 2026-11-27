@@ -4,7 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   BaggageClaim,
   Boxes,
-  CalendarDays,
+  Eye,
   FilePlus2,
   Hotel,
   LucideIcon,
@@ -15,8 +15,6 @@ import { Divider } from '@rneui/themed';
 import { Colors } from '../../../utils/colors';
 import { Fonts } from '../../../constants';
 import { Size } from '../../../utils/fontSize';
-import { useAppSelector } from '../../../store/hook';
-import { canUseLeave } from '../../../types/leaveType';
 
 interface QuickLinksProps {
   navigation: any;
@@ -29,31 +27,40 @@ type QuickLink = {
   params?: Record<string, unknown>;
 };
 
-// In the order the work is done: each step needs the one before it.
+// Store work, in the order it is done: each step needs the one before it.
 // A store needs its distributor; a PJP needs stores and activity locations;
-// orders come from store visits.
+// orders come from store visits. Each link starts with a verb, and the screen
+// it opens shows the same words as its top title.
+// The employee's own items (Expense Claim, Leave) are in ClaimsSection.
 const LINKS: QuickLink[] = [
   { title: 'Create Distributor', icon: Package, screen: 'AddDistributorScreen' },
   { title: 'Create Store', icon: Hotel, screen: 'AddStoreScreen' },
   // Opens the list, which has the "Create New Location" button.
-  { title: 'Create Activity Location', icon: MapPin, screen: 'ActivityLocationScreen' },
+  {
+    title: 'Create Activity Location',
+    icon: MapPin,
+    screen: 'ActivityLocationScreen',
+    params: { title: 'Create Activity Location' },
+  },
   { title: 'Create PJP', icon: FilePlus2, screen: 'AddPjpScreen' },
-  { title: 'Create Order', icon: BaggageClaim, screen: 'OrdersScreen', params: { index: 0 } },
+  {
+    title: 'Create Order',
+    icon: BaggageClaim,
+    screen: 'OrdersScreen',
+    params: { index: 0, title: 'Create Order' },
+  },
   { title: 'Update Stock', icon: Boxes, screen: 'StockManagementScreen' },
+  // Raised for a store, so it is store work: the Visibility tab of ExpenseScreen.
+  {
+    title: 'Create Visibility Claim',
+    icon: Eye,
+    screen: 'ExpenseScreen',
+    params: { index: 1 },
+  },
 ];
 
-// Leave is only for RSM, ASM, ASE, Sales Officer and ISR.
-const LEAVE_LINK: QuickLink = {
-  title: 'Leave',
-  icon: CalendarDays,
-  screen: 'LeaveScreen',
-};
-
 export const QuickLinks: React.FC<QuickLinksProps> = ({ navigation }) => {
-  const designation = useAppSelector(
-    s => s.persistedReducer.authSlice.employee?.designation,
-  );
-  const links = canUseLeave(designation) ? [...LINKS, LEAVE_LINK] : LINKS;
+  const links = LINKS;
   return (
     <View style={[styles.LinkSection, { paddingVertical: 15, marginTop: 10 }]}>
       <Text

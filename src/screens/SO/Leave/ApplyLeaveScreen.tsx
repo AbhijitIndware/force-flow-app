@@ -23,7 +23,7 @@ import ResultModal, { ResultInfo } from '../../../components/ui/ResultModal';
 import ReusableDatePicker from '../../../components/ui-lib/reusable-date-picker';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { useApplyLeaveMutation } from '../../../features/base/base-api';
-import { LEAVE_TYPES } from '../../../types/leaveType';
+import { LEAVE_DATE_FMT, LEAVE_TYPES } from '../../../types/leaveType';
 import {
   getSafeServerMessage,
   getUserFacingError,
@@ -140,6 +140,7 @@ const ApplyLeaveScreen = ({ navigation, route }: Props) => {
         <View style={styles.dateRow}>
           <View style={{ flex: 1 }}>
             <ReusableDatePicker
+              displayFormat={LEAVE_DATE_FMT}
               label="From"
               value={fromDate}
               onChange={v => {
@@ -152,6 +153,7 @@ const ApplyLeaveScreen = ({ navigation, route }: Props) => {
           </View>
           <View style={{ flex: 1 }}>
             <ReusableDatePicker
+              displayFormat={LEAVE_DATE_FMT}
               label="To"
               value={toDate}
               onChange={v => setToDate(v)}
@@ -178,6 +180,7 @@ const ApplyLeaveScreen = ({ navigation, route }: Props) => {
 
         {isHalfDay && !isSingleDay && (
           <ReusableDatePicker
+            displayFormat={LEAVE_DATE_FMT}
             label="Half day date"
             value={halfDayDate}
             onChange={v => setHalfDayDate(v)}

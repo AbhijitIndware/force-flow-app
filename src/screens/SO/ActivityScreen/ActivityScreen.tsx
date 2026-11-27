@@ -105,18 +105,22 @@ const ActivityScreen = ({navigation, route}: Props) => {
               },
             ].map(card => (
               <View key={card.key} style={styles.statCard}>
-                <View style={[styles.statIcon, {backgroundColor: card.bg}]}>
-                  {card.icon}
-                </View>
-                <View style={styles.statText}>
-                  <Text style={styles.statNum}>{card.value}</Text>
-                  <Text
-                    style={styles.statLabel}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit>
-                    {card.label}
+                {/* Number and icon on top, label below at full width: every
+                    label keeps the same size and wraps instead of shrinking. */}
+                <View style={styles.statTop}>
+                  <Text style={styles.statNum} numberOfLines={1}>
+                    {card.value}
                   </Text>
+                  <View style={[styles.statIcon, {backgroundColor: card.bg}]}>
+                    {card.icon}
+                  </View>
                 </View>
+                <Text
+                  style={styles.statLabel}
+                  numberOfLines={2}
+                  maxFontSizeMultiplier={1.3}>
+                  {card.label}
+                </Text>
               </View>
             ))}
           </View>
@@ -210,10 +214,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: 14,
-    padding: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 4,
     shadowColor: '#9F9D9D',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
@@ -227,21 +230,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statText: {
-    flex: 1,
-    flexDirection: 'column',
+  statTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 4,
   },
   statNum: {
+    flex: 1,
     fontFamily: Fonts.semiBold,
     fontSize: Size.md,
     color: Colors.darkButton,
-    // lineHeight: 22,
   },
   statLabel: {
-    fontFamily: Fonts.regular,
-    fontSize: 11,
-    color: '#888',
-    marginTop: 1,
+    fontFamily: Fonts.medium,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#64748B',
   },
   linksRow: {
     flexDirection: 'row',

@@ -56,7 +56,6 @@ import { QuickLinks } from '../../../components/SO/HomeScreen/QuickLinks';
 import { ClaimsSection } from '../../../components/SO/HomeScreen/ClaimsSection';
 import LateCheckinApprovalLink from '../../../components/SO/HomeScreen/LateCheckinApprovalLink';
 import PjpReopenApprovalLink from '../../../components/SO/HomeScreen/PjpReopenApprovalLink';
-import LeaveApprovalLink from '../../../components/SO/HomeScreen/LeaveApprovalLink';
 import { CheckoutConfirmModal } from '../../../components/SO/HomeScreen/CheckoutConfirmModal';
 import { MonthPickerModal } from '../../../components/SO/HomeScreen/MonthPickerModal';
 import { YearPickerModal } from '../../../components/SO/HomeScreen/YearPickerModal';
@@ -536,8 +535,6 @@ const HomeScreen = ({ navigation }: Props) => {
           {/* Shown right below the header so managers see it on login */}
           {!isSoOrIsr && <LateCheckinApprovalLink navigation={navigation} />}
           {!isSoOrIsr && <PjpReopenApprovalLink navigation={navigation} />}
-          {/* SO / ISR never approve leave */}
-          {!isSoOrIsr && <LeaveApprovalLink navigation={navigation} />}
 
           <StatsOverview prodData={prodData} />
 
@@ -632,7 +629,7 @@ const HomeScreen = ({ navigation }: Props) => {
 
 
           <View style={[styles.container, { paddingTop: 10 }]}>
-            <Text style={styles.SectionHeading}>Are you in a new store?</Text>
+            <Text style={styles.SectionHeading}>Need help?</Text>
             <View style={styles.newStoreCard}>
               <TouchableOpacity
                 style={styles.listLink}

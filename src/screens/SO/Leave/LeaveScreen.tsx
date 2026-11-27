@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import { CalendarPlus } from 'lucide-react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,7 +24,11 @@ import {
   useGetLeaveBalancesQuery,
   useGetMyLeavesQuery,
 } from '../../../features/base/base-api';
-import { LeaveApplication, leaveRows } from '../../../types/leaveType';
+import {
+  LeaveApplication,
+  formatLeaveDate,
+  leaveRows,
+} from '../../../types/leaveType';
 import {
   getSafeServerMessage,
   isServerSuccess,
@@ -89,9 +92,7 @@ const LeaveScreen = ({ navigation }: Props) => {
   const withdraw = (item: LeaveApplication) => {
     Alert.alert(
       'Withdraw leave',
-      `Withdraw your ${item.leave_type} from ${moment(item.from_date).format(
-        'DD MMM',
-      )}?`,
+      `Withdraw your ${item.leave_type} from ${formatLeaveDate(item.from_date)}?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -176,8 +177,8 @@ const LeaveScreen = ({ navigation }: Props) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.cardType}>{item.leave_type}</Text>
             <Text style={styles.cardDates}>
-              {moment(item.from_date).format('DD MMM YYYY')}
-              {sameDay ? '' : ` – ${moment(item.to_date).format('DD MMM YYYY')}`}
+              {formatLeaveDate(item.from_date)}
+              {sameDay ? '' : ` – ${formatLeaveDate(item.to_date)}`}
               {item.total_leave_days !== undefined
                 ? `  ·  ${formatDays(item.total_leave_days)}`
                 : ''}

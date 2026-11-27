@@ -40,7 +40,8 @@ const ExpenseScreen = ({ navigation, route }: Props) => {
         },
       ]}>
       <PageHeader
-        title="Expense & Visibility"
+        // Matches the home link that opens each tab.
+        title={index === 1 ? 'Create Visibility Claim' : 'Expense Claim'}
         navigation={() => {
           navigation.navigate('Home');
         }}

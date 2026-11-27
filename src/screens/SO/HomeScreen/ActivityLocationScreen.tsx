@@ -13,6 +13,7 @@ import LoadingScreen from '../../../components/ui/LoadingScreen';
 import { flexCol, flexRow, itemsCenter } from '../../../utils/styles';
 import { Colors } from '../../../utils/colors';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { SoAppStackParamList } from '../../../types/Navigation';
 import { useGetActivityLocationsQuery } from '../../../features/base/base-api';
 import { Fonts } from '../../../constants';
@@ -27,9 +28,10 @@ type NavigationProp = NativeStackNavigationProp<
 
 type Props = {
   navigation: NavigationProp;
+  route?: RouteProp<SoAppStackParamList, 'ActivityLocationScreen'>;
 };
 
-const ActivityLocationScreen = ({ navigation }: Props) => {
+const ActivityLocationScreen = ({ navigation, route }: Props) => {
   const {
     data: locationsData,
     isLoading,
@@ -83,7 +85,7 @@ const ActivityLocationScreen = ({ navigation }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.white }]}>
       <PageHeader
-        title="Activity Locations"
+        title={route?.params?.title ?? 'Activity Locations'}
         navigation={() => navigation.goBack()}
       />
 

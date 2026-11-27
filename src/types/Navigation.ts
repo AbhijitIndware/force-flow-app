@@ -91,7 +91,8 @@ export type SoAppStackParamList = {
   AttendanceScreen: undefined;
   SalesScreen: {index?: number} | undefined;
   ActivityScreen: undefined;
-  OrdersScreen: {index?: number} | undefined;
+  /** title: set by the home link ("Create Order"); defaults to "Orders". */
+  OrdersScreen: {index?: number; title?: string} | undefined;
   PartnersScreen: {index?: number} | undefined;
   ProfileScreen: undefined;
   AddDistributorScreen: {distributorId?: string} | undefined;
@@ -153,7 +154,8 @@ export type SoAppStackParamList = {
   StockManagementScreen: undefined;
   StockManagementFormScreen: {store: string; storeName: string; items?: any[]};
   AddActivityLocationScreen: undefined;
-  ActivityLocationScreen: undefined;
+  /** title: set by the home link; defaults to "Activity Locations". */
+  ActivityLocationScreen: {title?: string} | undefined;
   ActivityCheckInScreen: undefined;
   ExpenseApprovalScreen: {index?: number} | undefined;
   ExpenseApprovalDetailScreen: {claimId: string};

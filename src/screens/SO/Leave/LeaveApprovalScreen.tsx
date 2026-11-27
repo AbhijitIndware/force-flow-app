@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,7 +27,11 @@ import {
   useGetPendingLeaveApprovalsQuery,
   useRejectLeaveMutation,
 } from '../../../features/base/base-api';
-import { PendingLeaveApproval, managerStepRows } from '../../../types/leaveType';
+import {
+  PendingLeaveApproval,
+  formatLeaveDate,
+  managerStepRows,
+} from '../../../types/leaveType';
 import {
   getSafeServerMessage,
   getUserFacingError,
@@ -161,10 +164,8 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
     const tc = typeColor(item.leave_type);
     const sameDay = item.from_date === item.to_date;
     const dates = sameDay
-      ? moment(item.from_date).format('DD MMM')
-      : `${moment(item.from_date).format('DD MMM')} – ${moment(
-          item.to_date,
-        ).format('DD MMM')}`;
+      ? formatLeaveDate(item.from_date)
+      : `${formatLeaveDate(item.from_date)} – ${formatLeaveDate(item.to_date)}`;
     return (
       <View style={styles.card}>
         <View style={[styles.cardStripe, { backgroundColor: tc.fg }]} />
@@ -267,7 +268,7 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
   return (
     <SafeAreaView style={[flexCol, { flex: 1, backgroundColor: Colors.lightBg }]}>
       <PageHeader
-        title="Leave Approvals"
+        title="Leave Approval"
         navigation={() => navigation.goBack()}
       />
       {isLoading ? (
@@ -336,9 +337,9 @@ const LeaveApprovalScreen = ({ navigation }: Props) => {
                   {d.leave_type} · {daysLabel(d.total_leave_days)}
                 </Text>
                 <Text style={styles.sheetDetail}>
-                  {moment(d.from_date).format('DD MMM YYYY')}
+                  {formatLeaveDate(d.from_date)}
                   {d.from_date !== d.to_date
-                    ? ` – ${moment(d.to_date).format('DD MMM YYYY')}`
+                    ? ` – ${formatLeaveDate(d.to_date)}`
                     : ''}
                 </Text>
               </View>

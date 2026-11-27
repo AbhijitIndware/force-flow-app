@@ -24,6 +24,8 @@ interface Props {
   disabled?: boolean; // add
   height?: number;
   textSize?: any; // add
+  /** How the date is shown (moment format). `value` stays YYYY-MM-DD. */
+  displayFormat?: string;
 }
 
 const ReusableDatePicker: React.FC<Props> = ({
@@ -37,6 +39,7 @@ const ReusableDatePicker: React.FC<Props> = ({
   disabled,
   height = 50,
   textSize = Size.sm,
+  displayFormat,
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
@@ -84,7 +87,11 @@ const ReusableDatePicker: React.FC<Props> = ({
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.8}>
-          {value || 'Select date'}
+          {value
+            ? displayFormat
+              ? moment(value, 'YYYY-MM-DD').format(displayFormat)
+              : value
+            : 'Select date'}
         </Text>
       </TouchableOpacity>
       {error && <Text style={{color: 'red', marginTop: 4}}>{error}</Text>}

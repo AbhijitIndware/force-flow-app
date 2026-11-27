@@ -2,6 +2,14 @@
 // Flow: reporting manager first (in the app), then HR (final approval, on
 // the website only).
 
+import moment from 'moment';
+
+/** How leave dates are shown everywhere, e.g. 27 Nov 2026. The server still gets YYYY-MM-DD. */
+export const LEAVE_DATE_FMT = 'DD MMM YYYY';
+
+export const formatLeaveDate = (date?: string | null) =>
+  date ? moment(date, 'YYYY-MM-DD').format(LEAVE_DATE_FMT) : '';
+
 export const LEAVE_TYPES = [
   'Casual Leave',
   'Privilege Leave',
