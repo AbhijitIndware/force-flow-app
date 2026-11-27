@@ -69,7 +69,7 @@ export const ClaimsSection: React.FC<ClaimsSectionProps> = ({ navigation }) => {
       ? [
           {
             // Both expense and visibility claims to approve.
-            title: 'Claim Approval',
+            title: 'Expense Claim Approval',
             icon: CheckCircle2,
             screen: 'ExpenseApprovalScreen',
             params: { index: 0 },

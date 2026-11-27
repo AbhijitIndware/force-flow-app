@@ -40,7 +40,7 @@ const ExpenseApprovalScreen = ({ navigation, route }: Props) => {
         },
       ]}>
       <PageHeader
-        title="Claim Approval"
+        title="Expense Claim Approval"
         navigation={() => {
           navigation.navigate('Home');
         }}
